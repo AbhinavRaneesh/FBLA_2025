@@ -1,17 +1,28 @@
 import 'package:flutter/material.dart';
-import 'dart:math';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
-  runApp(StudentLearningApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => QuizProvider()),
+      ],
+      child: StudentLearningApp(),
+    ),
+  );
 }
 
 class StudentLearningApp extends StatelessWidget {
+  const StudentLearningApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Student Learning App',
       theme: ThemeData(
         primarySwatch: Colors.blue,
+        scaffoldBackgroundColor: Colors.grey[200],
       ),
       home: HomeScreen(),
     );
@@ -19,73 +30,42 @@ class StudentLearningApp extends StatelessWidget {
 }
 
 class HomeScreen extends StatelessWidget {
+  final Map<String, List<Question>> subjectQuestions = {
+    'Math': mathQuestions,
+    'History': historyQuestions,
+    'English': englishQuestions,
+    'Science': scienceQuestions,
+  };
+
+  HomeScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Learn Subjects'),
+        title: Text('Learn Subjects', style: TextStyle(fontWeight: FontWeight.bold)),
+        centerTitle: true,
+        backgroundColor: Colors.blueAccent,
       ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            SubjectButton(
-              subjectName: 'Math',
+          children: subjectQuestions.keys.map((subject) {
+            return SubjectButton(
+              subjectName: subject,
               onPressed: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => QuizScreen(
-                      subject: 'Math',
-                      questions: List.of(mathQuestions)..shuffle(),
+                    builder: (context) => QuestionSelectionScreen(
+                      subject: subject,
+                      questions: List.of(subjectQuestions[subject]!)..shuffle(),
                     ),
                   ),
                 );
               },
-            ),
-            SubjectButton(
-              subjectName: 'History',
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => QuizScreen(
-                      subject: 'History',
-                      questions: List.of(historyQuestions)..shuffle(),
-                    ),
-                  ),
-                );
-              },
-            ),
-            SubjectButton(
-              subjectName: 'English',
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => QuizScreen(
-                      subject: 'English',
-                      questions: List.of(englishQuestions)..shuffle(),
-                    ),
-                  ),
-                );
-              },
-            ),
-            SubjectButton(
-              subjectName: 'Science',
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => QuizScreen(
-                      subject: 'Science',
-                      questions: List.of(scienceQuestions)..shuffle(),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ],
+            );
+          }).toList(),
         ),
       ),
     );
@@ -96,20 +76,107 @@ class SubjectButton extends StatelessWidget {
   final String subjectName;
   final VoidCallback onPressed;
 
-  SubjectButton({required this.subjectName, required this.onPressed});
+  const SubjectButton({super.key, required this.subjectName, required this.onPressed});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: ElevatedButton(
-        onPressed: onPressed,
-        child: Text(
-          subjectName,
-          style: TextStyle(fontSize: 20),
+      padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+      child: SizedBox(
+        width: 250,
+        child: ElevatedButton(
+          onPressed: onPressed,
+          style: ElevatedButton.styleFrom(
+            padding: EdgeInsets.symmetric(vertical: 18),
+            backgroundColor: Colors.blueAccent,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15),
+            ),
+            elevation: 5,
+          ),
+          child: Text(
+            subjectName,
+            style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600, color: Colors.white),
+          ),
         ),
-        style: ElevatedButton.styleFrom(
-          padding: EdgeInsets.symmetric(horizontal: 50, vertical: 20),
+      ),
+    );
+  }
+}
+
+class QuestionSelectionScreen extends StatefulWidget {
+  final String subject;
+  final List<Question> questions;
+
+  const QuestionSelectionScreen({super.key, required this.subject, required this.questions});
+
+  @override
+  _QuestionSelectionScreenState createState() => _QuestionSelectionScreenState();
+}
+
+class _QuestionSelectionScreenState extends State<QuestionSelectionScreen> {
+  int _numberOfQuestions = 10;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Select Number of Questions'),
+        backgroundColor: Colors.blueAccent,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'How many questions do you want to answer?',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 20),
+            Text(
+              '$_numberOfQuestions',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.blueAccent),
+            ),
+            Slider(
+              value: _numberOfQuestions.toDouble(),
+              min: 5,
+              max: 20,
+              divisions: 15,
+              label: _numberOfQuestions.toString(),
+              onChanged: (value) {
+                setState(() {
+                  _numberOfQuestions = value.toInt();
+                });
+              },
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => QuizScreen(
+                      subject: widget.subject,
+                      questions: widget.questions.take(_numberOfQuestions).toList(),
+                    ),
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blueAccent,
+                padding: EdgeInsets.symmetric(vertical: 15, horizontal: 30),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+              ),
+              child: Text(
+                'Start Quiz',
+                style: TextStyle(fontSize: 18, color: Colors.white),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -130,14 +197,18 @@ class _QuizScreenState extends State<QuizScreen> {
   int currentQuestionIndex = 0;
   String? selectedAnswer;
   bool isAnswered = false;
-  int score = 0;
+  String? currentAnswerResult; // To store the result of the current question
 
-  void _checkAnswer(String answer) {
+  void _checkAnswer(String answer, QuizProvider quizProvider) {
     setState(() {
       selectedAnswer = answer;
       isAnswered = true;
       if (answer == widget.questions[currentQuestionIndex].correctAnswer) {
-        score++;
+        quizProvider.incrementScore();
+        currentAnswerResult = 'Correct!';
+      } else {
+        currentAnswerResult =
+        'Wrong! The correct answer is: ${widget.questions[currentQuestionIndex].correctAnswer}';
       }
     });
   }
@@ -148,27 +219,32 @@ class _QuizScreenState extends State<QuizScreen> {
         currentQuestionIndex++;
         selectedAnswer = null;
         isAnswered = false;
+        currentAnswerResult = null; // Reset the current answer result
       } else {
-        // Show final score when all questions are answered
         _showFinalScore();
       }
     });
   }
 
-  void _showFinalScore() {
+  void _showFinalScore() async {
+    final quizProvider = Provider.of<QuizProvider>(context, listen: false);
+    await saveScore(widget.subject, quizProvider.score);
+
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Quiz Finished!'),
-          content: Text('Your score: $score/${widget.questions.length}'),
+          title: Text('Quiz Finished!', style: TextStyle(fontWeight: FontWeight.bold)),
+          content: Text('Your score: ${quizProvider.score}/${widget.questions.length}',
+              style: TextStyle(fontSize: 18)),
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.pop(context); // Close the dialog
-                Navigator.pop(context); // Go back to the home screen
+                quizProvider.resetScore();
+                Navigator.pop(context);
+                Navigator.pop(context);
               },
-              child: Text('OK'),
+              child: Text('OK', style: TextStyle(fontSize: 18)),
             ),
           ],
         );
@@ -178,67 +254,105 @@ class _QuizScreenState extends State<QuizScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final quizProvider = Provider.of<QuizProvider>(context);
     Question currentQuestion = widget.questions[currentQuestionIndex];
 
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.subject),
+        backgroundColor: Colors.blueAccent,
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(20.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            LinearProgressIndicator(
+              value: (currentQuestionIndex + 1) / widget.questions.length,
+              backgroundColor: Colors.grey[300],
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.blueAccent),
+            ),
+            SizedBox(height: 20),
             Text(
-              'Question ${currentQuestionIndex + 1}/${widget.questions.length}: ${currentQuestion.questionText}',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              'Question ${currentQuestionIndex + 1}/${widget.questions.length}:',
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.blueAccent),
+            ),
+            SizedBox(height: 10),
+            Text(
+              currentQuestion.questionText,
+              style: TextStyle(fontSize: 20),
             ),
             SizedBox(height: 20),
             ...currentQuestion.options.map((option) {
               return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                padding: const EdgeInsets.symmetric(vertical: 6.0),
                 child: ElevatedButton(
-                  onPressed: isAnswered ? null : () => _checkAnswer(option),
+                  onPressed: isAnswered ? null : () => _checkAnswer(option, quizProvider),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: isAnswered
-                        ? (option == currentQuestion.correctAnswer
-                        ? Colors.green
-                        : Colors.red)
-                        : Colors.blue,
+                        ? (option == currentQuestion.correctAnswer ? Colors.green : Colors.red)
+                        : Colors.blueAccent,
+                    padding: EdgeInsets.symmetric(vertical: 15),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                   child: Text(
                     option,
-                    style: TextStyle(fontSize: 18),
+                    style: TextStyle(fontSize: 18, color: Colors.white),
                   ),
                 ),
               );
             }).toList(),
             SizedBox(height: 20),
             if (isAnswered)
-              Text(
-                selectedAnswer == currentQuestion.correctAnswer
-                    ? 'Correct!'
-                    : 'Wrong! The correct answer is: ${currentQuestion.correctAnswer}',
-                style: TextStyle(
-                  fontSize: 20,
-                  color: selectedAnswer == currentQuestion.correctAnswer
-                      ? Colors.green
-                      : Colors.red,
-                ),
-              ),
-            if (isAnswered)
               ElevatedButton(
                 onPressed: _nextQuestion,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blueAccent,
+                  padding: EdgeInsets.symmetric(vertical: 12),
+                ),
                 child: Text(
-                  currentQuestionIndex < widget.questions.length - 1
-                      ? 'Next Question'
-                      : 'Finish Quiz',
+                  currentQuestionIndex < widget.questions.length - 1 ? 'Next Question' : 'Finish Quiz',
+                  style: TextStyle(fontSize: 18, color: Colors.white),
+                ),
+              ),
+            // Feedback bar at the bottom
+            if (currentAnswerResult != null)
+              Container(
+                margin: EdgeInsets.only(top: 20),
+                padding: EdgeInsets.all(15),
+                decoration: BoxDecoration(
+                  color: currentAnswerResult!.startsWith('Correct')
+                      ? Colors.green.withOpacity(0.8)
+                      : Colors.red.withOpacity(0.8),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  currentAnswerResult!,
+                  style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
                 ),
               ),
           ],
         ),
       ),
     );
+  }
+}
+
+class QuizProvider with ChangeNotifier {
+  int _score = 0;
+  int get score => _score;
+
+  void incrementScore() {
+    _score++;
+    notifyListeners();
+  }
+
+  void resetScore() {
+    _score = 0;
+    notifyListeners();
   }
 }
 
@@ -252,6 +366,24 @@ class Question {
     required this.options,
     required this.correctAnswer,
   });
+
+  factory Question.fromJson(Map<String, dynamic> json) {
+    return Question(
+      questionText: json['questionText'],
+      options: List<String>.from(json['options']),
+      correctAnswer: json['correctAnswer'],
+    );
+  }
+}
+
+Future<void> saveScore(String subject, int score) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setInt(subject, score);
+}
+
+Future<int?> loadScore(String subject) async {
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getInt(subject);
 }
 
 // Sample questions for each subject (20 questions per subject)
@@ -492,7 +624,106 @@ final List<Question> englishQuestions = [
     options: ['Sad', 'Joyful', 'Angry', 'Tired'],
     correctAnswer: 'Joyful',
   ),
-  // Add 18 more English questions...
+  Question(
+    questionText: 'What is the past tense of "run"?',
+    options: ['Ran', 'Runned', 'Running', 'Runs'],
+    correctAnswer: 'Ran',
+  ),
+  Question(
+    questionText: 'What is a synonym for "happy"?',
+    options: ['Sad', 'Joyful', 'Angry', 'Tired'],
+    correctAnswer: 'Joyful',
+  ),
+  Question(
+    questionText: 'What is the plural of "child"?',
+    options: ['Childs', 'Children', 'Childes', 'Childies'],
+    correctAnswer: 'Children',
+  ),
+  Question(
+    questionText: 'What is the opposite of "begin"?',
+    options: ['Start', 'End', 'Continue', 'Pause'],
+    correctAnswer: 'End',
+  ),
+  Question(
+    questionText: 'What is the literary term for a play on words?',
+    options: ['Metaphor', 'Simile', 'Pun', 'Alliteration'],
+    correctAnswer: 'Pun',
+  ),
+  Question(
+    questionText: 'Who wrote "Romeo and Juliet"?',
+    options: ['Charles Dickens', 'William Shakespeare', 'Mark Twain', 'Jane Austen'],
+    correctAnswer: 'William Shakespeare',
+  ),
+  Question(
+    questionText: 'What is the main character in a story called?',
+    options: ['Antagonist', 'Protagonist', 'Narrator', 'Sidekick'],
+    correctAnswer: 'Protagonist',
+  ),
+  Question(
+    questionText: 'What is the term for a word that imitates a sound?',
+    options: ['Onomatopoeia', 'Alliteration', 'Hyperbole', 'Metaphor'],
+    correctAnswer: 'Onomatopoeia',
+  ),
+  Question(
+    questionText: 'What is the comparative form of "good"?',
+    options: ['Gooder', 'Better', 'Best', 'Well'],
+    correctAnswer: 'Better',
+  ),
+  Question(
+    questionText: 'What is the term for a story with a moral lesson?',
+    options: ['Fable', 'Myth', 'Legend', 'Fairy Tale'],
+    correctAnswer: 'Fable',
+  ),
+  Question(
+    questionText: 'What is the past tense of "go"?',
+    options: ['Went', 'Goed', 'Gone', 'Going'],
+    correctAnswer: 'Went',
+  ),
+  Question(
+    questionText: 'What is the term for a word that means the opposite of another word?',
+    options: ['Synonym', 'Antonym', 'Homonym', 'Acronym'],
+    correctAnswer: 'Antonym',
+  ),
+  Question(
+    questionText: 'What is the plural of "mouse"?',
+    options: ['Mouses', 'Mice', 'Mices', 'Mousees'],
+    correctAnswer: 'Mice',
+  ),
+  Question(
+    questionText: 'What is the term for a word that describes a noun?',
+    options: ['Verb', 'Adjective', 'Adverb', 'Preposition'],
+    correctAnswer: 'Adjective',
+  ),
+  Question(
+    questionText: 'What is the term for a word that replaces a noun?',
+    options: ['Adjective', 'Pronoun', 'Verb', 'Adverb'],
+    correctAnswer: 'Pronoun',
+  ),
+  Question(
+    questionText: 'What is the term for a comparison using "like" or "as"?',
+    options: ['Metaphor', 'Simile', 'Hyperbole', 'Personification'],
+    correctAnswer: 'Simile',
+  ),
+  Question(
+    questionText: 'What is the term for a story about a person\'s life written by someone else?',
+    options: ['Autobiography', 'Biography', 'Memoir', 'Diary'],
+    correctAnswer: 'Biography',
+  ),
+  Question(
+    questionText: 'What is the term for a word that sounds the same but has a different meaning?',
+    options: ['Synonym', 'Antonym', 'Homophone', 'Homonym'],
+    correctAnswer: 'Homophone',
+  ),
+  Question(
+    questionText: 'What is the term for a word that describes an action?',
+    options: ['Noun', 'Verb', 'Adjective', 'Adverb'],
+    correctAnswer: 'Verb',
+  ),
+  Question(
+    questionText: 'What is the term for a word that modifies a verb?',
+    options: ['Adjective', 'Adverb', 'Preposition', 'Conjunction'],
+    correctAnswer: 'Adverb',
+  ),
 ];
 
 final List<Question> scienceQuestions = [
