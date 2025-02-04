@@ -14,6 +14,8 @@ void main() {
 }
 
 class StudentLearningApp extends StatelessWidget {
+  const StudentLearningApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -28,6 +30,8 @@ class StudentLearningApp extends StatelessWidget {
 }
 
 class WelcomePage extends StatelessWidget {
+  const WelcomePage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -163,6 +167,8 @@ class HomeScreen extends StatelessWidget {
     'Science': scienceQuestions,
   };
 
+  HomeScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -200,7 +206,7 @@ class SubjectButton extends StatelessWidget {
   final String subjectName;
   final VoidCallback onPressed;
 
-  SubjectButton({required this.subjectName, required this.onPressed});
+  const SubjectButton({super.key, required this.subjectName, required this.onPressed});
 
   @override
   Widget build(BuildContext context) {
@@ -210,10 +216,6 @@ class SubjectButton extends StatelessWidget {
         width: 250,
         child: ElevatedButton(
           onPressed: onPressed,
-          child: Text(
-            subjectName,
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600, color: Colors.white),
-          ),
           style: ElevatedButton.styleFrom(
             padding: EdgeInsets.symmetric(vertical: 18),
             backgroundColor: Colors.blueAccent,
@@ -221,6 +223,10 @@ class SubjectButton extends StatelessWidget {
               borderRadius: BorderRadius.circular(15),
             ),
             elevation: 5,
+          ),
+          child: Text(
+            subjectName,
+            style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600, color: Colors.white),
           ),
         ),
       ),
@@ -232,7 +238,7 @@ class QuestionSelectionScreen extends StatefulWidget {
   final String subject;
   final List<Question> questions;
 
-  QuestionSelectionScreen({required this.subject, required this.questions});
+  const QuestionSelectionScreen({super.key, required this.subject, required this.questions});
 
   @override
   _QuestionSelectionScreenState createState() => _QuestionSelectionScreenState();
@@ -311,7 +317,7 @@ class QuizScreen extends StatefulWidget {
   final String subject;
   final List<Question> questions;
 
-  QuizScreen({required this.subject, required this.questions});
+  const QuizScreen({super.key, required this.subject, required this.questions});
 
   @override
   _QuizScreenState createState() => _QuizScreenState();
@@ -427,7 +433,7 @@ class _QuizScreenState extends State<QuizScreen> {
                   ),
                 ),
               );
-            }).toList(),
+            }),
             SizedBox(height: 20),
             if (isAnswered)
               ElevatedButton(
