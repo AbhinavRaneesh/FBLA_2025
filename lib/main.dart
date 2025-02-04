@@ -1,8 +1,16 @@
 import 'package:flutter/material.dart';
-import 'dart:math';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
-  runApp(StudentLearningApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => QuizProvider()),
+      ],
+      child: StudentLearningApp(),
+    ),
+  );
 }
 
 class StudentLearningApp extends StatelessWidget {
@@ -14,12 +22,147 @@ class StudentLearningApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         scaffoldBackgroundColor: Colors.grey[200],
       ),
-      home: HomeScreen(),
+      home: WelcomePage(), // Start with the Welcome Page
+    );
+  }
+}
+
+class WelcomePage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.blueAccent, Colors.purpleAccent],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'Welcome to the Learning App!',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 30),
+                // Sign-In Form
+                Container(
+                  padding: EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.8),
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Column(
+                    children: [
+                      TextField(
+                        decoration: InputDecoration(
+                          labelText: 'Username',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.person),
+                        ),
+                      ),
+                      SizedBox(height: 15),
+                      TextField(
+                        obscureText: true,
+                        decoration: InputDecoration(
+                          labelText: 'Password',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.lock),
+                        ),
+                      ),
+                      SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: () {
+                          // Navigate to the main page
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => HomeScreen()),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blueAccent,
+                          padding: EdgeInsets.symmetric(vertical: 15, horizontal: 30),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        child: Text(
+                          'Sign In',
+                          style: TextStyle(fontSize: 18, color: Colors.white),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 20),
+                // Continue Without Logging In
+                TextButton(
+                  onPressed: () {
+                    // Navigate to the main page
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => HomeScreen()),
+                    );
+                  },
+                  child: Text(
+                    'Continue Without Logging In',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                SizedBox(height: 20),
+                // Shop Button
+                ElevatedButton(
+                  onPressed: () {
+                    // Placeholder for shop functionality
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Shop feature coming soon!'),
+                        backgroundColor: Colors.blueAccent,
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.purpleAccent,
+                    padding: EdgeInsets.symmetric(vertical: 15, horizontal: 30),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: Text(
+                    'Shop',
+                    style: TextStyle(fontSize: 18, color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
 
 class HomeScreen extends StatelessWidget {
+  final Map<String, List<Question>> subjectQuestions = {
+    'Math': mathQuestions,
+    'History': historyQuestions,
+    'English': englishQuestions,
+    'Science': scienceQuestions,
+  };
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -31,64 +174,54 @@ class HomeScreen extends StatelessWidget {
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            SubjectButton(
-              subjectName: 'Math',
+          children: subjectQuestions.keys.map((subject) {
+            return SubjectButton(
+              subjectName: subject,
               onPressed: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => QuestionSelectionScreen(
-                      subject: 'Math',
-                      questions: List.of(mathQuestions)..shuffle(),
+                      subject: subject,
+                      questions: List.of(subjectQuestions[subject]!)..shuffle(),
                     ),
                   ),
                 );
               },
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+}
+
+class SubjectButton extends StatelessWidget {
+  final String subjectName;
+  final VoidCallback onPressed;
+
+  SubjectButton({required this.subjectName, required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+      child: SizedBox(
+        width: 250,
+        child: ElevatedButton(
+          onPressed: onPressed,
+          child: Text(
+            subjectName,
+            style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600, color: Colors.white),
+          ),
+          style: ElevatedButton.styleFrom(
+            padding: EdgeInsets.symmetric(vertical: 18),
+            backgroundColor: Colors.blueAccent,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15),
             ),
-            SubjectButton(
-              subjectName: 'History',
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => QuestionSelectionScreen(
-                      subject: 'History',
-                      questions: List.of(historyQuestions)..shuffle(),
-                    ),
-                  ),
-                );
-              },
-            ),
-            SubjectButton(
-              subjectName: 'English',
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => QuestionSelectionScreen(
-                      subject: 'English',
-                      questions: List.of(englishQuestions)..shuffle(),
-                    ),
-                  ),
-                );
-              },
-            ),
-            SubjectButton(
-              subjectName: 'Science',
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => QuestionSelectionScreen(
-                      subject: 'Science',
-                      questions: List.of(scienceQuestions)..shuffle(),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ],
+            elevation: 5,
+          ),
         ),
       ),
     );
@@ -106,7 +239,7 @@ class QuestionSelectionScreen extends StatefulWidget {
 }
 
 class _QuestionSelectionScreenState extends State<QuestionSelectionScreen> {
-  int _numberOfQuestions = 10; // Default number of questions
+  int _numberOfQuestions = 10;
 
   @override
   Widget build(BuildContext context) {
@@ -174,39 +307,6 @@ class _QuestionSelectionScreenState extends State<QuestionSelectionScreen> {
   }
 }
 
-
-class SubjectButton extends StatelessWidget {
-  final String subjectName;
-  final VoidCallback onPressed;
-
-  SubjectButton({required this.subjectName, required this.onPressed});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
-      child: SizedBox(
-        width: 250,
-        child: ElevatedButton(
-          onPressed: onPressed,
-          child: Text(
-            subjectName,
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600, color: Colors.white),
-          ),
-          style: ElevatedButton.styleFrom(
-            padding: EdgeInsets.symmetric(vertical: 18),
-            backgroundColor: Colors.blueAccent,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(15),
-            ),
-            elevation: 5,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class QuizScreen extends StatefulWidget {
   final String subject;
   final List<Question> questions;
@@ -221,14 +321,18 @@ class _QuizScreenState extends State<QuizScreen> {
   int currentQuestionIndex = 0;
   String? selectedAnswer;
   bool isAnswered = false;
-  int score = 0;
+  String? currentAnswerResult;
 
-  void _checkAnswer(String answer) {
+  void _checkAnswer(String answer, QuizProvider quizProvider) {
     setState(() {
       selectedAnswer = answer;
       isAnswered = true;
       if (answer == widget.questions[currentQuestionIndex].correctAnswer) {
-        score++;
+        quizProvider.incrementScore();
+        currentAnswerResult = 'Correct!';
+      } else {
+        currentAnswerResult =
+        'Wrong! The correct answer is: ${widget.questions[currentQuestionIndex].correctAnswer}';
       }
     });
   }
@@ -239,23 +343,28 @@ class _QuizScreenState extends State<QuizScreen> {
         currentQuestionIndex++;
         selectedAnswer = null;
         isAnswered = false;
+        currentAnswerResult = null;
       } else {
         _showFinalScore();
       }
     });
   }
 
-  void _showFinalScore() {
+  void _showFinalScore() async {
+    final quizProvider = Provider.of<QuizProvider>(context, listen: false);
+    await saveScore(widget.subject, quizProvider.score);
+
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
           title: Text('Quiz Finished!', style: TextStyle(fontWeight: FontWeight.bold)),
-          content: Text('Your score: $score/${widget.questions.length}',
+          content: Text('Your score: ${quizProvider.score}/${widget.questions.length}',
               style: TextStyle(fontSize: 18)),
           actions: [
             TextButton(
               onPressed: () {
+                quizProvider.resetScore();
                 Navigator.pop(context);
                 Navigator.pop(context);
               },
@@ -269,6 +378,7 @@ class _QuizScreenState extends State<QuizScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final quizProvider = Provider.of<QuizProvider>(context);
     Question currentQuestion = widget.questions[currentQuestionIndex];
 
     return Scaffold(
@@ -281,6 +391,12 @@ class _QuizScreenState extends State<QuizScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            LinearProgressIndicator(
+              value: (currentQuestionIndex + 1) / widget.questions.length,
+              backgroundColor: Colors.grey[300],
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.blueAccent),
+            ),
+            SizedBox(height: 20),
             Text(
               'Question ${currentQuestionIndex + 1}/${widget.questions.length}:',
               style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.blueAccent),
@@ -295,7 +411,7 @@ class _QuizScreenState extends State<QuizScreen> {
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 6.0),
                 child: ElevatedButton(
-                  onPressed: isAnswered ? null : () => _checkAnswer(option),
+                  onPressed: isAnswered ? null : () => _checkAnswer(option, quizProvider),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: isAnswered
                         ? (option == currentQuestion.correctAnswer ? Colors.green : Colors.red)
@@ -314,19 +430,6 @@ class _QuizScreenState extends State<QuizScreen> {
             }).toList(),
             SizedBox(height: 20),
             if (isAnswered)
-              Text(
-                selectedAnswer == currentQuestion.correctAnswer
-                    ? 'Correct!'
-                    : 'Wrong! The correct answer is: ${currentQuestion.correctAnswer}',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: selectedAnswer == currentQuestion.correctAnswer ? Colors.green : Colors.red,
-                ),
-              ),
-            if (isAnswered)
-              SizedBox(height: 10),
-            if (isAnswered)
               ElevatedButton(
                 onPressed: _nextQuestion,
                 style: ElevatedButton.styleFrom(
@@ -338,10 +441,41 @@ class _QuizScreenState extends State<QuizScreen> {
                   style: TextStyle(fontSize: 18, color: Colors.white),
                 ),
               ),
+            if (currentAnswerResult != null)
+              Container(
+                margin: EdgeInsets.only(top: 20),
+                padding: EdgeInsets.all(15),
+                decoration: BoxDecoration(
+                  color: currentAnswerResult!.startsWith('Correct')
+                      ? Colors.green.withOpacity(0.8)
+                      : Colors.red.withOpacity(0.8),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  currentAnswerResult!,
+                  style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+              ),
           ],
         ),
       ),
     );
+  }
+}
+
+class QuizProvider with ChangeNotifier {
+  int _score = 0;
+  int get score => _score;
+
+  void incrementScore() {
+    _score++;
+    notifyListeners();
+  }
+
+  void resetScore() {
+    _score = 0;
+    notifyListeners();
   }
 }
 
@@ -357,7 +491,15 @@ class Question {
   });
 }
 
+Future<void> saveScore(String subject, int score) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setInt(subject, score);
+}
 
+Future<int?> loadScore(String subject) async {
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getInt(subject);
+}
 
 // Sample questions for each subject (20 questions per subject)
 final List<Question> mathQuestions = [
@@ -473,6 +615,7 @@ final List<Question> mathQuestions = [
   ),
 ];
 
+
 final List<Question> historyQuestions = [
   Question(
     questionText: 'Who was the first President of the United States?',
@@ -586,6 +729,7 @@ final List<Question> historyQuestions = [
   ),
 ];
 
+
 final List<Question> englishQuestions = [
   Question(
     questionText: 'What is the past tense of "go"?',
@@ -698,6 +842,7 @@ final List<Question> englishQuestions = [
     correctAnswer: 'Adverb',
   ),
 ];
+
 
 final List<Question> scienceQuestions = [
   Question(
