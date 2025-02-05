@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'dart:math';
+import 'database_helper.dart';
 
 void main() {
   runApp(StudentLearningApp());
@@ -12,81 +12,445 @@ class StudentLearningApp extends StatelessWidget {
       title: 'Student Learning App',
       theme: ThemeData(
         primarySwatch: Colors.blue,
+        scaffoldBackgroundColor: Colors.grey[200],
       ),
-      home: HomeScreen(),
+      home: SignInPage(),
+    );
+  }
+}
+
+class SignInPage extends StatefulWidget {
+  @override
+  _SignInPageState createState() => _SignInPageState();
+}
+
+class _SignInPageState extends State<SignInPage> {
+  final _usernameController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _dbHelper = DatabaseHelper();
+
+  Future<void> _signIn() async {
+    final username = _usernameController.text.trim();
+    final password = _passwordController.text.trim();
+
+    if (username.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please enter a username and password')),
+      );
+      return;
+    }
+
+    final isAuthenticated = await _dbHelper.authenticateUser(username, password);
+    if (isAuthenticated) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Sign in successful!')),
+      );
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => HomeScreen()),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Invalid username or password')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.blueAccent, Colors.purpleAccent],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Center(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Welcome Back!',
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  SizedBox(height: 30),
+                  Card(
+                    elevation: 5,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: Column(
+                        children: [
+                          TextField(
+                            controller: _usernameController,
+                            decoration: InputDecoration(
+                              labelText: 'Username',
+                              border: OutlineInputBorder(),
+                              prefixIcon: Icon(Icons.person),
+                            ),
+                          ),
+                          SizedBox(height: 15),
+                          TextField(
+                            controller: _passwordController,
+                            obscureText: true,
+                            decoration: InputDecoration(
+                              labelText: 'Password',
+                              border: OutlineInputBorder(),
+                              prefixIcon: Icon(Icons.lock),
+                            ),
+                          ),
+                          SizedBox(height: 20),
+                          ElevatedButton(
+                            onPressed: _signIn,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blueAccent,
+                              padding: EdgeInsets.symmetric(vertical: 15, horizontal: 30),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            child: Text(
+                              'Sign In',
+                              style: TextStyle(fontSize: 18, color: Colors.white),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 10),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => SignUpPage()),
+                      );
+                    },
+                    child: Text(
+                      'Don\'t have an account? Sign up',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class SignUpPage extends StatefulWidget {
+  @override
+  _SignUpPageState createState() => _SignUpPageState();
+}
+
+class _SignUpPageState extends State<SignUpPage> {
+  final _usernameController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _dbHelper = DatabaseHelper();
+
+  Future<void> _signUp() async {
+    final username = _usernameController.text.trim();
+    final password = _passwordController.text.trim();
+
+    if (username.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please enter a username and password')),
+      );
+      return;
+    }
+
+    final usernameExists = await _dbHelper.usernameExists(username);
+    if (usernameExists) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Username already exists')),
+      );
+      return;
+    }
+
+    await _dbHelper.insertUser(username, password);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Account created successfully!')),
+    );
+
+    Navigator.pop(context); // Go back to the sign-in page
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.purpleAccent, Colors.blueAccent],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Center(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Create an Account',
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  SizedBox(height: 30),
+                  Card(
+                    elevation: 5,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: Column(
+                        children: [
+                          TextField(
+                            controller: _usernameController,
+                            decoration: InputDecoration(
+                              labelText: 'Username',
+                              border: OutlineInputBorder(),
+                              prefixIcon: Icon(Icons.person),
+                            ),
+                          ),
+                          SizedBox(height: 15),
+                          TextField(
+                            controller: _passwordController,
+                            obscureText: true,
+                            decoration: InputDecoration(
+                              labelText: 'Password',
+                              border: OutlineInputBorder(),
+                              prefixIcon: Icon(Icons.lock),
+                            ),
+                          ),
+                          SizedBox(height: 20),
+                          ElevatedButton(
+                            onPressed: _signUp,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.purpleAccent,
+                              padding: EdgeInsets.symmetric(vertical: 15, horizontal: 30),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            child: Text(
+                              'Sign Up',
+                              style: TextStyle(fontSize: 18, color: Colors.white),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
 
 class HomeScreen extends StatelessWidget {
+  final Map<String, List<Question>> subjectQuestions = {
+    'Math': mathQuestions,
+    'History': historyQuestions,
+    'English': englishQuestions,
+    'Science': scienceQuestions,
+  };
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Learn Subjects'),
+        backgroundColor: Colors.blueAccent,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.logout),
+            onPressed: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => SignInPage()),
+              );
+            },
+          ),
+        ],
       ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            SubjectButton(
-              subjectName: 'Math',
+          children: subjectQuestions.keys.map((subject) {
+            return SubjectButton(
+              subjectName: subject,
               onPressed: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => QuizScreen(
-                      subject: 'Math',
-                      questions: List.of(mathQuestions)..shuffle(),
+                    builder: (context) => QuestionSelectionScreen(
+                      subject: subject,
+                      questions: subjectQuestions[subject]!,
                     ),
                   ),
                 );
+              },
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+}
+
+class QuestionSelectionScreen extends StatefulWidget {
+  final String subject;
+  final List<Question> questions;
+
+  QuestionSelectionScreen({required this.subject, required this.questions});
+
+  @override
+  _QuestionSelectionScreenState createState() => _QuestionSelectionScreenState();
+}
+
+class _QuestionSelectionScreenState extends State<QuestionSelectionScreen> {
+  int _numberOfQuestions = 10;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Select Number of Questions'),
+        backgroundColor: Colors.blueAccent,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'How many questions do you want to answer?',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 20),
+            Text(
+              '$_numberOfQuestions',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.blueAccent),
+            ),
+            Slider(
+              value: _numberOfQuestions.toDouble(),
+              min: 1,
+              max: widget.questions.length.toDouble(),
+              divisions: widget.questions.length - 1,
+              label: _numberOfQuestions.toString(),
+              onChanged: (value) {
+                setState(() {
+                  _numberOfQuestions = value.toInt();
+                });
               },
             ),
-            SubjectButton(
-              subjectName: 'History',
+            SizedBox(height: 20),
+            ElevatedButton(
               onPressed: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => QuizScreen(
-                      subject: 'History',
-                      questions: List.of(historyQuestions)..shuffle(),
+                      subject: widget.subject,
+                      questions: widget.questions.take(_numberOfQuestions).toList(),
                     ),
                   ),
                 );
               },
-            ),
-            SubjectButton(
-              subjectName: 'English',
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => QuizScreen(
-                      subject: 'English',
-                      questions: List.of(englishQuestions)..shuffle(),
-                    ),
-                  ),
-                );
-              },
-            ),
-            SubjectButton(
-              subjectName: 'Science',
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => QuizScreen(
-                      subject: 'Science',
-                      questions: List.of(scienceQuestions)..shuffle(),
-                    ),
-                  ),
-                );
-              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blueAccent,
+                padding: EdgeInsets.symmetric(vertical: 15, horizontal: 30),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              child: Text(
+                'Start Quiz',
+                style: TextStyle(fontSize: 18, color: Colors.white),
+              ),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class DatabaseManagementPage extends StatelessWidget {
+  final _dbHelper = DatabaseHelper();
+
+  Future<void> _deleteUser(int id) async {
+    await _dbHelper.deleteUser(id);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Manage Users'),
+        backgroundColor: Colors.blueAccent,
+      ),
+      body: FutureBuilder<List<Map<String, dynamic>>>(
+        future: _dbHelper.getUsers(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return Center(child: Text('No users found.'));
+          } else {
+            final users = snapshot.data!;
+            return ListView.builder(
+              itemCount: users.length,
+              itemBuilder: (context, index) {
+                final user = users[index];
+                return ListTile(
+                  title: Text(user['username']),
+                  trailing: IconButton(
+                    icon: Icon(Icons.delete),
+                    onPressed: () async {
+                      await _deleteUser(user['id']);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('User deleted successfully!')),
+                      );
+                      Navigator.pop(context); // Refresh the page
+                    },
+                  ),
+                );
+              },
+            );
+          }
+        },
       ),
     );
   }
@@ -101,15 +465,23 @@ class SubjectButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: ElevatedButton(
-        onPressed: onPressed,
-        child: Text(
-          subjectName,
-          style: TextStyle(fontSize: 20),
-        ),
-        style: ElevatedButton.styleFrom(
-          padding: EdgeInsets.symmetric(horizontal: 50, vertical: 20),
+      padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+      child: SizedBox(
+        width: 250,
+        child: ElevatedButton(
+          onPressed: onPressed,
+          child: Text(
+            subjectName,
+            style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600, color: Colors.white),
+          ),
+          style: ElevatedButton.styleFrom(
+            padding: EdgeInsets.symmetric(vertical: 18),
+            backgroundColor: Colors.blueAccent,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15),
+            ),
+            elevation: 5,
+          ),
         ),
       ),
     );
@@ -130,14 +502,17 @@ class _QuizScreenState extends State<QuizScreen> {
   int currentQuestionIndex = 0;
   String? selectedAnswer;
   bool isAnswered = false;
-  int score = 0;
+  String? currentAnswerResult;
 
   void _checkAnswer(String answer) {
     setState(() {
       selectedAnswer = answer;
       isAnswered = true;
       if (answer == widget.questions[currentQuestionIndex].correctAnswer) {
-        score++;
+        currentAnswerResult = 'Correct!';
+      } else {
+        currentAnswerResult =
+        'Wrong! The correct answer is: ${widget.questions[currentQuestionIndex].correctAnswer}';
       }
     });
   }
@@ -148,8 +523,8 @@ class _QuizScreenState extends State<QuizScreen> {
         currentQuestionIndex++;
         selectedAnswer = null;
         isAnswered = false;
+        currentAnswerResult = null;
       } else {
-        // Show final score when all questions are answered
         _showFinalScore();
       }
     });
@@ -160,15 +535,16 @@ class _QuizScreenState extends State<QuizScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Quiz Finished!'),
-          content: Text('Your score: $score/${widget.questions.length}'),
+          title: Text('Quiz Finished!', style: TextStyle(fontWeight: FontWeight.bold)),
+          content: Text('Your score: ${currentQuestionIndex + 1}/${widget.questions.length}',
+              style: TextStyle(fontSize: 18)),
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.pop(context); // Close the dialog
-                Navigator.pop(context); // Go back to the home screen
+                Navigator.pop(context);
+                Navigator.pop(context);
               },
-              child: Text('OK'),
+              child: Text('OK', style: TextStyle(fontSize: 18)),
             ),
           ],
         );
@@ -183,56 +559,77 @@ class _QuizScreenState extends State<QuizScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.subject),
+        backgroundColor: Colors.blueAccent,
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(20.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            LinearProgressIndicator(
+              value: (currentQuestionIndex + 1) / widget.questions.length,
+              backgroundColor: Colors.grey[300],
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.blueAccent),
+            ),
+            SizedBox(height: 20),
             Text(
-              'Question ${currentQuestionIndex + 1}/${widget.questions.length}: ${currentQuestion.questionText}',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              'Question ${currentQuestionIndex + 1}/${widget.questions.length}:',
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.blueAccent),
+            ),
+            SizedBox(height: 10),
+            Text(
+              currentQuestion.questionText,
+              style: TextStyle(fontSize: 20),
             ),
             SizedBox(height: 20),
             ...currentQuestion.options.map((option) {
               return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                padding: const EdgeInsets.symmetric(vertical: 6.0),
                 child: ElevatedButton(
                   onPressed: isAnswered ? null : () => _checkAnswer(option),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: isAnswered
-                        ? (option == currentQuestion.correctAnswer
-                        ? Colors.green
-                        : Colors.red)
-                        : Colors.blue,
+                        ? (option == currentQuestion.correctAnswer ? Colors.green : Colors.red)
+                        : Colors.blueAccent,
+                    padding: EdgeInsets.symmetric(vertical: 15),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                   child: Text(
                     option,
-                    style: TextStyle(fontSize: 18),
+                    style: TextStyle(fontSize: 18, color: Colors.white),
                   ),
                 ),
               );
             }).toList(),
             SizedBox(height: 20),
             if (isAnswered)
-              Text(
-                selectedAnswer == currentQuestion.correctAnswer
-                    ? 'Correct!'
-                    : 'Wrong! The correct answer is: ${currentQuestion.correctAnswer}',
-                style: TextStyle(
-                  fontSize: 20,
-                  color: selectedAnswer == currentQuestion.correctAnswer
-                      ? Colors.green
-                      : Colors.red,
-                ),
-              ),
-            if (isAnswered)
               ElevatedButton(
                 onPressed: _nextQuestion,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blueAccent,
+                  padding: EdgeInsets.symmetric(vertical: 12),
+                ),
                 child: Text(
-                  currentQuestionIndex < widget.questions.length - 1
-                      ? 'Next Question'
-                      : 'Finish Quiz',
+                  currentQuestionIndex < widget.questions.length - 1 ? 'Next Question' : 'Finish Quiz',
+                  style: TextStyle(fontSize: 18, color: Colors.white),
+                ),
+              ),
+            if (currentAnswerResult != null)
+              Container(
+                margin: EdgeInsets.only(top: 20),
+                padding: EdgeInsets.all(15),
+                decoration: BoxDecoration(
+                  color: currentAnswerResult!.startsWith('Correct')
+                      ? Colors.green.withOpacity(0.8)
+                      : Colors.red.withOpacity(0.8),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  currentAnswerResult!,
+                  style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
                 ),
               ),
           ],
@@ -368,6 +765,7 @@ final List<Question> mathQuestions = [
   ),
 ];
 
+
 final List<Question> historyQuestions = [
   Question(
     questionText: 'Who was the first President of the United States?',
@@ -481,6 +879,7 @@ final List<Question> historyQuestions = [
   ),
 ];
 
+
 final List<Question> englishQuestions = [
   Question(
     questionText: 'What is the past tense of "go"?',
@@ -492,8 +891,108 @@ final List<Question> englishQuestions = [
     options: ['Sad', 'Joyful', 'Angry', 'Tired'],
     correctAnswer: 'Joyful',
   ),
-  // Add 18 more English questions...
+  Question(
+    questionText: 'What is the past tense of "run"?',
+    options: ['Ran', 'Runned', 'Running', 'Runs'],
+    correctAnswer: 'Ran',
+  ),
+  Question(
+    questionText: 'What is a synonym for "happy"?',
+    options: ['Sad', 'Joyful', 'Angry', 'Tired'],
+    correctAnswer: 'Joyful',
+  ),
+  Question(
+    questionText: 'What is the plural of "child"?',
+    options: ['Childs', 'Children', 'Childes', 'Childies'],
+    correctAnswer: 'Children',
+  ),
+  Question(
+    questionText: 'What is the opposite of "begin"?',
+    options: ['Start', 'End', 'Continue', 'Pause'],
+    correctAnswer: 'End',
+  ),
+  Question(
+    questionText: 'What is the literary term for a play on words?',
+    options: ['Metaphor', 'Simile', 'Pun', 'Alliteration'],
+    correctAnswer: 'Pun',
+  ),
+  Question(
+    questionText: 'Who wrote "Romeo and Juliet"?',
+    options: ['Charles Dickens', 'William Shakespeare', 'Mark Twain', 'Jane Austen'],
+    correctAnswer: 'William Shakespeare',
+  ),
+  Question(
+    questionText: 'What is the main character in a story called?',
+    options: ['Antagonist', 'Protagonist', 'Narrator', 'Sidekick'],
+    correctAnswer: 'Protagonist',
+  ),
+  Question(
+    questionText: 'What is the term for a word that imitates a sound?',
+    options: ['Onomatopoeia', 'Alliteration', 'Hyperbole', 'Metaphor'],
+    correctAnswer: 'Onomatopoeia',
+  ),
+  Question(
+    questionText: 'What is the comparative form of "good"?',
+    options: ['Gooder', 'Better', 'Best', 'Well'],
+    correctAnswer: 'Better',
+  ),
+  Question(
+    questionText: 'What is the term for a story with a moral lesson?',
+    options: ['Fable', 'Myth', 'Legend', 'Fairy Tale'],
+    correctAnswer: 'Fable',
+  ),
+  Question(
+    questionText: 'What is the past tense of "go"?',
+    options: ['Went', 'Goed', 'Gone', 'Going'],
+    correctAnswer: 'Went',
+  ),
+  Question(
+    questionText: 'What is the term for a word that means the opposite of another word?',
+    options: ['Synonym', 'Antonym', 'Homonym', 'Acronym'],
+    correctAnswer: 'Antonym',
+  ),
+  Question(
+    questionText: 'What is the plural of "mouse"?',
+    options: ['Mouses', 'Mice', 'Mices', 'Mousees'],
+    correctAnswer: 'Mice',
+  ),
+  Question(
+    questionText: 'What is the term for a word that describes a noun?',
+    options: ['Verb', 'Adjective', 'Adverb', 'Preposition'],
+    correctAnswer: 'Adjective',
+  ),
+  Question(
+    questionText: 'What is the term for a word that replaces a noun?',
+    options: ['Adjective', 'Pronoun', 'Verb', 'Adverb'],
+    correctAnswer: 'Pronoun',
+  ),
+  Question(
+    questionText: 'What is the term for a comparison using "like" or "as"?',
+    options: ['Metaphor', 'Simile', 'Hyperbole', 'Personification'],
+    correctAnswer: 'Simile',
+  ),
+  Question(
+    questionText: 'What is the term for a story about a person\'s life written by someone else?',
+    options: ['Autobiography', 'Biography', 'Memoir', 'Diary'],
+    correctAnswer: 'Biography',
+  ),
+  Question(
+    questionText: 'What is the term for a word that sounds the same but has a different meaning?',
+    options: ['Synonym', 'Antonym', 'Homophone', 'Homonym'],
+    correctAnswer: 'Homophone',
+  ),
+  Question(
+    questionText: 'What is the term for a word that describes an action?',
+    options: ['Noun', 'Verb', 'Adjective', 'Adverb'],
+    correctAnswer: 'Verb',
+  ),
+  Question(
+    questionText: 'What is the term for a word that modifies a verb?',
+    options: ['Adjective', 'Adverb', 'Preposition', 'Conjunction'],
+    correctAnswer: 'Adverb',
+  ),
 ];
+
 
 final List<Question> scienceQuestions = [
   Question(
