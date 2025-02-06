@@ -28,33 +28,49 @@ class _SignInPageState extends State<SignInPage> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _dbHelper = DatabaseHelper();
+  bool _showPassword = false;
 
   Future<void> _signIn() async {
-    final username = _usernameController.text.trim();
-    final password = _passwordController.text.trim();
+    final username = _usernameController.text.trim(); // Trim spaces
+    final password = _passwordController.text.trim(); // Trim spaces
 
+    // Validate input fields
     if (username.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please enter a username and password')),
+        SnackBar(content: Text('Please enter both username and password.')),
       );
       return;
     }
 
-    final isAuthenticated = await _dbHelper.authenticateUser(username, password);
-    if (isAuthenticated) {
+    try {
+      // Authenticate the user (Check database for username and password)
+      final isAuthenticated = await _dbHelper.authenticateUser(username, password);
+
+      if (isAuthenticated) {
+        // If authentication succeeds, navigate to the next screen
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Sign-in successful!')),
+        );
+
+        // Navigate to the home or dashboard screen
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomeScreen()),
+        );
+      } else {
+        // If authentication fails, show an error
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Invalid username or password.')),
+        );
+      }
+    } catch (e) {
+      print('Error during sign-in: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Sign in successful!')),
-      );
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => HomeScreen()),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Invalid username or password')),
+        SnackBar(content: Text('An error occurred. Please try again.')),
       );
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -103,11 +119,26 @@ class _SignInPageState extends State<SignInPage> {
                           SizedBox(height: 15),
                           TextField(
                             controller: _passwordController,
-                            obscureText: true,
+                            obscureText: !_showPassword,
                             decoration: InputDecoration(
                               labelText: 'Password',
                               border: OutlineInputBorder(),
                               prefixIcon: Icon(Icons.lock),
+                              suffixIcon: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Checkbox(
+                                    value: _showPassword,
+                                    onChanged: (bool? value) {
+                                      setState(() {
+                                        _showPassword = value ?? false;
+                                      });
+                                    },
+                                  ),
+                                  Text('Show Password', style: TextStyle(fontSize: 12)),
+                                  SizedBox(width: 8),
+                                ],
+                              ),
                             ),
                           ),
                           SizedBox(height: 20),
@@ -155,41 +186,60 @@ class _SignInPageState extends State<SignInPage> {
   }
 }
 
-class SignUpPage extends StatefulWidget {
-  @override
-  _SignUpPageState createState() => _SignUpPageState();
-}
-
 class _SignUpPageState extends State<SignUpPage> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _dbHelper = DatabaseHelper();
+  bool _showPassword = false;
 
   Future<void> _signUp() async {
     final username = _usernameController.text.trim();
     final password = _passwordController.text.trim();
 
+    // Validate input fields
     if (username.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please enter a username and password')),
+        SnackBar(content: Text('Please fill in all fields.')),
       );
       return;
     }
 
-    final usernameExists = await _dbHelper.usernameExists(username);
-    if (usernameExists) {
+    try {
+      // Check if the username already exists
+      final userExists = await _dbHelper.checkIfUserExists(username);
+
+      if (userExists) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content:
+              Text('Username already exists. Please choose a different one.')),
+        );
+        return;
+      }
+
+      // Add the user to the database
+      final success = await _dbHelper.addUser(username, password);
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Account created successfully!')),
+        );
+
+        // DEBUG: Print all users in the database
+        await _dbHelper.printAllUsers();
+
+        // Navigate back to the Sign-In page (or wherever you want)
+        Navigator.pop(context);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Something went wrong. Please try again.')),
+        );
+      }
+    } catch (e) {
+      print('Error during sign-up: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Username already exists')),
+        SnackBar(content: Text('An error occurred. Please try again.')),
       );
-      return;
     }
-
-    await _dbHelper.insertUser(username, password);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Account created successfully!')),
-    );
-
-    Navigator.pop(context); // Go back to the sign-in page
   }
 
   @override
@@ -239,11 +289,26 @@ class _SignUpPageState extends State<SignUpPage> {
                           SizedBox(height: 15),
                           TextField(
                             controller: _passwordController,
-                            obscureText: true,
+                            obscureText: !_showPassword,
                             decoration: InputDecoration(
                               labelText: 'Password',
                               border: OutlineInputBorder(),
                               prefixIcon: Icon(Icons.lock),
+                              suffixIcon: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Checkbox(
+                                    value: _showPassword,
+                                    onChanged: (bool? value) {
+                                      setState(() {
+                                        _showPassword = value ?? false;
+                                      });
+                                    },
+                                  ),
+                                  Text('Show Password', style: TextStyle(fontSize: 12)),
+                                  SizedBox(width: 8),
+                                ],
+                              ),
                             ),
                           ),
                           SizedBox(height: 20),
@@ -274,6 +339,17 @@ class _SignUpPageState extends State<SignUpPage> {
     );
   }
 }
+
+class SignUpPage extends StatefulWidget {
+  @override
+  _SignUpPageState createState() => _SignUpPageState();
+}
+
+
+
+
+
+
 
 class HomeScreen extends StatelessWidget {
   final Map<String, List<Question>> subjectQuestions = {
