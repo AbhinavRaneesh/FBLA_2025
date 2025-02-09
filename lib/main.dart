@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'database_helper.dart';
-import 'questions.dart'; // Import the QuestionsRepository class
+import 'questions.dart';
+import 'package:audioplayers/audioplayers.dart'; // For sound effects
+import 'dart:math'; // For random star positions
 
 void main() {
   runApp(StudentLearningApp());
@@ -13,9 +15,130 @@ class StudentLearningApp extends StatelessWidget {
       title: 'Student Learning App',
       theme: ThemeData(
         primarySwatch: Colors.blue,
-        scaffoldBackgroundColor: Colors.grey[200],
+        scaffoldBackgroundColor: Color(0xFF0A0E21), // Dark space background
+        textTheme: TextTheme(
+          displayLarge: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white),
+          bodyLarge: TextStyle(fontSize: 18, color: Colors.white),
+        ),
+        appBarTheme: AppBarTheme(
+          backgroundColor: Color(0xFF1D1E33), // Dark app bar
+          elevation: 0,
+          titleTextStyle: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+        ),
       ),
       home: SignInPage(),
+    );
+  }
+}
+
+class SpaceBackground extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF0A0E21), Color(0xFF1D1E33)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Stack(
+        children: [
+          // Twinkling stars
+          for (int i = 0; i < 50; i++)
+            Positioned(
+              left: Random().nextDouble() * MediaQuery.of(context).size.width,
+              top: Random().nextDouble() * MediaQuery.of(context).size.height,
+              child: AnimatedContainer(
+                duration: Duration(seconds: Random().nextInt(3) + 1),
+                width: 2,
+                height: 2,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                ),
+                onEnd: () {
+                  // Restart animation
+                },
+              ),
+            ),
+          // Planets and astronauts
+          Positioned(
+            left: 20,
+            top: 100,
+            child: Image.asset(
+              'assets/images/planet.png', // Add a planet image to your assets
+              width: 100,
+              height: 100,
+            ),
+          ),
+          Positioned(
+            right: 20,
+            bottom: 100,
+            child: Image.asset(
+              'assets/astronaut.png', // Add an astronaut image to your assets
+              width: 80,
+              height: 80,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class GameButton extends StatelessWidget {
+  final String text;
+  final VoidCallback onPressed;
+
+  GameButton({required this.text, required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 250, // Fixed width for all buttons
+      child: ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.transparent,
+          padding: EdgeInsets.symmetric(vertical: 15, horizontal: 30),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+            side: BorderSide(color: Colors.blueAccent, width: 2),
+          ),
+        ),
+        child: Text(
+          text,
+          style: TextStyle(fontSize: 18, color: Colors.white),
+        ),
+      ),
+    );
+  }
+}
+
+class AnimatedProgressBar extends StatelessWidget {
+  final double value;
+
+  AnimatedProgressBar({required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 10,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(5),
+        color: Colors.grey[300],
+      ),
+      child: AnimatedContainer(
+        duration: Duration(milliseconds: 500),
+        width: MediaQuery.of(context).size.width * value,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(5),
+          gradient: LinearGradient(
+            colors: [Colors.blueAccent, Colors.purpleAccent],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -52,7 +175,9 @@ class _SignInPageState extends State<SignInPage> {
 
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => HomeScreen(username: username)),
+          MaterialPageRoute(
+            builder: (context) => HomeScreen(username: username),
+          ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -70,112 +195,102 @@ class _SignInPageState extends State<SignInPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.blueAccent, Colors.purpleAccent],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        child: Center(
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Welcome Back!',
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  SizedBox(height: 30),
-                  Card(
-                    elevation: 5,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(20.0),
-                      child: Column(
-                        children: [
-                          TextField(
-                            controller: _usernameController,
-                            decoration: InputDecoration(
-                              labelText: 'Username',
-                              border: OutlineInputBorder(),
-                              prefixIcon: Icon(Icons.person),
-                            ),
-                          ),
-                          SizedBox(height: 15),
-                          TextField(
-                            controller: _passwordController,
-                            obscureText: !_showPassword,
-                            decoration: InputDecoration(
-                              labelText: 'Password',
-                              border: OutlineInputBorder(),
-                              prefixIcon: Icon(Icons.lock),
-                              suffixIcon: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Checkbox(
-                                    value: _showPassword,
-                                    onChanged: (bool? value) {
-                                      setState(() {
-                                        _showPassword = value ?? false;
-                                      });
-                                    },
-                                  ),
-                                  Text('Show Password', style: TextStyle(fontSize: 12)),
-                                  SizedBox(width: 8),
-                                ],
-                              ),
-                            ),
-                          ),
-                          SizedBox(height: 20),
-                          ElevatedButton(
-                            onPressed: _signIn,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blueAccent,
-                              padding: EdgeInsets.symmetric(vertical: 15, horizontal: 30),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                            ),
-                            child: Text(
-                              'Sign In',
-                              style: TextStyle(fontSize: 18, color: Colors.white),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 10),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => SignUpPage()),
-                      );
-                    },
-                    child: Text(
-                      'Don\'t have an account? Sign up',
+      body: Stack(
+        children: [
+          SpaceBackground(),
+          Center(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Welcome Back!',
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),
                     ),
-                  ),
-                ],
+                    SizedBox(height: 30),
+                    Card(
+                      elevation: 5,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(20.0),
+                        child: Column(
+                          children: [
+                            TextField(
+                              controller: _usernameController,
+                              decoration: InputDecoration(
+                                labelText: 'Username',
+                                labelStyle: TextStyle(color: Colors.black), // Black text
+                                border: OutlineInputBorder(),
+                                prefixIcon: Icon(Icons.person, color: Colors.black), // Black icon
+                              ),
+                              style: TextStyle(color: Colors.black), // Black text
+                            ),
+                            SizedBox(height: 15),
+                            TextField(
+                              controller: _passwordController,
+                              obscureText: !_showPassword,
+                              decoration: InputDecoration(
+                                labelText: 'Password',
+                                labelStyle: TextStyle(color: Colors.black), // Black text
+                                border: OutlineInputBorder(),
+                                prefixIcon: Icon(Icons.lock, color: Colors.black), // Black icon
+                                suffixIcon: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Checkbox(
+                                      value: _showPassword,
+                                      onChanged: (bool? value) {
+                                        setState(() {
+                                          _showPassword = value ?? false;
+                                        });
+                                      },
+                                    ),
+                                    Text('Show Password', style: TextStyle(fontSize: 12, color: Colors.black)), // Black text
+                                    SizedBox(width: 8),
+                                  ],
+                                ),
+                              ),
+                              style: TextStyle(color: Colors.black), // Black text
+                            ),
+                            SizedBox(height: 20),
+                            GameButton(
+                              text: 'Sign In',
+                              onPressed: _signIn,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 10),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => SignUpPage()),
+                        );
+                      },
+                      child: Text(
+                        'Don\'t have an account? Sign up',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -219,7 +334,7 @@ class _SignUpPageState extends State<SignUpPage> {
           SnackBar(content: Text('Account created successfully!')),
         );
 
-        await _dbHelper.printAllUsers();
+        // Navigate back to the Sign-In page
         Navigator.pop(context);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -237,96 +352,96 @@ class _SignUpPageState extends State<SignUpPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.purpleAccent, Colors.blueAccent],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+      appBar: AppBar(
+        title: Text('Sign Up'),
+        backgroundColor: Color(0xFF1D1E33),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {
+            Navigator.pop(context); // Go back to the Sign-In page
+          },
         ),
-        child: Center(
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Create an Account',
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  SizedBox(height: 30),
-                  Card(
-                    elevation: 5,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(20.0),
-                      child: Column(
-                        children: [
-                          TextField(
-                            controller: _usernameController,
-                            decoration: InputDecoration(
-                              labelText: 'Username',
-                              border: OutlineInputBorder(),
-                              prefixIcon: Icon(Icons.person),
-                            ),
-                          ),
-                          SizedBox(height: 15),
-                          TextField(
-                            controller: _passwordController,
-                            obscureText: !_showPassword,
-                            decoration: InputDecoration(
-                              labelText: 'Password',
-                              border: OutlineInputBorder(),
-                              prefixIcon: Icon(Icons.lock),
-                              suffixIcon: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Checkbox(
-                                    value: _showPassword,
-                                    onChanged: (bool? value) {
-                                      setState(() {
-                                        _showPassword = value ?? false;
-                                      });
-                                    },
-                                  ),
-                                  Text('Show Password', style: TextStyle(fontSize: 12)),
-                                  SizedBox(width: 8),
-                                ],
-                              ),
-                            ),
-                          ),
-                          SizedBox(height: 20),
-                          ElevatedButton(
-                            onPressed: _signUp,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.purpleAccent,
-                              padding: EdgeInsets.symmetric(vertical: 15, horizontal: 30),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                            ),
-                            child: Text(
-                              'Sign Up',
-                              style: TextStyle(fontSize: 18, color: Colors.white),
-                            ),
-                          ),
-                        ],
+      ),
+      body: Stack(
+        children: [
+          SpaceBackground(),
+          Center(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Create an Account',
+                      style: TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
                       ),
                     ),
-                  ),
-                ],
+                    SizedBox(height: 30),
+                    Card(
+                      elevation: 5,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(20.0),
+                        child: Column(
+                          children: [
+                            TextField(
+                              controller: _usernameController,
+                              decoration: InputDecoration(
+                                labelText: 'Username',
+                                labelStyle: TextStyle(color: Colors.black), // Black text
+                                border: OutlineInputBorder(),
+                                prefixIcon: Icon(Icons.person, color: Colors.black), // Black icon
+                              ),
+                              style: TextStyle(color: Colors.black), // Black text
+                            ),
+                            SizedBox(height: 15),
+                            TextField(
+                              controller: _passwordController,
+                              obscureText: !_showPassword,
+                              decoration: InputDecoration(
+                                labelText: 'Password',
+                                labelStyle: TextStyle(color: Colors.black), // Black text
+                                border: OutlineInputBorder(),
+                                prefixIcon: Icon(Icons.lock, color: Colors.black), // Black icon
+                                suffixIcon: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Checkbox(
+                                      value: _showPassword,
+                                      onChanged: (bool? value) {
+                                        setState(() {
+                                          _showPassword = value ?? false;
+                                        });
+                                      },
+                                    ),
+                                    Text('Show Password', style: TextStyle(fontSize: 12, color: Colors.black)), // Black text
+                                    SizedBox(width: 8),
+                                  ],
+                                ),
+                              ),
+                              style: TextStyle(color: Colors.black), // Black text
+                            ),
+                            SizedBox(height: 20),
+                            GameButton(
+                              text: 'Sign Up',
+                              onPressed: _signUp,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -349,8 +464,28 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('Learn Subjects'),
-        backgroundColor: Colors.blueAccent,
+        backgroundColor: Color(0xFF1D1E33),
         actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: Center(
+              child: FutureBuilder<int>(
+                future: DatabaseHelper().getUserPoints(username),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return CircularProgressIndicator();
+                  } else if (snapshot.hasError) {
+                    return Text('Error: ${snapshot.error}');
+                  } else {
+                    return Text(
+                      'Points: ${snapshot.data ?? 0}',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                    );
+                  }
+                },
+              ),
+            ),
+          ),
           IconButton(
             icon: Icon(Icons.logout),
             onPressed: () {
@@ -362,27 +497,35 @@ class HomeScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: subjectQuestions.keys.map((subject) {
-            return SubjectButton(
-              subjectName: subject,
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => QuestionSelectionScreen(
-                      subject: subject,
-                      questions: subjectQuestions[subject]!,
-                      username: username,
-                    ),
+      body: Stack(
+        children: [
+          SpaceBackground(),
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: subjectQuestions.keys.map((subject) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 10.0),
+                  child: GameButton(
+                    text: subject,
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => QuestionSelectionScreen(
+                            subject: subject,
+                            questions: subjectQuestions[subject]!,
+                            username: username,
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 );
-              },
-            );
-          }).toList(),
-        ),
+              }).toList(),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -407,63 +550,58 @@ class _QuestionSelectionScreenState extends State<QuestionSelectionScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Select Number of Questions'),
-        backgroundColor: Colors.blueAccent,
+        backgroundColor: Color(0xFF1D1E33),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'How many questions do you want to answer?',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: 20),
-            Text(
-              '$_numberOfQuestions',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.blueAccent),
-            ),
-            Slider(
-              value: _numberOfQuestions.toDouble(),
-              min: 1,
-              max: widget.questions.length.toDouble(),
-              divisions: widget.questions.length - 1,
-              label: _numberOfQuestions.toString(),
-              onChanged: (value) {
-                setState(() {
-                  _numberOfQuestions = value.toInt();
-                });
-              },
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => QuizScreen(
-                      subject: widget.subject,
-                      questions: widget.questions.take(_numberOfQuestions).toList(),
-                      username: widget.username,
-                    ),
-                  ),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blueAccent,
-                padding: EdgeInsets.symmetric(vertical: 15, horizontal: 30),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+      body: Stack(
+        children: [
+          SpaceBackground(),
+          Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'How many questions do you want to answer?',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                  textAlign: TextAlign.center,
                 ),
-              ),
-              child: Text(
-                'Start Quiz',
-                style: TextStyle(fontSize: 18, color: Colors.white),
-              ),
+                SizedBox(height: 20),
+                Text(
+                  '$_numberOfQuestions',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.blueAccent),
+                ),
+                Slider(
+                  value: _numberOfQuestions.toDouble(),
+                  min: 1,
+                  max: widget.questions.length.toDouble(),
+                  divisions: widget.questions.length - 1,
+                  label: _numberOfQuestions.toString(),
+                  onChanged: (value) {
+                    setState(() {
+                      _numberOfQuestions = value.toInt();
+                    });
+                  },
+                ),
+                SizedBox(height: 20),
+                GameButton(
+                  text: 'Start Quiz',
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => QuizScreen(
+                          subject: widget.subject,
+                          questions: widget.questions.take(_numberOfQuestions).toList(),
+                          username: widget.username,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -485,7 +623,30 @@ class _QuizScreenState extends State<QuizScreen> {
   String? selectedAnswer;
   bool isAnswered = false;
   String? currentAnswerResult;
-  int _userPoints = 0;
+  int points = 0;
+  final DatabaseHelper _dbHelper = DatabaseHelper();
+  final AudioPlayer _audioPlayer = AudioPlayer();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserPoints();
+  }
+
+  Future<void> _loadUserPoints() async {
+    final userPoints = await _dbHelper.getUserPoints(widget.username);
+    setState(() {
+      points = userPoints;
+    });
+  }
+
+  Future<void> _updateUserPoints() async {
+    await _dbHelper.updateUserPoints(widget.username, points);
+  }
+
+  Future<void> playSound(String sound) async {
+    await _audioPlayer.play(AssetSource(sound));
+  }
 
   void _checkAnswer(String answer) {
     setState(() {
@@ -493,27 +654,28 @@ class _QuizScreenState extends State<QuizScreen> {
       isAnswered = true;
       if (answer == widget.questions[currentQuestionIndex].correctAnswer) {
         currentAnswerResult = 'Correct!';
-        _userPoints += 10; // Award 10 points for a correct answer
+        points += 10;
+        _updateUserPoints();
+        playSound('correct_answer.mp3'); // Play sound for correct answer
       } else {
         currentAnswerResult =
         'Wrong! The correct answer is: ${widget.questions[currentQuestionIndex].correctAnswer}';
+        playSound('wrong_answer.mp3'); // Play sound for wrong answer
       }
     });
   }
 
-  void _nextQuestion() async {
-    if (currentQuestionIndex < widget.questions.length - 1) {
-      setState(() {
+  void _nextQuestion() {
+    setState(() {
+      if (currentQuestionIndex < widget.questions.length - 1) {
         currentQuestionIndex++;
         selectedAnswer = null;
         isAnswered = false;
         currentAnswerResult = null;
-      });
-    } else {
-      final dbHelper = DatabaseHelper();
-      await dbHelper.updateUserPoints(widget.username, _userPoints);
-      _showFinalScore();
-    }
+      } else {
+        _showFinalScore();
+      }
+    });
   }
 
   void _showFinalScore() {
@@ -522,7 +684,7 @@ class _QuizScreenState extends State<QuizScreen> {
       builder: (context) {
         return AlertDialog(
           title: Text('Quiz Finished!', style: TextStyle(fontWeight: FontWeight.bold)),
-          content: Text('Your score: ${currentQuestionIndex + 1}/${widget.questions.length}\nPoints earned: $_userPoints',
+          content: Text('Your score: ${currentQuestionIndex + 1}/${widget.questions.length}\nPoints: $points',
               style: TextStyle(fontSize: 18)),
           actions: [
             TextButton(
@@ -545,113 +707,84 @@ class _QuizScreenState extends State<QuizScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.subject),
-        backgroundColor: Colors.blueAccent,
+        backgroundColor: Color(0xFF1D1E33),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: Center(
+              child: Text(
+                'Points: $points',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+              ),
+            ),
+          ),
+        ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            LinearProgressIndicator(
-              value: (currentQuestionIndex + 1) / widget.questions.length,
-              backgroundColor: Colors.grey[300],
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.blueAccent),
-            ),
-            SizedBox(height: 20),
-            Text(
-              'Question ${currentQuestionIndex + 1}/${widget.questions.length}:',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.blueAccent),
-            ),
-            SizedBox(height: 10),
-            Text(
-              currentQuestion.questionText,
-              style: TextStyle(fontSize: 20),
-            ),
-            SizedBox(height: 20),
-            ...currentQuestion.options.map((option) {
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6.0),
-                child: ElevatedButton(
-                  onPressed: isAnswered ? null : () => _checkAnswer(option),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: isAnswered
-                        ? (option == currentQuestion.correctAnswer ? Colors.green : Colors.red)
-                        : Colors.blueAccent,
-                    padding: EdgeInsets.symmetric(vertical: 15),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+      body: Stack(
+        children: [
+          SpaceBackground(),
+          Padding(
+            padding: const EdgeInsets.only(top: 50.0), // Move content down
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                AnimatedProgressBar(
+                  value: (currentQuestionIndex + 1) / widget.questions.length,
+                ),
+                SizedBox(height: 20),
+                Text(
+                  'Question ${currentQuestionIndex + 1}/${widget.questions.length}:',
+                  style: Theme.of(context).textTheme.displayLarge,
+                ),
+                SizedBox(height: 10),
+                Text(
+                  currentQuestion.questionText,
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+                SizedBox(height: 20),
+                ...currentQuestion.options.map((option) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 6.0),
+                    child: GameButton(
+                      text: option,
+                      onPressed: () {
+                        _checkAnswer(option);
+                      },
+                    ),
+                  );
+                }).toList(),
+                if (isAnswered)
+                  ElevatedButton(
+                    onPressed: _nextQuestion,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green, // Changed color to green
+                      padding: EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    child: Text(
+                      currentQuestionIndex < widget.questions.length - 1 ? 'Next Question' : 'Finish Quiz',
+                      style: TextStyle(fontSize: 18, color: Colors.white),
                     ),
                   ),
-                  child: Text(
-                    option,
-                    style: TextStyle(fontSize: 18, color: Colors.white),
+                if (isAnswered)
+                  Container(
+                    margin: EdgeInsets.only(top: 20),
+                    padding: EdgeInsets.all(15),
+                    decoration: BoxDecoration(
+                      color: currentAnswerResult!.startsWith('Correct')
+                          ? Colors.green.withOpacity(0.8)
+                          : Colors.red.withOpacity(0.8),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      currentAnswerResult!,
+                      style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold),
+                      textAlign: TextAlign.center,
+                    ),
                   ),
-                ),
-              );
-            }).toList(),
-            SizedBox(height: 20),
-            if (isAnswered)
-              ElevatedButton(
-                onPressed: _nextQuestion,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blueAccent,
-                  padding: EdgeInsets.symmetric(vertical: 12),
-                ),
-                child: Text(
-                  currentQuestionIndex < widget.questions.length - 1 ? 'Next Question' : 'Finish Quiz',
-                  style: TextStyle(fontSize: 18, color: Colors.white),
-                ),
-              ),
-            if (currentAnswerResult != null)
-              Container(
-                margin: EdgeInsets.only(top: 20),
-                padding: EdgeInsets.all(15),
-                decoration: BoxDecoration(
-                  color: currentAnswerResult!.startsWith('Correct')
-                      ? Colors.green.withOpacity(0.8)
-                      : Colors.red.withOpacity(0.8),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  currentAnswerResult!,
-                  style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class SubjectButton extends StatelessWidget {
-  final String subjectName;
-  final VoidCallback onPressed;
-
-  SubjectButton({required this.subjectName, required this.onPressed});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
-      child: SizedBox(
-        width: 250,
-        child: ElevatedButton(
-          onPressed: onPressed,
-          child: Text(
-            subjectName,
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600, color: Colors.white),
-          ),
-          style: ElevatedButton.styleFrom(
-            padding: EdgeInsets.symmetric(vertical: 18),
-            backgroundColor: Colors.blueAccent,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(15),
+              ],
             ),
-            elevation: 5,
           ),
-        ),
+        ],
       ),
     );
   }
