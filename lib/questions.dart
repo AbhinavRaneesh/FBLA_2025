@@ -343,116 +343,116 @@ class QuestionsRepository {
 
 
   static final List<Question> scienceQuestions = [
-  Question(
-  questionText: 'What is the chemical symbol for water?',
-  options: ['H2O', 'CO2', 'O2', 'NaCl'],
-  correctAnswer: 'H2O',
-  ),
-  Question(
-  questionText: 'Which planet is known as the Red Planet?',
-  options: ['Earth', 'Mars', 'Jupiter', 'Venus'],
-  correctAnswer: 'Mars',
-  ),
-  Question(
-  questionText: 'What is the chemical symbol for water?',
-  options: ['H2O', 'CO2', 'O2', 'NaCl'],
-  correctAnswer: 'H2O',
-  ),
-  Question(
-  questionText: 'What is the closest planet to the Sun?',
-  options: ['Earth', 'Mars', 'Venus', 'Mercury'],
-  correctAnswer: 'Mercury',
-  ),
-  Question(
-  questionText: 'What is the process by which plants make food?',
-  options: ['Respiration', 'Photosynthesis', 'Digestion', 'Fermentation'],
-  correctAnswer: 'Photosynthesis',
-  ),
-  Question(
-  questionText: 'What is the largest planet in the solar system?',
-  options: ['Earth', 'Jupiter', 'Saturn', 'Neptune'],
-  correctAnswer: 'Jupiter',
-  ),
-  Question(
-  questionText: 'What is the hardest natural substance on Earth?',
-  options: ['Gold', 'Diamond', 'Iron', 'Quartz'],
-  correctAnswer: 'Diamond',
-  ),
-  Question(
-  questionText: 'What is the chemical symbol for gold?',
-  options: ['Au', 'Ag', 'Fe', 'Pb'],
-  correctAnswer: 'Au',
-  ),
-  Question(
-  questionText: 'What is the smallest unit of life?',
-  options: ['Cell', 'Atom', 'Molecule', 'Organ'],
-  correctAnswer: 'Cell',
-  ),
-  Question(
-  questionText: 'What is the force that pulls objects toward the Earth?',
-  options: ['Magnetism', 'Gravity', 'Friction', 'Inertia'],
-  correctAnswer: 'Gravity',
-  ),
-  Question(
-  questionText: 'What is the chemical symbol for oxygen?',
-  options: ['O', 'O2', 'H2O', 'CO2'],
-  correctAnswer: 'O2',
-  ),
-  Question(
-  questionText: 'What is the process by which liquid turns into gas?',
-  options: ['Condensation', 'Evaporation', 'Freezing', 'Melting'],
-  correctAnswer: 'Evaporation',
-  ),
-  Question(
-  questionText: 'What is the chemical symbol for carbon dioxide?',
-  options: ['CO', 'CO2', 'C2O', 'O2C'],
-  correctAnswer: 'CO2',
-  ),
-  Question(
-  questionText: 'What is the study of living organisms called?',
-  options: ['Physics', 'Chemistry', 'Biology', 'Geology'],
-  correctAnswer: 'Biology',
-  ),
-  Question(
-  questionText: 'What is the chemical symbol for sodium?',
-  options: ['Na', 'So', 'Sd', 'Ni'],
-  correctAnswer: 'Na',
-  ),
-  Question(
-  questionText: 'What is the process by which plants lose water through their leaves?',
-  options: ['Transpiration', 'Photosynthesis', 'Respiration', 'Digestion'],
-  correctAnswer: 'Transpiration',
-  ),
-  Question(
-  questionText: 'What is the chemical symbol for iron?',
-  options: ['Fe', 'Ir', 'In', 'Io'],
-  correctAnswer: 'Fe',
-  ),
-  Question(
-  questionText: 'What is the study of the Earth\'s physical structure called?',
-  options: ['Biology', 'Chemistry', 'Geology', 'Physics'],
-  correctAnswer: 'Geology',
-  ),
-  Question(
-  questionText: 'What is the chemical symbol for silver?',
-  options: ['Si', 'Ag', 'Au', 'Sl'],
-  correctAnswer: 'Ag',
-  ),
-  Question(
-  questionText: 'What is the process by which gas turns into liquid?',
-  options: ['Evaporation', 'Condensation', 'Freezing', 'Melting'],
-  correctAnswer: 'Condensation',
-  ),
-  Question(
-  questionText: 'What is the chemical symbol for lead?',
-  options: ['Le', 'Ld', 'Pb', 'Pl'],
-  correctAnswer: 'Pb',
-  ),
-  Question(
-  questionText: 'What is the study of the universe called?',
-  options: ['Astronomy', 'Biology', 'Geology', 'Chemistry'],
-  correctAnswer: 'Astronomy',
-  ),
+    Question(
+      questionText: 'What is the chemical symbol for water?',
+      options: ['H2O', 'CO2', 'O2', 'NaCl'],
+      correctAnswer: 'H2O',
+    ),
+    Question(
+      questionText: 'Which planet is known as the Red Planet?',
+      options: ['Earth', 'Mars', 'Jupiter', 'Venus'],
+      correctAnswer: 'Mars',
+    ),
+    Question(
+      questionText: 'What is the chemical symbol for water?',
+      options: ['H2O', 'CO2', 'O2', 'NaCl'],
+      correctAnswer: 'H2O',
+    ),
+    Question(
+      questionText: 'What is the closest planet to the Sun?',
+      options: ['Earth', 'Mars', 'Venus', 'Mercury'],
+      correctAnswer: 'Mercury',
+    ),
+    Question(
+      questionText: 'What is the process by which plants make food?',
+      options: ['Respiration', 'Photosynthesis', 'Digestion', 'Fermentation'],
+      correctAnswer: 'Photosynthesis',
+    ),
+    Question(
+      questionText: 'What is the largest planet in the solar system?',
+      options: ['Earth', 'Jupiter', 'Saturn', 'Neptune'],
+      correctAnswer: 'Jupiter',
+    ),
+    Question(
+      questionText: 'What is the hardest natural substance on Earth?',
+      options: ['Gold', 'Diamond', 'Iron', 'Quartz'],
+      correctAnswer: 'Diamond',
+    ),
+    Question(
+      questionText: 'What is the chemical symbol for gold?',
+      options: ['Au', 'Ag', 'Fe', 'Pb'],
+      correctAnswer: 'Au',
+    ),
+    Question(
+      questionText: 'What is the smallest unit of life?',
+      options: ['Cell', 'Atom', 'Molecule', 'Organ'],
+      correctAnswer: 'Cell',
+    ),
+    Question(
+      questionText: 'What is the force that pulls objects toward the Earth?',
+      options: ['Magnetism', 'Gravity', 'Friction', 'Inertia'],
+      correctAnswer: 'Gravity',
+    ),
+    Question(
+      questionText: 'What is the chemical symbol for oxygen?',
+      options: ['O', 'O2', 'H2O', 'CO2'],
+      correctAnswer: 'O2',
+    ),
+    Question(
+      questionText: 'What is the process by which liquid turns into gas?',
+      options: ['Condensation', 'Evaporation', 'Freezing', 'Melting'],
+      correctAnswer: 'Evaporation',
+    ),
+    Question(
+      questionText: 'What is the chemical symbol for carbon dioxide?',
+      options: ['CO', 'CO2', 'C2O', 'O2C'],
+      correctAnswer: 'CO2',
+    ),
+    Question(
+      questionText: 'What is the study of living organisms called?',
+      options: ['Physics', 'Chemistry', 'Biology', 'Geology'],
+      correctAnswer: 'Biology',
+    ),
+    Question(
+      questionText: 'What is the chemical symbol for sodium?',
+      options: ['Na', 'So', 'Sd', 'Ni'],
+      correctAnswer: 'Na',
+    ),
+    Question(
+      questionText: 'What is the process by which plants lose water through their leaves?',
+      options: ['Transpiration', 'Photosynthesis', 'Respiration', 'Digestion'],
+      correctAnswer: 'Transpiration',
+    ),
+    Question(
+      questionText: 'What is the chemical symbol for iron?',
+      options: ['Fe', 'Ir', 'In', 'Io'],
+      correctAnswer: 'Fe',
+    ),
+    Question(
+      questionText: 'What is the study of the Earth\'s physical structure called?',
+      options: ['Biology', 'Chemistry', 'Geology', 'Physics'],
+      correctAnswer: 'Geology',
+    ),
+    Question(
+      questionText: 'What is the chemical symbol for silver?',
+      options: ['Si', 'Ag', 'Au', 'Sl'],
+      correctAnswer: 'Ag',
+    ),
+    Question(
+      questionText: 'What is the process by which gas turns into liquid?',
+      options: ['Evaporation', 'Condensation', 'Freezing', 'Melting'],
+      correctAnswer: 'Condensation',
+    ),
+    Question(
+      questionText: 'What is the chemical symbol for lead?',
+      options: ['Le', 'Ld', 'Pb', 'Pl'],
+      correctAnswer: 'Pb',
+    ),
+    Question(
+      questionText: 'What is the study of the universe called?',
+      options: ['Astronomy', 'Biology', 'Geology', 'Chemistry'],
+      correctAnswer: 'Astronomy',
+    ),
   ];
 
   // Method to get questions by subject
