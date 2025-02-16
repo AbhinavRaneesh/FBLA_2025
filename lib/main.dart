@@ -16,17 +16,8 @@ class StudentLearningApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
         scaffoldBackgroundColor: Color(0xFF0A0E21), // Dark space background
-        textTheme: TextTheme(
-          displayLarge: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white),
-          bodyLarge: TextStyle(fontSize: 18, color: Colors.white),
-        ),
-        appBarTheme: AppBarTheme(
-          backgroundColor: Color(0xFF1D1E33), // Dark app bar
-          elevation: 0,
-          titleTextStyle: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
-        ),
       ),
-      home: SignInPage(),
+      home: SignInPage(), // Correctly defined home property
     );
   }
 }
@@ -62,25 +53,6 @@ class SpaceBackground extends StatelessWidget {
                 },
               ),
             ),
-          // Planets and astronauts
-          Positioned(
-            left: 20,
-            top: 100,
-            child: Image.asset(
-              'assets/images/planet.png', // Add a planet image to your assets
-              width: 100,
-              height: 100,
-            ),
-          ),
-          Positioned(
-            right: 20,
-            bottom: 100,
-            child: Image.asset(
-              'assets/astronaut.png', // Add an astronaut image to your assets
-              width: 80,
-              height: 80,
-            ),
-          ),
         ],
       ),
     );
@@ -96,7 +68,7 @@ class GameButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 250, // Fixed width for all buttons
+      width: 200, // Reduced width for buttons
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
@@ -356,7 +328,7 @@ class _SignUpPageState extends State<SignUpPage> {
         title: Text('Sign Up'),
         backgroundColor: Color(0xFF1D1E33),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: Colors.white), // White back arrow
           onPressed: () {
             Navigator.pop(context); // Go back to the Sign-In page
           },
@@ -487,7 +459,7 @@ class HomeScreen extends StatelessWidget {
             ),
           ),
           IconButton(
-            icon: Icon(Icons.logout),
+            icon: Icon(Icons.logout, color: Colors.white), // White logout icon
             onPressed: () {
               Navigator.pushReplacement(
                 context,
@@ -551,6 +523,12 @@ class _QuestionSelectionScreenState extends State<QuestionSelectionScreen> {
       appBar: AppBar(
         title: Text('Select Number of Questions'),
         backgroundColor: Color(0xFF1D1E33),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.white), // White back arrow
+          onPressed: () {
+            Navigator.pop(context); // Go back to the HomeScreen
+          },
+        ),
       ),
       body: Stack(
         children: [
@@ -708,6 +686,12 @@ class _QuizScreenState extends State<QuizScreen> {
       appBar: AppBar(
         title: Text(widget.subject),
         backgroundColor: Color(0xFF1D1E33),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.white), // White back arrow
+          onPressed: () {
+            Navigator.pop(context); // Go back to the QuestionSelectionScreen
+          },
+        ),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
@@ -734,12 +718,12 @@ class _QuizScreenState extends State<QuizScreen> {
                 SizedBox(height: 20),
                 Text(
                   'Question ${currentQuestionIndex + 1}/${widget.questions.length}:',
-                  style: Theme.of(context).textTheme.displayLarge,
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
                 ),
                 SizedBox(height: 10),
                 Text(
                   currentQuestion.questionText,
-                  style: Theme.of(context).textTheme.bodyLarge,
+                  style: TextStyle(fontSize: 20, color: Colors.white),
                 ),
                 SizedBox(height: 20),
                 ...currentQuestion.options.map((option) {
@@ -757,7 +741,7 @@ class _QuizScreenState extends State<QuizScreen> {
                   ElevatedButton(
                     onPressed: _nextQuestion,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green, // Changed color to green
+                      backgroundColor: Colors.purple, // Changed color to purple
                       padding: EdgeInsets.symmetric(vertical: 12),
                     ),
                     child: Text(
