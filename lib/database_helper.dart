@@ -92,25 +92,25 @@ class DatabaseHelper {
   }
 
   Future<void> updateUserPoints(String username, int points) async {
-  final db = await database;
-  await db.update(
-  'users',
-  {'points': points},
-  where: 'username = ?',
-  whereArgs: [username],
-  );
+    final db = await database;
+    await db.update(
+      'users',
+      {'points': points},
+      where: 'username = ?',
+      whereArgs: [username],
+    );
   }
 
   // Method to get user points
   Future<int> getUserPoints(String username) async {
-  final db = await database;
-  final List<Map<String, dynamic>> result = await db.query(
-  'users',
-  columns: ['points'],
-  where: 'username = ?',
-  whereArgs: [username],
-  );
-  return result.isNotEmpty ? result.first['points'] : 0;
+    final db = await database;
+    final List<Map<String, dynamic>> result = await db.query(
+      'users',
+      columns: ['points'],
+      where: 'username = ?',
+      whereArgs: [username],
+    );
+    return result.isNotEmpty ? result.first['points'] : 0;
   }
 
 
