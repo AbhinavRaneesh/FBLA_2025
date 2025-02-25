@@ -9,6 +9,8 @@ void main() {
 }
 
 class StudentLearningApp extends StatelessWidget {
+  const StudentLearningApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -18,11 +20,14 @@ class StudentLearningApp extends StatelessWidget {
         scaffoldBackgroundColor: Color(0xFF0A0E21), // Dark space background
       ),
       home: SignInPage(), // Correctly defined home property
+      debugShowCheckedModeBanner: false,
     );
   }
 }
 
 class SpaceBackground extends StatelessWidget {
+  const SpaceBackground({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -68,7 +73,7 @@ class GameButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 200, // Reduced width for buttons
+      width: MediaQuery.of(context).size.width * 0.9, // Increased width to 90% of screen width
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
@@ -82,6 +87,7 @@ class GameButton extends StatelessWidget {
         child: Text(
           text,
           style: TextStyle(fontSize: 18, color: Colors.white),
+          textAlign: TextAlign.center,
         ),
       ),
     );
@@ -91,7 +97,7 @@ class GameButton extends StatelessWidget {
 class AnimatedProgressBar extends StatelessWidget {
   final double value;
 
-  AnimatedProgressBar({required this.value});
+  const AnimatedProgressBar({super.key, required this.value});
 
   @override
   Widget build(BuildContext context) {
@@ -170,6 +176,22 @@ class _SignInPageState extends State<SignInPage> {
       body: Stack(
         children: [
           SpaceBackground(),
+          Positioned(
+            top: 50,
+            left: 20,
+            child: Image.asset(
+              'assets/images/planet.png',
+              height: 200,
+            ),
+          ),
+          Positioned(
+            bottom: 50,
+            right: 20,
+            child: Image.asset(
+              'assets/images/astronaut.png',
+              height: 200,
+            ),
+          ),
           Center(
             child: SingleChildScrollView(
               child: Padding(
@@ -178,7 +200,7 @@ class _SignInPageState extends State<SignInPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'Welcome Back!',
+                      'Welcome!',
                       style: TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
@@ -199,11 +221,11 @@ class _SignInPageState extends State<SignInPage> {
                               controller: _usernameController,
                               decoration: InputDecoration(
                                 labelText: 'Username',
-                                labelStyle: TextStyle(color: Colors.black), // Black text
+                                labelStyle: TextStyle(color: Colors.black),
                                 border: OutlineInputBorder(),
-                                prefixIcon: Icon(Icons.person, color: Colors.black), // Black icon
+                                prefixIcon: Icon(Icons.person, color: Colors.black),
                               ),
-                              style: TextStyle(color: Colors.black), // Black text
+                              style: TextStyle(color: Colors.black),
                             ),
                             SizedBox(height: 15),
                             TextField(
@@ -211,9 +233,9 @@ class _SignInPageState extends State<SignInPage> {
                               obscureText: !_showPassword,
                               decoration: InputDecoration(
                                 labelText: 'Password',
-                                labelStyle: TextStyle(color: Colors.black), // Black text
+                                labelStyle: TextStyle(color: Colors.black),
                                 border: OutlineInputBorder(),
-                                prefixIcon: Icon(Icons.lock, color: Colors.black), // Black icon
+                                prefixIcon: Icon(Icons.lock, color: Colors.black),
                                 suffixIcon: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
@@ -225,12 +247,12 @@ class _SignInPageState extends State<SignInPage> {
                                         });
                                       },
                                     ),
-                                    Text('Show Password', style: TextStyle(fontSize: 12, color: Colors.black)), // Black text
+                                    Text('Show Password', style: TextStyle(fontSize: 12, color: Colors.black)),
                                     SizedBox(width: 8),
                                   ],
                                 ),
                               ),
-                              style: TextStyle(color: Colors.black), // Black text
+                              style: TextStyle(color: Colors.black),
                             ),
                             SizedBox(height: 20),
                             GameButton(
@@ -306,7 +328,6 @@ class _SignUpPageState extends State<SignUpPage> {
           SnackBar(content: Text('Account created successfully!')),
         );
 
-        // Navigate back to the Sign-In page
         Navigator.pop(context);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -328,15 +349,31 @@ class _SignUpPageState extends State<SignUpPage> {
         title: Text('Sign Up'),
         backgroundColor: Color(0xFF1D1E33),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white), // White back arrow
+          icon: Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
-            Navigator.pop(context); // Go back to the Sign-In page
+            Navigator.pop(context);
           },
         ),
       ),
       body: Stack(
         children: [
           SpaceBackground(),
+          Positioned(
+            top: 20,
+            left: 20,
+            child: Image.asset(
+              'assets/images/planet.png',
+              height: 100,
+            ),
+          ),
+          Positioned(
+            bottom: 20,
+            right: 20,
+            child: Image.asset(
+              'assets/images/astronaut.png',
+              height: 100,
+            ),
+          ),
           Center(
             child: SingleChildScrollView(
               child: Padding(
@@ -366,11 +403,11 @@ class _SignUpPageState extends State<SignUpPage> {
                               controller: _usernameController,
                               decoration: InputDecoration(
                                 labelText: 'Username',
-                                labelStyle: TextStyle(color: Colors.black), // Black text
+                                labelStyle: TextStyle(color: Colors.black),
                                 border: OutlineInputBorder(),
-                                prefixIcon: Icon(Icons.person, color: Colors.black), // Black icon
+                                prefixIcon: Icon(Icons.person, color: Colors.black),
                               ),
-                              style: TextStyle(color: Colors.black), // Black text
+                              style: TextStyle(color: Colors.black),
                             ),
                             SizedBox(height: 15),
                             TextField(
@@ -378,9 +415,9 @@ class _SignUpPageState extends State<SignUpPage> {
                               obscureText: !_showPassword,
                               decoration: InputDecoration(
                                 labelText: 'Password',
-                                labelStyle: TextStyle(color: Colors.black), // Black text
+                                labelStyle: TextStyle(color: Colors.black),
                                 border: OutlineInputBorder(),
-                                prefixIcon: Icon(Icons.lock, color: Colors.black), // Black icon
+                                prefixIcon: Icon(Icons.lock, color: Colors.black),
                                 suffixIcon: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
@@ -392,12 +429,12 @@ class _SignUpPageState extends State<SignUpPage> {
                                         });
                                       },
                                     ),
-                                    Text('Show Password', style: TextStyle(fontSize: 12, color: Colors.black)), // Black text
+                                    Text('Show Password', style: TextStyle(fontSize: 12, color: Colors.black)),
                                     SizedBox(width: 8),
                                   ],
                                 ),
                               ),
-                              style: TextStyle(color: Colors.black), // Black text
+                              style: TextStyle(color: Colors.black),
                             ),
                             SizedBox(height: 20),
                             GameButton(
@@ -422,7 +459,7 @@ class _SignUpPageState extends State<SignUpPage> {
 class HomeScreen extends StatelessWidget {
   final String username;
 
-  HomeScreen({required this.username});
+  HomeScreen({super.key, required this.username});
 
   final Map<String, List<Question>> subjectQuestions = {
     'Math': QuestionsRepository.getQuestionsForSubject('Math'),
@@ -435,8 +472,9 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Learn Subjects'),
+        title: Text('Learn Subjects', style: TextStyle(color: Colors.white)),
         backgroundColor: Color(0xFF1D1E33),
+        automaticallyImplyLeading: false,
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
@@ -445,7 +483,7 @@ class HomeScreen extends StatelessWidget {
                 future: DatabaseHelper().getUserPoints(username),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return CircularProgressIndicator();
+                    return CircularProgressIndicator(); // Show a loading indicator while fetching points
                   } else if (snapshot.hasError) {
                     return Text('Error: ${snapshot.error}');
                   } else {
@@ -508,7 +546,7 @@ class QuestionSelectionScreen extends StatefulWidget {
   final List<Question> questions;
   final String username;
 
-  QuestionSelectionScreen({required this.subject, required this.questions, required this.username});
+  const QuestionSelectionScreen({super.key, required this.subject, required this.questions, required this.username});
 
   @override
   _QuestionSelectionScreenState createState() => _QuestionSelectionScreenState();
@@ -521,7 +559,7 @@ class _QuestionSelectionScreenState extends State<QuestionSelectionScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Select Number of Questions'),
+        title: Text('Select Number of Questions', style: TextStyle(color: Colors.white)),
         backgroundColor: Color(0xFF1D1E33),
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.white), // White back arrow
@@ -601,7 +639,9 @@ class _QuizScreenState extends State<QuizScreen> {
   String? selectedAnswer;
   bool isAnswered = false;
   String? currentAnswerResult;
-  int points = 0;
+  int pointsEarnedInRound = 0; // Points earned in the current quiz round
+  int totalPoints = 0; // Total points of the user
+  int correctAnswersCount = 0; // Track the number of correct answers
   final DatabaseHelper _dbHelper = DatabaseHelper();
   final AudioPlayer _audioPlayer = AudioPlayer();
 
@@ -614,12 +654,12 @@ class _QuizScreenState extends State<QuizScreen> {
   Future<void> _loadUserPoints() async {
     final userPoints = await _dbHelper.getUserPoints(widget.username);
     setState(() {
-      points = userPoints;
+      totalPoints = userPoints;
     });
   }
 
   Future<void> _updateUserPoints() async {
-    await _dbHelper.updateUserPoints(widget.username, points);
+    await _dbHelper.updateUserPoints(widget.username, totalPoints + pointsEarnedInRound);
   }
 
   Future<void> playSound(String sound) async {
@@ -632,8 +672,8 @@ class _QuizScreenState extends State<QuizScreen> {
       isAnswered = true;
       if (answer == widget.questions[currentQuestionIndex].correctAnswer) {
         currentAnswerResult = 'Correct!';
-        points += 10;
-        _updateUserPoints();
+        pointsEarnedInRound += 10; // Add points for correct answer
+        correctAnswersCount++; // Increment correct answers count
         playSound('correct_answer.mp3'); // Play sound for correct answer
       } else {
         currentAnswerResult =
@@ -657,20 +697,60 @@ class _QuizScreenState extends State<QuizScreen> {
   }
 
   void _showFinalScore() {
+    // Update total points in the database
+    _updateUserPoints();
+
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Quiz Finished!', style: TextStyle(fontWeight: FontWeight.bold)),
-          content: Text('Your score: ${currentQuestionIndex + 1}/${widget.questions.length}\nPoints: $points',
-              style: TextStyle(fontSize: 18)),
+          backgroundColor: Color(0xFF1D1E33), // Dark background
+          title: Text(
+            'Quiz Finished!',
+            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+            textAlign: TextAlign.center,
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Your Score:',
+                style: TextStyle(fontSize: 20, color: Colors.white),
+              ),
+              SizedBox(height: 10),
+              Text(
+                '$correctAnswersCount/${widget.questions.length}', // Show correct answers count
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.blueAccent),
+              ),
+              SizedBox(height: 10),
+              Text(
+                'Points Earned This Round: $pointsEarnedInRound',
+                style: TextStyle(fontSize: 18, color: Colors.white),
+              ),
+              SizedBox(height: 10),
+              Text(
+                'Total Points: ${totalPoints + pointsEarnedInRound}',
+                style: TextStyle(fontSize: 18, color: Colors.white),
+              ),
+            ],
+          ),
           actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                Navigator.pop(context);
-              },
-              child: Text('OK', style: TextStyle(fontSize: 18)),
+            Center(
+              child: TextButton(
+                onPressed: () {
+                  Navigator.pop(context); // Close the dialog
+                  Navigator.pushReplacement( // Replace the current route with a new HomeScreen
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => HomeScreen(username: widget.username),
+                    ),
+                  );
+                },
+                child: Text(
+                  'OK',
+                  style: TextStyle(fontSize: 18, color: Colors.blueAccent),
+                ),
+              ),
             ),
           ],
         );
@@ -684,7 +764,7 @@ class _QuizScreenState extends State<QuizScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.subject),
+        title: Text(widget.subject, style: TextStyle(color: Colors.white),),
         backgroundColor: Color(0xFF1D1E33),
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.white), // White back arrow
@@ -697,7 +777,7 @@ class _QuizScreenState extends State<QuizScreen> {
             padding: const EdgeInsets.only(right: 16.0),
             child: Center(
               child: Text(
-                'Points: $points',
+                'Points: ${totalPoints + pointsEarnedInRound}',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
               ),
             ),
@@ -719,34 +799,45 @@ class _QuizScreenState extends State<QuizScreen> {
                 Text(
                   'Question ${currentQuestionIndex + 1}/${widget.questions.length}:',
                   style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+                  textAlign: TextAlign.center,
                 ),
                 SizedBox(height: 10),
-                Text(
-                  currentQuestion.questionText,
-                  style: TextStyle(fontSize: 20, color: Colors.white),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                  child: Text(
+                    currentQuestion.questionText,
+                    style: TextStyle(fontSize: 20, color: Colors.white),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
                 SizedBox(height: 20),
                 ...currentQuestion.options.map((option) {
                   return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 6.0),
-                    child: GameButton(
-                      text: option,
-                      onPressed: () {
-                        _checkAnswer(option);
-                      },
+                    padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 20.0),
+                    child: SizedBox(
+                      width: MediaQuery.of(context).size.width * 0.7, // Smaller width for buttons
+                      child: GameButton(
+                        text: option,
+                        onPressed: () {
+                          _checkAnswer(option);
+                        },
+                      ),
                     ),
                   );
                 }).toList(),
                 if (isAnswered)
-                  ElevatedButton(
-                    onPressed: _nextQuestion,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.purple, // Changed color to purple
-                      padding: EdgeInsets.symmetric(vertical: 12),
-                    ),
-                    child: Text(
-                      currentQuestionIndex < widget.questions.length - 1 ? 'Next Question' : 'Finish Quiz',
-                      style: TextStyle(fontSize: 18, color: Colors.white),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                    child: ElevatedButton(
+                      onPressed: _nextQuestion,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.purple, // Changed color to purple
+                        padding: EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      child: Text(
+                        currentQuestionIndex < widget.questions.length - 1 ? 'Next Question' : 'Finish Quiz',
+                        style: TextStyle(fontSize: 18, color: Colors.white),
+                      ),
                     ),
                   ),
                 if (isAnswered)
