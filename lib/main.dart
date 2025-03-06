@@ -1110,7 +1110,7 @@ class _QuizScreenState extends State<QuizScreen> {
   }
 
   //Future<void> playSound(String sound) async {
- //   await _audioPlayer.play(AssetSource(sound));
+  //   await _audioPlayer.play(AssetSource(sound));
   //}
 
   void _checkAnswer(String answer) {
@@ -1214,7 +1214,8 @@ class _QuizScreenState extends State<QuizScreen> {
         title: Text(widget.subject, style: const TextStyle(color: Colors.white),),
         backgroundColor: const Color(0xFF1D1E33),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white), // White back arrow
+          icon: const Icon(Icons.arrow_back, color: Colors.white, size: 12,), // White back arrow
+
           onPressed: () {
             Navigator.pop(context); // Go back to the QuestionSelectionScreen
           },
