@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'database_helper.dart';
 import 'questions.dart';
-import 'package:audioplayers/audioplayers.dart'; // For sound effects
+//import 'package:audioplayers/audioplayers.dart'; // For sound effects
 import 'dart:math'; // For random star positions
+import 'package:google_sign_in/google_sign_in.dart'; // For Google Sign-In
 
 void main() {
   runApp(StudentLearningApp());
@@ -131,6 +132,7 @@ class _SignInPageState extends State<SignInPage> {
   final _passwordController = TextEditingController();
   final _dbHelper = DatabaseHelper();
   bool _showPassword = false;
+  final GoogleSignIn _googleSignIn = GoogleSignIn(); // Google Sign-In instance
 
   Future<void> _signIn() async {
     final username = _usernameController.text.trim();
@@ -170,6 +172,35 @@ class _SignInPageState extends State<SignInPage> {
     }
   }
 
+  // Function to handle Google Sign-In
+  Future<void> _signInWithGoogle() async {
+    try {
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) return; // User canceled the sign-in
+
+      // You can now use the googleUser object to get user details
+      final email = googleUser.email;
+      final displayName = googleUser.displayName;
+
+      // For simplicity, navigate to the HomeScreen with the user's email as the username
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => HomeScreen(username: email ?? 'Google User'),
+        ),
+      );
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Signed in with Google successfully!')),
+      );
+    } catch (e) {
+      print('Error during Google Sign-In: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to sign in with Google. Please try again.')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -185,7 +216,7 @@ class _SignInPageState extends State<SignInPage> {
             ),
           ),
           Positioned(
-            bottom: 50,
+            bottom: 30,
             right: 20,
             child: Image.asset(
               'assets/images/astronaut.png',
@@ -258,6 +289,35 @@ class _SignInPageState extends State<SignInPage> {
                             GameButton(
                               text: 'Sign In',
                               onPressed: _signIn,
+                            ),
+                            SizedBox(height: 10),
+                            // Add the "Sign in with Google" button
+                            ElevatedButton(
+                              onPressed: _signInWithGoogle,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                padding: EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Image.asset(
+                                    'assets/images/google_icon.png', // Add a Google icon asset
+                                    height: 24,
+                                  ),
+                                  SizedBox(width: 10),
+                                  Text(
+                                    'Sign in with Google',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
                         ),
@@ -359,19 +419,19 @@ class _SignUpPageState extends State<SignUpPage> {
         children: [
           SpaceBackground(),
           Positioned(
-            top: 20,
+            top: 50,
             left: 20,
             child: Image.asset(
               'assets/images/planet.png',
-              height: 100,
+              height: 200,
             ),
           ),
           Positioned(
-            bottom: 20,
+            bottom: 30,
             right: 20,
             child: Image.asset(
               'assets/images/astronaut.png',
-              height: 100,
+              height: 200,
             ),
           ),
           Center(
@@ -643,7 +703,7 @@ class _QuizScreenState extends State<QuizScreen> {
   int totalPoints = 0; // Total points of the user
   int correctAnswersCount = 0; // Track the number of correct answers
   final DatabaseHelper _dbHelper = DatabaseHelper();
-  final AudioPlayer _audioPlayer = AudioPlayer();
+  //final AudioPlayer _audioPlayer = AudioPlayer();
 
   @override
   void initState() {
@@ -662,9 +722,9 @@ class _QuizScreenState extends State<QuizScreen> {
     await _dbHelper.updateUserPoints(widget.username, totalPoints + pointsEarnedInRound);
   }
 
-  Future<void> playSound(String sound) async {
-    await _audioPlayer.play(AssetSource(sound));
-  }
+  //Future<void> playSound(String sound) async {
+ //   await _audioPlayer.play(AssetSource(sound));
+  //}
 
   void _checkAnswer(String answer) {
     setState(() {
@@ -674,11 +734,11 @@ class _QuizScreenState extends State<QuizScreen> {
         currentAnswerResult = 'Correct!';
         pointsEarnedInRound += 10; // Add points for correct answer
         correctAnswersCount++; // Increment correct answers count
-        playSound('correct_answer.mp3'); // Play sound for correct answer
+        //playSound('correct_answer.mp3'); // Play sound for correct answer
       } else {
         currentAnswerResult =
         'Wrong! The correct answer is: ${widget.questions[currentQuestionIndex].correctAnswer}';
-        playSound('wrong_answer.mp3'); // Play sound for wrong answer
+        //playSound('wrong_answer.mp3'); // Play sound for wrong answer
       }
     });
   }
