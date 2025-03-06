@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'database_helper.dart';
 import 'questions.dart';
-//import 'package:audioplayers/audioplayers.dart'; // For sound effects
 import 'dart:math'; // For random star positions
 import 'package:google_sign_in/google_sign_in.dart'; // For Google Sign-In
 
 void main() {
-  runApp(StudentLearningApp());
+  runApp(const StudentLearningApp());
 }
 
 class StudentLearningApp extends StatelessWidget {
@@ -18,7 +17,7 @@ class StudentLearningApp extends StatelessWidget {
       title: 'Student Learning App',
       theme: ThemeData(
         primarySwatch: Colors.blue,
-        scaffoldBackgroundColor: Color(0xFF0A0E21), // Dark space background
+        scaffoldBackgroundColor: const Color(0xFF0A0E21), // Dark space background
       ),
       home: SignInPage(), // Correctly defined home property
       debugShowCheckedModeBanner: false,
@@ -32,7 +31,7 @@ class SpaceBackground extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         gradient: LinearGradient(
           colors: [Color(0xFF0A0E21), Color(0xFF1D1E33)],
           begin: Alignment.topLeft,
@@ -50,7 +49,7 @@ class SpaceBackground extends StatelessWidget {
                 duration: Duration(seconds: Random().nextInt(3) + 1),
                 width: 2,
                 height: 2,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: Colors.white,
                   shape: BoxShape.circle,
                 ),
@@ -79,15 +78,15 @@ class GameButton extends StatelessWidget {
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.transparent,
-          padding: EdgeInsets.symmetric(vertical: 15, horizontal: 30),
+          padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 30),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
-            side: BorderSide(color: Colors.blueAccent, width: 2),
+            side: const BorderSide(color: Colors.blueAccent, width: 2),
           ),
         ),
         child: Text(
           text,
-          style: TextStyle(fontSize: 18, color: Colors.white),
+          style: const TextStyle(fontSize: 18, color: Colors.white),
           textAlign: TextAlign.center,
         ),
       ),
@@ -109,11 +108,11 @@ class AnimatedProgressBar extends StatelessWidget {
         color: Colors.grey[300],
       ),
       child: AnimatedContainer(
-        duration: Duration(milliseconds: 500),
+        duration: const Duration(milliseconds: 500),
         width: MediaQuery.of(context).size.width * value,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(5),
-          gradient: LinearGradient(
+          gradient: const LinearGradient(
             colors: [Colors.blueAccent, Colors.purpleAccent],
           ),
         ),
@@ -134,13 +133,46 @@ class _SignInPageState extends State<SignInPage> {
   bool _showPassword = false;
   final GoogleSignIn _googleSignIn = GoogleSignIn(); // Google Sign-In instance
 
+  // Track whether the username and password fields have input
+  bool _isFormValid = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Listen for changes in the text fields
+    _usernameController.addListener(_updateFormState);
+    _passwordController.addListener(_updateFormState);
+  }
+
+  @override
+  void dispose() {
+    // Clean up the controllers
+    _usernameController.removeListener(_updateFormState);
+    _passwordController.removeListener(_updateFormState);
+    _usernameController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  // Update the form state based on input
+  void _updateFormState() {
+    print('Username: ${_usernameController.text}'); // Debugging
+    print('Password: ${_passwordController.text}'); // Debugging
+
+    setState(() {
+      _isFormValid = _usernameController.text.isNotEmpty && _passwordController.text.isNotEmpty;
+    });
+
+    print('Form Valid: $_isFormValid'); // Debugging
+  }
+
   Future<void> _signIn() async {
     final username = _usernameController.text.trim();
     final password = _passwordController.text.trim();
 
     if (username.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please enter both username and password.')),
+        const SnackBar(content: Text('Please enter both username and password.')),
       );
       return;
     }
@@ -150,7 +182,7 @@ class _SignInPageState extends State<SignInPage> {
 
       if (isAuthenticated) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Sign-in successful!')),
+          const SnackBar(content: Text('Sign-in successful!')),
         );
 
         Navigator.pushReplacement(
@@ -161,13 +193,13 @@ class _SignInPageState extends State<SignInPage> {
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Invalid username or password.')),
+          const SnackBar(content: Text('Invalid username or password.')),
         );
       }
     } catch (e) {
       print('Error during sign-in: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An error occurred. Please try again.')),
+        const SnackBar(content: Text('An error occurred. Please try again.')),
       );
     }
   }
@@ -191,12 +223,12 @@ class _SignInPageState extends State<SignInPage> {
       );
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Signed in with Google successfully!')),
+        const SnackBar(content: Text('Signed in with Google successfully!')),
       );
     } catch (e) {
       print('Error during Google Sign-In: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to sign in with Google. Please try again.')),
+        const SnackBar(content: Text('Failed to sign in with Google. Please try again.')),
       );
     }
   }
@@ -206,7 +238,7 @@ class _SignInPageState extends State<SignInPage> {
     return Scaffold(
       body: Stack(
         children: [
-          SpaceBackground(),
+          const SpaceBackground(),
           Positioned(
             top: 50,
             left: 20,
@@ -230,7 +262,7 @@ class _SignInPageState extends State<SignInPage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
+                    const Text(
                       'Welcome!',
                       style: TextStyle(
                         fontSize: 32,
@@ -238,7 +270,7 @@ class _SignInPageState extends State<SignInPage> {
                         color: Colors.white,
                       ),
                     ),
-                    SizedBox(height: 30),
+                    const SizedBox(height: 30),
                     Card(
                       elevation: 5,
                       shape: RoundedRectangleBorder(
@@ -250,23 +282,23 @@ class _SignInPageState extends State<SignInPage> {
                           children: [
                             TextField(
                               controller: _usernameController,
-                              decoration: InputDecoration(
+                              decoration: const InputDecoration(
                                 labelText: 'Username',
                                 labelStyle: TextStyle(color: Colors.black),
                                 border: OutlineInputBorder(),
                                 prefixIcon: Icon(Icons.person, color: Colors.black),
                               ),
-                              style: TextStyle(color: Colors.black),
+                              style: const TextStyle(color: Colors.black),
                             ),
-                            SizedBox(height: 15),
+                            const SizedBox(height: 15),
                             TextField(
                               controller: _passwordController,
                               obscureText: !_showPassword,
                               decoration: InputDecoration(
                                 labelText: 'Password',
-                                labelStyle: TextStyle(color: Colors.black),
-                                border: OutlineInputBorder(),
-                                prefixIcon: Icon(Icons.lock, color: Colors.black),
+                                labelStyle: const TextStyle(color: Colors.black),
+                                border: const OutlineInputBorder(),
+                                prefixIcon: const Icon(Icons.lock, color: Colors.black),
                                 suffixIcon: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
@@ -278,25 +310,41 @@ class _SignInPageState extends State<SignInPage> {
                                         });
                                       },
                                     ),
-                                    Text('Show Password', style: TextStyle(fontSize: 12, color: Colors.black)),
-                                    SizedBox(width: 8),
+                                    const Text('Show Password', style: TextStyle(fontSize: 12, color: Colors.black)),
+                                    const SizedBox(width: 8),
                                   ],
                                 ),
                               ),
-                              style: TextStyle(color: Colors.black),
+                              style: const TextStyle(color: Colors.black),
                             ),
-                            SizedBox(height: 20),
-                            GameButton(
-                              text: 'Sign In',
-                              onPressed: _signIn,
+                            const SizedBox(height: 20),
+                            // Sign In Button
+                            Container(
+                              width: MediaQuery.of(context).size.width * 0.9,
+                              child: ElevatedButton(
+                                onPressed: _isFormValid ? _signIn : null, // Disable if form is invalid
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: _isFormValid ? Colors.blueAccent : Colors.grey, // Grey out if disabled
+                                  padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 30),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                    side: BorderSide(color: _isFormValid ? Colors.blueAccent : Colors.grey, width: 2),
+                                  ),
+                                ),
+                                child: const Text(
+                                  'Sign In',
+                                  style: TextStyle(fontSize: 18, color: Colors.white),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
                             ),
-                            SizedBox(height: 10),
-                            // Add the "Sign in with Google" button
+                            const SizedBox(height: 10),
+                            // Sign in with Google Button
                             ElevatedButton(
                               onPressed: _signInWithGoogle,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.white,
-                                padding: EdgeInsets.symmetric(vertical: 12),
+                                padding: const EdgeInsets.symmetric(vertical: 12),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10),
                                 ),
@@ -308,8 +356,8 @@ class _SignInPageState extends State<SignInPage> {
                                     'assets/images/google_icon.png', // Add a Google icon asset
                                     height: 24,
                                   ),
-                                  SizedBox(width: 10),
-                                  Text(
+                                  const SizedBox(width: 10),
+                                  const Text(
                                     'Sign in with Google',
                                     style: TextStyle(
                                       fontSize: 16,
@@ -323,7 +371,7 @@ class _SignInPageState extends State<SignInPage> {
                         ),
                       ),
                     ),
-                    SizedBox(height: 10),
+                    const SizedBox(height: 10),
                     TextButton(
                       onPressed: () {
                         Navigator.push(
@@ -331,7 +379,7 @@ class _SignInPageState extends State<SignInPage> {
                           MaterialPageRoute(builder: (context) => SignUpPage()),
                         );
                       },
-                      child: Text(
+                      child: const Text(
                         'Don\'t have an account? Sign up',
                         style: TextStyle(
                           fontSize: 16,
@@ -360,6 +408,29 @@ class _SignUpPageState extends State<SignUpPage> {
   final _passwordController = TextEditingController();
   final _dbHelper = DatabaseHelper();
   bool _showPassword = false;
+  bool _isFormValid = false; // Track form validity
+
+  @override
+  void initState() {
+    super.initState();
+    _usernameController.addListener(_updateFormState);
+    _passwordController.addListener(_updateFormState);
+  }
+
+  @override
+  void dispose() {
+    _usernameController.removeListener(_updateFormState);
+    _passwordController.removeListener(_updateFormState);
+    _usernameController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  void _updateFormState() {
+    setState(() {
+      _isFormValid = _usernameController.text.isNotEmpty && _passwordController.text.isNotEmpty;
+    });
+  }
 
   Future<void> _signUp() async {
     final username = _usernameController.text.trim();
@@ -367,7 +438,7 @@ class _SignUpPageState extends State<SignUpPage> {
 
     if (username.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please fill in all fields.')),
+        const SnackBar(content: Text('Please fill in all fields.')),
       );
       return;
     }
@@ -377,7 +448,7 @@ class _SignUpPageState extends State<SignUpPage> {
 
       if (userExists) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Username already exists. Please choose a different one.')),
+          const SnackBar(content: Text('Username already exists. Please choose a different one.')),
         );
         return;
       }
@@ -385,19 +456,19 @@ class _SignUpPageState extends State<SignUpPage> {
       final success = await _dbHelper.addUser(username, password);
       if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Account created successfully!')),
+          const SnackBar(content: Text('Account created successfully!')),
         );
 
         Navigator.pop(context);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Something went wrong. Please try again.')),
+          const SnackBar(content: Text('Something went wrong. Please try again.')),
         );
       }
     } catch (e) {
       print('Error during sign-up: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An error occurred. Please try again.')),
+        const SnackBar(content: Text('An error occurred. Please try again.')),
       );
     }
   }
@@ -405,19 +476,9 @@ class _SignUpPageState extends State<SignUpPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Sign Up'),
-        backgroundColor: Color(0xFF1D1E33),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
-      ),
       body: Stack(
         children: [
-          SpaceBackground(),
+          const SpaceBackground(),
           Positioned(
             top: 50,
             left: 20,
@@ -441,7 +502,7 @@ class _SignUpPageState extends State<SignUpPage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
+                    const Text(
                       'Create an Account',
                       style: TextStyle(
                         fontSize: 32,
@@ -449,7 +510,7 @@ class _SignUpPageState extends State<SignUpPage> {
                         color: Colors.white,
                       ),
                     ),
-                    SizedBox(height: 30),
+                    const SizedBox(height: 30),
                     Card(
                       elevation: 5,
                       shape: RoundedRectangleBorder(
@@ -461,23 +522,23 @@ class _SignUpPageState extends State<SignUpPage> {
                           children: [
                             TextField(
                               controller: _usernameController,
-                              decoration: InputDecoration(
+                              decoration: const InputDecoration(
                                 labelText: 'Username',
                                 labelStyle: TextStyle(color: Colors.black),
                                 border: OutlineInputBorder(),
                                 prefixIcon: Icon(Icons.person, color: Colors.black),
                               ),
-                              style: TextStyle(color: Colors.black),
+                              style: const TextStyle(color: Colors.black),
                             ),
-                            SizedBox(height: 15),
+                            const SizedBox(height: 15),
                             TextField(
                               controller: _passwordController,
                               obscureText: !_showPassword,
                               decoration: InputDecoration(
                                 labelText: 'Password',
-                                labelStyle: TextStyle(color: Colors.black),
-                                border: OutlineInputBorder(),
-                                prefixIcon: Icon(Icons.lock, color: Colors.black),
+                                labelStyle: const TextStyle(color: Colors.black),
+                                border: const OutlineInputBorder(),
+                                prefixIcon: const Icon(Icons.lock, color: Colors.black),
                                 suffixIcon: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
@@ -489,19 +550,48 @@ class _SignUpPageState extends State<SignUpPage> {
                                         });
                                       },
                                     ),
-                                    Text('Show Password', style: TextStyle(fontSize: 12, color: Colors.black)),
-                                    SizedBox(width: 8),
+                                    const Text('Show Password', style: TextStyle(fontSize: 12, color: Colors.black)),
+                                    const SizedBox(width: 8),
                                   ],
                                 ),
                               ),
-                              style: TextStyle(color: Colors.black),
+                              style: const TextStyle(color: Colors.black),
                             ),
-                            SizedBox(height: 20),
-                            GameButton(
-                              text: 'Sign Up',
-                              onPressed: _signUp,
+                            const SizedBox(height: 20),
+                            // Sign Up Button
+                            Container(
+                              width: MediaQuery.of(context).size.width * 0.9,
+                              child: ElevatedButton(
+                                onPressed: _isFormValid ? _signUp : null, // Disable if form is invalid
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: _isFormValid ? Colors.blueAccent : Colors.grey, // Grey out if disabled
+                                  padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 30),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                    side: BorderSide(color: _isFormValid ? Colors.blueAccent : Colors.grey, width: 2),
+                                  ),
+                                ),
+                                child: const Text(
+                                  'Sign Up',
+                                  style: TextStyle(fontSize: 18, color: Colors.white),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
                             ),
                           ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(context); // Navigate back to the SignInPage
+                      },
+                      child: const Text(
+                        'Already have an account? Sign in',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.white,
                         ),
                       ),
                     ),
@@ -516,11 +606,16 @@ class _SignUpPageState extends State<SignUpPage> {
   }
 }
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   final String username;
 
   HomeScreen({super.key, required this.username});
 
+  @override
+  _HomeScreenState createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
   final Map<String, List<Question>> subjectQuestions = {
     'Math': QuestionsRepository.getQuestionsForSubject('Math'),
     'History': QuestionsRepository.getQuestionsForSubject('History'),
@@ -528,31 +623,36 @@ class HomeScreen extends StatelessWidget {
     'Science': QuestionsRepository.getQuestionsForSubject('Science'),
   };
 
+  int _userPoints = 0;
+  final DatabaseHelper _dbHelper = DatabaseHelper();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserPoints();
+  }
+
+  Future<void> _loadUserPoints() async {
+    final points = await _dbHelper.getUserPoints(widget.username);
+    setState(() {
+      _userPoints = points;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Learn Subjects', style: TextStyle(color: Colors.white)),
+        title: Text('Choose a Subject', style: TextStyle(color: Colors.white)),
         backgroundColor: Color(0xFF1D1E33),
         automaticallyImplyLeading: false,
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
             child: Center(
-              child: FutureBuilder<int>(
-                future: DatabaseHelper().getUserPoints(username),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return CircularProgressIndicator(); // Show a loading indicator while fetching points
-                  } else if (snapshot.hasError) {
-                    return Text('Error: ${snapshot.error}');
-                  } else {
-                    return Text(
-                      'Points: ${snapshot.data ?? 0}',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
-                    );
-                  }
-                },
+              child: Text(
+                'Points: $_userPoints',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
               ),
             ),
           ),
@@ -570,32 +670,319 @@ class HomeScreen extends StatelessWidget {
       body: Stack(
         children: [
           SpaceBackground(),
-          Center(
+          Padding(
+            padding: const EdgeInsets.all(20.0),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: subjectQuestions.keys.map((subject) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 10.0),
-                  child: GameButton(
-                    text: subject,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Welcome, ${widget.username}!',
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  'Choose a subject to start learning:',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.white70,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Expanded(
+                  child: GridView.count(
+                    crossAxisCount: 2, // Two columns for the grid
+                    crossAxisSpacing: 20, // Spacing between columns
+                    mainAxisSpacing: 20, // Spacing between rows
+                    children: subjectQuestions.keys.map((subject) {
+                      return SubjectCard(
+                        subject: subject,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => QuestionSelectionScreen(
+                                subject: subject,
+                                questions: subjectQuestions[subject]!,
+                                username: widget.username,
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    }).toList(),
+                  ),
+                ),
+                SizedBox(height: 20),
+                // Bigger Shop Button
+                Container(
+                  width: double.infinity, // Full width
+                  padding: EdgeInsets.symmetric(horizontal: 50),
+                  child: ElevatedButton(
                     onPressed: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => QuestionSelectionScreen(
-                            subject: subject,
-                            questions: subjectQuestions[subject]!,
-                            username: username,
-                          ),
+                          builder: (context) => ShopScreen(username: widget.username),
                         ),
                       );
                     },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blueAccent,
+                      padding: EdgeInsets.symmetric(vertical: 20), // Bigger button
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                    ),
+                    child: Text(
+                      'Visit Shop',
+                      style: TextStyle(fontSize: 20, color: Colors.white), // Bigger text
+                    ),
                   ),
-                );
-              }).toList(),
+                ),
+              ],
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class SubjectCard extends StatelessWidget {
+  final String subject;
+  final VoidCallback onTap;
+
+  const SubjectCard({super.key, required this.subject, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.blueAccent.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(color: Colors.blueAccent, width: 2),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              _getSubjectIcon(subject), // Get an icon based on the subject
+              size: 50,
+              color: Colors.white,
+            ),
+            SizedBox(height: 10),
+            Text(
+              subject,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Helper function to get an icon for each subject
+  IconData _getSubjectIcon(String subject) {
+    switch (subject.toLowerCase()) {
+      case 'math':
+        return Icons.calculate;
+      case 'history':
+        return Icons.history;
+      case 'english':
+        return Icons.menu_book;
+      case 'science':
+        return Icons.science;
+      default:
+        return Icons.subject;
+    }
+  }
+}
+
+class ShopScreen extends StatefulWidget {
+  final String username;
+
+  const ShopScreen({super.key, required this.username});
+
+  @override
+  _ShopScreenState createState() => _ShopScreenState();
+}
+
+class _ShopScreenState extends State<ShopScreen> {
+  int _userPoints = 0;
+  final DatabaseHelper _dbHelper = DatabaseHelper();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserPoints();
+  }
+
+  Future<void> _loadUserPoints() async {
+    final points = await _dbHelper.getUserPoints(widget.username);
+    setState(() {
+      _userPoints = points;
+    });
+  }
+
+  Future<void> _purchaseItem(String item, int cost) async {
+    final success = await _dbHelper.purchaseTheme(widget.username, item, cost);
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$item purchased successfully!')),
+      );
+      await _loadUserPoints(); // Refresh points after purchase
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Not enough points to purchase $item.')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Shop', style: TextStyle(color: Colors.white)),
+        backgroundColor: const Color(0xFF1D1E33),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: Center(
+              child: Text(
+                'Points: $_userPoints',
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+              ),
+            ),
+          ),
+        ],
+      ),
+      body: Stack(
+        children: [
+          const SpaceBackground(),
+          Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Welcome to the Shop!',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  'Spend your points on cool items:',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.white70,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Expanded(
+                  child: ListView(
+                    children: [
+                      ShopItem(
+                        itemName: 'Space Theme',
+                        cost: 100,
+                        onPurchase: () => _purchaseItem('Space Theme', 100),
+                      ),
+                      ShopItem(
+                        itemName: 'Galaxy Theme',
+                        cost: 200,
+                        onPurchase: () => _purchaseItem('Galaxy Theme', 200),
+                      ),
+                      ShopItem(
+                        itemName: 'Power-Up: Double Points',
+                        cost: 300,
+                        onPurchase: () => _purchaseItem('Double Points', 300),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class ShopItem extends StatelessWidget {
+  final String itemName;
+  final int cost;
+  final VoidCallback onPurchase;
+
+  const ShopItem({super.key, required this.itemName, required this.cost, required this.onPurchase});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      color: Colors.blueAccent.withOpacity(0.2),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
+        side: const BorderSide(color: Colors.blueAccent, width: 2),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              itemName,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'Cost: $cost points',
+              style: const TextStyle(
+                fontSize: 16,
+                color: Colors.white70,
+              ),
+            ),
+            const SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: onPurchase,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blueAccent,
+                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              child: const Text(
+                'Buy',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -619,10 +1006,10 @@ class _QuestionSelectionScreenState extends State<QuestionSelectionScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Select Number of Questions', style: TextStyle(color: Colors.white)),
+        title: const Text('Select Number of Questions', style: TextStyle(color: Colors.white)),
         backgroundColor: Color(0xFF1D1E33),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white), // White back arrow
+          icon: const Icon(Icons.arrow_back, color: Colors.white), // White back arrow
           onPressed: () {
             Navigator.pop(context); // Go back to the HomeScreen
           },
@@ -630,21 +1017,21 @@ class _QuestionSelectionScreenState extends State<QuestionSelectionScreen> {
       ),
       body: Stack(
         children: [
-          SpaceBackground(),
+          const SpaceBackground(),
           Padding(
             padding: const EdgeInsets.all(20.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  'How many questions do you want to answer?',
+                const Text(
+                  'Amount of Questions:',
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
                   textAlign: TextAlign.center,
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 Text(
                   '$_numberOfQuestions',
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.blueAccent),
+                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.blueAccent),
                 ),
                 Slider(
                   value: _numberOfQuestions.toDouble(),
@@ -658,7 +1045,7 @@ class _QuestionSelectionScreenState extends State<QuestionSelectionScreen> {
                     });
                   },
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 GameButton(
                   text: 'Start Quiz',
                   onPressed: () {
@@ -764,8 +1151,8 @@ class _QuizScreenState extends State<QuizScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          backgroundColor: Color(0xFF1D1E33), // Dark background
-          title: Text(
+          backgroundColor: const Color(0xFF1D1E33), // Dark background
+          title: const Text(
             'Quiz Finished!',
             style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
             textAlign: TextAlign.center,
@@ -773,24 +1160,24 @@ class _QuizScreenState extends State<QuizScreen> {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
+              const Text(
                 'Your Score:',
                 style: TextStyle(fontSize: 20, color: Colors.white),
               ),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               Text(
                 '$correctAnswersCount/${widget.questions.length}', // Show correct answers count
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.blueAccent),
+                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.blueAccent),
               ),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               Text(
                 'Points Earned This Round: $pointsEarnedInRound',
-                style: TextStyle(fontSize: 18, color: Colors.white),
+                style: const TextStyle(fontSize: 18, color: Colors.white),
               ),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               Text(
                 'Total Points: ${totalPoints + pointsEarnedInRound}',
-                style: TextStyle(fontSize: 18, color: Colors.white),
+                style: const TextStyle(fontSize: 18, color: Colors.white),
               ),
             ],
           ),
@@ -806,7 +1193,7 @@ class _QuizScreenState extends State<QuizScreen> {
                     ),
                   );
                 },
-                child: Text(
+                child: const Text(
                   'OK',
                   style: TextStyle(fontSize: 18, color: Colors.blueAccent),
                 ),
@@ -824,10 +1211,10 @@ class _QuizScreenState extends State<QuizScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.subject, style: TextStyle(color: Colors.white),),
-        backgroundColor: Color(0xFF1D1E33),
+        title: Text(widget.subject, style: const TextStyle(color: Colors.white),),
+        backgroundColor: const Color(0xFF1D1E33),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white), // White back arrow
+          icon: const Icon(Icons.arrow_back, color: Colors.white), // White back arrow
           onPressed: () {
             Navigator.pop(context); // Go back to the QuestionSelectionScreen
           },
@@ -838,7 +1225,7 @@ class _QuizScreenState extends State<QuizScreen> {
             child: Center(
               child: Text(
                 'Points: ${totalPoints + pointsEarnedInRound}',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
               ),
             ),
           ),
@@ -846,7 +1233,7 @@ class _QuizScreenState extends State<QuizScreen> {
       ),
       body: Stack(
         children: [
-          SpaceBackground(),
+          const SpaceBackground(),
           Padding(
             padding: const EdgeInsets.only(top: 50.0), // Move content down
             child: Column(
@@ -855,22 +1242,22 @@ class _QuizScreenState extends State<QuizScreen> {
                 AnimatedProgressBar(
                   value: (currentQuestionIndex + 1) / widget.questions.length,
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 Text(
                   'Question ${currentQuestionIndex + 1}/${widget.questions.length}:',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
                   textAlign: TextAlign.center,
                 ),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20.0),
                   child: Text(
                     currentQuestion.questionText,
-                    style: TextStyle(fontSize: 20, color: Colors.white),
+                    style: const TextStyle(fontSize: 20, color: Colors.white),
                     textAlign: TextAlign.center,
                   ),
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 ...currentQuestion.options.map((option) {
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 20.0),
@@ -884,7 +1271,7 @@ class _QuizScreenState extends State<QuizScreen> {
                       ),
                     ),
                   );
-                }).toList(),
+                }),
                 if (isAnswered)
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20.0),
@@ -892,18 +1279,18 @@ class _QuizScreenState extends State<QuizScreen> {
                       onPressed: _nextQuestion,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.purple, // Changed color to purple
-                        padding: EdgeInsets.symmetric(vertical: 12),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
                       child: Text(
                         currentQuestionIndex < widget.questions.length - 1 ? 'Next Question' : 'Finish Quiz',
-                        style: TextStyle(fontSize: 18, color: Colors.white),
+                        style: const TextStyle(fontSize: 18, color: Colors.white),
                       ),
                     ),
                   ),
                 if (isAnswered)
                   Container(
-                    margin: EdgeInsets.only(top: 20),
-                    padding: EdgeInsets.all(15),
+                    margin: const EdgeInsets.only(top: 20),
+                    padding: const EdgeInsets.all(15),
                     decoration: BoxDecoration(
                       color: currentAnswerResult!.startsWith('Correct')
                           ? Colors.green.withOpacity(0.8)
@@ -912,7 +1299,7 @@ class _QuizScreenState extends State<QuizScreen> {
                     ),
                     child: Text(
                       currentAnswerResult!,
-                      style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold),
+                      style: const TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold),
                       textAlign: TextAlign.center,
                     ),
                   ),
