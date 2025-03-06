@@ -181,4 +181,52 @@ class DatabaseHelper {
     final db = await database;
     await db.delete('users', where: 'id = ?', whereArgs: [id]);
   }
+
+  // Add a method to fetch purchased themes
+  Future<List<String>> getPurchasedThemes(String username) async {
+    final db = await database;
+    final result = await db.query(
+      'user_themes',
+      where: 'username = ?',
+      whereArgs: [username],
+    );
+    return result.map((row) => row['theme'] as String).toList();
+  }
+
+  // Add a method to purchase a theme
+  Future<bool> purchaseTheme(String username, String theme, int cost) async {
+    final db = await database;
+    final userPoints = await getUserPoints(username);
+
+    if (userPoints < cost) {
+      return false; // Not enough points
+    }
+
+    // Deduct points
+    await db.update(
+      'users',
+      {'points': userPoints - cost},
+      where: 'username = ?',
+      whereArgs: [username],
+    );
+
+    // Add theme to user's purchased themes
+    await db.insert('user_themes', {
+      'username': username,
+      'theme': theme,
+    });
+
+    return true;
+  }
+
+  // Add a method to check if a theme is already purchased
+  Future<bool> isThemePurchased(String username, String theme) async {
+    final db = await database;
+    final result = await db.query(
+      'user_themes',
+      where: 'username = ? AND theme = ?',
+      whereArgs: [username, theme],
+    );
+    return result.isNotEmpty;
+  }
 }
