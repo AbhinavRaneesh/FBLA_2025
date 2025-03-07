@@ -263,7 +263,7 @@ class _SignInPageState extends State<SignInPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const Text(
-                      'Welcome!',
+                      'Welcome To EduQuest!',
                       style: TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
