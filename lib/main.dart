@@ -85,24 +85,22 @@ class GameButton extends StatelessWidget {
     Color textColor = Colors.white;
 
     if (isSelected && isCorrect != null) {
-      // Full button coloring when answered
       backgroundColor = isCorrect! ? Colors.green : Colors.red;
       borderColor = isCorrect! ? Colors.green : Colors.red;
       textColor = Colors.white;
     } else if (isCorrect == true) {
-      // Show correct answer
       backgroundColor = Colors.green;
       borderColor = Colors.green;
       textColor = Colors.white;
     }
 
     return Container(
-      width: MediaQuery.of(context).size.width * 0.9,
+      width: MediaQuery.of(context).size.width * 0.8, // Reduced from 0.9
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
           backgroundColor: backgroundColor,
-          padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 30),
+          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 25), // Increased vertical padding
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
             side: BorderSide(color: borderColor, width: 2),
@@ -871,7 +869,11 @@ class ShopScreen extends StatefulWidget {
   final String username;
   final Function(int) onPointsUpdated;
 
-  const ShopScreen({super.key, required this.username, required this.onPointsUpdated});
+  const ShopScreen({
+    super.key,
+    required this.username,
+    required this.onPointsUpdated,
+  });
 
   @override
   _ShopScreenState createState() => _ShopScreenState();
@@ -881,94 +883,96 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
   late TabController _tabController;
   int _userPoints = 0;
   final DatabaseHelper _dbHelper = DatabaseHelper();
+  Map<String, int> powerupQuantities = {};
+  bool isLoading = true;
 
-  // List of themes
-  final List<ShopItem> themes = [
-    ShopItem(
-      itemName: 'Space Theme',
-      cost: 0,
-      isPurchased: true,
-      isEquipped: true,
-      type: ShopItemType.theme,
-    ),
-    ShopItem(
-      itemName: 'Jungle Theme',
-      cost: 100,
-      isPurchased: false,
-      isEquipped: false,
-      type: ShopItemType.theme,
-    ),
-    ShopItem(
-      itemName: 'Egypt Theme',
-      cost: 150,
-      isPurchased: false,
-      isEquipped: false,
-      type: ShopItemType.theme,
-    ),
-    ShopItem(
-      itemName: 'Mountain Theme',
-      cost: 200,
-      isPurchased: false,
-      isEquipped: false,
-      type: ShopItemType.theme,
-    ),
-  ];
-
-  // List of powerups
   final List<ShopItem> powerups = [
     ShopItem(
       itemName: 'Double Points',
-      cost: 50,
+      cost: 10,
       isPurchased: false,
       isEquipped: false,
       type: ShopItemType.powerup,
     ),
     ShopItem(
       itemName: '50/50',
-      cost: 30,
+      cost: 20,
       isPurchased: false,
       isEquipped: false,
       type: ShopItemType.powerup,
     ),
     ShopItem(
       itemName: 'Skip Question',
-      cost: 40,
+      cost: 30,
       isPurchased: false,
       isEquipped: false,
       type: ShopItemType.powerup,
     ),
     ShopItem(
       itemName: 'Double or Nothing',
-      cost: 60,
+      cost: 30,
       isPurchased: false,
       isEquipped: false,
       type: ShopItemType.powerup,
     ),
   ];
 
+  final List<ShopItem> themes = [
+    ShopItem(
+      itemName: 'Space Theme',
+      cost: 0,  // Free as default
+      isPurchased: true,
+      isEquipped: true,
+      type: ShopItemType.theme,
+    ),
+    ShopItem(
+      itemName: 'Beach Theme',
+      cost: 500,
+      isPurchased: false,
+      isEquipped: false,
+      type: ShopItemType.theme,
+    ),
+    ShopItem(
+      itemName: 'Mountain Theme',
+      cost: 750,
+      isPurchased: false,
+      isEquipped: false,
+      type: ShopItemType.theme,
+    ),
+    ShopItem(
+      itemName: 'Egypt Theme',
+      cost: 1000,
+      isPurchased: false,
+      isEquipped: false,
+      type: ShopItemType.theme,
+    ),
+  ];
+
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this); // Two tabs: Themes and Powerups
-    _loadUserPoints();
+    _tabController = TabController(length: 2, vsync: this);
+    _loadInitialData();
   }
 
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _loadUserPoints() async {
+  Future<void> _loadInitialData() async {
     final points = await _dbHelper.getUserPoints(widget.username);
+    final quantities = await Future.wait(
+      powerups.map((powerup) => _dbHelper.getPowerupQuantity(widget.username, powerup.itemName)),
+    );
+
     setState(() {
       _userPoints = points;
+      for (var i = 0; i < powerups.length; i++) {
+        powerupQuantities[powerups[i].itemName] = quantities[i];
+        powerups[i].quantity = quantities[i];
+      }
+      isLoading = false;
     });
   }
 
   Future<void> _purchaseItem(ShopItem item) async {
     if (_userPoints < item.cost) {
-      ScaffoldMessenger.of(context).hideCurrentSnackBar(); // Hide previous SnackBar
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Not enough points to purchase this item.')),
       );
@@ -977,87 +981,124 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
 
     try {
       final newPoints = _userPoints - item.cost;
-
-      // Update points in the database
       await _dbHelper.updateUserPoints(widget.username, newPoints);
 
       if (item.type == ShopItemType.powerup) {
-        // Update powerup quantity
-        final currentQuantity = await _dbHelper.getPowerupQuantity(widget.username, item.itemName);
-        await _dbHelper.updatePowerupQuantity(widget.username, item.itemName, currentQuantity + 1);
-        print('Updated ${item.itemName} quantity to ${currentQuantity + 1}'); // Debug log
+        final newQuantity = (powerupQuantities[item.itemName] ?? 0) + 1;
+        await _dbHelper.updatePowerupQuantity(widget.username, item.itemName, newQuantity);
+
+        setState(() {
+          _userPoints = newPoints;
+          powerupQuantities[item.itemName] = newQuantity;
+          item.quantity = newQuantity;
+        });
+      } else if (item.type == ShopItemType.theme) {
+        await _dbHelper.purchaseTheme(widget.username, item.itemName);
+
+        setState(() {
+          _userPoints = newPoints;
+          item.isPurchased = true;
+        });
       }
 
-      // Update local state
-      setState(() {
-        _userPoints = newPoints;
-        item.isPurchased = true;
-      });
-
-      // Notify HomeScreen about the updated points
       widget.onPointsUpdated(newPoints);
-
-      ScaffoldMessenger.of(context).hideCurrentSnackBar(); // Hide previous SnackBar
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('${item.itemName} purchased successfully!')),
       );
     } catch (e) {
       print('Error purchasing item: $e');
-      ScaffoldMessenger.of(context).hideCurrentSnackBar(); // Hide previous SnackBar
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('An error occurred. Please try again.')),
       );
     }
   }
 
+  Widget _buildPowerupsTab() {
+    if (isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(20),
+      itemCount: powerups.length,
+      itemBuilder: (context, index) {
+        final powerup = powerups[index];
+        return ShopItemCard(
+          item: powerup,
+          onPurchase: () => _purchaseItem(powerup),
+        );
+      },
+    );
+  }
+
+  Widget _buildThemesTab() {
+    if (isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(20),
+      itemCount: themes.length,
+      itemBuilder: (context, index) {
+        final theme = themes[index];
+        return ShopItemCard(
+          item: theme,
+          onPurchase: () => _purchaseItem(theme),
+          onEquip: theme.isPurchased ? () => _equipTheme(theme) : null,
+        );
+      },
+    );
+  }
+
+  void _equipTheme(ShopItem theme) {
+    setState(() {
+      for (var t in themes) {
+        t.isEquipped = false;
+      }
+      theme.isEquipped = true;
+    });
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Shop', style: TextStyle(color: Colors.white)),
         backgroundColor: const Color(0xFF1D1E33),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: Center(
-              child: Text(
-                'Points: $_userPoints',
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
-              ),
-            ),
-          ),
-        ],
+        iconTheme: const IconThemeData(color: Colors.white), // This makes the back arrow white
         bottom: TabBar(
           controller: _tabController,
-          indicatorColor: Colors.blueAccent,
+          indicatorColor: Colors.white,
           indicatorWeight: 3,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white60,
           labelStyle: const TextStyle(
-            fontSize: 18,
+            fontSize: 16,
             fontWeight: FontWeight.bold,
+            color: Colors.white, // Makes the selected tab text white
           ),
           unselectedLabelStyle: const TextStyle(
             fontSize: 16,
-            fontWeight: FontWeight.normal,
+            color: Colors.white70, // Makes the unselected tab text white with opacity
           ),
-          tabs: [
+          labelColor: Colors.white, // Makes tab text white
+          unselectedLabelColor: Colors.white70, // Makes unselected tab text white with opacity
+          tabs: const [
             Tab(
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: const Text('Themes'),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.palette),
+                  SizedBox(width: 8),
+                  Text('Themes'),
+                ],
               ),
             ),
             Tab(
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: const Text('Powerups'),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.auto_awesome),
+                  SizedBox(width: 8),
+                  Text('Powerups'),
+                ],
               ),
             ),
           ],
@@ -1066,76 +1107,39 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
       body: Stack(
         children: [
           const SpaceBackground(),
-          TabBarView(
-            controller: _tabController,
+          Column(
             children: [
-              _buildThemesTab(),
-              _buildPowerupsTab(),
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.stars, color: Colors.amber),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Points: $_userPoints',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _buildThemesTab(),
+                    _buildPowerupsTab(),
+                  ],
+                ),
+              ),
             ],
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildThemesTab() {
-    return ListView.builder(
-      padding: const EdgeInsets.all(20),
-      itemCount: themes.length,
-      itemBuilder: (context, index) {
-        final theme = themes[index];
-        return ShopItemCard(
-          item: theme,
-          onPurchase: () async {
-            await _purchaseItem(theme);
-          },
-          onEquip: () {
-            // Logic to equip the theme
-            setState(() {
-              for (var t in themes) {
-                t.isEquipped = false;
-              }
-              theme.isEquipped = true;
-            });
-            ScaffoldMessenger.of(context).hideCurrentSnackBar(); // Hide previous SnackBar
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('${theme.itemName} equipped!')),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildPowerupsTab() {
-    return ListView.builder(
-      padding: const EdgeInsets.all(20),
-      itemCount: powerups.length,
-      itemBuilder: (context, index) {
-        final powerup = powerups[index];
-        return FutureBuilder<int>(
-          key: ValueKey(powerup.itemName), // Unique key for each FutureBuilder
-          future: _dbHelper.getPowerupQuantity(widget.username, powerup.itemName),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const CircularProgressIndicator(); // Show a loading indicator
-            }
-            if (snapshot.hasError) {
-              return Text('Error: ${snapshot.error}');
-            }
-            final quantity = snapshot.data ?? 0; // Default to 0 if no data
-            powerup.quantity = quantity; // Update the powerup quantity
-
-            return ShopItemCard(
-              item: powerup,
-              onPurchase: () async {
-                await _purchaseItem(powerup);
-                setState(() {}); // Force the FutureBuilder to rebuild
-              },
-            );
-          },
-        );
-      },
     );
   }
 }
@@ -1359,7 +1363,12 @@ class QuizScreen extends StatefulWidget {
   final List<Question> questions;
   final String username;
 
-  QuizScreen({required this.subject, required this.questions, required this.username});
+  const QuizScreen({
+    super.key,
+    required this.subject,
+    required this.questions,
+    required this.username,
+  });
 
   @override
   _QuizScreenState createState() => _QuizScreenState();
@@ -1369,7 +1378,6 @@ class _QuizScreenState extends State<QuizScreen> {
   int currentQuestionIndex = 0;
   String? selectedAnswer;
   bool isAnswered = false;
-  String? currentAnswerResult;
   int pointsEarnedInRound = 0;
   int totalPoints = 0;
   int correctAnswersCount = 0;
@@ -1419,7 +1427,6 @@ class _QuizScreenState extends State<QuizScreen> {
       isAnswered = true;
 
       if (answer == widget.questions[currentQuestionIndex].correctAnswer) {
-        currentAnswerResult = 'Correct!';
         if (isDoublePointsActive) {
           pointsEarnedInRound += 20;
         } else if (isDoubleOrNothingActive) {
@@ -1429,7 +1436,6 @@ class _QuizScreenState extends State<QuizScreen> {
         }
         correctAnswersCount++;
       } else {
-        currentAnswerResult = 'Wrong! The correct answer is: ${widget.questions[currentQuestionIndex].correctAnswer}';
         if (isDoubleOrNothingActive) {
           pointsEarnedInRound -= 20;
         }
@@ -1443,7 +1449,6 @@ class _QuizScreenState extends State<QuizScreen> {
         currentQuestionIndex++;
         selectedAnswer = null;
         isAnswered = false;
-        currentAnswerResult = null;
         isDoublePointsActive = false;
         isFiftyFiftyActive = false;
         isSkipQuestionActive = false;
@@ -1452,69 +1457,6 @@ class _QuizScreenState extends State<QuizScreen> {
         _showFinalScore();
       }
     });
-  }
-
-  Widget _buildPowerupButton(String powerup, int quantity, Widget icon) {
-    bool isActive = false;
-    Color buttonColor = Colors.blueAccent;
-
-    switch (powerup) {
-      case 'Double Points':
-        isActive = isDoublePointsActive;
-        buttonColor = Colors.green;
-        break;
-      case '50/50':
-        isActive = isFiftyFiftyActive;
-        buttonColor = Colors.orange;
-        break;
-      case 'Skip Question':
-        isActive = isSkipQuestionActive;
-        buttonColor = Colors.red;
-        break;
-      case 'Double or Nothing':
-        isActive = isDoubleOrNothingActive;
-        buttonColor = Colors.purple;
-        break;
-    }
-
-    return Opacity(
-      opacity: quantity > 0 ? 1.0 : 0.5,
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 4),
-        child: Tooltip(
-          message: '$powerup ($quantity left)',
-          child: ElevatedButton(
-            onPressed: quantity > 0 && !isAnswered ? () => _usePowerup(powerup) : null,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: isActive ? buttonColor : Colors.blueAccent.withOpacity(0.2),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-                side: BorderSide(
-                  color: isActive ? buttonColor : Colors.blueAccent,
-                  width: 2,
-                ),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                icon,
-                const SizedBox(height: 4),
-                Text(
-                  quantity.toString(),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
   }
 
   void _usePowerup(String powerup) {
@@ -1618,6 +1560,67 @@ class _QuizScreenState extends State<QuizScreen> {
     });
   }
 
+  Widget _buildPowerupButton(String powerup, int quantity, Widget icon, Color activeColor) {
+    bool isActive = false;
+    Color buttonColor = const Color(0xFF1D1E33);
+
+    switch (powerup) {
+      case 'Double Points':
+        isActive = isDoublePointsActive;
+        buttonColor = isActive ? activeColor : const Color(0xFF1D1E33);
+        break;
+      case '50/50':
+        isActive = isFiftyFiftyActive;
+        buttonColor = isActive ? activeColor : const Color(0xFF1D1E33);
+        break;
+      case 'Skip Question':
+        isActive = isSkipQuestionActive;
+        buttonColor = isActive ? activeColor : const Color(0xFF1D1E33);
+        break;
+      case 'Double or Nothing':
+        isActive = isDoubleOrNothingActive;
+        buttonColor = isActive ? activeColor : const Color(0xFF1D1E33);
+        break;
+    }
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 8),
+      child: Opacity(
+        opacity: quantity > 0 ? 1.0 : 0.5,
+        child: ElevatedButton(
+          onPressed: quantity > 0 && !isAnswered ? () => _usePowerup(powerup) : null,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: buttonColor,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(color: Colors.blueAccent, width: 2),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: 24,
+                height: 24,
+                child: icon,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'x$quantity',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     Question currentQuestion = widget.questions[currentQuestionIndex];
@@ -1628,91 +1631,111 @@ class _QuizScreenState extends State<QuizScreen> {
     }
 
     return Scaffold(
+      backgroundColor: const Color(0xFF1A1A2E),
       appBar: AppBar(
-        title: Text(widget.subject, style: const TextStyle(color: Colors.white)),
-        backgroundColor: const Color(0xFF1D1E33),
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        title: Row(
+          children: [
+            Text(
+              widget.subject,
+              style: const TextStyle(color: Colors.white),
+            ),
+            const Spacer(),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.blueAccent.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.stars, color: Colors.amber, size: 20),
+                  const SizedBox(width: 8),
+                  Text(
+                    '${totalPoints + pointsEarnedInRound}',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
-        actions: [
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.only(right: 16.0),
-              child: Text(
-                'Points: ${totalPoints + pointsEarnedInRound}',
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ),
-        ],
       ),
       body: Stack(
         children: [
           const SpaceBackground(),
           Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // Progress Bar
               Container(
-                height: 10,
-                margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                decoration: BoxDecoration(
-                  color: Colors.grey[800],
-                  borderRadius: BorderRadius.circular(5),
-                ),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 500),
-                  curve: Curves.easeInOut,
-                  width: MediaQuery.of(context).size.width * ((currentQuestionIndex + (isAnswered ? 1 : 0)) / widget.questions.length),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Colors.blueAccent, Colors.purpleAccent],
-                    ),
-                    borderRadius: BorderRadius.circular(5),
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                child: Text(
-                  'Question ${currentQuestionIndex + 1}/${widget.questions.length}',
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-              Container(
-                height: 60,
-                padding: const EdgeInsets.symmetric(horizontal: 10), // Reduced padding
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly, // Changed from center
+                margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                child: Column(
                   children: [
-                    Flexible(child: _buildPowerupButton('Double Points', doublePointsQuantity,
-                        const Text('2×', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)))),
-                    Flexible(child: _buildPowerupButton('50/50', fiftyFiftyQuantity,
-                        const Text('50/50', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)))),
-                    Flexible(child: _buildPowerupButton('Skip Question', skipQuestionQuantity,
-                        const Icon(Icons.skip_next, size: 20))),
-                    Flexible(child: _buildPowerupButton('Double or Nothing', doubleOrNothingQuantity,
-                        const Icon(Icons.casino_outlined, size: 20))),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Question ${currentQuestionIndex + 1}',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        Text(
+                          '${currentQuestionIndex + 1}/${widget.questions.length}',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            color: Colors.white70,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: LinearProgressIndicator(
+                        value: (currentQuestionIndex + 1) / widget.questions.length,
+                        backgroundColor: Colors.blueAccent.withOpacity(0.2),
+                        valueColor: const AlwaysStoppedAnimation<Color>(Colors.blueAccent),
+                        minHeight: 10,
+                      ),
+                    ),
                   ],
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.all(20),
+
+              // Question Text
+              Container(
+                margin: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.blueAccent.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(15),
+                  border: Border.all(color: Colors.blueAccent.withOpacity(0.3)),
+                ),
                 child: Text(
                   currentQuestion.questionText,
-                  style: const TextStyle(fontSize: 20, color: Colors.white),
+                  style: const TextStyle(
+                    fontSize: 20,
+                    color: Colors.white,
+                    height: 1.5,
+                  ),
                   textAlign: TextAlign.center,
                 ),
               ),
+
+              // Answer Options
               Expanded(
                 child: ListView(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -1723,29 +1746,80 @@ class _QuizScreenState extends State<QuizScreen> {
                         text: option,
                         onPressed: isAnswered ? null : () => _checkAnswer(option),
                         isSelected: selectedAnswer == option,
-                        isCorrect: isAnswered ? option == widget.questions[currentQuestionIndex].correctAnswer : null,
+                        isCorrect: isAnswered ? option == currentQuestion.correctAnswer : null,
                       ),
                     )),
                     if (isAnswered) ...[
                       const SizedBox(height: 20),
-                      ElevatedButton(
-                        onPressed: _nextQuestion,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.purple,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 20),
+                        child: ElevatedButton(
+                          onPressed: _nextQuestion,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.purple,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15),
+                            ),
                           ),
-                        ),
-                        child: Text(
-                          currentQuestionIndex < widget.questions.length - 1
-                              ? 'Next Question'
-                              : 'Finish Quiz',
-                          style: const TextStyle(fontSize: 18, color: Colors.white),
+                          child: Text(
+                            currentQuestionIndex < widget.questions.length - 1
+                                ? 'Next Question'
+                                : 'Finish Quiz',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
                         ),
                       ),
                     ],
                   ],
+                ),
+              ),
+
+              // Powerups Row at the bottom
+              Container(
+                height: 100,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.3),
+                  border: Border(
+                    top: BorderSide(color: Colors.blueAccent.withOpacity(0.3)),
+                  ),
+                ),
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildPowerupButton(
+                        'Double Points',
+                        doublePointsQuantity,
+                        const Icon(Icons.looks_two, color: Colors.white, size: 28),
+                        Colors.green,
+                      ),
+                      _buildPowerupButton(
+                        '50/50',
+                        fiftyFiftyQuantity,
+                        const Icon(Icons.balance, color: Colors.white, size: 28),
+                        Colors.orange,
+                      ),
+                      _buildPowerupButton(
+                        'Skip Question',
+                        skipQuestionQuantity,
+                        const Icon(Icons.skip_next, color: Colors.white, size: 28),
+                        Colors.red,
+                      ),
+                      _buildPowerupButton(
+                        'Double or Nothing',
+                        doubleOrNothingQuantity,
+                        const Icon(Icons.casino, color: Colors.white, size: 28),
+                        Colors.purple,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],

@@ -14,6 +14,7 @@ dependencies:
   sqflite: ^2.3.0 # For SQLite database operations
   path: ^1.8.3 # For path manipulation (used with sqflite)
   google_sign_in: ^6.1.0
+  provider: ^6.0.0
   #audioplayers: ^4.1.0 # For playing sound effects
 
 dev_dependencies:
@@ -28,6 +29,7 @@ flutter:
     - assets/images/planet.png # Add your image assets here
     - assets/images/astronaut.png # Add your sound assets here (e.g., correct_answer.mp3, wrong_answer.mp3)
     - assets/images/google_icon.png # Add your sound assets here (e.g., correct_answer.mp3, wrong_answer.mp3)
+    - assets/images/beach.jpg # Add your sound assets here (e.g., correct_answer.mp3, wrong_answer.mp3)
 
 #  fonts:
 #    - family: YourCustomFont # Optional: Add custom fonts if needed

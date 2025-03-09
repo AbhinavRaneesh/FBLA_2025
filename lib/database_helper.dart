@@ -26,30 +26,37 @@ class DatabaseHelper {
 
   Future<void> _onCreate(Database db, int version) async {
     await db.execute('''
-      CREATE TABLE users(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT UNIQUE,
-        password TEXT,
-        points INTEGER DEFAULT 0
-      )
-    ''');
+    CREATE TABLE users(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT UNIQUE,
+      password TEXT,
+      points INTEGER DEFAULT 0
+    )
+  ''');
 
     await db.execute('''
-      CREATE TABLE user_themes(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT,
-        theme TEXT
-      )
-    ''');
+    CREATE TABLE user_themes(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT,
+      theme TEXT,
+      active INTEGER DEFAULT 0
+    )
+  ''');
+
+    // Insert default space theme for all users
+    await db.execute('''
+    INSERT INTO user_themes (username, theme, active)
+    SELECT username, 'Space Theme', 1 FROM users
+  ''');
 
     await db.execute('''
-      CREATE TABLE user_powerups(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT,
-        itemName TEXT,
-        quantity INTEGER DEFAULT 0
-      )
-    ''');
+    CREATE TABLE user_powerups(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT,
+      itemName TEXT,
+      quantity INTEGER DEFAULT 0
+    )
+  ''');
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -146,13 +153,13 @@ class DatabaseHelper {
     );
   }
 
-  Future<void> purchaseTheme(String username, String themeName, int cost) async {
+  Future<void> purchaseTheme(String username, String themeName) async {
     final db = await database;
     await db.insert(
-      'user_themes',
+      'purchased_themes',
       {
         'username': username,
-        'theme': themeName,
+        'theme_name': themeName,
       },
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
@@ -175,19 +182,14 @@ class DatabaseHelper {
   }
 
   // Check if a theme is already purchased
-  Future<bool> isThemePurchased(String username, String theme) async {
-    try {
-      final db = await database;
-      final result = await db.query(
-        'user_themes',
-        where: 'username = ? AND theme = ?',
-        whereArgs: [username, theme],
-      );
-      return result.isNotEmpty;
-    } catch (e) {
-      print('Error checking if theme is purchased: $e');
-      return false;
-    }
+  Future<bool> isThemePurchased(String username, String themeName) async {
+    final db = await database;
+    final List<Map<String, dynamic>> result = await db.query(
+      'purchased_themes',
+      where: 'username = ? AND theme_name = ?',
+      whereArgs: [username, themeName],
+    );
+    return result.isNotEmpty;
   }
 
   // Print all users (for debugging)
@@ -243,5 +245,40 @@ class DatabaseHelper {
         whereArgs: [username, itemName],
       );
     }
+  }
+
+  Future<String> getActiveTheme(String username) async {
+    try {
+      final db = await database;
+      final result = await db.query(
+        'user_themes',
+        where: 'username = ? AND active = 1',
+        whereArgs: [username],
+      );
+      return result.isNotEmpty ? result.first['theme'] as String : 'Space Theme';
+    } catch (e) {
+      print('Error fetching active theme: $e');
+      return 'Space Theme';
+    }
+  }
+
+  Future<void> updateActiveTheme(String username, String themeName) async {
+    final db = await database;
+    await db.transaction((txn) async {
+      // First, deactivate all themes for this user
+      await txn.update(
+        'user_themes',
+        {'active': 0},
+        where: 'username = ?',
+        whereArgs: [username],
+      );
+      // Then, activate the selected theme
+      await txn.update(
+        'user_themes',
+        {'active': 1},
+        where: 'username = ? AND theme = ?',
+        whereArgs: [username, themeName],
+      );
+    });
   }
 }
