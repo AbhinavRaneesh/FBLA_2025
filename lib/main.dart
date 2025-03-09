@@ -444,7 +444,7 @@ class _SignUpPageState extends State<SignUpPage> {
     }
 
     try {
-      final userExists = await _dbHelper.checkIfUserExists(username);
+      final userExists = await _dbHelper.usernameExists(username);
 
       if (userExists) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -616,13 +616,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final Map<String, List<Question>> subjectQuestions = {
-    'Math': QuestionsRepository.getQuestionsForSubject('Math'),
-    'History': QuestionsRepository.getQuestionsForSubject('History'),
-    'English': QuestionsRepository.getQuestionsForSubject('English'),
-    'Science': QuestionsRepository.getQuestionsForSubject('Science'),
-  };
-
   int _userPoints = 0;
   final DatabaseHelper _dbHelper = DatabaseHelper();
 
@@ -639,12 +632,18 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  void _updatePoints(int newPoints) {
+    setState(() {
+      _userPoints = newPoints;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Choose a Subject', style: TextStyle(color: Colors.white)),
-        backgroundColor: Color(0xFF1D1E33),
+        title: const Text('Choose a Subject', style: TextStyle(color: Colors.white)),
+        backgroundColor: const Color(0xFF1D1E33),
         automaticallyImplyLeading: false,
         actions: [
           Padding(
@@ -652,12 +651,12 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Center(
               child: Text(
                 'Points: $_userPoints',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
               ),
             ),
           ),
           IconButton(
-            icon: Icon(Icons.logout, color: Colors.white), // White logout icon
+            icon: const Icon(Icons.logout, color: Colors.white),
             onPressed: () {
               Navigator.pushReplacement(
                 context,
@@ -669,7 +668,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: Stack(
         children: [
-          SpaceBackground(),
+          const SpaceBackground(),
           Padding(
             padding: const EdgeInsets.all(20.0),
             child: Column(
@@ -694,52 +693,100 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 20),
                 Expanded(
                   child: GridView.count(
-                    crossAxisCount: 2, // Two columns for the grid
-                    crossAxisSpacing: 20, // Spacing between columns
-                    mainAxisSpacing: 20, // Spacing between rows
-                    children: subjectQuestions.keys.map((subject) {
-                      return SubjectCard(
-                        subject: subject,
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 20,
+                    mainAxisSpacing: 20,
+                    children: [
+                      SubjectCard(
+                        subject: 'Math',
                         onTap: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (context) => QuestionSelectionScreen(
-                                subject: subject,
-                                questions: subjectQuestions[subject]!,
+                                subject: 'Math',
+                                questions: QuestionsRepository.getQuestionsForSubject('Math'),
                                 username: widget.username,
                               ),
                             ),
                           );
                         },
-                      );
-                    }).toList(),
+                      ),
+                      SubjectCard(
+                        subject: 'History',
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => QuestionSelectionScreen(
+                                subject: 'History',
+                                questions: QuestionsRepository.getQuestionsForSubject('History'),
+                                username: widget.username,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      SubjectCard(
+                        subject: 'English',
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => QuestionSelectionScreen(
+                                subject: 'English',
+                                questions: QuestionsRepository.getQuestionsForSubject('English'),
+                                username: widget.username,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      SubjectCard(
+                        subject: 'Science',
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => QuestionSelectionScreen(
+                                subject: 'Science',
+                                questions: QuestionsRepository.getQuestionsForSubject('Science'),
+                                username: widget.username,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
                   ),
                 ),
-                SizedBox(height: 20),
-                // Bigger Shop Button
+                const SizedBox(height: 20),
+                // Shop Button
                 Container(
-                  width: double.infinity, // Full width
-                  padding: EdgeInsets.symmetric(horizontal: 50),
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 50),
                   child: ElevatedButton(
                     onPressed: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => ShopScreen(username: widget.username),
+                          builder: (context) => ShopScreen(
+                            username: widget.username,
+                            onPointsUpdated: _updatePoints, // Pass the callback
+                          ),
                         ),
                       );
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blueAccent,
-                      padding: EdgeInsets.symmetric(vertical: 20), // Bigger button
+                      padding: const EdgeInsets.symmetric(vertical: 20),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(15),
                       ),
                     ),
-                    child: Text(
+                    child: const Text(
                       'Visit Shop',
-                      style: TextStyle(fontSize: 20, color: Colors.white), // Bigger text
+                      style: TextStyle(fontSize: 20, color: Colors.white),
                     ),
                   ),
                 ),
@@ -772,14 +819,14 @@ class SubjectCard extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              _getSubjectIcon(subject), // Get an icon based on the subject
+              _getSubjectIcon(subject),
               size: 50,
               color: Colors.white,
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             Text(
               subject,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
@@ -810,21 +857,94 @@ class SubjectCard extends StatelessWidget {
 
 class ShopScreen extends StatefulWidget {
   final String username;
+  final Function(int) onPointsUpdated;
 
-  const ShopScreen({super.key, required this.username});
+  const ShopScreen({super.key, required this.username, required this.onPointsUpdated});
 
   @override
   _ShopScreenState createState() => _ShopScreenState();
 }
 
-class _ShopScreenState extends State<ShopScreen> {
+class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
   int _userPoints = 0;
   final DatabaseHelper _dbHelper = DatabaseHelper();
+
+  // List of themes
+  final List<ShopItem> themes = [
+    ShopItem(
+      itemName: 'Space Theme',
+      cost: 0,
+      isPurchased: true,
+      isEquipped: true,
+      type: ShopItemType.theme,
+    ),
+    ShopItem(
+      itemName: 'Jungle Theme',
+      cost: 100,
+      isPurchased: false,
+      isEquipped: false,
+      type: ShopItemType.theme,
+    ),
+    ShopItem(
+      itemName: 'Egypt Theme',
+      cost: 150,
+      isPurchased: false,
+      isEquipped: false,
+      type: ShopItemType.theme,
+    ),
+    ShopItem(
+      itemName: 'Mountain Theme',
+      cost: 200,
+      isPurchased: false,
+      isEquipped: false,
+      type: ShopItemType.theme,
+    ),
+  ];
+
+  // List of powerups
+  final List<ShopItem> powerups = [
+    ShopItem(
+      itemName: 'Double Points',
+      cost: 50,
+      isPurchased: false,
+      isEquipped: false,
+      type: ShopItemType.powerup,
+    ),
+    ShopItem(
+      itemName: '50/50',
+      cost: 30,
+      isPurchased: false,
+      isEquipped: false,
+      type: ShopItemType.powerup,
+    ),
+    ShopItem(
+      itemName: 'Skip Question',
+      cost: 40,
+      isPurchased: false,
+      isEquipped: false,
+      type: ShopItemType.powerup,
+    ),
+    ShopItem(
+      itemName: 'Double or Nothing',
+      cost: 60,
+      isPurchased: false,
+      isEquipped: false,
+      type: ShopItemType.powerup,
+    ),
+  ];
 
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this); // Two tabs: Themes and Powerups
     _loadUserPoints();
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadUserPoints() async {
@@ -834,16 +954,46 @@ class _ShopScreenState extends State<ShopScreen> {
     });
   }
 
-  Future<void> _purchaseItem(String item, int cost) async {
-    final success = await _dbHelper.purchaseTheme(widget.username, item, cost);
-    if (success) {
+  Future<void> _purchaseItem(ShopItem item) async {
+    if (_userPoints < item.cost) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar(); // Hide previous SnackBar
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$item purchased successfully!')),
+        const SnackBar(content: Text('Not enough points to purchase this item.')),
       );
-      await _loadUserPoints(); // Refresh points after purchase
-    } else {
+      return;
+    }
+
+    try {
+      final newPoints = _userPoints - item.cost;
+
+      // Update points in the database
+      await _dbHelper.updateUserPoints(widget.username, newPoints);
+
+      if (item.type == ShopItemType.powerup) {
+        // Update powerup quantity
+        final currentQuantity = await _dbHelper.getPowerupQuantity(widget.username, item.itemName);
+        await _dbHelper.updatePowerupQuantity(widget.username, item.itemName, currentQuantity + 1);
+        print('Updated ${item.itemName} quantity to ${currentQuantity + 1}'); // Debug log
+      }
+
+      // Update local state
+      setState(() {
+        _userPoints = newPoints;
+        item.isPurchased = true;
+      });
+
+      // Notify HomeScreen about the updated points
+      widget.onPointsUpdated(newPoints);
+
+      ScaffoldMessenger.of(context).hideCurrentSnackBar(); // Hide previous SnackBar
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Not enough points to purchase $item.')),
+        SnackBar(content: Text('${item.itemName} purchased successfully!')),
+      );
+    } catch (e) {
+      print('Error purchasing item: $e');
+      ScaffoldMessenger.of(context).hideCurrentSnackBar(); // Hide previous SnackBar
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('An error occurred. Please try again.')),
       );
     }
   }
@@ -871,68 +1021,120 @@ class _ShopScreenState extends State<ShopScreen> {
             ),
           ),
         ],
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: const [
+            Tab(text: 'Themes'),
+            Tab(text: 'Powerups'),
+          ],
+        ),
       ),
-      body: Stack(
+      body: TabBarView(
+        controller: _tabController,
         children: [
-          const SpaceBackground(),
-          Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Welcome to the Shop!',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                const Text(
-                  'Spend your points on cool items:',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.white70,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Expanded(
-                  child: ListView(
-                    children: [
-                      ShopItem(
-                        itemName: 'Space Theme',
-                        cost: 100,
-                        onPurchase: () => _purchaseItem('Space Theme', 100),
-                      ),
-                      ShopItem(
-                        itemName: 'Galaxy Theme',
-                        cost: 200,
-                        onPurchase: () => _purchaseItem('Galaxy Theme', 200),
-                      ),
-                      ShopItem(
-                        itemName: 'Power-Up: Double Points',
-                        cost: 300,
-                        onPurchase: () => _purchaseItem('Double Points', 300),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
+          _buildThemesTab(),
+          _buildPowerupsTab(),
         ],
       ),
     );
   }
+
+  Widget _buildThemesTab() {
+    return ListView.builder(
+      padding: const EdgeInsets.all(20),
+      itemCount: themes.length,
+      itemBuilder: (context, index) {
+        final theme = themes[index];
+        return ShopItemCard(
+          item: theme,
+          onPurchase: () async {
+            await _purchaseItem(theme);
+          },
+          onEquip: () {
+            // Logic to equip the theme
+            setState(() {
+              for (var t in themes) {
+                t.isEquipped = false;
+              }
+              theme.isEquipped = true;
+            });
+            ScaffoldMessenger.of(context).hideCurrentSnackBar(); // Hide previous SnackBar
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('${theme.itemName} equipped!')),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildPowerupsTab() {
+    return ListView.builder(
+      padding: const EdgeInsets.all(20),
+      itemCount: powerups.length,
+      itemBuilder: (context, index) {
+        final powerup = powerups[index];
+        return FutureBuilder<int>(
+          key: ValueKey(powerup.itemName), // Unique key for each FutureBuilder
+          future: _dbHelper.getPowerupQuantity(widget.username, powerup.itemName),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const CircularProgressIndicator(); // Show a loading indicator
+            }
+            if (snapshot.hasError) {
+              return Text('Error: ${snapshot.error}');
+            }
+            final quantity = snapshot.data ?? 0; // Default to 0 if no data
+            powerup.quantity = quantity; // Update the powerup quantity
+
+            return ShopItemCard(
+              item: powerup,
+              onPurchase: () async {
+                await _purchaseItem(powerup);
+                setState(() {}); // Force the FutureBuilder to rebuild
+              },
+            );
+          },
+        );
+      },
+    );
+  }
 }
 
-class ShopItem extends StatelessWidget {
+// Model class for shop items
+enum ShopItemType { theme, powerup }
+
+class ShopItem {
   final String itemName;
   final int cost;
-  final VoidCallback onPurchase;
+  bool isPurchased;
+  bool isEquipped;
+  final ShopItemType type;
+  int quantity; // Track how many powerups the user owns
 
-  const ShopItem({super.key, required this.itemName, required this.cost, required this.onPurchase});
+  ShopItem({
+    required this.itemName,
+    required this.cost,
+    required this.isPurchased,
+    required this.isEquipped,
+    required this.type,
+    this.quantity = 0, // Default to 0
+  });
+}
+
+
+// Custom widget for shop item cards
+class ShopItemCard extends StatelessWidget {
+  final ShopItem item;
+  final VoidCallback onPurchase;
+  final VoidCallback? onEquip;
+
+  const ShopItemCard({
+    super.key,
+    required this.item,
+    required this.onPurchase,
+    this.onEquip,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -945,10 +1147,10 @@ class ShopItem extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              itemName,
+              item.itemName,
               style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -957,30 +1159,57 @@ class ShopItem extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             Text(
-              'Cost: $cost points',
+              'Cost: ${item.cost} points',
               style: const TextStyle(
                 fontSize: 16,
                 color: Colors.white70,
               ),
             ),
-            const SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: onPurchase,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blueAccent,
-                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              child: const Text(
-                'Buy',
-                style: TextStyle(
+            if (item.type == ShopItemType.powerup)
+              Text(
+                'Owned: ${item.quantity}',
+                style: const TextStyle(
                   fontSize: 16,
-                  color: Colors.white,
+                  color: Colors.white70,
                 ),
               ),
-            ),
+            const SizedBox(height: 10),
+            if (item.type == ShopItemType.theme && item.isPurchased)
+              ElevatedButton(
+                onPressed: onEquip,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: item.isEquipped ? Colors.green : Colors.blueAccent,
+                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: Text(
+                  item.isEquipped ? 'Equipped' : 'Equip',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            if (item.type == ShopItemType.powerup || !item.isPurchased)
+              ElevatedButton(
+                onPressed: onPurchase,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blueAccent,
+                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: const Text(
+                  'Buy',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
           ],
         ),
       ),
@@ -1086,46 +1315,69 @@ class _QuizScreenState extends State<QuizScreen> {
   String? selectedAnswer;
   bool isAnswered = false;
   String? currentAnswerResult;
-  int pointsEarnedInRound = 0; // Points earned in the current quiz round
-  int totalPoints = 0; // Total points of the user
-  int correctAnswersCount = 0; // Track the number of correct answers
+  int pointsEarnedInRound = 0;
+  int totalPoints = 0;
+  int correctAnswersCount = 0;
   final DatabaseHelper _dbHelper = DatabaseHelper();
-  //final AudioPlayer _audioPlayer = AudioPlayer();
+
+  // Powerups
+  bool isDoublePointsActive = false;
+  bool isFiftyFiftyActive = false;
+  bool isSkipQuestionActive = false;
+  bool isDoubleOrNothingActive = false;
+
+  // Powerup quantities
+  int doublePointsQuantity = 0;
+  int fiftyFiftyQuantity = 0;
+  int skipQuestionQuantity = 0;
+  int doubleOrNothingQuantity = 0;
 
   @override
   void initState() {
     super.initState();
     _loadUserPoints();
+    _loadPowerupQuantities();
   }
 
   Future<void> _loadUserPoints() async {
-    final userPoints = await _dbHelper.getUserPoints(widget.username);
+    final points = await _dbHelper.getUserPoints(widget.username);
     setState(() {
-      totalPoints = userPoints;
+      totalPoints = points;
     });
+  }
+
+  Future<void> _loadPowerupQuantities() async {
+    doublePointsQuantity = await _dbHelper.getPowerupQuantity(widget.username, 'Double Points');
+    fiftyFiftyQuantity = await _dbHelper.getPowerupQuantity(widget.username, '50/50');
+    skipQuestionQuantity = await _dbHelper.getPowerupQuantity(widget.username, 'Skip Question');
+    doubleOrNothingQuantity = await _dbHelper.getPowerupQuantity(widget.username, 'Double or Nothing');
+    setState(() {});
   }
 
   Future<void> _updateUserPoints() async {
     await _dbHelper.updateUserPoints(widget.username, totalPoints + pointsEarnedInRound);
   }
 
-  //Future<void> playSound(String sound) async {
-  //   await _audioPlayer.play(AssetSource(sound));
-  //}
-
   void _checkAnswer(String answer) {
     setState(() {
       selectedAnswer = answer;
       isAnswered = true;
+
       if (answer == widget.questions[currentQuestionIndex].correctAnswer) {
         currentAnswerResult = 'Correct!';
-        pointsEarnedInRound += 10; // Add points for correct answer
-        correctAnswersCount++; // Increment correct answers count
-        //playSound('correct_answer.mp3'); // Play sound for correct answer
+        if (isDoublePointsActive) {
+          pointsEarnedInRound += 20; // Double points
+        } else if (isDoubleOrNothingActive) {
+          pointsEarnedInRound += 20; // Double points
+        } else {
+          pointsEarnedInRound += 10; // Normal points
+        }
+        correctAnswersCount++;
       } else {
-        currentAnswerResult =
-        'Wrong! The correct answer is: ${widget.questions[currentQuestionIndex].correctAnswer}';
-        //playSound('wrong_answer.mp3'); // Play sound for wrong answer
+        currentAnswerResult = 'Wrong! The correct answer is: ${widget.questions[currentQuestionIndex].correctAnswer}';
+        if (isDoubleOrNothingActive) {
+          pointsEarnedInRound -= 20; // Deduct double points
+        }
       }
     });
   }
@@ -1137,87 +1389,131 @@ class _QuizScreenState extends State<QuizScreen> {
         selectedAnswer = null;
         isAnswered = false;
         currentAnswerResult = null;
+        isDoublePointsActive = false;
+        isFiftyFiftyActive = false;
+        isSkipQuestionActive = false;
+        isDoubleOrNothingActive = false;
       } else {
         _showFinalScore();
       }
     });
   }
 
-  void _showFinalScore() {
-    // Update total points in the database
-    _updateUserPoints();
+  void _usePowerup(String powerup) {
+    setState(() {
+      switch (powerup) {
+        case 'Double Points':
+          if (doublePointsQuantity > 0) {
+            isDoublePointsActive = true;
+            doublePointsQuantity--;
+            _dbHelper.updatePowerupQuantity(widget.username, powerup, doublePointsQuantity);
+          }
+          break;
+        case '50/50':
+          if (fiftyFiftyQuantity > 0) {
+            isFiftyFiftyActive = true;
+            fiftyFiftyQuantity--;
+            _dbHelper.updatePowerupQuantity(widget.username, powerup, fiftyFiftyQuantity);
+          }
+          break;
+        case 'Skip Question':
+          if (skipQuestionQuantity > 0) {
+            isSkipQuestionActive = true;
+            skipQuestionQuantity--;
+            _dbHelper.updatePowerupQuantity(widget.username, powerup, skipQuestionQuantity);
+            _nextQuestion();
+          }
+          break;
+        case 'Double or Nothing':
+          if (doubleOrNothingQuantity > 0) {
+            isDoubleOrNothingActive = true;
+            doubleOrNothingQuantity--;
+            _dbHelper.updatePowerupQuantity(widget.username, powerup, doubleOrNothingQuantity);
+          }
+          break;
+      }
+    });
+  }
 
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: const Color(0xFF1D1E33), // Dark background
-          title: const Text(
-            'Quiz Finished!',
-            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
-            textAlign: TextAlign.center,
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'Your Score:',
-                style: TextStyle(fontSize: 20, color: Colors.white),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                '$correctAnswersCount/${widget.questions.length}', // Show correct answers count
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.blueAccent),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                'Points Earned This Round: $pointsEarnedInRound',
-                style: const TextStyle(fontSize: 18, color: Colors.white),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                'Total Points: ${totalPoints + pointsEarnedInRound}',
-                style: const TextStyle(fontSize: 18, color: Colors.white),
-              ),
-            ],
-          ),
-          actions: [
-            Center(
-              child: TextButton(
-                onPressed: () {
-                  Navigator.pop(context); // Close the dialog
-                  Navigator.pushReplacement( // Replace the current route with a new HomeScreen
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => HomeScreen(username: widget.username),
-                    ),
-                  );
-                },
-                child: const Text(
-                  'OK',
-                  style: TextStyle(fontSize: 18, color: Colors.blueAccent),
+  void _showFinalScore() {
+    _updateUserPoints().then((_) {
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            backgroundColor: const Color(0xFF1D1E33),
+            title: const Text(
+              'Quiz Finished!',
+              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+              textAlign: TextAlign.center,
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Your Score:',
+                  style: TextStyle(fontSize: 20, color: Colors.white),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  '$correctAnswersCount/${widget.questions.length}',
+                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.blueAccent),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  'Points Earned This Round: $pointsEarnedInRound',
+                  style: const TextStyle(fontSize: 18, color: Colors.white),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  'Total Points: ${totalPoints + pointsEarnedInRound}',
+                  style: const TextStyle(fontSize: 18, color: Colors.white),
+                ),
+              ],
+            ),
+            actions: [
+              Center(
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.pop(context); // Close the dialog
+                    Navigator.pushReplacement( // Replace the current route with a new HomeScreen
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => HomeScreen(username: widget.username),
+                      ),
+                    );
+                  },
+                  child: const Text(
+                    'OK',
+                    style: TextStyle(fontSize: 18, color: Colors.blueAccent),
+                  ),
                 ),
               ),
-            ),
-          ],
-        );
-      },
-    );
+            ],
+          );
+        },
+      );
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     Question currentQuestion = widget.questions[currentQuestionIndex];
+    List<String> options = currentQuestion.options;
+
+    if (isFiftyFiftyActive) {
+      // Remove two incorrect answers
+      options = _applyFiftyFifty(options, currentQuestion.correctAnswer);
+    }
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.subject, style: const TextStyle(color: Colors.white),),
+        title: Text(widget.subject, style: const TextStyle(color: Colors.white)),
         backgroundColor: const Color(0xFF1D1E33),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white, size: 12,), // White back arrow
-
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
-            Navigator.pop(context); // Go back to the QuestionSelectionScreen
+            Navigator.pop(context);
           },
         ),
         actions: [
@@ -1234,9 +1530,9 @@ class _QuizScreenState extends State<QuizScreen> {
       ),
       body: Stack(
         children: [
-          const SpaceBackground(),
+          SpaceBackground(),
           Padding(
-            padding: const EdgeInsets.only(top: 50.0), // Move content down
+            padding: const EdgeInsets.only(top: 50.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -1259,11 +1555,11 @@ class _QuizScreenState extends State<QuizScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                ...currentQuestion.options.map((option) {
+                ...options.map((option) {
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 20.0),
                     child: SizedBox(
-                      width: MediaQuery.of(context).size.width * 0.7, // Smaller width for buttons
+                      width: MediaQuery.of(context).size.width * 0.7,
                       child: GameButton(
                         text: option,
                         onPressed: () {
@@ -1279,7 +1575,7 @@ class _QuizScreenState extends State<QuizScreen> {
                     child: ElevatedButton(
                       onPressed: _nextQuestion,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.purple, // Changed color to purple
+                        backgroundColor: Colors.purple,
                         padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
                       child: Text(
@@ -1307,8 +1603,43 @@ class _QuizScreenState extends State<QuizScreen> {
               ],
             ),
           ),
+          // Powerups Menu
+          Positioned(
+            bottom: 20,
+            right: 20,
+            child: PopupMenuButton<String>(
+              icon: const Icon(Icons.bolt, color: Colors.white, size: 30),
+              onSelected: _usePowerup,
+              itemBuilder: (context) {
+                return [
+                  PopupMenuItem(
+                    value: 'Double Points',
+                    child: Text('Double Points ($doublePointsQuantity left)'),
+                  ),
+                  PopupMenuItem(
+                    value: '50/50',
+                    child: Text('50/50 ($fiftyFiftyQuantity left)'),
+                  ),
+                  PopupMenuItem(
+                    value: 'Skip Question',
+                    child: Text('Skip Question ($skipQuestionQuantity left)'),
+                  ),
+                  PopupMenuItem(
+                    value: 'Double or Nothing',
+                    child: Text('Double or Nothing ($doubleOrNothingQuantity left)'),
+                  ),
+                ];
+              },
+            ),
+          ),
         ],
       ),
     );
+  }
+
+  List<String> _applyFiftyFifty(List<String> options, String correctAnswer) {
+    final incorrectOptions = options.where((option) => option != correctAnswer).toList();
+    incorrectOptions.shuffle();
+    return [correctAnswer, incorrectOptions.first];
   }
 }
