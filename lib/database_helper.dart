@@ -217,11 +217,31 @@ class DatabaseHelper {
 
   Future<void> updatePowerupQuantity(String username, String itemName, int quantity) async {
     final db = await database;
-    await db.update(
+    // First check if the powerup exists for the user
+    final result = await db.query(
       'user_powerups',
-      {'quantity': quantity},
       where: 'username = ? AND itemName = ?',
       whereArgs: [username, itemName],
     );
+
+    if (result.isEmpty) {
+      // If the powerup doesn't exist, insert a new record
+      await db.insert(
+        'user_powerups',
+        {
+          'username': username,
+          'itemName': itemName,
+          'quantity': quantity,
+        },
+      );
+    } else {
+      // If it exists, update the quantity
+      await db.update(
+        'user_powerups',
+        {'quantity': quantity},
+        where: 'username = ? AND itemName = ?',
+        whereArgs: [username, itemName],
+      );
+    }
   }
 }

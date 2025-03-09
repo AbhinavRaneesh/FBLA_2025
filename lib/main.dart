@@ -66,14 +66,18 @@ class SpaceBackground extends StatelessWidget {
 
 class GameButton extends StatelessWidget {
   final String text;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
 
-  GameButton({required this.text, required this.onPressed});
+  const GameButton({
+    super.key,
+    required this.text,
+    this.onPressed,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: MediaQuery.of(context).size.width * 0.9, // Increased width to 90% of screen width
+      width: MediaQuery.of(context).size.width * 0.9,
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
@@ -88,33 +92,6 @@ class GameButton extends StatelessWidget {
           text,
           style: const TextStyle(fontSize: 18, color: Colors.white),
           textAlign: TextAlign.center,
-        ),
-      ),
-    );
-  }
-}
-
-class AnimatedProgressBar extends StatelessWidget {
-  final double value;
-
-  const AnimatedProgressBar({super.key, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 10,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(5),
-        color: Colors.grey[300],
-      ),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 500),
-        width: MediaQuery.of(context).size.width * value,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(5),
-          gradient: const LinearGradient(
-            colors: [Colors.blueAccent, Colors.purpleAccent],
-          ),
         ),
       ),
     );
@@ -642,7 +619,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Choose a Subject', style: TextStyle(color: Colors.white)),
+        title: const Text('EduQuest', style: TextStyle(color: Colors.white)),
         backgroundColor: const Color(0xFF1D1E33),
         automaticallyImplyLeading: false,
         actions: [
@@ -1149,13 +1126,37 @@ class ShopItemCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              item.itemName,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    item.itemName,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                if (item.type == ShopItemType.powerup)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.blueAccent.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.blueAccent),
+                    ),
+                    child: Text(
+                      'x${item.quantity}',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+              ],
             ),
             const SizedBox(height: 10),
             Text(
@@ -1165,14 +1166,6 @@ class ShopItemCard extends StatelessWidget {
                 color: Colors.white70,
               ),
             ),
-            if (item.type == ShopItemType.powerup)
-              Text(
-                'Owned: ${item.quantity}',
-                style: const TextStyle(
-                  fontSize: 16,
-                  color: Colors.white70,
-                ),
-              ),
             const SizedBox(height: 10),
             if (item.type == ShopItemType.theme && item.isPurchased)
               ElevatedButton(
@@ -1366,17 +1359,17 @@ class _QuizScreenState extends State<QuizScreen> {
       if (answer == widget.questions[currentQuestionIndex].correctAnswer) {
         currentAnswerResult = 'Correct!';
         if (isDoublePointsActive) {
-          pointsEarnedInRound += 20; // Double points
+          pointsEarnedInRound += 20;
         } else if (isDoubleOrNothingActive) {
-          pointsEarnedInRound += 20; // Double points
+          pointsEarnedInRound += 20;
         } else {
-          pointsEarnedInRound += 10; // Normal points
+          pointsEarnedInRound += 10;
         }
         correctAnswersCount++;
       } else {
         currentAnswerResult = 'Wrong! The correct answer is: ${widget.questions[currentQuestionIndex].correctAnswer}';
         if (isDoubleOrNothingActive) {
-          pointsEarnedInRound -= 20; // Deduct double points
+          pointsEarnedInRound -= 20;
         }
       }
     });
@@ -1397,6 +1390,69 @@ class _QuizScreenState extends State<QuizScreen> {
         _showFinalScore();
       }
     });
+  }
+
+  Widget _buildPowerupButton(String powerup, int quantity, Widget icon) {
+    bool isActive = false;
+    Color buttonColor = Colors.blueAccent;
+
+    switch (powerup) {
+      case 'Double Points':
+        isActive = isDoublePointsActive;
+        buttonColor = Colors.green;
+        break;
+      case '50/50':
+        isActive = isFiftyFiftyActive;
+        buttonColor = Colors.orange;
+        break;
+      case 'Skip Question':
+        isActive = isSkipQuestionActive;
+        buttonColor = Colors.red;
+        break;
+      case 'Double or Nothing':
+        isActive = isDoubleOrNothingActive;
+        buttonColor = Colors.purple;
+        break;
+    }
+
+    return Opacity(
+      opacity: quantity > 0 ? 1.0 : 0.5,
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 4),
+        child: Tooltip(
+          message: '$powerup ($quantity left)',
+          child: ElevatedButton(
+            onPressed: quantity > 0 && !isAnswered ? () => _usePowerup(powerup) : null,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: isActive ? buttonColor : Colors.blueAccent.withOpacity(0.2),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+                side: BorderSide(
+                  color: isActive ? buttonColor : Colors.blueAccent,
+                  width: 2,
+                ),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                icon,
+                const SizedBox(height: 4),
+                Text(
+                  quantity.toString(),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   void _usePowerup(String powerup) {
@@ -1435,63 +1491,67 @@ class _QuizScreenState extends State<QuizScreen> {
     });
   }
 
+  List<String> _applyFiftyFifty(List<String> options, String correctAnswer) {
+    final incorrectOptions = options.where((option) => option != correctAnswer).toList();
+    incorrectOptions.shuffle();
+    return [correctAnswer, incorrectOptions.first];
+  }
+
   void _showFinalScore() {
     _updateUserPoints().then((_) {
       showDialog(
         context: context,
-        builder: (context) {
-          return AlertDialog(
-            backgroundColor: const Color(0xFF1D1E33),
-            title: const Text(
-              'Quiz Finished!',
-              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
-              textAlign: TextAlign.center,
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  'Your Score:',
-                  style: TextStyle(fontSize: 20, color: Colors.white),
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  '$correctAnswersCount/${widget.questions.length}',
-                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.blueAccent),
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  'Points Earned This Round: $pointsEarnedInRound',
-                  style: const TextStyle(fontSize: 18, color: Colors.white),
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  'Total Points: ${totalPoints + pointsEarnedInRound}',
-                  style: const TextStyle(fontSize: 18, color: Colors.white),
-                ),
-              ],
-            ),
-            actions: [
-              Center(
-                child: TextButton(
-                  onPressed: () {
-                    Navigator.pop(context); // Close the dialog
-                    Navigator.pushReplacement( // Replace the current route with a new HomeScreen
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => HomeScreen(username: widget.username),
-                      ),
-                    );
-                  },
-                  child: const Text(
-                    'OK',
-                    style: TextStyle(fontSize: 18, color: Colors.blueAccent),
-                  ),
-                ),
+        builder: (context) => AlertDialog(
+          backgroundColor: const Color(0xFF1D1E33),
+          title: const Text(
+            'Quiz Finished!',
+            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+            textAlign: TextAlign.center,
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Your Score:',
+                style: TextStyle(fontSize: 20, color: Colors.white),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                '$correctAnswersCount/${widget.questions.length}',
+                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.blueAccent),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'Points Earned This Round: $pointsEarnedInRound',
+                style: const TextStyle(fontSize: 18, color: Colors.white),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'Total Points: ${totalPoints + pointsEarnedInRound}',
+                style: const TextStyle(fontSize: 18, color: Colors.white),
               ),
             ],
-          );
-        },
+          ),
+          actions: [
+            Center(
+              child: TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => HomeScreen(username: widget.username),
+                    ),
+                  );
+                },
+                child: const Text(
+                  'OK',
+                  style: TextStyle(fontSize: 18, color: Colors.blueAccent),
+                ),
+              ),
+            ),
+          ],
+        ),
       );
     });
   }
@@ -1502,7 +1562,6 @@ class _QuizScreenState extends State<QuizScreen> {
     List<String> options = currentQuestion.options;
 
     if (isFiftyFiftyActive) {
-      // Remove two incorrect answers
       options = _applyFiftyFifty(options, currentQuestion.correctAnswer);
     }
 
@@ -1512,17 +1571,19 @@ class _QuizScreenState extends State<QuizScreen> {
         backgroundColor: const Color(0xFF1D1E33),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () {
-            Navigator.pop(context);
-          },
+          onPressed: () => Navigator.pop(context),
         ),
         actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: Center(
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.only(right: 16.0),
               child: Text(
                 'Points: ${totalPoints + pointsEarnedInRound}',
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
               ),
             ),
           ),
@@ -1530,116 +1591,122 @@ class _QuizScreenState extends State<QuizScreen> {
       ),
       body: Stack(
         children: [
-          SpaceBackground(),
-          Padding(
-            padding: const EdgeInsets.only(top: 50.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                AnimatedProgressBar(
-                  value: (currentQuestionIndex + 1) / widget.questions.length,
+          const SpaceBackground(),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Container(
+                height: 10,
+                margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                decoration: BoxDecoration(
+                  color: Colors.grey[800],
+                  borderRadius: BorderRadius.circular(5),
                 ),
-                const SizedBox(height: 20),
-                Text(
-                  'Question ${currentQuestionIndex + 1}/${widget.questions.length}:',
-                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 500),
+                  curve: Curves.easeInOut,
+                  width: MediaQuery.of(context).size.width * ((currentQuestionIndex + (isAnswered ? 1 : 0)) / widget.questions.length),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Colors.blueAccent, Colors.purpleAccent],
+                    ),
+                    borderRadius: BorderRadius.circular(5),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                child: Text(
+                  'Question ${currentQuestionIndex + 1}/${widget.questions.length}',
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 10),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                  child: Text(
-                    currentQuestion.questionText,
-                    style: const TextStyle(fontSize: 20, color: Colors.white),
-                    textAlign: TextAlign.center,
-                  ),
+              ),
+              Container(
+                height: 60,
+                padding: const EdgeInsets.symmetric(horizontal: 10), // Reduced padding
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly, // Changed from center
+                  children: [
+                    Flexible(child: _buildPowerupButton('Double Points', doublePointsQuantity,
+                        const Text('2×', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)))),
+                    Flexible(child: _buildPowerupButton('50/50', fiftyFiftyQuantity,
+                        const Text('50/50', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)))),
+                    Flexible(child: _buildPowerupButton('Skip Question', skipQuestionQuantity,
+                        const Icon(Icons.skip_next, size: 20))),
+                    Flexible(child: _buildPowerupButton('Double or Nothing', doubleOrNothingQuantity,
+                        const Icon(Icons.casino_outlined, size: 20))),
+                  ],
                 ),
-                const SizedBox(height: 20),
-                ...options.map((option) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 20.0),
-                    child: SizedBox(
-                      width: MediaQuery.of(context).size.width * 0.7,
+              ),
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Text(
+                  currentQuestion.questionText,
+                  style: const TextStyle(fontSize: 20, color: Colors.white),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  children: [
+                    ...options.map((option) => Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 6),
                       child: GameButton(
                         text: option,
-                        onPressed: () {
-                          _checkAnswer(option);
-                        },
+                        onPressed: isAnswered ? null : () => _checkAnswer(option),
                       ),
-                    ),
-                  );
-                }),
-                if (isAnswered)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                    child: ElevatedButton(
-                      onPressed: _nextQuestion,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.purple,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
+                    )),
+                    if (isAnswered) ...[
+                      const SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: _nextQuestion,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.purple,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        child: Text(
+                          currentQuestionIndex < widget.questions.length - 1
+                              ? 'Next Question'
+                              : 'Finish Quiz',
+                          style: const TextStyle(fontSize: 18, color: Colors.white),
+                        ),
                       ),
-                      child: Text(
-                        currentQuestionIndex < widget.questions.length - 1 ? 'Next Question' : 'Finish Quiz',
-                        style: const TextStyle(fontSize: 18, color: Colors.white),
+                      const SizedBox(height: 20),
+                      Container(
+                        padding: const EdgeInsets.all(15),
+                        decoration: BoxDecoration(
+                          color: currentAnswerResult!.startsWith('Correct')
+                              ? Colors.green.withOpacity(0.8)
+                              : Colors.red.withOpacity(0.8),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          currentAnswerResult!,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
                       ),
-                    ),
-                  ),
-                if (isAnswered)
-                  Container(
-                    margin: const EdgeInsets.only(top: 20),
-                    padding: const EdgeInsets.all(15),
-                    decoration: BoxDecoration(
-                      color: currentAnswerResult!.startsWith('Correct')
-                          ? Colors.green.withOpacity(0.8)
-                          : Colors.red.withOpacity(0.8),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      currentAnswerResult!,
-                      style: const TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          // Powerups Menu
-          Positioned(
-            bottom: 20,
-            right: 20,
-            child: PopupMenuButton<String>(
-              icon: const Icon(Icons.bolt, color: Colors.white, size: 30),
-              onSelected: _usePowerup,
-              itemBuilder: (context) {
-                return [
-                  PopupMenuItem(
-                    value: 'Double Points',
-                    child: Text('Double Points ($doublePointsQuantity left)'),
-                  ),
-                  PopupMenuItem(
-                    value: '50/50',
-                    child: Text('50/50 ($fiftyFiftyQuantity left)'),
-                  ),
-                  PopupMenuItem(
-                    value: 'Skip Question',
-                    child: Text('Skip Question ($skipQuestionQuantity left)'),
-                  ),
-                  PopupMenuItem(
-                    value: 'Double or Nothing',
-                    child: Text('Double or Nothing ($doubleOrNothingQuantity left)'),
-                  ),
-                ];
-              },
-            ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),
     );
-  }
-
-  List<String> _applyFiftyFifty(List<String> options, String correctAnswer) {
-    final incorrectOptions = options.where((option) => option != correctAnswer).toList();
-    incorrectOptions.shuffle();
-    return [correctAnswer, incorrectOptions.first];
   }
 }
