@@ -356,14 +356,24 @@ class _SignInPageState extends State<SignInPage> {
                           MaterialPageRoute(builder: (context) => SignUpPage()),
                         );
                       },
-                      child: const Text(
-                        'Don\'t have an account? Sign up',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.white,
+                      child: RichText(
+                        text: const TextSpan(
+                          children: [
+                            TextSpan(
+                              text: 'Don\'t have an account? ',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                            TextSpan(
+                              text: 'Sign Up',
+                              style: TextStyle(
+                                color: Colors.white,
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ),
+                    )
                   ],
                 ),
               ),
@@ -1000,17 +1010,44 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
         ],
         bottom: TabBar(
           controller: _tabController,
-          tabs: const [
-            Tab(text: 'Themes'),
-            Tab(text: 'Powerups'),
+          indicatorColor: Colors.blueAccent,
+          indicatorWeight: 3,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white60,
+          labelStyle: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+          unselectedLabelStyle: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.normal,
+          ),
+          tabs: [
+            Tab(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: const Text('Themes'),
+              ),
+            ),
+            Tab(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: const Text('Powerups'),
+              ),
+            ),
           ],
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
+      body: Stack(
         children: [
-          _buildThemesTab(),
-          _buildPowerupsTab(),
+          const SpaceBackground(),
+          TabBarView(
+            controller: _tabController,
+            children: [
+              _buildThemesTab(),
+              _buildPowerupsTab(),
+            ],
+          ),
         ],
       ),
     );
