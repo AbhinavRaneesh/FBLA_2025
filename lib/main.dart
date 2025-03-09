@@ -67,30 +67,55 @@ class SpaceBackground extends StatelessWidget {
 class GameButton extends StatelessWidget {
   final String text;
   final VoidCallback? onPressed;
+  final bool isSelected;
+  final bool? isCorrect;
 
   const GameButton({
     super.key,
     required this.text,
     this.onPressed,
+    this.isSelected = false,
+    this.isCorrect,
   });
 
   @override
   Widget build(BuildContext context) {
+    Color backgroundColor = const Color(0xFF1D1E33);
+    Color borderColor = Colors.blueAccent;
+    Color textColor = Colors.white;
+
+    if (isSelected && isCorrect != null) {
+      // Full button coloring when answered
+      backgroundColor = isCorrect! ? Colors.green : Colors.red;
+      borderColor = isCorrect! ? Colors.green : Colors.red;
+      textColor = Colors.white;
+    } else if (isCorrect == true) {
+      // Show correct answer
+      backgroundColor = Colors.green;
+      borderColor = Colors.green;
+      textColor = Colors.white;
+    }
+
     return Container(
       width: MediaQuery.of(context).size.width * 0.9,
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.transparent,
+          backgroundColor: backgroundColor,
           padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 30),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
-            side: const BorderSide(color: Colors.blueAccent, width: 2),
+            side: BorderSide(color: borderColor, width: 2),
           ),
+          elevation: 5,
         ),
         child: Text(
           text,
-          style: const TextStyle(fontSize: 18, color: Colors.white),
+          style: TextStyle(
+            fontSize: 18,
+            color: textColor,
+            fontWeight: FontWeight.bold,
+          ),
           textAlign: TextAlign.center,
         ),
       ),
@@ -1697,6 +1722,8 @@ class _QuizScreenState extends State<QuizScreen> {
                       child: GameButton(
                         text: option,
                         onPressed: isAnswered ? null : () => _checkAnswer(option),
+                        isSelected: selectedAnswer == option,
+                        isCorrect: isAnswered ? option == widget.questions[currentQuestionIndex].correctAnswer : null,
                       ),
                     )),
                     if (isAnswered) ...[
@@ -1715,25 +1742,6 @@ class _QuizScreenState extends State<QuizScreen> {
                               ? 'Next Question'
                               : 'Finish Quiz',
                           style: const TextStyle(fontSize: 18, color: Colors.white),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      Container(
-                        padding: const EdgeInsets.all(15),
-                        decoration: BoxDecoration(
-                          color: currentAnswerResult!.startsWith('Correct')
-                              ? Colors.green.withOpacity(0.8)
-                              : Colors.red.withOpacity(0.8),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Text(
-                          currentAnswerResult!,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          textAlign: TextAlign.center,
                         ),
                       ),
                     ],
