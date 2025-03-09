@@ -2,35 +2,15 @@ import 'package:flutter/material.dart';
 import 'database_helper.dart';
 import 'questions.dart';
 import 'dart:math'; // For random star positions
-import 'package:google_sign_in/google_sign_in.dart';// For Google Sign-In
-import 'package:flutter_native_splash/flutter_native_splash.dart'; // For native splash
+import 'package:google_sign_in/google_sign_in.dart'; // For Google Sign-In
 
 void main() {
-  WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
-  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
-  runApp(const MyApp());
+  runApp(const StudentLearningApp());
 }
 
-class MyApp extends StatefulWidget {
-  const MyApp({super.key});
+class StudentLearningApp extends StatelessWidget {
+  const StudentLearningApp({super.key});
 
-  @override
-  State<MyApp> createState() => StudentLearningApp();
-}
-class StudentLearningApp extends State<MyApp> {
-
-  @override
-  void initState() {
-    super.initState();
-    initialization();
-  }
-
-  void initialization() async {
-    print('pausing...');
-    await Future.delayed(const Duration(seconds: 3));
-    print('unpausing...');
-    FlutterNativeSplash.remove();
-  }
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -42,12 +22,6 @@ class StudentLearningApp extends State<MyApp> {
       home: SignInPage(), // Correctly defined home property
       debugShowCheckedModeBanner: false,
     );
-  }
-
-  @override
-  State<StatefulWidget> createState() {
-    // TODO: implement createState
-    throw UnimplementedError();
   }
 }
 
