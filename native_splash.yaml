@@ -1,0 +1,16 @@
+dev_dependencies:
+  flutter_native_splash: ^2.4.5
+
+flutter_native_splash:
+  android: true
+  ios: true
+  web: true
+
+  color: "#08254b"
+  image: "assets/ic_launcher.png"
+  branding: "assets/Branding.png"
+
+  android_12:
+    color: "#08254b"
+    image: "assets/ic_launcher.png"
+    branding: "assets/Branding.png"
