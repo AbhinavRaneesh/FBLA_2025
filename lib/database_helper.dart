@@ -1,15 +1,15 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
-
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
-  factory DatabaseHelper() => _instance;
   static Database? _database;
 
+  factory DatabaseHelper() {
+    return _instance;
+  }
 
   DatabaseHelper._internal();
-
 
   Future<Database> get database async {
     if (_database != null) return _database!;
@@ -17,85 +17,65 @@ class DatabaseHelper {
     return _database!;
   }
 
-
   Future<Database> _initDatabase() async {
-    String path = join(await getDatabasesPath(), 'student_learning_app.db');
+    final dbPath = await getDatabasesPath();
+    final path = join(dbPath, 'eduquest.db');
+
     return await openDatabase(
       path,
-      version: 3, // Increment the version number
+      version: 1,
       onCreate: _onCreate,
-      onUpgrade: _onUpgrade, // Add this method
     );
   }
 
-
   Future<void> _onCreate(Database db, int version) async {
+    // Create users table
     await db.execute('''
-   CREATE TABLE users(
-     id INTEGER PRIMARY KEY AUTOINCREMENT,
-     username TEXT UNIQUE,
-     password TEXT,
-     points INTEGER DEFAULT 0
-   )
- ''');
+      CREATE TABLE users(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE,
+        password TEXT,
+        points INTEGER DEFAULT 0,
+        current_theme TEXT DEFAULT 'space'
+      )
+    ''');
 
-
+    // Create powerups table
     await db.execute('''
-   CREATE TABLE user_themes(
-     id INTEGER PRIMARY KEY AUTOINCREMENT,
-     username TEXT,
-     theme TEXT,
-     active INTEGER DEFAULT 0
-   )
- ''');
+      CREATE TABLE powerups(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT,
+        powerup_name TEXT,
+        quantity INTEGER DEFAULT 0,
+        FOREIGN KEY(username) REFERENCES users(username)
+      )
+    ''');
 
-
-    // Insert default space theme for all users
+    // Create themes table
     await db.execute('''
-   INSERT INTO user_themes (username, theme, active)
-   SELECT username, 'Space Theme', 1 FROM users
- ''');
-
-
-    await db.execute('''
-   CREATE TABLE user_powerups(
-     id INTEGER PRIMARY KEY AUTOINCREMENT,
-     username TEXT,
-     itemName TEXT,
-     quantity INTEGER DEFAULT 0
-   )
- ''');
+      CREATE TABLE themes(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT,
+        theme_name TEXT,
+        is_purchased INTEGER DEFAULT 0,
+        FOREIGN KEY(username) REFERENCES users(username)
+      )
+    ''');
   }
-
-
-  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    if (oldVersion < 3) {
-      // Create the user_powerups table if it doesn't exist
-      await db.execute('''
-       CREATE TABLE IF NOT EXISTS user_powerups(
-         id INTEGER PRIMARY KEY AUTOINCREMENT,
-         username TEXT,
-         itemName TEXT,
-         quantity INTEGER DEFAULT 0
-       )
-     ''');
-    }
-  }
-
 
   // Add a new user
   Future<bool> addUser(String username, String password) async {
+    final db = await database;
     try {
-      final db = await database;
       await db.insert(
         'users',
         {
           'username': username,
           'password': password,
+          'current_theme': 'space', // Default theme
         },
-        conflictAlgorithm: ConflictAlgorithm.fail,
+        conflictAlgorithm: ConflictAlgorithm.replace,
       );
-      print('User $username added successfully.');
       return true;
     } catch (e) {
       print('Error adding user: $e');
@@ -103,60 +83,40 @@ class DatabaseHelper {
     }
   }
 
-
   // Authenticate a user
   Future<bool> authenticateUser(String username, String password) async {
-    try {
-      final db = await database;
-      final result = await db.query(
-        'users',
-        where: 'username = ? AND password = ?',
-        whereArgs: [username, password],
-      );
-      return result.isNotEmpty;
-    } catch (e) {
-      print('Error authenticating user: $e');
-      return false;
-    }
+    final db = await database;
+    final result = await db.query(
+      'users',
+      where: 'username = ? AND password = ?',
+      whereArgs: [username, password],
+    );
+    return result.isNotEmpty;
   }
-
 
   // Check if a username already exists
   Future<bool> usernameExists(String username) async {
-    try {
-      final db = await database;
-      final result = await db.query(
-        'users',
-        where: 'username = ?',
-        whereArgs: [username],
-      );
-      return result.isNotEmpty;
-    } catch (e) {
-      print('Error checking username: $e');
-      return false;
-    }
+    final db = await database;
+    final result = await db.query(
+      'users',
+      where: 'username = ?',
+      whereArgs: [username],
+    );
+    return result.isNotEmpty;
   }
-
 
   // Get user points
   Future<int> getUserPoints(String username) async {
-    try {
-      final db = await database;
-      final result = await db.query(
-        'users',
-        columns: ['points'],
-        where: 'username = ?',
-        whereArgs: [username],
-      );
-      return result.isNotEmpty ? result.first['points'] as int : 0;
-    } catch (e) {
-      print('Error fetching user points: $e');
-      return 0;
-    }
+    final db = await database;
+    final result = await db.query(
+      'users',
+      where: 'username = ?',
+      whereArgs: [username],
+    );
+    return result.isNotEmpty ? result.first['points'] as int : 0;
   }
 
-
-  // Update user points and print the updated points to the terminal
+  // Update user points
   Future<void> updateUserPoints(String username, int newPoints) async {
     final db = await database;
     await db.update(
@@ -167,142 +127,72 @@ class DatabaseHelper {
     );
   }
 
+  // Get powerup quantity for a user
+  Future<int> getPowerupQuantity(String username, String powerupName) async {
+    final db = await database;
+    final result = await db.query(
+      'powerups',
+      where: 'username = ? AND powerup_name = ?',
+      whereArgs: [username, powerupName],
+    );
+    return result.isNotEmpty ? result.first['quantity'] as int : 0;
+  }
 
-  Future<void> purchaseTheme(String username, String themeName) async {
+  // Update powerup quantity for a user
+  Future<void> updatePowerupQuantity(String username, String powerupName, int newQuantity) async {
     final db = await database;
     await db.insert(
-      'purchased_themes',
+      'powerups',
       {
         'username': username,
-        'theme_name': themeName,
+        'powerup_name': powerupName,
+        'quantity': newQuantity,
       },
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
 
-
-  // Get purchased themes for a user
-  Future<List<String>> getPurchasedThemes(String username) async {
-    try {
-      final db = await database;
-      final result = await db.query(
-        'user_themes',
-        where: 'username = ?',
-        whereArgs: [username],
-      );
-      return result.map((row) => row['theme'] as String).toList();
-    } catch (e) {
-      print('Error fetching purchased themes: $e');
-      return [];
-    }
+  // Purchase a theme
+  Future<void> purchaseTheme(String username, String themeName) async {
+    final db = await database;
+    await db.insert(
+      'themes',
+      {
+        'username': username,
+        'theme_name': themeName,
+        'is_purchased': 1,
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
+  Future<void> equipTheme(String username, String themeName) async {
+    final db = await database;
+    await db.update(
+      'users',
+      {'current_theme': themeName},
+      where: 'username = ?',
+      whereArgs: [username],
+    );
+  }
 
-  // Check if a theme is already purchased
   Future<bool> isThemePurchased(String username, String themeName) async {
     final db = await database;
-    final List<Map<String, dynamic>> result = await db.query(
-      'purchased_themes',
+    final result = await db.query(
+      'themes',
       where: 'username = ? AND theme_name = ?',
       whereArgs: [username, themeName],
     );
-    return result.isNotEmpty;
+    return result.isNotEmpty && result.first['is_purchased'] == 1;
   }
 
-
-  // Print all users (for debugging)
-  Future<void> printAllUsers() async {
-    try {
-      final db = await database;
-      final users = await db.query('users');
-      print('Current Users in the Database:');
-      for (var user in users) {
-        print('ID: ${user['id']}, Username: ${user['username']}, Points: ${user['points']}');
-      }
-    } catch (e) {
-      print('Error while fetching users: $e');
-    }
-  }
-
-
-  Future<int> getPowerupQuantity(String username, String itemName) async {
+  Future<String?> getCurrentTheme(String username) async {
     final db = await database;
     final result = await db.query(
-      'user_powerups',
-      columns: ['quantity'],
-      where: 'username = ? AND itemName = ?',
-      whereArgs: [username, itemName],
+      'users',
+      where: 'username = ?',
+      whereArgs: [username],
     );
-    return result.isNotEmpty ? result.first['quantity'] as int? ?? 0 : 0;
-  }
-
-
-  Future<void> updatePowerupQuantity(String username, String itemName, int quantity) async {
-    final db = await database;
-    // First check if the powerup exists for the user
-    final result = await db.query(
-      'user_powerups',
-      where: 'username = ? AND itemName = ?',
-      whereArgs: [username, itemName],
-    );
-
-
-    if (result.isEmpty) {
-      // If the powerup doesn't exist, insert a new record
-      await db.insert(
-        'user_powerups',
-        {
-          'username': username,
-          'itemName': itemName,
-          'quantity': quantity,
-        },
-      );
-    } else {
-      // If it exists, update the quantity
-      await db.update(
-        'user_powerups',
-        {'quantity': quantity},
-        where: 'username = ? AND itemName = ?',
-        whereArgs: [username, itemName],
-      );
-    }
-  }
-
-
-  Future<String> getActiveTheme(String username) async {
-    try {
-      final db = await database;
-      final result = await db.query(
-        'user_themes',
-        where: 'username = ? AND active = 1',
-        whereArgs: [username],
-      );
-      return result.isNotEmpty ? result.first['theme'] as String : 'Space Theme';
-    } catch (e) {
-      print('Error fetching active theme: $e');
-      return 'Space Theme';
-    }
-  }
-
-
-  Future<void> updateActiveTheme(String username, String themeName) async {
-    final db = await database;
-    await db.transaction((txn) async {
-      // First, deactivate all themes for this user
-      await txn.update(
-        'user_themes',
-        {'active': 0},
-        where: 'username = ?',
-        whereArgs: [username],
-      );
-      // Then, activate the selected theme
-      await txn.update(
-        'user_themes',
-        {'active': 1},
-        where: 'username = ? AND theme = ?',
-        whereArgs: [username, themeName],
-      );
-    });
+    return result.isNotEmpty ? result.first['current_theme'] as String? : 'space';
   }
 }
-

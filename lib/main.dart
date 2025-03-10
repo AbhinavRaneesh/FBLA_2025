@@ -3,6 +3,7 @@ import 'database_helper.dart';
 import 'questions.dart';
 import 'dart:math'; // For random star positions
 import 'package:google_sign_in/google_sign_in.dart'; // For Google Sign-In
+import 'package:share_plus/share_plus.dart'; // For sharing the app
 
 void main() {
   runApp(const StudentLearningApp());
@@ -69,6 +70,7 @@ class GameButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final bool isSelected;
   final bool? isCorrect;
+  final String currentTheme; // Add this parameter
 
   const GameButton({
     super.key,
@@ -76,6 +78,7 @@ class GameButton extends StatelessWidget {
     this.onPressed,
     this.isSelected = false,
     this.isCorrect,
+    required this.currentTheme, // Add this parameter
   });
 
   @override
@@ -83,6 +86,12 @@ class GameButton extends StatelessWidget {
     Color backgroundColor = const Color(0xFF1D1E33);
     Color borderColor = Colors.blueAccent;
     Color textColor = Colors.white;
+
+    if (currentTheme == 'beach') {
+      backgroundColor = Colors.orange.withOpacity(0.2);
+      borderColor = Colors.orange;
+      textColor = Colors.black;
+    }
 
     if (isSelected && isCorrect != null) {
       backgroundColor = isCorrect! ? Colors.green : Colors.red;
@@ -95,12 +104,12 @@ class GameButton extends StatelessWidget {
     }
 
     return Container(
-      width: MediaQuery.of(context).size.width * 0.8, // Reduced from 0.9
+      width: MediaQuery.of(context).size.width * 0.8,
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
           backgroundColor: backgroundColor,
-          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 25), // Increased vertical padding
+          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 25),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
             side: BorderSide(color: borderColor, width: 2),
@@ -131,22 +140,18 @@ class _SignInPageState extends State<SignInPage> {
   final _passwordController = TextEditingController();
   final _dbHelper = DatabaseHelper();
   bool _showPassword = false;
-  final GoogleSignIn _googleSignIn = GoogleSignIn(); // Google Sign-In instance
-
-  // Track whether the username and password fields have input
   bool _isFormValid = false;
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
 
   @override
   void initState() {
     super.initState();
-    // Listen for changes in the text fields
     _usernameController.addListener(_updateFormState);
     _passwordController.addListener(_updateFormState);
   }
 
   @override
   void dispose() {
-    // Clean up the controllers
     _usernameController.removeListener(_updateFormState);
     _passwordController.removeListener(_updateFormState);
     _usernameController.dispose();
@@ -154,16 +159,10 @@ class _SignInPageState extends State<SignInPage> {
     super.dispose();
   }
 
-  // Update the form state based on input
   void _updateFormState() {
-    print('Username: ${_usernameController.text}'); // Debugging
-    print('Password: ${_passwordController.text}'); // Debugging
-
     setState(() {
       _isFormValid = _usernameController.text.isNotEmpty && _passwordController.text.isNotEmpty;
     });
-
-    print('Form Valid: $_isFormValid'); // Debugging
   }
 
   Future<void> _signIn() async {
@@ -188,7 +187,11 @@ class _SignInPageState extends State<SignInPage> {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => HomeScreen(username: username),
+            builder: (context) => HomeScreen(
+              username: username,
+              onPointsUpdated: (newPoints) {},
+              onThemeChanged: (newTheme) {},
+            ),
           ),
         );
       } else {
@@ -204,21 +207,20 @@ class _SignInPageState extends State<SignInPage> {
     }
   }
 
-  // Function to handle Google Sign-In
   Future<void> _signInWithGoogle() async {
     try {
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       if (googleUser == null) return; // User canceled the sign-in
 
-      // You can now use the googleUser object to get user details
-      final email = googleUser.email;
-      final displayName = googleUser.displayName;
-
-      // For simplicity, navigate to the HomeScreen with the user's email as the username
+      // Navigate to HomeScreen with Google user's email as the username
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => HomeScreen(username: email ?? 'Google User'),
+          builder: (context) => HomeScreen(
+            username: googleUser.email,
+            onPointsUpdated: (newPoints) {},
+            onThemeChanged: (newTheme) {},
+          ),
         ),
       );
 
@@ -418,7 +420,7 @@ class _SignUpPageState extends State<SignUpPage> {
   final _passwordController = TextEditingController();
   final _dbHelper = DatabaseHelper();
   bool _showPassword = false;
-  bool _isFormValid = false; // Track form validity
+  bool _isFormValid = false;
 
   @override
   void initState() {
@@ -618,8 +620,15 @@ class _SignUpPageState extends State<SignUpPage> {
 
 class HomeScreen extends StatefulWidget {
   final String username;
+  final Function(int) onPointsUpdated;
+  final Function(String) onThemeChanged;
 
-  HomeScreen({super.key, required this.username});
+  HomeScreen({
+    super.key,
+    required this.username,
+    required this.onPointsUpdated,
+    required this.onThemeChanged,
+  });
 
   @override
   _HomeScreenState createState() => _HomeScreenState();
@@ -628,17 +637,26 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _userPoints = 0;
   final DatabaseHelper _dbHelper = DatabaseHelper();
+  String _currentTheme = 'space'; // Default theme
 
   @override
   void initState() {
     super.initState();
     _loadUserPoints();
+    _loadCurrentTheme();
   }
 
   Future<void> _loadUserPoints() async {
     final points = await _dbHelper.getUserPoints(widget.username);
     setState(() {
       _userPoints = points;
+    });
+  }
+
+  Future<void> _loadCurrentTheme() async {
+    final theme = await _dbHelper.getCurrentTheme(widget.username);
+    setState(() {
+      _currentTheme = theme ?? 'space';
     });
   }
 
@@ -653,7 +671,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('EduQuest', style: TextStyle(color: Colors.white)),
-        backgroundColor: const Color(0xFF1D1E33),
+        backgroundColor: _currentTheme == 'beach' ? Colors.orange : const Color(0xFF1D1E33),
         automaticallyImplyLeading: false,
         actions: [
           Padding(
@@ -661,7 +679,11 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Center(
               child: Text(
                 'Points: $_userPoints',
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: _currentTheme == 'beach' ? Colors.black : Colors.white,
+                ),
               ),
             ),
           ),
@@ -678,7 +700,14 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: Stack(
         children: [
-          const SpaceBackground(),
+          _currentTheme == 'beach'
+              ? Image.asset(
+            'assets/images/beach.jpg',
+            fit: BoxFit.cover,
+            width: double.infinity,
+            height: double.infinity,
+          )
+              : const SpaceBackground(),
           Padding(
             padding: const EdgeInsets.all(20.0),
             child: Column(
@@ -686,18 +715,18 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 Text(
                   'Welcome, ${widget.username}!',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: _currentTheme == 'beach' ? Colors.black : Colors.white,
                   ),
                 ),
                 const SizedBox(height: 10),
-                const Text(
+                Text(
                   'Choose a subject to start learning:',
                   style: TextStyle(
                     fontSize: 16,
-                    color: Colors.white70,
+                    color: _currentTheme == 'beach' ? Colors.black : Colors.white70,
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -717,6 +746,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 subject: 'Math',
                                 questions: QuestionsRepository.getQuestionsForSubject('Math'),
                                 username: widget.username,
+                                currentTheme: _currentTheme,
                               ),
                             ),
                           );
@@ -732,6 +762,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 subject: 'History',
                                 questions: QuestionsRepository.getQuestionsForSubject('History'),
                                 username: widget.username,
+                                currentTheme: _currentTheme,
                               ),
                             ),
                           );
@@ -747,6 +778,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 subject: 'English',
                                 questions: QuestionsRepository.getQuestionsForSubject('English'),
                                 username: widget.username,
+                                currentTheme: _currentTheme,
                               ),
                             ),
                           );
@@ -762,6 +794,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 subject: 'Science',
                                 questions: QuestionsRepository.getQuestionsForSubject('Science'),
                                 username: widget.username,
+                                currentTheme: _currentTheme,
                               ),
                             ),
                           );
@@ -782,13 +815,18 @@ class _HomeScreenState extends State<HomeScreen> {
                         MaterialPageRoute(
                           builder: (context) => ShopScreen(
                             username: widget.username,
-                            onPointsUpdated: _updatePoints, // Pass the callback
+                            onPointsUpdated: _updatePoints,
+                            onThemeChanged: (newTheme) {
+                              setState(() {
+                                _currentTheme = newTheme;
+                              });
+                            },
                           ),
                         ),
                       );
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blueAccent,
+                      backgroundColor: _currentTheme == 'beach' ? Colors.orange : Colors.blueAccent,
                       padding: const EdgeInsets.symmetric(vertical: 20),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(15),
@@ -868,11 +906,13 @@ class SubjectCard extends StatelessWidget {
 class ShopScreen extends StatefulWidget {
   final String username;
   final Function(int) onPointsUpdated;
+  final Function(String) onThemeChanged;
 
   const ShopScreen({
     super.key,
     required this.username,
     required this.onPointsUpdated,
+    required this.onThemeChanged,
   });
 
   @override
@@ -885,6 +925,7 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
   final DatabaseHelper _dbHelper = DatabaseHelper();
   Map<String, int> powerupQuantities = {};
   bool isLoading = true;
+  String _currentTheme = 'space'; // Track the current theme
 
   final List<ShopItem> powerups = [
     ShopItem(
@@ -920,17 +961,19 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
   final List<ShopItem> themes = [
     ShopItem(
       itemName: 'Space Theme',
-      cost: 0,  // Free as default
-      isPurchased: true,
-      isEquipped: true,
+      cost: 0, // Free
+      isPurchased: true, // Defaultly purchased
+      isEquipped: true, // Defaultly equipped
       type: ShopItemType.theme,
+      themeName: 'space',
     ),
     ShopItem(
       itemName: 'Beach Theme',
-      cost: 500,
+      cost: 0,
       isPurchased: false,
       isEquipped: false,
       type: ShopItemType.theme,
+      themeName: 'beach',
     ),
     ShopItem(
       itemName: 'Mountain Theme',
@@ -938,6 +981,7 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
       isPurchased: false,
       isEquipped: false,
       type: ShopItemType.theme,
+      themeName: 'mountain',
     ),
     ShopItem(
       itemName: 'Egypt Theme',
@@ -945,6 +989,7 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
       isPurchased: false,
       isEquipped: false,
       type: ShopItemType.theme,
+      themeName: 'egypt',
     ),
   ];
 
@@ -960,6 +1005,17 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
     final quantities = await Future.wait(
       powerups.map((powerup) => _dbHelper.getPowerupQuantity(widget.username, powerup.itemName)),
     );
+
+    // Load theme purchase and equip status
+    for (var theme in themes) {
+      final isPurchased = await _dbHelper.isThemePurchased(widget.username, theme.themeName!);
+      final currentTheme = await _dbHelper.getCurrentTheme(widget.username);
+      setState(() {
+        theme.isPurchased = isPurchased;
+        theme.isEquipped = currentTheme == theme.themeName;
+        _currentTheme = currentTheme ?? 'space';
+      });
+    }
 
     setState(() {
       _userPoints = points;
@@ -993,7 +1049,7 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
           item.quantity = newQuantity;
         });
       } else if (item.type == ShopItemType.theme) {
-        await _dbHelper.purchaseTheme(widget.username, item.itemName);
+        await _dbHelper.purchaseTheme(widget.username, item.themeName!);
 
         setState(() {
           _userPoints = newPoints;
@@ -1013,58 +1069,35 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
     }
   }
 
-  Widget _buildPowerupsTab() {
-    if (isLoading) {
-      return const Center(child: CircularProgressIndicator());
+  Future<void> _equipTheme(ShopItem theme) async {
+    try {
+      await _dbHelper.equipTheme(widget.username, theme.themeName!);
+      setState(() {
+        for (var t in themes) {
+          t.isEquipped = false;
+        }
+        theme.isEquipped = true;
+        _currentTheme = theme.themeName!;
+      });
+      widget.onThemeChanged(theme.themeName!); // Notify the HomeScreen
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${theme.itemName} equipped successfully!')),
+      );
+    } catch (e) {
+      print('Error equipping theme: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('An error occurred. Please try again.')),
+      );
     }
-
-    return ListView.builder(
-      padding: const EdgeInsets.all(20),
-      itemCount: powerups.length,
-      itemBuilder: (context, index) {
-        final powerup = powerups[index];
-        return ShopItemCard(
-          item: powerup,
-          onPurchase: () => _purchaseItem(powerup),
-        );
-      },
-    );
   }
 
-  Widget _buildThemesTab() {
-    if (isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.all(20),
-      itemCount: themes.length,
-      itemBuilder: (context, index) {
-        final theme = themes[index];
-        return ShopItemCard(
-          item: theme,
-          onPurchase: () => _purchaseItem(theme),
-          onEquip: theme.isPurchased ? () => _equipTheme(theme) : null,
-        );
-      },
-    );
-  }
-
-  void _equipTheme(ShopItem theme) {
-    setState(() {
-      for (var t in themes) {
-        t.isEquipped = false;
-      }
-      theme.isEquipped = true;
-    });
-  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Shop', style: TextStyle(color: Colors.white)),
-        backgroundColor: const Color(0xFF1D1E33),
-        iconTheme: const IconThemeData(color: Colors.white), // This makes the back arrow white
+        backgroundColor: _currentTheme == 'beach' ? Colors.orange : const Color(0xFF1D1E33),
+        iconTheme: const IconThemeData(color: Colors.white),
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: Colors.white,
@@ -1072,14 +1105,14 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
           labelStyle: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
-            color: Colors.white, // Makes the selected tab text white
+            color: Colors.white,
           ),
           unselectedLabelStyle: const TextStyle(
             fontSize: 16,
-            color: Colors.white70, // Makes the unselected tab text white with opacity
+            color: Colors.white70,
           ),
-          labelColor: Colors.white, // Makes tab text white
-          unselectedLabelColor: Colors.white70, // Makes unselected tab text white with opacity
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white70,
           tabs: const [
             Tab(
               child: Row(
@@ -1106,7 +1139,14 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
       ),
       body: Stack(
         children: [
-          const SpaceBackground(),
+          _currentTheme == 'beach'
+              ? Image.asset(
+            'assets/images/beach.jpg',
+            fit: BoxFit.cover,
+            width: double.infinity,
+            height: double.infinity,
+          )
+              : const SpaceBackground(),
           Column(
             children: [
               Padding(
@@ -1118,10 +1158,10 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
                     const SizedBox(width: 8),
                     Text(
                       'Points: $_userPoints',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: _currentTheme == 'beach' ? Colors.black : Colors.white,
                       ),
                     ),
                   ],
@@ -1142,6 +1182,45 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
       ),
     );
   }
+
+  Widget _buildThemesTab() {
+    if (isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(20),
+      itemCount: themes.length,
+      itemBuilder: (context, index) {
+        final theme = themes[index];
+        return ShopItemCard(
+          item: theme,
+          onPurchase: () => _purchaseItem(theme),
+          onEquip: theme.isPurchased ? () => _equipTheme(theme) : null,
+          currentTheme: _currentTheme,
+        );
+      },
+    );
+  }
+
+  Widget _buildPowerupsTab() {
+    if (isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(20),
+      itemCount: powerups.length,
+      itemBuilder: (context, index) {
+        final powerup = powerups[index];
+        return ShopItemCard(
+          item: powerup,
+          onPurchase: () => _purchaseItem(powerup),
+          currentTheme: _currentTheme,
+        );
+      },
+    );
+  }
 }
 
 // Model class for shop items
@@ -1154,6 +1233,7 @@ class ShopItem {
   bool isEquipped;
   final ShopItemType type;
   int quantity; // Track how many powerups the user owns
+  String? themeName; // Add this field for themes
 
   ShopItem({
     required this.itemName,
@@ -1162,30 +1242,32 @@ class ShopItem {
     required this.isEquipped,
     required this.type,
     this.quantity = 0, // Default to 0
+    this.themeName, // Add this field for themes
   });
 }
-
 
 // Custom widget for shop item cards
 class ShopItemCard extends StatelessWidget {
   final ShopItem item;
   final VoidCallback onPurchase;
   final VoidCallback? onEquip;
+  final String currentTheme;
 
   const ShopItemCard({
     super.key,
     required this.item,
     required this.onPurchase,
     this.onEquip,
+    required this.currentTheme,
   });
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      color: Colors.blueAccent.withOpacity(0.2),
+      color: currentTheme == 'beach' ? Colors.orange.withOpacity(0.2) : Colors.blueAccent.withOpacity(0.2),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(15),
-        side: const BorderSide(color: Colors.blueAccent, width: 2),
+        side: BorderSide(color: currentTheme == 'beach' ? Colors.orange : Colors.blueAccent, width: 2),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -1198,10 +1280,10 @@ class ShopItemCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     item.itemName,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: currentTheme == 'beach' ? Colors.black : Colors.white,
                     ),
                   ),
                 ),
@@ -1209,16 +1291,16 @@ class ShopItemCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: Colors.blueAccent.withOpacity(0.3),
+                      color: currentTheme == 'beach' ? Colors.orange.withOpacity(0.3) : Colors.blueAccent.withOpacity(0.3),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.blueAccent),
+                      border: Border.all(color: currentTheme == 'beach' ? Colors.orange : Colors.blueAccent),
                     ),
                     child: Text(
                       'x${item.quantity}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: currentTheme == 'beach' ? Colors.black : Colors.white,
                       ),
                     ),
                   ),
@@ -1227,9 +1309,9 @@ class ShopItemCard extends StatelessWidget {
             const SizedBox(height: 10),
             Text(
               'Cost: ${item.cost} points',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16,
-                color: Colors.white70,
+                color: currentTheme == 'beach' ? Colors.black : Colors.white70,
               ),
             ),
             const SizedBox(height: 10),
@@ -1245,7 +1327,7 @@ class ShopItemCard extends StatelessWidget {
                 ),
                 child: Text(
                   item.isEquipped ? 'Equipped' : 'Equip',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
                     color: Colors.white,
                   ),
@@ -1255,7 +1337,7 @@ class ShopItemCard extends StatelessWidget {
               ElevatedButton(
                 onPressed: onPurchase,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blueAccent,
+                  backgroundColor: currentTheme == 'beach' ? Colors.orange : Colors.blueAccent,
                   padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
@@ -1280,8 +1362,15 @@ class QuestionSelectionScreen extends StatefulWidget {
   final String subject;
   final List<Question> questions;
   final String username;
+  final String currentTheme;
 
-  const QuestionSelectionScreen({super.key, required this.subject, required this.questions, required this.username});
+  const QuestionSelectionScreen({
+    super.key,
+    required this.subject,
+    required this.questions,
+    required this.username,
+    required this.currentTheme,
+  });
 
   @override
   _QuestionSelectionScreenState createState() => _QuestionSelectionScreenState();
@@ -1294,32 +1383,52 @@ class _QuestionSelectionScreenState extends State<QuestionSelectionScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Select Number of Questions', style: TextStyle(color: Colors.white)),
-        backgroundColor: Color(0xFF1D1E33),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white), // White back arrow
-          onPressed: () {
-            Navigator.pop(context); // Go back to the HomeScreen
-          },
+        title: Text(
+          'Select Number of Questions',
+          style: TextStyle(
+            color: widget.currentTheme == 'beach' ? Colors.black : Colors.white, // Dynamic text color
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
         ),
+        backgroundColor: widget.currentTheme == 'beach' ? Colors.orange : const Color(0xFF1D1E33), // Dynamic app bar color
+        iconTheme: IconThemeData(
+          color: widget.currentTheme == 'beach' ? Colors.black : Colors.white, // Dynamic icon color
+        ),
+        elevation: 0,
       ),
       body: Stack(
         children: [
-          const SpaceBackground(),
+          widget.currentTheme == 'beach'
+              ? Image.asset(
+            'assets/images/beach.jpg',
+            fit: BoxFit.cover,
+            width: double.infinity,
+            height: double.infinity,
+          )
+              : const SpaceBackground(),
           Padding(
             padding: const EdgeInsets.all(20.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text(
+                Text(
                   'Amount of Questions:',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: widget.currentTheme == 'beach' ? Colors.black : Colors.white, // Dynamic text color
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 20),
                 Text(
                   '$_numberOfQuestions',
-                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.blueAccent),
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: widget.currentTheme == 'beach' ? Colors.blue : Colors.blueAccent, // Dynamic text color
+                  ),
                 ),
                 Slider(
                   value: _numberOfQuestions.toDouble(),
@@ -1327,6 +1436,8 @@ class _QuestionSelectionScreenState extends State<QuestionSelectionScreen> {
                   max: widget.questions.length.toDouble(),
                   divisions: widget.questions.length - 1,
                   label: _numberOfQuestions.toString(),
+                  activeColor: widget.currentTheme == 'beach' ? Colors.orange : Colors.blueAccent, // Dynamic slider color
+                  inactiveColor: widget.currentTheme == 'beach' ? Colors.orange.withOpacity(0.3) : Colors.blueAccent.withOpacity(0.3), // Dynamic slider color
                   onChanged: (value) {
                     setState(() {
                       _numberOfQuestions = value.toInt();
@@ -1334,20 +1445,39 @@ class _QuestionSelectionScreenState extends State<QuestionSelectionScreen> {
                   },
                 ),
                 const SizedBox(height: 20),
-                GameButton(
-                  text: 'Start Quiz',
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => QuizScreen(
-                          subject: widget.subject,
-                          questions: widget.questions.take(_numberOfQuestions).toList(),
-                          username: widget.username,
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 50),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => QuizScreen(
+                            subject: widget.subject,
+                            questions: widget.questions.take(_numberOfQuestions).toList(),
+                            username: widget.username,
+                            currentTheme: widget.currentTheme,
+                          ),
                         ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: widget.currentTheme == 'beach' ? Colors.orange : Colors.blueAccent, // Dynamic button color
+                      padding: const EdgeInsets.symmetric(vertical: 15),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                    );
-                  },
+                    ),
+                    child: Text(
+                      'Start Quiz',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: widget.currentTheme == 'beach' ? Colors.black : Colors.white, // Dynamic text color
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -1362,12 +1492,14 @@ class QuizScreen extends StatefulWidget {
   final String subject;
   final List<Question> questions;
   final String username;
+  final String currentTheme;
 
   const QuizScreen({
     super.key,
     required this.subject,
     required this.questions,
     required this.username,
+    required this.currentTheme,
   });
 
   @override
@@ -1501,56 +1633,80 @@ class _QuizScreenState extends State<QuizScreen> {
     return [correctAnswer, incorrectOptions.first];
   }
 
+  // Function to share quiz results
+  void _shareQuizResults() {
+    String message = "I just scored $correctAnswersCount out of ${widget.questions.length} in ${widget.subject} on EduQuest! 🚀\n"
+        "Total Points: ${totalPoints + pointsEarnedInRound}\n"
+        "Download the app and join the fun!";
+
+    Share.share(message); // Use Share.share() to show the share sheet
+  }
+
   void _showFinalScore() {
     _updateUserPoints().then((_) {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          backgroundColor: const Color(0xFF1D1E33),
-          title: const Text(
+          backgroundColor: widget.currentTheme == 'beach' ? Colors.orange.withOpacity(0.9) : const Color(0xFF1D1E33),
+          title: Text(
             'Quiz Finished!',
-            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+            style: TextStyle(fontWeight: FontWeight.bold, color: widget.currentTheme == 'beach' ? Colors.black : Colors.white),
             textAlign: TextAlign.center,
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
+              Text(
                 'Your Score:',
-                style: TextStyle(fontSize: 20, color: Colors.white),
+                style: TextStyle(fontSize: 20, color: widget.currentTheme == 'beach' ? Colors.black : Colors.white),
               ),
               const SizedBox(height: 10),
               Text(
                 '$correctAnswersCount/${widget.questions.length}',
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.blueAccent),
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: widget.currentTheme == 'beach' ? Colors.blue : Colors.blueAccent),
               ),
               const SizedBox(height: 10),
               Text(
                 'Points Earned This Round: $pointsEarnedInRound',
-                style: const TextStyle(fontSize: 18, color: Colors.white),
+                style: TextStyle(fontSize: 18, color: widget.currentTheme == 'beach' ? Colors.black : Colors.white),
               ),
               const SizedBox(height: 10),
               Text(
                 'Total Points: ${totalPoints + pointsEarnedInRound}',
-                style: const TextStyle(fontSize: 18, color: Colors.white),
+                style: TextStyle(fontSize: 18, color: widget.currentTheme == 'beach' ? Colors.black : Colors.white),
               ),
             ],
           ),
           actions: [
-            Center(
-              child: TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => HomeScreen(username: widget.username),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => HomeScreen(
+                      username: widget.username,
+                      onPointsUpdated: (newPoints) {},
+                      onThemeChanged: (newTheme) {},
                     ),
-                  );
-                },
-                child: const Text(
-                  'OK',
-                  style: TextStyle(fontSize: 18, color: Colors.blueAccent),
+                  ),
+                );
+              },
+              child: Text(
+                'OK',
+                style: TextStyle(
+                  fontSize: 18,
+                  color: widget.currentTheme == 'beach' ? Colors.blue : Colors.blueAccent,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: _shareQuizResults, // Share results
+              child: Text(
+                'Share Results',
+                style: TextStyle(
+                  fontSize: 18,
+                  color: widget.currentTheme == 'beach' ? Colors.blue : Colors.blueAccent,
                 ),
               ),
             ),
@@ -1562,24 +1718,24 @@ class _QuizScreenState extends State<QuizScreen> {
 
   Widget _buildPowerupButton(String powerup, int quantity, Widget icon, Color activeColor) {
     bool isActive = false;
-    Color buttonColor = const Color(0xFF1D1E33);
+    Color buttonColor = widget.currentTheme == 'beach' ? Colors.orange.withOpacity(0.2) : const Color(0xFF1D1E33);
 
     switch (powerup) {
       case 'Double Points':
         isActive = isDoublePointsActive;
-        buttonColor = isActive ? activeColor : const Color(0xFF1D1E33);
+        buttonColor = isActive ? activeColor : widget.currentTheme == 'beach' ? Colors.orange.withOpacity(0.2) : const Color(0xFF1D1E33);
         break;
       case '50/50':
         isActive = isFiftyFiftyActive;
-        buttonColor = isActive ? activeColor : const Color(0xFF1D1E33);
+        buttonColor = isActive ? activeColor : widget.currentTheme == 'beach' ? Colors.orange.withOpacity(0.2) : const Color(0xFF1D1E33);
         break;
       case 'Skip Question':
         isActive = isSkipQuestionActive;
-        buttonColor = isActive ? activeColor : const Color(0xFF1D1E33);
+        buttonColor = isActive ? activeColor : widget.currentTheme == 'beach' ? Colors.orange.withOpacity(0.2) : const Color(0xFF1D1E33);
         break;
       case 'Double or Nothing':
         isActive = isDoubleOrNothingActive;
-        buttonColor = isActive ? activeColor : const Color(0xFF1D1E33);
+        buttonColor = isActive ? activeColor : widget.currentTheme == 'beach' ? Colors.orange.withOpacity(0.2) : const Color(0xFF1D1E33);
         break;
     }
 
@@ -1594,7 +1750,7 @@ class _QuizScreenState extends State<QuizScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
-              side: BorderSide(color: Colors.blueAccent, width: 2),
+              side: BorderSide(color: widget.currentTheme == 'beach' ? Colors.orange : Colors.blueAccent, width: 2),
             ),
           ),
           child: Row(
@@ -1608,8 +1764,8 @@ class _QuizScreenState extends State<QuizScreen> {
               const SizedBox(width: 8),
               Text(
                 'x$quantity',
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: widget.currentTheme == 'beach' ? Colors.black : Colors.white,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -1631,198 +1787,206 @@ class _QuizScreenState extends State<QuizScreen> {
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFF1A1A2E),
+      backgroundColor: widget.currentTheme == 'beach' ? Colors.orange.withOpacity(0.1) : const Color(0xFF1A1A2E),
       appBar: AppBar(
+        title: Text(
+          widget.subject,
+          style: TextStyle(
+            color: widget.currentTheme == 'beach' ? Colors.black : Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        backgroundColor: widget.currentTheme == 'beach' ? Colors.orange : const Color(0xFF1D1E33),
+        iconTheme: IconThemeData(
+          color: widget.currentTheme == 'beach' ? Colors.black : Colors.white,
+        ),
         elevation: 0,
-        backgroundColor: Colors.transparent,
-        title: Row(
-          children: [
-            Text(
-              widget.subject,
-              style: const TextStyle(color: Colors.white),
-            ),
-            const Spacer(),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.blueAccent.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.stars, color: Colors.amber, size: 20),
-                  const SizedBox(width: 8),
-                  Text(
-                    '${totalPoints + pointsEarnedInRound}',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: Center(
+              child: Text(
+                'Points: ${totalPoints + pointsEarnedInRound}',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: widget.currentTheme == 'beach' ? Colors.black : Colors.white,
+                ),
               ),
             ),
-          ],
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
+          ),
+        ],
       ),
       body: Stack(
         children: [
-          const SpaceBackground(),
-          Column(
-            children: [
-              // Progress Bar
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Question ${currentQuestionIndex + 1}',
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
+          widget.currentTheme == 'beach'
+              ? Image.asset(
+            'assets/images/beach.jpg',
+            fit: BoxFit.cover,
+            width: double.infinity,
+            height: double.infinity,
+          )
+              : const SpaceBackground(),
+          Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              children: [
+                // Progress Bar
+                Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Question ${currentQuestionIndex + 1}',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: widget.currentTheme == 'beach' ? Colors.black : Colors.white,
+                            ),
                           ),
+                          Text(
+                            '${currentQuestionIndex + 1}/${widget.questions.length}',
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: widget.currentTheme == 'beach' ? Colors.black : Colors.white70,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: LinearProgressIndicator(
+                          value: (currentQuestionIndex + 1) / widget.questions.length,
+                          backgroundColor: widget.currentTheme == 'beach' ? Colors.orange.withOpacity(0.3) : Colors.blueAccent.withOpacity(0.3),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            widget.currentTheme == 'beach' ? Colors.orange : Colors.blueAccent,
+                          ),
+                          minHeight: 10,
                         ),
-                        Text(
-                          '${currentQuestionIndex + 1}/${widget.questions.length}',
-                          style: const TextStyle(
-                            fontSize: 18,
-                            color: Colors.white70,
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Question Text
+                Container(
+                  margin: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: widget.currentTheme == 'beach' ? Colors.orange.withOpacity(0.2) : Colors.blueAccent.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(15),
+                    border: Border.all(
+                      color: widget.currentTheme == 'beach' ? Colors.orange : Colors.blueAccent.withOpacity(0.3),
+                    ),
+                  ),
+                  child: Text(
+                    currentQuestion.questionText,
+                    style: TextStyle(
+                      fontSize: 20,
+                      color: widget.currentTheme == 'beach' ? Colors.black : Colors.white,
+                      height: 1.5,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+
+                // Answer Options
+                Expanded(
+                  child: ListView(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    children: [
+                      ...options.map((option) => Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 6),
+                        child: GameButton(
+                          text: option,
+                          onPressed: isAnswered ? null : () => _checkAnswer(option),
+                          isSelected: selectedAnswer == option,
+                          isCorrect: isAnswered ? option == currentQuestion.correctAnswer : null,
+                          currentTheme: widget.currentTheme,
+                        ),
+                      )),
+                      if (isAnswered) ...[
+                        const SizedBox(height: 20),
+                        Container(
+                          margin: const EdgeInsets.only(bottom: 20),
+                          child: ElevatedButton(
+                            onPressed: _nextQuestion,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: widget.currentTheme == 'beach' ? Colors.orange : Colors.purple,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(15),
+                              ),
+                            ),
+                            child: Text(
+                              currentQuestionIndex < widget.questions.length - 1
+                                  ? 'Next Question'
+                                  : 'Finish Quiz',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: widget.currentTheme == 'beach' ? Colors.black : Colors.white,
+                              ),
+                            ),
                           ),
                         ),
                       ],
-                    ),
-                    const SizedBox(height: 8),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: LinearProgressIndicator(
-                        value: (currentQuestionIndex + 1) / widget.questions.length,
-                        backgroundColor: Colors.blueAccent.withOpacity(0.2),
-                        valueColor: const AlwaysStoppedAnimation<Color>(Colors.blueAccent),
-                        minHeight: 10,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Question Text
-              Container(
-                margin: const EdgeInsets.all(20),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.blueAccent.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(15),
-                  border: Border.all(color: Colors.blueAccent.withOpacity(0.3)),
-                ),
-                child: Text(
-                  currentQuestion.questionText,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    color: Colors.white,
-                    height: 1.5,
+                    ],
                   ),
-                  textAlign: TextAlign.center,
                 ),
-              ),
 
-              // Answer Options
-              Expanded(
-                child: ListView(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  children: [
-                    ...options.map((option) => Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 6),
-                      child: GameButton(
-                        text: option,
-                        onPressed: isAnswered ? null : () => _checkAnswer(option),
-                        isSelected: selectedAnswer == option,
-                        isCorrect: isAnswered ? option == currentQuestion.correctAnswer : null,
+                // Powerups Row at the bottom
+                Container(
+                  height: 100,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  decoration: BoxDecoration(
+                    color: widget.currentTheme == 'beach' ? Colors.orange.withOpacity(0.2) : Colors.black.withOpacity(0.3),
+                    border: Border(
+                      top: BorderSide(
+                        color: widget.currentTheme == 'beach' ? Colors.orange : Colors.blueAccent.withOpacity(0.3),
                       ),
-                    )),
-                    if (isAnswered) ...[
-                      const SizedBox(height: 20),
-                      Container(
-                        margin: const EdgeInsets.only(bottom: 20),
-                        child: ElevatedButton(
-                          onPressed: _nextQuestion,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.purple,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(15),
-                            ),
-                          ),
-                          child: Text(
-                            currentQuestionIndex < widget.questions.length - 1
-                                ? 'Next Question'
-                                : 'Finish Quiz',
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
+                    ),
+                  ),
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        _buildPowerupButton(
+                          'Double Points',
+                          doublePointsQuantity,
+                          const Icon(Icons.looks_two, color: Colors.white, size: 28),
+                          Colors.green,
                         ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-
-              // Powerups Row at the bottom
-              Container(
-                height: 100,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.3),
-                  border: Border(
-                    top: BorderSide(color: Colors.blueAccent.withOpacity(0.3)),
+                        _buildPowerupButton(
+                          '50/50',
+                          fiftyFiftyQuantity,
+                          const Icon(Icons.balance, color: Colors.white, size: 28),
+                          Colors.orange,
+                        ),
+                        _buildPowerupButton(
+                          'Skip Question',
+                          skipQuestionQuantity,
+                          const Icon(Icons.skip_next, color: Colors.white, size: 28),
+                          Colors.red,
+                        ),
+                        _buildPowerupButton(
+                          'Double or Nothing',
+                          doubleOrNothingQuantity,
+                          const Icon(Icons.casino, color: Colors.white, size: 28),
+                          Colors.purple,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _buildPowerupButton(
-                        'Double Points',
-                        doublePointsQuantity,
-                        const Icon(Icons.looks_two, color: Colors.white, size: 28),
-                        Colors.green,
-                      ),
-                      _buildPowerupButton(
-                        '50/50',
-                        fiftyFiftyQuantity,
-                        const Icon(Icons.balance, color: Colors.white, size: 28),
-                        Colors.orange,
-                      ),
-                      _buildPowerupButton(
-                        'Skip Question',
-                        skipQuestionQuantity,
-                        const Icon(Icons.skip_next, color: Colors.white, size: 28),
-                        Colors.red,
-                      ),
-                      _buildPowerupButton(
-                        'Double or Nothing',
-                        doubleOrNothingQuantity,
-                        const Icon(Icons.casino, color: Colors.white, size: 28),
-                        Colors.purple,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),

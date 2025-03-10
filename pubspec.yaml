@@ -14,6 +14,7 @@ dependencies:
   sqflite: ^2.3.0 # For SQLite database operations
   path: ^1.8.3 # For path manipulation (used with sqflite)
   google_sign_in: ^6.1.0
+  share_plus: ^7.0.0
   #audioplayers: ^4.1.0 # For playing sound effects
 
 dev_dependencies:
