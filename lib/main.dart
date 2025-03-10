@@ -1765,7 +1765,7 @@ class _QuizScreenState extends State<QuizScreen> {
     }
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 4),
+      margin: const EdgeInsets.symmetric(horizontal: 8),
       child: Opacity(
         opacity: quantity > 0 ? 1.0 : 0.5,
         child: ElevatedButton(
