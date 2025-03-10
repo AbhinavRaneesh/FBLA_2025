@@ -1543,15 +1543,20 @@ class _QuizScreenState extends State<QuizScreen> {
   }
 
   Future<void> _loadPowerupQuantities() async {
-    doublePointsQuantity = await _dbHelper.getPowerupQuantity(widget.username, 'Double Points');
-    fiftyFiftyQuantity = await _dbHelper.getPowerupQuantity(widget.username, '50/50');
-    skipQuestionQuantity = await _dbHelper.getPowerupQuantity(widget.username, 'Skip Question');
-    doubleOrNothingQuantity = await _dbHelper.getPowerupQuantity(widget.username, 'Double or Nothing');
+    doublePointsQuantity =
+    await _dbHelper.getPowerupQuantity(widget.username, 'Double Points');
+    fiftyFiftyQuantity =
+    await _dbHelper.getPowerupQuantity(widget.username, '50/50');
+    skipQuestionQuantity =
+    await _dbHelper.getPowerupQuantity(widget.username, 'Skip Question');
+    doubleOrNothingQuantity =
+    await _dbHelper.getPowerupQuantity(widget.username, 'Double or Nothing');
     setState(() {});
   }
 
   Future<void> _updateUserPoints() async {
-    await _dbHelper.updateUserPoints(widget.username, totalPoints + pointsEarnedInRound);
+    await _dbHelper.updateUserPoints(
+        widget.username, totalPoints + pointsEarnedInRound);
   }
 
   void _checkAnswer(String answer) {
@@ -1599,21 +1604,24 @@ class _QuizScreenState extends State<QuizScreen> {
           if (doublePointsQuantity > 0) {
             isDoublePointsActive = true;
             doublePointsQuantity--;
-            _dbHelper.updatePowerupQuantity(widget.username, powerup, doublePointsQuantity);
+            _dbHelper.updatePowerupQuantity(
+                widget.username, powerup, doublePointsQuantity);
           }
           break;
         case '50/50':
           if (fiftyFiftyQuantity > 0) {
             isFiftyFiftyActive = true;
             fiftyFiftyQuantity--;
-            _dbHelper.updatePowerupQuantity(widget.username, powerup, fiftyFiftyQuantity);
+            _dbHelper.updatePowerupQuantity(
+                widget.username, powerup, fiftyFiftyQuantity);
           }
           break;
         case 'Skip Question':
           if (skipQuestionQuantity > 0) {
             isSkipQuestionActive = true;
             skipQuestionQuantity--;
-            _dbHelper.updatePowerupQuantity(widget.username, powerup, skipQuestionQuantity);
+            _dbHelper.updatePowerupQuantity(
+                widget.username, powerup, skipQuestionQuantity);
             _nextQuestion();
           }
           break;
@@ -1621,7 +1629,8 @@ class _QuizScreenState extends State<QuizScreen> {
           if (doubleOrNothingQuantity > 0) {
             isDoubleOrNothingActive = true;
             doubleOrNothingQuantity--;
-            _dbHelper.updatePowerupQuantity(widget.username, powerup, doubleOrNothingQuantity);
+            _dbHelper.updatePowerupQuantity(
+                widget.username, powerup, doubleOrNothingQuantity);
           }
           break;
       }
@@ -1629,14 +1638,16 @@ class _QuizScreenState extends State<QuizScreen> {
   }
 
   List<String> _applyFiftyFifty(List<String> options, String correctAnswer) {
-    final incorrectOptions = options.where((option) => option != correctAnswer).toList();
+    final incorrectOptions = options.where((option) => option != correctAnswer)
+        .toList();
     incorrectOptions.shuffle();
     return [correctAnswer, incorrectOptions.first];
   }
 
   // Function to share quiz results
   void _shareQuizResults() {
-    String message = "I just scored $correctAnswersCount out of ${widget.questions.length} in ${widget.subject} on EduQuest! 🚀\n"
+    String message = "I just scored $correctAnswersCount out of ${widget
+        .questions.length} in ${widget.subject} on EduQuest! 🚀\n"
         "Total Points: ${totalPoints + pointsEarnedInRound}\n"
         "Download the app and join the fun!";
 
@@ -1647,135 +1658,148 @@ class _QuizScreenState extends State<QuizScreen> {
     _updateUserPoints().then((_) {
       showDialog(
         context: context,
-        builder: (context) => AlertDialog(
-          backgroundColor: widget.currentTheme == 'beach' ? Colors.orange.withOpacity(0.9) : const Color(0xFF1D1E33),
-          title: Text(
-            'Quiz Finished!',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: widget.currentTheme == 'beach' ? Colors.black : Colors.white,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Your Score:',
-                style: TextStyle(
-                    fontSize: 16,
-                    color: widget.currentTheme == 'beach' ? Colors.black : Colors.white
-                ),
+        builder: (context) =>
+            AlertDialog(
+              backgroundColor: widget.currentTheme == 'beach' ? Colors.orange
+                  .withOpacity(0.9) : const Color(0xFF1D1E33),
+              title: Text(
+                'Quiz Finished!',
+                style: TextStyle(fontWeight: FontWeight.bold,
+                    color: widget.currentTheme == 'beach'
+                        ? Colors.black
+                        : Colors.white),
+                textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 8),
-              Text(
-                '$correctAnswersCount/${widget.questions.length}',
-                style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: widget.currentTheme == 'beach' ? Colors.blue : Colors.blueAccent
-                ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Your Score:',
+                    style: TextStyle(fontSize: 20,
+                        color: widget.currentTheme == 'beach'
+                            ? Colors.black
+                            : Colors.white),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    '$correctAnswersCount/${widget.questions.length}',
+                    style: TextStyle(fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: widget.currentTheme == 'beach'
+                            ? Colors.blue
+                            : Colors.blueAccent),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    'Points Earned This Round: $pointsEarnedInRound',
+                    style: TextStyle(fontSize: 18,
+                        color: widget.currentTheme == 'beach'
+                            ? Colors.black
+                            : Colors.white),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    'Total Points: ${totalPoints + pointsEarnedInRound}',
+                    style: TextStyle(fontSize: 18,
+                        color: widget.currentTheme == 'beach'
+                            ? Colors.black
+                            : Colors.white),
+                  ),
+                ],
               ),
-              const SizedBox(height: 8),
-              Text(
-                'Points Earned This Round: $pointsEarnedInRound',
-                style: TextStyle(
-                    fontSize: 14,
-                    color: widget.currentTheme == 'beach' ? Colors.black : Colors.white
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Total Points: ${totalPoints + pointsEarnedInRound}',
-                style: TextStyle(
-                    fontSize: 14,
-                    color: widget.currentTheme == 'beach' ? Colors.black : Colors.white
-                ),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => HomeScreen(
-                        username: widget.username,
-                        onPointsUpdated: (newPoints) {},
-                        onThemeChanged: (newTheme) {},
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            HomeScreen(
+                              username: widget.username,
+                              onPointsUpdated: (newPoints) {},
+                              onThemeChanged: (newTheme) {},
+                            ),
                       ),
+                    );
+                  },
+                  child: Text(
+                    'OK',
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: widget.currentTheme == 'beach'
+                          ? Colors.blue
+                          : Colors.blueAccent,
                     ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: widget.currentTheme == 'beach' ? Colors.orange : Colors.blueAccent,
-                  minimumSize: Size(120, 40),
-                ),
-                child: Text(
-                  'Continue',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.white,
                   ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              TextButton(
-                onPressed: _shareQuizResults,
-                style: TextButton.styleFrom(
-                  minimumSize: Size(120, 40),
-                ),
-                child: Text(
-                  'Share Results',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: widget.currentTheme == 'beach' ? Colors.blue : Colors.blueAccent,
+                TextButton(
+                  onPressed: _shareQuizResults, // Share results
+                  child: Text(
+                    'Share Results',
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: widget.currentTheme == 'beach'
+                          ? Colors.blue
+                          : Colors.blueAccent,
+                    ),
                   ),
                 ),
-              ),
-            ],
-          ),
-          actions: [], // Removed actions from here
-        ),
+              ],
+            ),
       );
     });
   }
 
-  Widget _buildPowerupButton(String powerup, int quantity, Widget icon, Color activeColor) {
+  Widget _buildPowerupButton(String powerup, int quantity, Widget icon,
+      Color activeColor) {
     bool isActive = false;
-    Color buttonColor = widget.currentTheme == 'beach' ? Colors.orange.withOpacity(0.2) : const Color(0xFF1D1E33);
+    Color buttonColor = widget.currentTheme == 'beach' ? Colors.orange
+        .withOpacity(0.2) : const Color(0xFF1D1E33);
 
     switch (powerup) {
       case 'Double Points':
         isActive = isDoublePointsActive;
-        buttonColor = isActive ? activeColor : widget.currentTheme == 'beach' ? Colors.orange.withOpacity(0.2) : const Color(0xFF1D1E33);
+        buttonColor =
+        isActive ? activeColor : widget.currentTheme == 'beach' ? Colors.orange
+            .withOpacity(0.2) : const Color(0xFF1D1E33);
         break;
       case '50/50':
         isActive = isFiftyFiftyActive;
-        buttonColor = isActive ? activeColor : widget.currentTheme == 'beach' ? Colors.orange.withOpacity(0.2) : const Color(0xFF1D1E33);
+        buttonColor =
+        isActive ? activeColor : widget.currentTheme == 'beach' ? Colors.orange
+            .withOpacity(0.2) : const Color(0xFF1D1E33);
         break;
       case 'Skip Question':
         isActive = isSkipQuestionActive;
-        buttonColor = isActive ? activeColor : widget.currentTheme == 'beach' ? Colors.orange.withOpacity(0.2) : const Color(0xFF1D1E33);
+        buttonColor =
+        isActive ? activeColor : widget.currentTheme == 'beach' ? Colors.orange
+            .withOpacity(0.2) : const Color(0xFF1D1E33);
         break;
       case 'Double or Nothing':
         isActive = isDoubleOrNothingActive;
-        buttonColor = isActive ? activeColor : widget.currentTheme == 'beach' ? Colors.orange.withOpacity(0.2) : const Color(0xFF1D1E33);
+        buttonColor =
+        isActive ? activeColor : widget.currentTheme == 'beach' ? Colors.orange
+            .withOpacity(0.2) : const Color(0xFF1D1E33);
         break;
     }
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 8),
+      margin: const EdgeInsets.symmetric(horizontal: 4),
       child: Opacity(
         opacity: quantity > 0 ? 1.0 : 0.5,
         child: ElevatedButton(
-          onPressed: quantity > 0 && !isAnswered ? () => _usePowerup(powerup) : null,
+          onPressed: quantity > 0 && !isAnswered
+              ? () => _usePowerup(powerup)
+              : null,
           style: ElevatedButton.styleFrom(
             backgroundColor: buttonColor,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
-              side: BorderSide(color: widget.currentTheme == 'beach' ? Colors.orange : Colors.blueAccent, width: 2),
+              side: BorderSide(
+                  color: widget.currentTheme == 'beach' ? Colors.orange : Colors
+                      .blueAccent, width: 2),
             ),
           ),
           child: Row(
@@ -1790,7 +1814,8 @@ class _QuizScreenState extends State<QuizScreen> {
               Text(
                 'x$quantity',
                 style: TextStyle(
-                  color: widget.currentTheme == 'beach' ? Colors.black : Colors.white,
+                  color: widget.currentTheme == 'beach' ? Colors.black : Colors
+                      .white,
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
                 ),
@@ -1840,133 +1865,38 @@ class _QuizScreenState extends State<QuizScreen> {
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: widget.currentTheme == 'beach' ? Colors.black : Colors.white,
+                  color: widget.currentTheme == 'beach' ? Colors.black : Colors
+                      .white,
                 ),
               ),
             ),
           ),
         ],
       ),
-        body: Stack(
-          children: [
-        // Background
-        widget.currentTheme == 'beach'
-        ? Image.asset(
-          'assets/images/beach.jpg',
-          fit: BoxFit.cover,
-          width: double.infinity,
-          height: double.infinity,
-        )
-            : const SpaceBackground(),
-         Column(
-          children: [
-          // Progress Bar
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      body: Stack(
+        children: [
+          // Background
+          widget.currentTheme == 'beach'
+              ? Image.asset(
+            'assets/images/beach.jpg',
+            fit: BoxFit.cover,
+            width: double.infinity,
+            height: double.infinity,
+          )
+              : const SpaceBackground(),
+          Column(
+            children: [
+              // Progress Bar
+              Container(
+                margin: const EdgeInsets.symmetric(
+                    horizontal: 24, vertical: 16),
+                child: Column(
                   children: [
-                    Text(
-                      'Question ${currentQuestionIndex + 1}',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: widget.currentTheme == 'beach' ? Colors.black : Colors.white,
-                      ),
-                    ),
-                    Text(
-                      '${currentQuestionIndex + 1}/${widget.questions.length}',
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: widget.currentTheme == 'beach' ? Colors.black : Colors.white70,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: LinearProgressIndicator(
-                    value: (currentQuestionIndex + 1) / widget.questions.length,
-                    backgroundColor: widget.currentTheme == 'beach'
-                        ? Colors.orange.withOpacity(0.3)
-                        : Colors.blueAccent.withOpacity(0.3),
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      widget.currentTheme == 'beach' ? Colors.orange : Colors.blueAccent,
-                    ),
-                    minHeight: 10,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Question Text
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  Container(
-                    margin: const EdgeInsets.all(20),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: widget.currentTheme == 'beach'
-                          ? Colors.orange.withOpacity(0.2)
-                          : Colors.blueAccent.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(15),
-                      border: Border.all(
-                        color: widget.currentTheme == 'beach'
-                            ? Colors.orange
-                            : Colors.blueAccent.withOpacity(0.3),
-                      ),
-                    ),
-                    child: Text(
-                      currentQuestion.questionText,
-                      style: TextStyle(
-                        fontSize: 20,
-                        color: widget.currentTheme == 'beach' ? Colors.black : Colors.white,
-                        height: 1.5,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-
-                  // Answer Options
-                  ...options.map((option) => Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 6),
-                    child: GameButton(
-                      text: option,
-                      onPressed: isAnswered ? null : () => _checkAnswer(option),
-                      isSelected: selectedAnswer == option,
-                      isCorrect: isAnswered
-                          ? option == currentQuestion.correctAnswer
-                          : null,
-                      currentTheme: widget.currentTheme,
-                    ),
-                  )),
-                  if (isAnswered) ...[
-                    const SizedBox(height: 20),
-                    Container(
-                      width: MediaQuery.of(context).size.width * 0.7, // Makes button wider
-                      margin: const EdgeInsets.only(bottom: 20),
-                      child: ElevatedButton(
-                        onPressed: _nextQuestion,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: widget.currentTheme == 'beach'
-                              ? Colors.orange
-                              : Colors.purple,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                        ),
-                        child: Text(
-                          currentQuestionIndex < widget.questions.length - 1
-                              ? 'Next Question'
-                              : 'Finish Quiz',
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Question ${currentQuestionIndex + 1}',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -1975,56 +1905,170 @@ class _QuizScreenState extends State<QuizScreen> {
                                 : Colors.white,
                           ),
                         ),
+                        Text(
+                          '${currentQuestionIndex + 1}/${widget.questions
+                              .length}',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: widget.currentTheme == 'beach'
+                                ? Colors.black
+                                : Colors.white70,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: LinearProgressIndicator(
+                        value: (currentQuestionIndex + 1) /
+                            widget.questions.length,
+                        backgroundColor: widget.currentTheme == 'beach'
+                            ? Colors.orange.withOpacity(0.3)
+                            : Colors.blueAccent.withOpacity(0.3),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          widget.currentTheme == 'beach'
+                              ? Colors.orange
+                              : Colors.blueAccent,
+                        ),
+                        minHeight: 10,
                       ),
                     ),
                   ],
-                ],
+                ),
               ),
-            ),
-          ),
 
-          // Powerups Bar at the bottom
-          Container(
-            height: 80, // Adjust height as needed
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: widget.currentTheme == 'beach'
-                  ? Colors.orange.withOpacity(0.2)
-                  : Colors.black.withOpacity(0.3),
-              border: Border(
-                top: BorderSide(
-                  color: widget.currentTheme == 'beach'
-                      ? Colors.orange
-                      : Colors.blueAccent.withOpacity(0.3),
+              // Question Text
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    children: [
+                      Container(
+                        margin: const EdgeInsets.all(20),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: widget.currentTheme == 'beach'
+                              ? Colors.orange.withOpacity(0.2)
+                              : Colors.blueAccent.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(15),
+                          border: Border.all(
+                            color: widget.currentTheme == 'beach'
+                                ? Colors.orange
+                                : Colors.blueAccent.withOpacity(0.3),
+                          ),
+                        ),
+                        child: Text(
+                          currentQuestion.questionText,
+                          style: TextStyle(
+                            fontSize: 20,
+                            color: widget.currentTheme == 'beach'
+                                ? Colors.black
+                                : Colors.white,
+                            height: 1.5,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+
+                      // Answer Options
+                      ...options.map((option) =>
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 6),
+                            child: GameButton(
+                              text: option,
+                              onPressed: isAnswered ? null : () =>
+                                  _checkAnswer(option),
+                              isSelected: selectedAnswer == option,
+                              isCorrect: isAnswered
+                                  ? option == currentQuestion.correctAnswer
+                                  : null,
+                              currentTheme: widget.currentTheme,
+                            ),
+                          )),
+                      if (isAnswered) ...[
+                        const SizedBox(height: 20),
+                        Container(
+                          width: MediaQuery
+                              .of(context)
+                              .size
+                              .width * 0.7, // Makes button wider
+                          margin: const EdgeInsets.only(bottom: 20),
+                          child: ElevatedButton(
+                            onPressed: _nextQuestion,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: widget.currentTheme == 'beach'
+                                  ? Colors.orange
+                                  : Colors.purple,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(15),
+                              ),
+                            ),
+                            child: Text(
+                              currentQuestionIndex < widget.questions.length - 1
+                                  ? 'Next Question'
+                                  : 'Finish Quiz',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: widget.currentTheme == 'beach'
+                                    ? Colors.black
+                                    : Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
                 ),
               ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _buildPowerupButton(
-                  'Double Points',
-                  doublePointsQuantity,
-                  const Icon(Icons.looks_two, color: Colors.white, size: 24),
-                  Colors.green,
+
+              // Powerups Bar at the bottom
+              Container(
+                height: 80, // Adjust height as needed
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: widget.currentTheme == 'beach'
+                      ? Colors.orange.withOpacity(0.2)
+                      : Colors.black.withOpacity(0.3),
+                  border: Border(
+                    top: BorderSide(
+                      color: widget.currentTheme == 'beach'
+                          ? Colors.orange
+                          : Colors.blueAccent.withOpacity(0.3),
+                    ),
+                  ),
                 ),
-                _buildPowerupButton(
-                  '50/50',
-                  fiftyFiftyQuantity,
-                  const Icon(Icons.balance, color: Colors.white, size: 24),
-                  Colors.orange,
-                ),
-                _buildPowerupButton(
-                  'Skip Question',
-                  skipQuestionQuantity,
-                  const Icon(Icons.skip_next, color: Colors.white, size: 24),
-                  Colors.red,
-                ),
-                _buildPowerupButton(
-                  'Double or Nothing',
-                  doubleOrNothingQuantity,
-                  const Icon(Icons.casino, color: Colors.white, size: 24),
-                  Colors.purple,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _buildPowerupButton(
+                      'Double Points',
+                      doublePointsQuantity,
+                      const Icon(
+                          Icons.looks_two, color: Colors.white, size: 24),
+                      Colors.green,
+                    ),
+                    _buildPowerupButton(
+                      '50/50',
+                      fiftyFiftyQuantity,
+                      const Icon(Icons.balance, color: Colors.white, size: 24),
+                      Colors.orange,
+                    ),
+                    _buildPowerupButton(
+                      'Skip Question',
+                      skipQuestionQuantity,
+                      const Icon(
+                          Icons.skip_next, color: Colors.white, size: 24),
+                      Colors.red,
+                    ),
+                    _buildPowerupButton(
+                      'Double or Nothing',
+                      doubleOrNothingQuantity,
+                      const Icon(Icons.casino, color: Colors.white, size: 24),
+                      Colors.purple,
                     ),
                   ],
                 ),
