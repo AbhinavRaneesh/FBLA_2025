@@ -1381,6 +1381,7 @@ class _QuestionSelectionScreenState extends State<QuestionSelectionScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final questions = QuestionsRepository.getQuestionsForSubject(widget.subject);
     return Scaffold(
       appBar: AppBar(
         title: Text(

@@ -457,18 +457,26 @@ class QuestionsRepository {
 
   // Method to get questions by subject
   static List<Question> getQuestionsForSubject(String subject) {
+    List<Question> questions;
     switch (subject) {
       case 'Math':
-        return mathQuestions;
+        questions = List<Question>.from(mathQuestions);
+        break;
       case 'History':
-        return historyQuestions;
+        questions = List<Question>.from(historyQuestions);
+        break;
       case 'English':
-        return englishQuestions;
+        questions = List<Question>.from(englishQuestions);
+        break;
       case 'Science':
-        return scienceQuestions;
+        questions = List<Question>.from(scienceQuestions);
+        break;
       default:
-        return [];
+        questions = [];
+        break;
     }
+    questions.shuffle(); // Shuffle the questions
+    return questions;
   }
 }
 
