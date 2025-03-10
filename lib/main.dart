@@ -1651,7 +1651,10 @@ class _QuizScreenState extends State<QuizScreen> {
           backgroundColor: widget.currentTheme == 'beach' ? Colors.orange.withOpacity(0.9) : const Color(0xFF1D1E33),
           title: Text(
             'Quiz Finished!',
-            style: TextStyle(fontWeight: FontWeight.bold, color: widget.currentTheme == 'beach' ? Colors.black : Colors.white),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: widget.currentTheme == 'beach' ? Colors.black : Colors.white,
+            ),
             textAlign: TextAlign.center,
           ),
           content: Column(
@@ -1659,59 +1662,80 @@ class _QuizScreenState extends State<QuizScreen> {
             children: [
               Text(
                 'Your Score:',
-                style: TextStyle(fontSize: 20, color: widget.currentTheme == 'beach' ? Colors.black : Colors.white),
+                style: TextStyle(
+                    fontSize: 16,
+                    color: widget.currentTheme == 'beach' ? Colors.black : Colors.white
+                ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
               Text(
                 '$correctAnswersCount/${widget.questions.length}',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: widget.currentTheme == 'beach' ? Colors.blue : Colors.blueAccent),
+                style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: widget.currentTheme == 'beach' ? Colors.blue : Colors.blueAccent
+                ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
               Text(
                 'Points Earned This Round: $pointsEarnedInRound',
-                style: TextStyle(fontSize: 18, color: widget.currentTheme == 'beach' ? Colors.black : Colors.white),
+                style: TextStyle(
+                    fontSize: 14,
+                    color: widget.currentTheme == 'beach' ? Colors.black : Colors.white
+                ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
               Text(
                 'Total Points: ${totalPoints + pointsEarnedInRound}',
-                style: TextStyle(fontSize: 18, color: widget.currentTheme == 'beach' ? Colors.black : Colors.white),
+                style: TextStyle(
+                    fontSize: 14,
+                    color: widget.currentTheme == 'beach' ? Colors.black : Colors.white
+                ),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => HomeScreen(
+                        username: widget.username,
+                        onPointsUpdated: (newPoints) {},
+                        onThemeChanged: (newTheme) {},
+                      ),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: widget.currentTheme == 'beach' ? Colors.orange : Colors.blueAccent,
+                  minimumSize: Size(120, 40),
+                ),
+                child: Text(
+                  'Continue',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: _shareQuizResults,
+                style: TextButton.styleFrom(
+                  minimumSize: Size(120, 40),
+                ),
+                child: Text(
+                  'Share Results',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: widget.currentTheme == 'beach' ? Colors.blue : Colors.blueAccent,
+                  ),
+                ),
               ),
             ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => HomeScreen(
-                      username: widget.username,
-                      onPointsUpdated: (newPoints) {},
-                      onThemeChanged: (newTheme) {},
-                    ),
-                  ),
-                );
-              },
-              child: Text(
-                'OK',
-                style: TextStyle(
-                  fontSize: 18,
-                  color: widget.currentTheme == 'beach' ? Colors.blue : Colors.blueAccent,
-                ),
-              ),
-            ),
-            TextButton(
-              onPressed: _shareQuizResults, // Share results
-              child: Text(
-                'Share Results',
-                style: TextStyle(
-                  fontSize: 18,
-                  color: widget.currentTheme == 'beach' ? Colors.blue : Colors.blueAccent,
-                ),
-              ),
-            ),
-          ],
+          actions: [], // Removed actions from here
         ),
       );
     });
