@@ -3,7 +3,7 @@ import 'database_helper.dart';
 import 'questions.dart';
 import 'dart:math'; // For random star positions
 import 'package:google_sign_in/google_sign_in.dart'; // For Google Sign-In
-import 'package:share_plus/share_plus.dart'; // For sharing the app
+//import 'package:share_plus/share_plus.dart'; // For sharing the app
 
 void main() {
   runApp(const StudentLearningApp());
@@ -242,19 +242,19 @@ class _SignInPageState extends State<SignInPage> {
         children: [
           const SpaceBackground(),
           Positioned(
-            top: 50,
+            top: 10,
             left: 20,
             child: Image.asset(
               'assets/images/planet.png',
-              height: 200,
+              height: 190,
             ),
           ),
           Positioned(
-            bottom: 30,
-            right: 20,
+            bottom: -15,
+            right: 0,
             child: Image.asset(
               'assets/images/astronaut.png',
-              height: 200,
+              height: 195,
             ),
           ),
           Center(
@@ -267,7 +267,7 @@ class _SignInPageState extends State<SignInPage> {
                     const Text(
                       'Welcome To EduQuest!',
                       style: TextStyle(
-                        fontSize: 32,
+                        fontSize: 30,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),
@@ -492,19 +492,19 @@ class _SignUpPageState extends State<SignUpPage> {
         children: [
           const SpaceBackground(),
           Positioned(
-            top: 50,
+            top: 10,
             left: 20,
             child: Image.asset(
               'assets/images/planet.png',
-              height: 200,
+              height: 190,
             ),
           ),
           Positioned(
-            bottom: 30,
-            right: 20,
+            bottom: -15,
+            right: 0,
             child: Image.asset(
               'assets/images/astronaut.png',
-              height: 200,
+              height: 195,
             ),
           ),
           Center(
@@ -1651,102 +1651,103 @@ class _QuizScreenState extends State<QuizScreen> {
         "Total Points: ${totalPoints + pointsEarnedInRound}\n"
         "Download the app and join the fun!";
 
-    Share.share(message); // Use Share.share() to show the share sheet
+    //Share.share(message); // Use Share.share() to show the share sheet
   }
 
   void _showFinalScore() {
     _updateUserPoints().then((_) {
       showDialog(
         context: context,
-        builder: (context) =>
-            AlertDialog(
-              backgroundColor: widget.currentTheme == 'beach' ? Colors.orange
-                  .withOpacity(0.9) : const Color(0xFF1D1E33),
-              title: Text(
-                'Quiz Finished!',
-                style: TextStyle(fontWeight: FontWeight.bold,
-                    color: widget.currentTheme == 'beach'
-                        ? Colors.black
-                        : Colors.white),
-                textAlign: TextAlign.center,
-              ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Your Score:',
-                    style: TextStyle(fontSize: 20,
-                        color: widget.currentTheme == 'beach'
-                            ? Colors.black
-                            : Colors.white),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    '$correctAnswersCount/${widget.questions.length}',
-                    style: TextStyle(fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: widget.currentTheme == 'beach'
-                            ? Colors.blue
-                            : Colors.blueAccent),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    'Points Earned This Round: $pointsEarnedInRound',
-                    style: TextStyle(fontSize: 18,
-                        color: widget.currentTheme == 'beach'
-                            ? Colors.black
-                            : Colors.white),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    'Total Points: ${totalPoints + pointsEarnedInRound}',
-                    style: TextStyle(fontSize: 18,
-                        color: widget.currentTheme == 'beach'
-                            ? Colors.black
-                            : Colors.white),
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            HomeScreen(
-                              username: widget.username,
-                              onPointsUpdated: (newPoints) {},
-                              onThemeChanged: (newTheme) {},
-                            ),
-                      ),
-                    );
-                  },
-                  child: Text(
-                    'OK',
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: widget.currentTheme == 'beach'
-                          ? Colors.blue
-                          : Colors.blueAccent,
-                    ),
-                  ),
-                ),
-                TextButton(
-                  onPressed: _shareQuizResults, // Share results
-                  child: Text(
-                    'Share Results',
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: widget.currentTheme == 'beach'
-                          ? Colors.blue
-                          : Colors.blueAccent,
-                    ),
-                  ),
-                ),
-              ],
+        builder: (context) => AlertDialog(
+          backgroundColor: widget.currentTheme == 'beach' ? Colors.orange.withOpacity(0.9) : const Color(0xFF1D1E33),
+          title: Text(
+            'Quiz Finished!',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: widget.currentTheme == 'beach' ? Colors.black : Colors.white,
             ),
+            textAlign: TextAlign.center,
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Your Score:',
+                style: TextStyle(
+                    fontSize: 18,
+                    color: widget.currentTheme == 'beach' ? Colors.black : Colors.white
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '$correctAnswersCount/${widget.questions.length}',
+                style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: widget.currentTheme == 'beach' ? Colors.blue : Colors.blueAccent
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Points Earned This Round: $pointsEarnedInRound',
+                style: TextStyle(
+                    fontSize: 16,
+                    color: widget.currentTheme == 'beach' ? Colors.black : Colors.white
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Current Balance: ${totalPoints + pointsEarnedInRound}',
+                style: TextStyle(
+                    fontSize: 16,
+                    color: widget.currentTheme == 'beach' ? Colors.black : Colors.white
+                ),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => HomeScreen(
+                        username: widget.username,
+                        onPointsUpdated: (newPoints) {},
+                        onThemeChanged: (newTheme) {},
+                      ),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: widget.currentTheme == 'beach' ? Colors.orange : Colors.blueAccent,
+                  minimumSize: Size(150, 50),
+                ),
+                child: Text(
+                  'Continue',
+                  style: TextStyle(
+                    fontSize: 20,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 4),
+              TextButton(
+                onPressed: _shareQuizResults,
+                style: TextButton.styleFrom(
+                  minimumSize: Size(140, 40),
+                ),
+                child: Text(
+                  'Share Results',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: widget.currentTheme == 'beach' ? Colors.blue : Colors.blueAccent,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actions: [], // Removed actions from here
+        ),
       );
     });
   }
