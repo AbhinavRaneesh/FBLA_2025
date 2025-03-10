@@ -1762,12 +1762,12 @@ class _QuizScreenState extends State<QuizScreen> {
                 height: 24,
                 child: icon,
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 4),
               Text(
                 'x$quantity',
                 style: TextStyle(
                   color: widget.currentTheme == 'beach' ? Colors.black : Colors.white,
-                  fontSize: 16,
+                  fontSize: 12,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -1823,8 +1823,19 @@ class _QuizScreenState extends State<QuizScreen> {
           ),
         ],
       ),
-      body: Column(
-        children: [
+        body: Stack(
+          children: [
+        // Background
+        widget.currentTheme == 'beach'
+        ? Image.asset(
+          'assets/images/beach.jpg',
+          fit: BoxFit.cover,
+          width: double.infinity,
+          height: double.infinity,
+        )
+            : const SpaceBackground(),
+         Column(
+          children: [
           // Progress Bar
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
@@ -1915,6 +1926,7 @@ class _QuizScreenState extends State<QuizScreen> {
                   if (isAnswered) ...[
                     const SizedBox(height: 20),
                     Container(
+                      width: MediaQuery.of(context).size.width * 0.7, // Makes button wider
                       margin: const EdgeInsets.only(bottom: 20),
                       child: ElevatedButton(
                         onPressed: _nextQuestion,
@@ -1950,7 +1962,7 @@ class _QuizScreenState extends State<QuizScreen> {
           // Powerups Bar at the bottom
           Container(
             height: 80, // Adjust height as needed
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
               color: widget.currentTheme == 'beach'
                   ? Colors.orange.withOpacity(0.2)
@@ -1989,9 +2001,11 @@ class _QuizScreenState extends State<QuizScreen> {
                   doubleOrNothingQuantity,
                   const Icon(Icons.casino, color: Colors.white, size: 28),
                   Colors.purple,
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ],
       ),
