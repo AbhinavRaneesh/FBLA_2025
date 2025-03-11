@@ -4,6 +4,7 @@ import 'questions.dart';
 import 'dart:math'; // For random star positions
 import 'package:google_sign_in/google_sign_in.dart'; // For Google Sign-In
 //import 'package:share_plus/share_plus.dart'; // For sharing the app
+import 'dart:async';
 
 void main() {
   runApp(const StudentLearningApp());
@@ -22,6 +23,307 @@ class StudentLearningApp extends StatelessWidget {
       ),
       home: SignInPage(), // Correctly defined home property
       debugShowCheckedModeBanner: false,
+    );
+  }
+}
+
+class FlappyBirdGameScreen extends StatefulWidget {
+  final String username;
+  final String currentTheme;
+  final List<Question> questions;
+
+  const FlappyBirdGameScreen({
+    super.key,
+    required this.username,
+    required this.currentTheme,
+    required this.questions,
+  });
+
+  @override
+  _FlappyBirdGameScreenState createState() => _FlappyBirdGameScreenState();
+}
+
+class _FlappyBirdGameScreenState extends State<FlappyBirdGameScreen> {
+  double birdY = 0.4; // Initial vertical position of the bird (0 to 1)
+  double birdVelocity = 0.0; // Vertical velocity of the bird
+  double gravity = 0.0003; // Further reduced gravity for even slower fall
+  double jumpStrength = -0.01; // Even smaller jump strength for minimal vertical movement
+  List<double> obstacleX = [1.0, 2.0, 3.0]; // Initial X positions of obstacles
+  List<double> obstacleHeights = [0.3, 0.4, 0.5]; // Random heights for obstacles
+  double obstacleWidth = 0.2; // Width of the obstacles
+  double obstacleGap = 0.3; // Gap between top and bottom obstacles
+  int score = 0; // Player's score
+  bool isGameOver = false; // Whether the game is over
+  Timer? gameTimer; // Timer for game updates
+  int currentQuestionIndex = 0; // Current question index
+  bool isPausedForQuestion = false; // Whether the game is paused for a question
+  Random random = Random(); // Random number generator
+
+  // Define minimum and maximum distance between obstacles
+  final double minObstacleDistance = 1.0; // Minimum distance between obstacles
+  final double maxObstacleDistance = 1.5; // Maximum distance between obstacles
+
+  @override
+  void initState() {
+    super.initState();
+    startGame();
+  }
+
+  void startGame() {
+    // Initialize random obstacle heights
+    for (int i = 0; i < obstacleHeights.length; i++) {
+      obstacleHeights[i] = 0.2 + random.nextDouble() * 0.5; // Random height between 0.2 and 0.7
+    }
+
+    // Game loop: updates bird and obstacle positions
+    gameTimer = Timer.periodic(const Duration(milliseconds: 16), (timer) {
+      if (!isPausedForQuestion && !isGameOver) {
+        setState(() {
+          // Apply gravity to the bird
+          birdVelocity += gravity;
+          birdY += birdVelocity;
+
+          // Prevent the bird from going too high
+          if (birdY < 0.1) {
+            birdY = 0.1;
+            birdVelocity = 0.0;
+          }
+
+          // Move obstacles to the left
+          for (int i = 0; i < obstacleX.length; i++) {
+            obstacleX[i] -= 0.008; // Slower obstacle movement
+            if (obstacleX[i] < -obstacleWidth) {
+              // Reset obstacle position and randomize height
+              double previousObstacleX = obstacleX[(i - 1 + obstacleX.length) % obstacleX.length];
+              double newX = previousObstacleX + minObstacleDistance + random.nextDouble() * (maxObstacleDistance - minObstacleDistance);
+              obstacleX[i] = newX;
+              obstacleHeights[i] = 0.2 + random.nextDouble() * 0.5; // Random height between 0.2 and 0.7
+              score++; // Increase score when passing an obstacle
+
+              // Show a question every 5 points
+              if (score % 5 == 0) {
+                isPausedForQuestion = true;
+                showQuestion();
+              }
+            }
+          }
+
+          // Check for collisions with top or bottom of the screen
+          if (birdY < 0 || birdY > 1) {
+            endGame(); // End the game if the bird hits the top or bottom
+          }
+
+          // Check for collisions with obstacles
+          for (int i = 0; i < obstacleX.length; i++) {
+            if (obstacleX[i] < 0.2 && obstacleX[i] + obstacleWidth > 0.1) {
+              // Bird is within the horizontal range of an obstacle
+              if (birdY < obstacleHeights[i] || birdY > obstacleHeights[i] + obstacleGap) {
+                // Bird hits the top or bottom obstacle
+                endGame();
+              }
+            }
+          }
+        });
+      }
+    });
+  }
+
+  void endGame() {
+    setState(() {
+      isGameOver = true;
+    });
+    gameTimer?.cancel(); // Stop the game loop
+
+    // Show game over dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false, // Prevent dismissing the dialog by tapping outside
+      builder: (context) => Theme(
+        data: Theme.of(context).copyWith(
+          dialogBackgroundColor: widget.currentTheme == 'beach' ? Colors.orange.withOpacity(0.9) : const Color(0xFF1D1E33),
+          textTheme: Theme.of(context).textTheme.copyWith(
+            titleLarge: TextStyle(
+              fontSize: 24, // Larger title
+              fontWeight: FontWeight.bold,
+              color: widget.currentTheme == 'beach' ? Colors.black : Colors.white,
+            ),
+            bodyMedium: TextStyle(
+              fontSize: 20, // Larger body text
+              color: widget.currentTheme == 'beach' ? Colors.black : Colors.white,
+            ),
+          ),
+        ),
+        child: AlertDialog(
+          title: const Text('Game Over'),
+          content: Text('Your score: $score'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Close the dialog
+                Navigator.pop(context); // Return to the home screen
+              },
+              child: Text(
+                'OK',
+                style: TextStyle(
+                  fontSize: 20, // Larger button text
+                  color: widget.currentTheme == 'beach' ? Colors.black : Colors.white,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void showQuestion() {
+    // Show a question dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false, // Prevent dismissing the dialog by tapping outside
+      builder: (context) => Theme(
+        data: Theme.of(context).copyWith(
+          dialogBackgroundColor: widget.currentTheme == 'beach' ? Colors.orange.withOpacity(0.9) : const Color(0xFF1D1E33),
+          textTheme: Theme.of(context).textTheme.copyWith(
+            titleLarge: TextStyle(
+              fontSize: 24, // Larger title
+              fontWeight: FontWeight.bold,
+              color: widget.currentTheme == 'beach' ? Colors.black : Colors.white,
+            ),
+            bodyMedium: TextStyle(
+              fontSize: 20, // Larger body text
+              color: widget.currentTheme == 'beach' ? Colors.black : Colors.white,
+            ),
+          ),
+        ),
+        child: AlertDialog(
+          title: const Text('Answer the Question'),
+          content: SizedBox(
+            width: double.maxFinite, // Make the dialog wider
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(widget.questions[currentQuestionIndex].questionText),
+                const SizedBox(height: 20), // Add spacing
+                ...widget.questions[currentQuestionIndex].options.map((option) =>
+                    SizedBox(
+                      width: double.infinity, // Make buttons wider
+                      child: ElevatedButton(
+                        onPressed: () {
+                          if (option == widget.questions[currentQuestionIndex].correctAnswer) {
+                            // Correct answer: resume the game
+                            setState(() {
+                              isPausedForQuestion = false;
+                              currentQuestionIndex = (currentQuestionIndex + 1) % widget.questions.length;
+                            });
+                            Navigator.pop(context); // Close the dialog
+                          } else {
+                            // Incorrect answer: end the game
+                            endGame();
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: widget.currentTheme == 'beach' ? Colors.orange : Colors.blueAccent,
+                          padding: const EdgeInsets.symmetric(vertical: 16), // Larger button padding
+                        ),
+                        child: Text(
+                          option,
+                          style: TextStyle(
+                            fontSize: 18, // Larger button text
+                            color: widget.currentTheme == 'beach' ? Colors.black : Colors.white,
+                          ),
+                        ),
+                      ),
+                    )),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    gameTimer?.cancel(); // Clean up the game timer
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        // Make the bird jump when the screen is tapped
+        if (!isGameOver && !isPausedForQuestion) {
+          setState(() {
+            birdVelocity = jumpStrength;
+          });
+        }
+      },
+      child: Scaffold(
+        backgroundColor: widget.currentTheme == 'beach' ? Colors.orange.withOpacity(0.1) : const Color(0xFF1A1A2E),
+        body: Stack(
+          children: [
+            // Background
+            widget.currentTheme == 'beach'
+                ? Image.asset(
+              'assets/images/beach.jpg',
+              fit: BoxFit.cover,
+              width: double.infinity,
+              height: double.infinity,
+            )
+                : const SpaceBackground(),
+
+            // Bird
+            Positioned(
+              left: 50,
+              top: MediaQuery.of(context).size.height * birdY,
+              child: Image.asset(
+                'assets/images/bird.png',
+                width: 50,
+                height: 50,
+              ),
+            ),
+
+            // Obstacles
+            for (int i = 0; i < obstacleX.length; i++) ...[
+              // Top obstacle
+              Positioned(
+                left: MediaQuery.of(context).size.width * obstacleX[i],
+                top: 0,
+                child: Container(
+                  width: MediaQuery.of(context).size.width * obstacleWidth,
+                  height: MediaQuery.of(context).size.height * obstacleHeights[i],
+                  color: Colors.green,
+                ),
+              ),
+              // Bottom obstacle
+              Positioned(
+                left: MediaQuery.of(context).size.width * obstacleX[i],
+                top: MediaQuery.of(context).size.height * (obstacleHeights[i] + obstacleGap),
+                child: Container(
+                  width: MediaQuery.of(context).size.width * obstacleWidth,
+                  height: MediaQuery.of(context).size.height * (1 - obstacleHeights[i] - obstacleGap),
+                  color: Colors.green,
+                ),
+              ),
+            ],
+
+            // Score
+            Positioned(
+              top: 50,
+              left: 20,
+              child: Text(
+                'Score: $score',
+                style: TextStyle(
+                  fontSize: 24,
+                  color: widget.currentTheme == 'beach' ? Colors.black : Colors.white,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -1387,14 +1689,14 @@ class _QuestionSelectionScreenState extends State<QuestionSelectionScreen> {
         title: Text(
           'Select Number of Questions',
           style: TextStyle(
-            color: widget.currentTheme == 'beach' ? Colors.black : Colors.white, // Dynamic text color
+            color: widget.currentTheme == 'beach' ? Colors.black : Colors.white,
             fontSize: 20,
             fontWeight: FontWeight.bold,
           ),
         ),
-        backgroundColor: widget.currentTheme == 'beach' ? Colors.orange : const Color(0xFF1D1E33), // Dynamic app bar color
+        backgroundColor: widget.currentTheme == 'beach' ? Colors.orange : const Color(0xFF1D1E33),
         iconTheme: IconThemeData(
-          color: widget.currentTheme == 'beach' ? Colors.black : Colors.white, // Dynamic icon color
+          color: widget.currentTheme == 'beach' ? Colors.black : Colors.white,
         ),
         elevation: 0,
       ),
@@ -1418,7 +1720,7 @@ class _QuestionSelectionScreenState extends State<QuestionSelectionScreen> {
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
-                    color: widget.currentTheme == 'beach' ? Colors.black : Colors.white, // Dynamic text color
+                    color: widget.currentTheme == 'beach' ? Colors.black : Colors.white,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -1428,7 +1730,7 @@ class _QuestionSelectionScreenState extends State<QuestionSelectionScreen> {
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
-                    color: widget.currentTheme == 'beach' ? Colors.blue : Colors.blueAccent, // Dynamic text color
+                    color: widget.currentTheme == 'beach' ? Colors.blue : Colors.blueAccent,
                   ),
                 ),
                 Slider(
@@ -1437,8 +1739,8 @@ class _QuestionSelectionScreenState extends State<QuestionSelectionScreen> {
                   max: widget.questions.length.toDouble(),
                   divisions: widget.questions.length - 1,
                   label: _numberOfQuestions.toString(),
-                  activeColor: widget.currentTheme == 'beach' ? Colors.orange : Colors.blueAccent, // Dynamic slider color
-                  inactiveColor: widget.currentTheme == 'beach' ? Colors.orange.withOpacity(0.3) : Colors.blueAccent.withOpacity(0.3), // Dynamic slider color
+                  activeColor: widget.currentTheme == 'beach' ? Colors.orange : Colors.blueAccent,
+                  inactiveColor: widget.currentTheme == 'beach' ? Colors.orange.withOpacity(0.3) : Colors.blueAccent.withOpacity(0.3),
                   onChanged: (value) {
                     setState(() {
                       _numberOfQuestions = value.toInt();
@@ -1464,7 +1766,7 @@ class _QuestionSelectionScreenState extends State<QuestionSelectionScreen> {
                       );
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: widget.currentTheme == 'beach' ? Colors.orange : Colors.blueAccent, // Dynamic button color
+                      backgroundColor: widget.currentTheme == 'beach' ? Colors.orange : Colors.blueAccent,
                       padding: const EdgeInsets.symmetric(vertical: 15),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
@@ -1474,7 +1776,41 @@ class _QuestionSelectionScreenState extends State<QuestionSelectionScreen> {
                       'Start Quiz',
                       style: TextStyle(
                         fontSize: 18,
-                        color: widget.currentTheme == 'beach' ? Colors.black : Colors.white, // Dynamic text color
+                        color: widget.currentTheme == 'beach' ? Colors.black : Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 50),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => FlappyBirdGameScreen(
+                            username: widget.username,
+                            currentTheme: widget.currentTheme,
+                            questions: widget.questions.take(_numberOfQuestions).toList(),
+                          ),
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: widget.currentTheme == 'beach' ? Colors.orange : Colors.blueAccent,
+                      padding: const EdgeInsets.symmetric(vertical: 15),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: Text(
+                      'Start Flappy Bird Game',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: widget.currentTheme == 'beach' ? Colors.black : Colors.white,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
