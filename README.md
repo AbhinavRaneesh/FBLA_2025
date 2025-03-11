@@ -19,7 +19,7 @@ EduQuest is developed using the Flutter framework to ensure a smooth and efficie
 
 ## Database
 
-EduQuest uses SQL as the database for storing user progress, game data, and other essential information. SQL ensures efficient data management and retrieval for a seamless learning experience.
+EduQuest uses SQLite as the database for storing user progress, game data, and other essential information. SQLite ensures efficient data management and retrieval for a seamless learning experience.
 
 ## Requirements
 
