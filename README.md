@@ -1,30 +1,61 @@
-# Eduquest
+# EduQuest
 
-Eduquest is an engaging learning app designed for students, offering puzzles, quizzes, and a progress tracking system. The app uses dynamic themes (such as space, beach, or jungle) and a point-based rewards system, making education fun and interactive.
+## Project Description
 
-## Features
-**Interactive Learning**: Solve puzzles and quizzes to enhance knowledge and skills.
-**Progress Tracking**: Monitor your learning journey in real-time.
-**Dynamic Themes**: Personalize the experience with exciting themes like space, beach, or jungle.
-**Points and Rewards**: Earn points to unlock new themes and power-ups.
+EduQuest is a user-friendly learning app designed to make education more engaging and enjoyable. By incorporating gamified features such as theme changes, power-ups, and inbuilt games, EduQuest encourages users to learn in a fun and interactive way.
 
-## Design Philosophy
-1. **User-Friendly**: Intuitive UI and navigation for all users.
-2. **Engaging**: Gamified elements like points and rewards to keep users motivated.
-3. **Scalable**: Adaptable for adding new features and updates.
-4. **Accessible**: Optimized for all screen sizes and devices.
+## Table of Contents
 
-## Tech Stack
-### Frontend
-**Flutter**: For cross-platform compatibility and seamless design.
+1. [Technologies Used](#technologies-used)
+2. [Database](#database)
+3. [Requirements](#requirements)
+4. [Installation Instructions](#installation-instructions)
+5. [Usage Instructions](#usage-instructions)
+6. [Support Information](#support-information)
 
-### Backend
-**Firebase**: For secure user authentication, data storage, and real-time updates.
-**APIs**: For managing quizzes, points, and theme purchases.
+## Technologies Used
 
-## Installation
-1. Clone the repository:
+EduQuest is developed using the Flutter framework to ensure a smooth and efficient cross-platform experience.
 
-bash
+## Database
 
-git clone <repository-link>
+EduQuest uses SQL as the database for storing user progress, game data, and other essential information. SQL ensures efficient data management and retrieval for a seamless learning experience.
+
+## Requirements
+
+- Flutter SDK installed
+- A compatible device or emulator to run the app
+- Internet connection for downloading dependencies
+
+## Installation Instructions
+
+1. Clone the repository from GitHub:
+   ```bash
+   git clone <repository_url>
+   ```
+2. Navigate to the project directory:
+   ```bash
+   cd eduquest
+   ```
+3. Install dependencies:
+   ```bash
+   flutter pub get
+   ```
+4. Run the application:
+   ```bash
+   flutter run
+   ```
+
+> **Note:** The app is not yet published on the App Store or Play Store due to developer age restrictions.
+
+## Usage Instructions
+
+- Open the app and create an account.
+- Customize themes according to your preference.
+- Earn power-ups and rewards through interactive learning activities.
+- Explore built-in games that reinforce learning.
+
+## Support Information
+
+For any queries or support, please contact:
+**Email:** [abhinav.raneesh@gmail.com](mailto:abhinav.raneesh@gmail.com)
