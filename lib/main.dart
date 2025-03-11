@@ -3,7 +3,7 @@ import 'database_helper.dart';
 import 'questions.dart';
 import 'dart:math'; // For random star positions
 import 'package:google_sign_in/google_sign_in.dart'; // For Google Sign-In
-//import 'package:share_plus/share_plus.dart'; // For sharing the app
+import 'package:share_plus/share_plus.dart'; // For sharing the app
 import 'dart:async';
 
 void main() {
@@ -143,19 +143,32 @@ class _FlappyBirdGameScreenState extends State<FlappyBirdGameScreen> {
           dialogBackgroundColor: widget.currentTheme == 'beach' ? Colors.orange.withOpacity(0.9) : const Color(0xFF1D1E33),
           textTheme: Theme.of(context).textTheme.copyWith(
             titleLarge: TextStyle(
-              fontSize: 24, // Larger title
+              fontSize: 28, // Larger title
               fontWeight: FontWeight.bold,
-              color: widget.currentTheme == 'beach' ? Colors.black : Colors.white,
+              color: Colors.black, // Always black
             ),
             bodyMedium: TextStyle(
-              fontSize: 20, // Larger body text
-              color: widget.currentTheme == 'beach' ? Colors.black : Colors.white,
+              fontSize: 22, // Larger body text
+              color: Colors.black, // Always black
             ),
           ),
         ),
         child: AlertDialog(
-          title: const Text('Game Over'),
-          content: Text('Your score: $score'),
+          title: Text(
+            'Game Over',
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: Colors.black, // Always black
+            ),
+          ),
+          content: Text(
+            'Your score: $score',
+            style: TextStyle(
+              fontSize: 22,
+              color: Colors.black, // Always black
+            ),
+          ),
           actions: [
             TextButton(
               onPressed: () {
@@ -165,8 +178,8 @@ class _FlappyBirdGameScreenState extends State<FlappyBirdGameScreen> {
               child: Text(
                 'OK',
                 style: TextStyle(
-                  fontSize: 20, // Larger button text
-                  color: widget.currentTheme == 'beach' ? Colors.black : Colors.white,
+                  fontSize: 20,
+                  color: Colors.black, // Always black
                 ),
               ),
             ),
@@ -175,6 +188,7 @@ class _FlappyBirdGameScreenState extends State<FlappyBirdGameScreen> {
       ),
     );
   }
+
 
   void showQuestion() {
     // Show a question dialog
@@ -186,28 +200,41 @@ class _FlappyBirdGameScreenState extends State<FlappyBirdGameScreen> {
           dialogBackgroundColor: widget.currentTheme == 'beach' ? Colors.orange.withOpacity(0.9) : const Color(0xFF1D1E33),
           textTheme: Theme.of(context).textTheme.copyWith(
             titleLarge: TextStyle(
-              fontSize: 24, // Larger title
+              fontSize: 28, // Larger title
               fontWeight: FontWeight.bold,
-              color: widget.currentTheme == 'beach' ? Colors.black : Colors.white,
+              color: Colors.black, // Always black
             ),
             bodyMedium: TextStyle(
-              fontSize: 20, // Larger body text
-              color: widget.currentTheme == 'beach' ? Colors.black : Colors.white,
+              fontSize: 22, // Larger body text
+              color: Colors.black, // Always black
             ),
           ),
         ),
         child: AlertDialog(
-          title: const Text('Answer the Question'),
+          title: Text(
+            'Answer the Question',
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: Colors.black, // Always black
+            ),
+          ),
           content: SizedBox(
-            width: double.maxFinite, // Make the dialog wider
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
+            width: MediaQuery.of(context).size.width * 0.8, // Wider dialog
+            child: ListView(
+              shrinkWrap: true,
               children: [
-                Text(widget.questions[currentQuestionIndex].questionText),
+                Text(
+                  widget.questions[currentQuestionIndex].questionText,
+                  style: TextStyle(
+                    fontSize: 22, // Larger question text
+                    color: Colors.black, // Always black
+                  ),
+                ),
                 const SizedBox(height: 20), // Add spacing
                 ...widget.questions[currentQuestionIndex].options.map((option) =>
-                    SizedBox(
-                      width: double.infinity, // Make buttons wider
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 10), // Add spacing between buttons
                       child: ElevatedButton(
                         onPressed: () {
                           if (option == widget.questions[currentQuestionIndex].correctAnswer) {
@@ -219,7 +246,8 @@ class _FlappyBirdGameScreenState extends State<FlappyBirdGameScreen> {
                             Navigator.pop(context); // Close the dialog
                           } else {
                             // Incorrect answer: end the game
-                            endGame();
+                            Navigator.pop(context); // Close the question dialog
+                            endGame(); // Show the game over dialog
                           }
                         },
                         style: ElevatedButton.styleFrom(
@@ -229,8 +257,8 @@ class _FlappyBirdGameScreenState extends State<FlappyBirdGameScreen> {
                         child: Text(
                           option,
                           style: TextStyle(
-                            fontSize: 18, // Larger button text
-                            color: widget.currentTheme == 'beach' ? Colors.black : Colors.white,
+                            fontSize: 20, // Larger button text
+                            color: Colors.black, // Always black
                           ),
                         ),
                       ),
@@ -925,7 +953,7 @@ class HomeScreen extends StatefulWidget {
   final Function(int) onPointsUpdated;
   final Function(String) onThemeChanged;
 
-  HomeScreen({
+  const HomeScreen({
     super.key,
     required this.username,
     required this.onPointsUpdated,
@@ -972,7 +1000,11 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('EduQuest', style: TextStyle(color: Colors.white)),
+        title: Image.asset(
+          'assets/images/eduquest_logo.png', // Path to your logo image
+          height: 60, // Adjust the height as needed
+          fit: BoxFit.contain, // Ensure the image fits within the available space
+        ),
         backgroundColor: _currentTheme == 'beach' ? Colors.orange : const Color(0xFF1D1E33),
         automaticallyImplyLeading: false,
         actions: [
@@ -1044,11 +1076,11 @@ class _HomeScreenState extends State<HomeScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => QuestionSelectionScreen(
+                              builder: (context) => GameModeSelectionScreen(
                                 subject: 'Math',
-                                questions: QuestionsRepository.getQuestionsForSubject('Math'),
                                 username: widget.username,
                                 currentTheme: _currentTheme,
+                                questions: QuestionsRepository.getQuestionsForSubject('Math'),
                               ),
                             ),
                           );
@@ -1060,11 +1092,11 @@ class _HomeScreenState extends State<HomeScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => QuestionSelectionScreen(
+                              builder: (context) => GameModeSelectionScreen(
                                 subject: 'History',
-                                questions: QuestionsRepository.getQuestionsForSubject('History'),
                                 username: widget.username,
                                 currentTheme: _currentTheme,
+                                questions: QuestionsRepository.getQuestionsForSubject('History'),
                               ),
                             ),
                           );
@@ -1076,11 +1108,11 @@ class _HomeScreenState extends State<HomeScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => QuestionSelectionScreen(
+                              builder: (context) => GameModeSelectionScreen(
                                 subject: 'English',
-                                questions: QuestionsRepository.getQuestionsForSubject('English'),
                                 username: widget.username,
                                 currentTheme: _currentTheme,
+                                questions: QuestionsRepository.getQuestionsForSubject('English'),
                               ),
                             ),
                           );
@@ -1092,11 +1124,11 @@ class _HomeScreenState extends State<HomeScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => QuestionSelectionScreen(
+                              builder: (context) => GameModeSelectionScreen(
                                 subject: 'Science',
-                                questions: QuestionsRepository.getQuestionsForSubject('Science'),
                                 username: widget.username,
                                 currentTheme: _currentTheme,
+                                questions: QuestionsRepository.getQuestionsForSubject('Science'),
                               ),
                             ),
                           );
@@ -1202,6 +1234,140 @@ class SubjectCard extends StatelessWidget {
       default:
         return Icons.subject;
     }
+  }
+}
+
+class GameModeSelectionScreen extends StatelessWidget {
+  final String subject;
+  final String username;
+  final String currentTheme;
+  final List<Question> questions;
+
+  const GameModeSelectionScreen({
+    super.key,
+    required this.subject,
+    required this.username,
+    required this.currentTheme,
+    required this.questions,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Image.asset(
+          'assets/images/eduquest_logo.png', // Path to your logo image
+          height: 40, // Adjust the height as needed
+          fit: BoxFit.contain, // Ensure the image fits within the available space
+        ),
+        backgroundColor: currentTheme == 'beach' ? Colors.orange : const Color(0xFF1D1E33),
+        automaticallyImplyLeading: false,
+        leading: IconButton(
+          icon: Icon(
+            Icons.arrow_back,
+            color: currentTheme == 'beach' ? Colors.black : Colors.white,
+          ),
+          onPressed: () {
+            Navigator.pop(context); // Go back to the previous screen
+          },
+        ),
+      ),
+      body: Stack(
+        children: [
+          // Background
+          currentTheme == 'beach'
+              ? Image.asset(
+            'assets/images/beach.jpg',
+            fit: BoxFit.cover,
+            width: double.infinity,
+            height: double.infinity,
+          )
+              : const SpaceBackground(),
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'Select Game Mode',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: currentTheme == 'beach' ? Colors.black : Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 40),
+                // Classic Mode Button
+                Container(
+                  width: MediaQuery.of(context).size.width * 0.7,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => QuestionSelectionScreen(
+                            subject: subject,
+                            questions: questions,
+                            username: username,
+                            currentTheme: currentTheme,
+                          ),
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: currentTheme == 'beach' ? Colors.orange : Colors.blueAccent,
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                    ),
+                    child: Text(
+                      'Classic',
+                      style: TextStyle(
+                        fontSize: 24,
+                        color: currentTheme == 'beach' ? Colors.black : Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                // Game Mode Button
+                Container(
+                  width: MediaQuery.of(context).size.width * 0.7,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => FlappyBirdGameScreen(
+                            username: username,
+                            currentTheme: currentTheme,
+                            questions: questions,
+                          ),
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: currentTheme == 'beach' ? Colors.orange : Colors.blueAccent,
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                    ),
+                    child: Text(
+                      'Game',
+                      style: TextStyle(
+                        fontSize: 24,
+                        color: currentTheme == 'beach' ? Colors.black : Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -1783,39 +1949,6 @@ class _QuestionSelectionScreenState extends State<QuestionSelectionScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(horizontal: 50),
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => FlappyBirdGameScreen(
-                            username: widget.username,
-                            currentTheme: widget.currentTheme,
-                            questions: widget.questions.take(_numberOfQuestions).toList(),
-                          ),
-                        ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: widget.currentTheme == 'beach' ? Colors.orange : Colors.blueAccent,
-                      padding: const EdgeInsets.symmetric(vertical: 15),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    child: Text(
-                      'Start Flappy Bird Game',
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: widget.currentTheme == 'beach' ? Colors.black : Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
               ],
             ),
           ),
@@ -1987,7 +2120,7 @@ class _QuizScreenState extends State<QuizScreen> {
         "Total Points: ${totalPoints + pointsEarnedInRound}\n"
         "Download the app and join the fun!";
 
-    //Share.share(message); // Use Share.share() to show the share sheet
+    Share.share(message); // Use Share.share() to show the share sheet
   }
 
   void _showFinalScore() {

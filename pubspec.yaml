@@ -31,6 +31,7 @@ flutter:
     - assets/images/google_icon.png # Add your sound assets here (e.g., correct_answer.mp3, wrong_answer.mp3)
     - assets/images/beach.jpg # Add your sound assets here (e.g., correct_answer.mp3, wrong_answer.mp3)
     - assets/images/bird.png
+    - assets/images/eduquest_logo.png
 
 #  fonts:
 #    - family: YourCustomFont # Optional: Add custom fonts if needed
