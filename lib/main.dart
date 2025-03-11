@@ -3,8 +3,9 @@ import 'database_helper.dart';
 import 'questions.dart';
 import 'dart:math'; // For random star positions
 import 'package:google_sign_in/google_sign_in.dart'; // For Google Sign-In
-import 'package:share_plus/share_plus.dart'; // For sharing the app
+//import 'package:share_plus/share_plus.dart'; // For sharing the app
 import 'dart:async';
+import 'package:url_launcher/url_launcher.dart';
 
 void main() {
   runApp(const StudentLearningApp());
@@ -751,6 +752,7 @@ class _SignUpPageState extends State<SignUpPage> {
   final _dbHelper = DatabaseHelper();
   bool _showPassword = false;
   bool _isFormValid = false;
+  bool _agreeToPrivacyPolicy = false; // Track if the user agrees to the privacy policy
 
   @override
   void initState() {
@@ -770,7 +772,7 @@ class _SignUpPageState extends State<SignUpPage> {
 
   void _updateFormState() {
     setState(() {
-      _isFormValid = _usernameController.text.isNotEmpty && _passwordController.text.isNotEmpty;
+      _isFormValid = _usernameController.text.isNotEmpty && _passwordController.text.isNotEmpty && _agreeToPrivacyPolicy;
     });
   }
 
@@ -899,6 +901,36 @@ class _SignUpPageState extends State<SignUpPage> {
                               ),
                               style: const TextStyle(color: Colors.black),
                             ),
+                            const SizedBox(height: 15),
+                            // Privacy Policy Checkbox
+                            Row(
+                              children: [
+                                Checkbox(
+                                  value: _agreeToPrivacyPolicy,
+                                  onChanged: (bool? value) {
+                                    setState(() {
+                                      _agreeToPrivacyPolicy = value ?? false;
+                                      _updateFormState();
+                                    });
+                                  },
+                                ),
+                                GestureDetector(
+                                  onTap: () {
+                                    // Open the privacy policy link
+                                    const privacyPolicyUrl = 'https://www.example.com/privacy-policy';
+                                    launchUrl(Uri.parse(privacyPolicyUrl));
+                                  },
+                                  child: Text(
+                                    'I agree to the privacy policy',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.blue,
+                                      decoration: TextDecoration.underline,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                             const SizedBox(height: 20),
                             // Sign Up Button
                             Container(
@@ -929,11 +961,25 @@ class _SignUpPageState extends State<SignUpPage> {
                       onPressed: () {
                         Navigator.pop(context); // Navigate back to the SignInPage
                       },
-                      child: const Text(
-                        'Already have an account? Sign in',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.white,
+                      child: RichText(
+                        text: const TextSpan(
+                          children: [
+                            TextSpan(
+                              text: 'Already have an account? ',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.white,
+                              ),
+                            ),
+                            TextSpan(
+                              text: 'Sign in',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.white,
+                                decoration: TextDecoration.underline, // Underline the "Sign in" part
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -2120,7 +2166,7 @@ class _QuizScreenState extends State<QuizScreen> {
         "Total Points: ${totalPoints + pointsEarnedInRound}\n"
         "Download the app and join the fun!";
 
-    Share.share(message); // Use Share.share() to show the share sheet
+    //Share.share(message); // Use Share.share() to show the share sheet
   }
 
   void _showFinalScore() {
