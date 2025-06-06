@@ -15,22 +15,25 @@ dependencies:
   path: ^1.8.3 # For path manipulation (used with sqflite)
   google_sign_in: ^6.1.0
   share_plus: ^7.0.0
-  #audioplayers: ^4.1.0 # For playing sound effects
-  url_launcher: ^6.1.5
+  lottie: ^2.7.0 # For Lottie animations
+  confetti: ^0.7.0 # For celebration effects
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^3.0.0 # For linting and co de analysis
+  flutter_lints: ^3.0.0 # For linting and code analysis
 
 flutter:
   uses-material-design: true
 
   assets:
-    - assets/images/planet.png # Add your image assets here
-    - assets/images/astronaut.png # Add your sound assets here (e.g., correct_answer.mp3, wrong_answer.mp3)
-    - assets/images/google_icon.png # Add your sound assets here (e.g., correct_answer.mp3, wrong_answer.mp3)
-    - assets/images/beach.jpg # Add your sound assets here (e.g., correct_answer.mp3, wrong_answer.mp3)
+    - assets/images/
+    - assets/animations/
+    - assets/icons/
+    - assets/images/planet.png
+    - assets/images/astronaut.png
+    - assets/images/google_icon.png
+    - assets/images/beach.jpg
     - assets/images/bird.png
     - assets/images/eduquest_logo.png
 
