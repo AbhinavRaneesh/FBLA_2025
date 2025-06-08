@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'database_helper.dart';
 import 'questions.dart';
 import 'dart:math'; // For random star positions
@@ -6,10 +7,9 @@ import 'package:google_sign_in/google_sign_in.dart'; // For Google Sign-In
 import 'package:share_plus/share_plus.dart'; // For sharing the app
 import 'dart:async';
 import 'package:flutter/services.dart'; // For haptic feedback
-import 'package:lottie/lottie.dart'; // For Lottie animations
-import 'package:confetti/confetti.dart'; // For celebration effects
-import 'study_set_selection_screen.dart';
-import 'profile_screen.dart';
+import 'package:file_picker/file_picker.dart';
+import 'dart:io';
+import 'package:excel/excel.dart' as excel;
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -717,68 +717,61 @@ class _SignInPageState extends State<SignInPage>
   Future<void> _signIn() async {
     if (!_isFormValid) return;
 
-    final username = _usernameController.text.trim();
-    final password = _passwordController.text.trim();
-
-    if (username.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter both username and password'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
     setState(() {
       _isLoading = true;
     });
 
+    HapticFeedback.mediumImpact();
+
+    final username = _usernameController.text.trim();
+    final password = _passwordController.text.trim();
+
     try {
-      HapticFeedback.mediumImpact();
+      if (username.isEmpty || password.isEmpty) {
+        throw Exception('Please fill in all fields');
+      }
+
       final isAuthenticated =
           await _dbHelper.authenticateUser(username, password);
 
-      if (!mounted) return;
-
       if (isAuthenticated) {
         HapticFeedback.heavyImpact();
+        if (!mounted) return;
         Navigator.pushReplacement(
           context,
           CustomPageRoute(
-            page: HomeScreen(
-              username: username,
-              currentTheme: 'space',
-            ),
+            page: MainScreen(username: username),
             routeName: '/home',
           ),
         );
       } else {
         HapticFeedback.vibrate();
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Row(
               children: [
-                Icon(Icons.error_outline, color: Colors.white),
-                SizedBox(width: 8),
-                Text('Invalid username or password'),
+                const Icon(Icons.error_outline, color: Colors.white),
+                const SizedBox(width: 8),
+                const Text('Invalid username or password'),
               ],
             ),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(Radius.circular(10)),
+              borderRadius: BorderRadius.circular(10),
             ),
           ),
         );
       }
     } catch (e) {
-      print('Error during sign-in: $e');
+      debugPrint('Error during sign-in: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('An error occurred. Please try again.'),
+        SnackBar(
+          content: Text(e.toString().replaceAll('Exception: ', '')),
           backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
         ),
       );
     } finally {
@@ -798,36 +791,42 @@ class _SignInPageState extends State<SignInPage>
     try {
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       if (googleUser == null) {
-        setState(() {
-          _isLoading = false;
-        });
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Google sign in was cancelled'),
+            backgroundColor: Colors.orange,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
         return;
       }
 
-      final String email =
-          googleUser.email ?? 'guest_${DateTime.now().millisecondsSinceEpoch}';
-
       HapticFeedback.heavyImpact();
+      if (!mounted) return;
       Navigator.pushReplacement(
         context,
         CustomPageRoute(
-          page: HomeScreen(
-            username: email,
-            currentTheme: 'space',
-          ),
+          page: MainScreen(username: googleUser.email),
           routeName: '/home',
         ),
       );
     } catch (e) {
-      print('Error during Google Sign-In: $e');
+      debugPrint('Error during Google Sign-In: $e');
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Failed to sign in with Google. Please try again.')),
+        SnackBar(
+          content: Text('Failed to sign in with Google: ${e.toString()}'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
       );
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -1135,9 +1134,14 @@ class _SignUpPageState extends State<SignUpPage> {
         );
       }
     } catch (e) {
-      print('Error during sign-up: $e');
+      debugPrint('Error during sign-up: $e');
+      if (!mounted) return; // Add mounted check
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('An error occurred. Please try again.')),
+        SnackBar(
+          content: Text('An error occurred during sign-up: ${e.toString()}'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
       );
     }
   }
@@ -1294,57 +1298,96 @@ class _SignUpPageState extends State<SignUpPage> {
   }
 }
 
-class HomeScreen extends StatefulWidget {
+class MainScreen extends StatefulWidget {
   final String username;
-  final String currentTheme;
 
-  const HomeScreen({
+  const MainScreen({
     super.key,
     required this.username,
-    required this.currentTheme,
   });
 
   @override
-  _HomeScreenState createState() => _HomeScreenState();
+  _MainScreenState createState() => _MainScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
-  int _selectedIndex = 0;
+class _MainScreenState extends State<MainScreen> {
+  int _currentIndex = 0;
+  int _userPoints = 0;
+  String _currentTheme = 'space';
+  final DatabaseHelper _dbHelper = DatabaseHelper();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    final points = await _dbHelper.getUserPoints(widget.username);
+    final theme = await _dbHelper.getCurrentTheme(widget.username);
+    setState(() {
+      _userPoints = points;
+      _currentTheme = theme ?? 'space';
+    });
+  }
+
+  void _onTabTapped(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+  }
+
+  void _updatePoints(int newPoints) {
+    setState(() {
+      _userPoints = newPoints;
+    });
+  }
+
+  void _updateTheme(String newTheme) {
+    setState(() {
+      _currentTheme = newTheme;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: [
-          StudySetSelectionScreen(
-            username: widget.username,
-            currentTheme: widget.currentTheme,
-          ),
-          ShopScreen(
-            username: widget.username,
-            currentTheme: widget.currentTheme,
-          ),
-          ProfileScreen(
-            username: widget.username,
-            currentTheme: widget.currentTheme,
-          ),
-        ],
+    final List<Widget> _children = [
+      LearnTab(
+        username: widget.username,
+        userPoints: _userPoints,
+        currentTheme: _currentTheme,
+        onPointsUpdated: _updatePoints,
       ),
+      ShopTab(
+        username: widget.username,
+        userPoints: _userPoints,
+        currentTheme: _currentTheme,
+        onPointsUpdated: _updatePoints,
+        onThemeChanged: _updateTheme,
+      ),
+      ProfileTab(
+        username: widget.username,
+        userPoints: _userPoints,
+        currentTheme: _currentTheme,
+      ),
+    ];
+
+    return Scaffold(
+      body: _children[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
+        onTap: _onTabTapped,
+        currentIndex: _currentIndex,
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: const Color(0xFF1D1E33),
+        selectedItemColor: Colors.blueAccent,
+        unselectedItemColor: Colors.white70,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.school),
-            label: 'Study',
+            label: 'Learn',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.shopping_bag),
+            icon: Icon(Icons.shopping_cart),
             label: 'Shop',
           ),
           BottomNavigationBarItem(
@@ -1357,240 +1400,1556 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-class SubjectCard extends StatelessWidget {
-  final String subject;
-  final VoidCallback onTap;
-
-  const SubjectCard({super.key, required this.subject, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.blueAccent.withOpacity(0.2),
-          borderRadius: BorderRadius.circular(15),
-          border: Border.all(color: Colors.blueAccent, width: 2),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              _getSubjectIcon(subject),
-              size: 35,
-              color: Colors.white,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              subject,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // Helper function to get an icon for each subject
-  IconData _getSubjectIcon(String subject) {
-    switch (subject.toLowerCase()) {
-      case 'math':
-        return Icons.calculate;
-      case 'history':
-        return Icons.history;
-      case 'english':
-        return Icons.menu_book;
-      case 'science':
-        return Icons.science;
-      default:
-        return Icons.subject;
-    }
-  }
-}
-
-class GameModeSelectionScreen extends StatefulWidget {
-  final String subject;
+class LearnTab extends StatefulWidget {
   final String username;
+  final int userPoints;
   final String currentTheme;
-  final List<Question> questions;
+  final Function(int) onPointsUpdated;
 
-  const GameModeSelectionScreen({
+  const LearnTab({
     super.key,
-    required this.subject,
     required this.username,
+    required this.userPoints,
     required this.currentTheme,
-    required this.questions,
+    required this.onPointsUpdated,
   });
 
   @override
-  _GameModeSelectionScreenState createState() =>
-      _GameModeSelectionScreenState();
+  _LearnTabState createState() => _LearnTabState();
 }
 
-class _GameModeSelectionScreenState extends State<GameModeSelectionScreen>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
-  late Animation<Offset> _slideAnimation;
-  bool _isLoading = false;
+class _LearnTabState extends State<LearnTab>
+    with AutomaticKeepAliveClientMixin {
+  final DatabaseHelper _dbHelper = DatabaseHelper();
+  List<Map<String, dynamic>> _studySets = [];
+  List<Map<String, dynamic>> _premadeStudySets = [];
+  bool _isLoading = true;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
     super.initState();
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 1000),
-      vsync: this,
-    );
+    _loadStudySets();
+  }
 
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: const Interval(0.0, 0.5, curve: Curves.easeIn),
-      ),
-    );
-
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.2),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: const Interval(0.0, 0.5, curve: Curves.easeOut),
-      ),
-    );
-
-    _animationController.forward();
+  Future<void> _loadStudySets() async {
+    final userSets = await _dbHelper.getUserStudySets(widget.username);
+    final premadeSets = await _dbHelper.getPremadeStudySets();
+    setState(() {
+      _studySets = userSets;
+      _premadeStudySets = premadeSets;
+      _isLoading = false;
+    });
   }
 
   @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return Scaffold(
+      body: Stack(
+        children: [
+          const SpaceBackground(),
+          SafeArea(
+            child: Column(
+              children: [
+                // Header with points
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Welcome, ${widget.username}!',
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 5),
+                          Text(
+                            'Let\'s learn something new today!',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.white.withOpacity(0.8),
+                            ),
+                          ),
+                        ],
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.amber,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.star,
+                                color: Colors.white, size: 20),
+                            const SizedBox(width: 5),
+                            Text(
+                              '${widget.userPoints}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Study Sets Content
+                Expanded(
+                  child: _isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : DefaultTabController(
+                          length: 3,
+                          child: Column(
+                            children: [
+                              const TabBar(
+                                labelColor: Colors.white,
+                                unselectedLabelColor: Colors.white70,
+                                indicatorColor: Colors.blueAccent,
+                                tabs: [
+                                  Tab(text: 'My Sets'),
+                                  Tab(text: 'Browse'),
+                                  Tab(text: 'Quick Play'),
+                                ],
+                              ),
+                              Expanded(
+                                child: TabBarView(
+                                  children: [
+                                    _buildMyStudySets(),
+                                    _buildBrowseStudySets(),
+                                    _buildQuickPlay(),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => CreateStudySetScreen(
+                username: widget.username,
+                onStudySetCreated: _loadStudySets,
+              ),
+            ),
+          );
+        },
+        backgroundColor: Colors.blueAccent,
+        icon: const Icon(Icons.add),
+        label: const Text('Create Set'),
+      ),
+    );
+  }
+
+  Widget _buildMyStudySets() {
+    if (_studySets.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.school_outlined,
+              size: 80,
+              color: Colors.white.withOpacity(0.5),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'No study sets yet',
+              style: TextStyle(
+                fontSize: 20,
+                color: Colors.white.withOpacity(0.7),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'Create your first study set to get started!',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.white.withOpacity(0.5),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: _studySets.length,
+      itemBuilder: (context, index) {
+        final studySet = _studySets[index];
+        return Card(
+          margin: const EdgeInsets.only(bottom: 12),
+          elevation: 4,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          child: ListTile(
+            contentPadding: const EdgeInsets.all(16),
+            title: Text(
+              studySet['name'],
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 5),
+                Text(studySet['description']),
+                const SizedBox(height: 5),
+                Text(
+                  'Created: ${_formatDate(studySet['created_at'])}',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.play_arrow, color: Colors.green),
+                  onPressed: () => _startPractice(studySet),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete, color: Colors.red),
+                  onPressed: () => _deleteStudySet(studySet['id']),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildBrowseStudySets() {
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: _premadeStudySets.length,
+      itemBuilder: (context, index) {
+        final studySet = _premadeStudySets[index];
+        return Card(
+          margin: const EdgeInsets.only(bottom: 12),
+          elevation: 4,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          child: ListTile(
+            contentPadding: const EdgeInsets.all(16),
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.blueAccent.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(Icons.school, color: Colors.blueAccent),
+            ),
+            title: Text(
+              studySet['name'],
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
+            subtitle: Text(studySet['description']),
+            trailing: ElevatedButton(
+              onPressed: () => _startPractice(studySet),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blueAccent,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child:
+                  const Text('Practice', style: TextStyle(color: Colors.white)),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildQuickPlay() {
+    final subjects = ['Math', 'Science', 'History', 'English'];
+
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Quick Practice',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            'Jump into a quick practice session',
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.white.withOpacity(0.7),
+            ),
+          ),
+          const SizedBox(height: 20),
+          Expanded(
+            child: GridView.builder(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                childAspectRatio: 1.2,
+              ),
+              itemCount: subjects.length,
+              itemBuilder: (context, index) {
+                final subject = subjects[index];
+                return Card(
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: InkWell(
+                    onTap: () => _startQuickPlay(subject),
+                    borderRadius: BorderRadius.circular(16),
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            _getSubjectColor(subject),
+                            _getSubjectColor(subject).withOpacity(0.7),
+                          ],
+                        ),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            _getSubjectIcon(subject),
+                            size: 40,
+                            color: Colors.white,
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            subject,
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _getSubjectColor(String subject) {
+    switch (subject) {
+      case 'Math':
+        return Colors.blue;
+      case 'Science':
+        return Colors.green;
+      case 'History':
+        return Colors.orange;
+      case 'English':
+        return Colors.purple;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  IconData _getSubjectIcon(String subject) {
+    switch (subject) {
+      case 'Math':
+        return Icons.calculate;
+      case 'Science':
+        return Icons.science;
+      case 'History':
+        return Icons.history_edu;
+      case 'English':
+        return Icons.menu_book;
+      default:
+        return Icons.school;
+    }
+  }
+
+  String _formatDate(String dateString) {
+    final date = DateTime.parse(dateString);
+    return '${date.day}/${date.month}/${date.year}';
+  }
+
+  void _startPractice(Map<String, dynamic> studySet) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PracticeModeScreen(
+          studySet: studySet,
+          username: widget.username,
+          currentTheme: widget.currentTheme,
+        ),
+      ),
+    );
+  }
+
+  void _startQuickPlay(String subject) {
+    final questions = QuestionsRepository.getQuestionsForSubject(subject);
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => QuizScreen(
+          subject: subject,
+          username: widget.username,
+          questions: questions,
+          currentTheme: widget.currentTheme,
+          gameMode: 'classic',
+          questionCount: 10,
+        ),
+      ),
+    );
+  }
+
+  void _deleteStudySet(int studySetId) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Study Set'),
+        content: const Text('Are you sure you want to delete this study set?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              await _dbHelper.deleteStudySet(studySetId);
+              Navigator.pop(context);
+              _loadStudySets();
+            },
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class ShopTab extends StatefulWidget {
+  final String username;
+  final int userPoints;
+  final String currentTheme;
+  final Function(int) onPointsUpdated;
+  final Function(String) onThemeChanged;
+
+  const ShopTab({
+    super.key,
+    required this.username,
+    required this.userPoints,
+    required this.currentTheme,
+    required this.onPointsUpdated,
+    required this.onThemeChanged,
+  });
+
+  @override
+  _ShopTabState createState() => _ShopTabState();
+}
+
+class _ShopTabState extends State<ShopTab> with AutomaticKeepAliveClientMixin {
+  final DatabaseHelper _dbHelper = DatabaseHelper();
+
+  @override
+  bool get wantKeepAlive => true;
+
+  final List<Map<String, dynamic>> _themes = [
+    {
+      'name': 'Space',
+      'price': 0,
+      'color': const Color(0xFF0A0E21),
+      'description': 'Classic space theme',
+      'icon': Icons.rocket_launch,
+    },
+    {
+      'name': 'Ocean',
+      'price': 100,
+      'color': const Color(0xFF006994),
+      'description': 'Deep ocean vibes',
+      'icon': Icons.waves,
+    },
+    {
+      'name': 'Forest',
+      'price': 100,
+      'color': const Color(0xFF2E7D32),
+      'description': 'Natural forest feel',
+      'icon': Icons.forest,
+    },
+    {
+      'name': 'Sunset',
+      'price': 150,
+      'color': const Color(0xFFFF6D00),
+      'description': 'Warm sunset colors',
+      'icon': Icons.wb_sunny,
+    },
+    {
+      'name': 'Purple',
+      'price': 100,
+      'color': const Color(0xFF6A1B9A),
+      'description': 'Royal purple theme',
+      'icon': Icons.color_lens,
+    },
+    {
+      'name': 'Dark',
+      'price': 200,
+      'color': const Color(0xFF121212),
+      'description': 'Pure dark mode',
+      'icon': Icons.dark_mode,
+    },
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return Scaffold(
+      body: Stack(
+        children: [
+          const SpaceBackground(),
+          SafeArea(
+            child: Column(
+              children: [
+                // Header
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Theme Shop',
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.amber,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.star,
+                                color: Colors.white, size: 20),
+                            const SizedBox(width: 5),
+                            Text(
+                              '${widget.userPoints}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Themes Grid
+                Expanded(
+                  child: GridView.builder(
+                    padding: const EdgeInsets.all(16),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 16,
+                      mainAxisSpacing: 16,
+                      childAspectRatio: 0.8,
+                    ),
+                    itemCount: _themes.length,
+                    itemBuilder: (context, index) {
+                      final theme = _themes[index];
+                      final isOwned = theme['price'] == 0 ||
+                          widget.currentTheme == theme['name'].toLowerCase();
+                      final canAfford =
+                          widget.userPoints >= (theme['price'] as int);
+
+                      return Card(
+                        elevation: 6,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          side: widget.currentTheme ==
+                                  theme['name'].toLowerCase()
+                              ? const BorderSide(color: Colors.amber, width: 2)
+                              : BorderSide.none,
+                        ),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(16),
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                theme['color'],
+                                theme['color'].withOpacity(0.7),
+                              ],
+                            ),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Column(
+                                  children: [
+                                    Icon(
+                                      theme['icon'],
+                                      size: 40,
+                                      color: Colors.white,
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      theme['name'],
+                                      style: const TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      theme['description'],
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.white.withOpacity(0.8),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Column(
+                                  children: [
+                                    if (widget.currentTheme ==
+                                        theme['name'].toLowerCase())
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 12, vertical: 6),
+                                        decoration: BoxDecoration(
+                                          color: Colors.amber,
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                        ),
+                                        child: const Text(
+                                          'EQUIPPED',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      )
+                                    else if (theme['price'] == 0)
+                                      ElevatedButton(
+                                        onPressed: () => _selectTheme(
+                                            theme['name'].toLowerCase()),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.green,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(8),
+                                          ),
+                                        ),
+                                        child: const Text('SELECT',
+                                            style:
+                                                TextStyle(color: Colors.white)),
+                                      )
+                                    else
+                                      ElevatedButton(
+                                        onPressed: canAfford
+                                            ? () => _purchaseTheme(theme)
+                                            : null,
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: canAfford
+                                              ? Colors.blueAccent
+                                              : Colors.grey,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(8),
+                                          ),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const Icon(Icons.star,
+                                                size: 16, color: Colors.white),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              '${theme['price']}',
+                                              style: const TextStyle(
+                                                  color: Colors.white),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _purchaseTheme(Map<String, dynamic> theme) async {
+    if (widget.userPoints < (theme['price'] as int)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Not enough points!'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    try {
+      await _dbHelper.purchaseTheme(
+          widget.username, theme['name'].toLowerCase());
+      final newPoints = widget.userPoints - (theme['price'] as int);
+      await _dbHelper.updateUserPoints(widget.username, newPoints);
+
+      widget.onPointsUpdated(newPoints);
+      widget.onThemeChanged(theme['name'].toLowerCase());
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Successfully purchased ${theme['name']} theme!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to purchase theme: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _selectTheme(String themeName) async {
+    try {
+      await _dbHelper.updateCurrentTheme(widget.username, themeName);
+      widget.onThemeChanged(themeName);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Theme changed to $themeName!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to change theme: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+}
+
+class ProfileTab extends StatefulWidget {
+  final String username;
+  final int userPoints;
+  final String currentTheme;
+
+  const ProfileTab({
+    super.key,
+    required this.username,
+    required this.userPoints,
+    required this.currentTheme,
+  });
+
+  @override
+  _ProfileTabState createState() => _ProfileTabState();
+}
+
+class _ProfileTabState extends State<ProfileTab>
+    with AutomaticKeepAliveClientMixin {
+  final DatabaseHelper _dbHelper = DatabaseHelper();
+  Map<String, dynamic>? _userStats;
+
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserStats();
+  }
+
+  Future<void> _loadUserStats() async {
+    final userSets = await _dbHelper.getUserStudySets(widget.username);
+    setState(() {
+      _userStats = {
+        'studySetsCreated': userSets.length,
+        'totalQuestions': 0, // You can implement this if needed
+        'averageScore': 0, // You can implement this if needed
+      };
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return Scaffold(
+      body: Stack(
+        children: [
+          const SpaceBackground(),
+          SafeArea(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    // Profile Header
+                    Card(
+                      elevation: 6,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          gradient: const LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [Colors.blueAccent, Colors.blue],
+                          ),
+                        ),
+                        child: Column(
+                          children: [
+                            CircleAvatar(
+                              radius: 50,
+                              backgroundColor: Colors.white,
+                              child: Text(
+                                widget.username.isNotEmpty
+                                    ? widget.username[0].toUpperCase()
+                                    : 'U',
+                                style: const TextStyle(
+                                  fontSize: 32,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.blueAccent,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              widget.username,
+                              style: const TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: Colors.amber,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.star,
+                                      color: Colors.white, size: 20),
+                                  const SizedBox(width: 5),
+                                  Text(
+                                    '${widget.userPoints} points',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // Stats Section
+                    if (_userStats != null) ...[
+                      Card(
+                        elevation: 4,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(20),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Statistics',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceAround,
+                                children: [
+                                  _buildStatItem(
+                                    'Study Sets',
+                                    '${_userStats!['studySetsCreated']}',
+                                    Icons.school,
+                                    Colors.blue,
+                                  ),
+                                  _buildStatItem(
+                                    'Current Theme',
+                                    widget.currentTheme.toUpperCase(),
+                                    Icons.palette,
+                                    Colors.purple,
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                    ],
+
+                    // Account Settings
+                    Card(
+                      elevation: 4,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Account Settings',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            _buildSettingsItem(
+                              'Change Password',
+                              Icons.lock,
+                              Colors.orange,
+                              () => _showChangePasswordDialog(),
+                            ),
+                            const Divider(),
+                            _buildSettingsItem(
+                              'About App',
+                              Icons.info,
+                              Colors.blue,
+                              () => _showAboutDialog(),
+                            ),
+                            const Divider(),
+                            _buildSettingsItem(
+                              'Share App',
+                              Icons.share,
+                              Colors.green,
+                              () => _shareApp(),
+                            ),
+                            const Divider(),
+                            _buildSettingsItem(
+                              'Sign Out',
+                              Icons.logout,
+                              Colors.red,
+                              () => _showSignOutDialog(),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatItem(
+      String label, String value, IconData icon, Color color) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: color, size: 24),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            color: Colors.grey[600],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSettingsItem(
+      String title, IconData icon, Color color, VoidCallback onTap) {
+    return ListTile(
+      leading: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(icon, color: color),
+      ),
+      title: Text(title),
+      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+      onTap: onTap,
+    );
+  }
+
+  void _showChangePasswordDialog() {
+    final currentPasswordController = TextEditingController();
+    final newPasswordController = TextEditingController();
+    final confirmPasswordController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Change Password'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: currentPasswordController,
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: 'Current Password',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: newPasswordController,
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: 'New Password',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: confirmPasswordController,
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: 'Confirm New Password',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              // Implement password change logic
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                    content: Text('Password change feature coming soon!')),
+              );
+            },
+            child: const Text('Change'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showAboutDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('About EduQuest'),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'EduQuest v1.0.0',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 8),
+            Text(
+                'A gamified learning platform designed to make education fun and engaging.'),
+            SizedBox(height: 16),
+            Text('Features:'),
+            Text('• Create custom study sets'),
+            Text('• Practice with interactive quizzes'),
+            Text('• Earn points and unlock themes'),
+            Text('• Track your learning progress'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _shareApp() {
+    Share.share(
+        'Check out EduQuest - the fun way to learn! Download now and start your learning journey.');
+  }
+
+  void _showSignOutDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Sign Out'),
+        content: const Text('Are you sure you want to sign out?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => SignInPage()),
+                (route) => false,
+              );
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child:
+                const Text('Sign Out', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class CreateStudySetScreen extends StatefulWidget {
+  final String username;
+  final VoidCallback onStudySetCreated;
+
+  const CreateStudySetScreen({
+    super.key,
+    required this.username,
+    required this.onStudySetCreated,
+  });
+
+  @override
+  _CreateStudySetScreenState createState() => _CreateStudySetScreenState();
+}
+
+class _CreateStudySetScreenState extends State<CreateStudySetScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
+  final _descriptionController = TextEditingController();
+  final _dbHelper = DatabaseHelper();
+  bool _isLoading = false;
+  List<Map<String, dynamic>> _questions = [];
+  final _questionController = TextEditingController();
+  final _correctAnswerController = TextEditingController();
+  final List<TextEditingController> _optionControllers = [
+    TextEditingController(),
+    TextEditingController(),
+    TextEditingController(),
+    TextEditingController(),
+  ];
+
+  @override
   void dispose() {
-    _animationController.dispose();
+    _nameController.dispose();
+    _descriptionController.dispose();
+    _questionController.dispose();
+    _correctAnswerController.dispose();
+    for (var controller in _optionControllers) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
-  void _startGame(String mode) async {
-    setState(() => _isLoading = true);
-    HapticFeedback.mediumImpact();
-
-    // Simulate loading
-    await Future.delayed(const Duration(milliseconds: 500));
-
-    if (!mounted) return;
-
-    Navigator.push(
-      context,
-      CustomPageRoute(
-        page: QuizScreen(
-          subject: widget.subject,
-          username: widget.username,
-          questions: widget.questions,
-          gameMode: mode,
-          currentTheme: widget.currentTheme,
+  Future<void> _createStudySet() async {
+    if (!_formKey.currentState!.validate()) return;
+    if (_questions.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please add at least one question'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
         ),
-        routeName: '/quiz',
-      ),
-    ).then((_) => setState(() => _isLoading = false));
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final studySetId = await _dbHelper.createStudySet(
+        _nameController.text,
+        _descriptionController.text,
+        widget.username,
+      );
+
+      for (var question in _questions) {
+        try {
+          await _dbHelper.addQuestionToStudySet(
+            studySetId,
+            question['question'],
+            question['correct_answer'],
+            question['options'],
+          );
+        } catch (e) {
+          debugPrint('Error adding question: $e');
+          throw Exception('Failed to add question: ${e.toString()}');
+        }
+      }
+
+      if (!mounted) return;
+      widget.onStudySetCreated();
+      Navigator.pop(context);
+    } catch (e) {
+      debugPrint('Error creating study set: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to create study set: ${e.toString()}'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  void _addQuestion() {
+    if (_questionController.text.isEmpty ||
+        _correctAnswerController.text.isEmpty ||
+        _optionControllers.any((controller) => controller.text.isEmpty)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please fill in all fields'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _questions.add({
+        'question': _questionController.text,
+        'correct_answer': _correctAnswerController.text,
+        'options': _optionControllers.map((c) => c.text).toList(),
+      });
+      _questionController.clear();
+      _correctAnswerController.clear();
+      for (var controller in _optionControllers) {
+        controller.clear();
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          '${widget.subject} Quiz',
-          style: const TextStyle(
+        title: const Text(
+          'Create Study Set',
+          style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
             color: Colors.white,
           ),
         ),
-        backgroundColor: widget.currentTheme == 'beach'
-            ? Colors.orange
-            : const Color(0xFF1D1E33),
+        backgroundColor: const Color(0xFF1D1E33),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Stack(
         children: [
-          widget.currentTheme == 'beach'
-              ? Image.asset(
-                  'assets/images/beach.jpg',
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  height: double.infinity,
-                )
-              : const SpaceBackground(),
+          const SpaceBackground(),
           _isLoading
               ? const Center(child: CircularProgressIndicator())
-              : FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: SlideTransition(
-                    position: _slideAnimation,
-                    child: Padding(
-                      padding: const EdgeInsets.all(20.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Choose Game Mode',
+              : SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            ElevatedButton.icon(
+                              onPressed: _importFromXLSX,
+                              icon: const Icon(Icons.upload_file),
+                              label: const Text('Import from Spreadsheet'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blueAccent,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            ElevatedButton.icon(
+                              onPressed: () => _showQuizletImportDialog(),
+                              icon: const Icon(Icons.link),
+                              label: const Text('Import from Quizlet'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _nameController,
+                          decoration: const InputDecoration(
+                            labelText: 'Study Set Name',
+                            labelStyle: TextStyle(color: Colors.white),
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.white),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.blueAccent),
+                            ),
+                          ),
+                          style: const TextStyle(color: Colors.white),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter a name';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 20),
+                        TextFormField(
+                          controller: _descriptionController,
+                          decoration: const InputDecoration(
+                            labelText: 'Description',
+                            labelStyle: TextStyle(color: Colors.white),
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.white),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.blueAccent),
+                            ),
+                          ),
+                          style: const TextStyle(color: Colors.white),
+                          maxLines: 3,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter a description';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 30),
+                        const Text(
+                          'Add Questions',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        TextFormField(
+                          controller: _questionController,
+                          decoration: const InputDecoration(
+                            labelText: 'Question',
+                            labelStyle: TextStyle(color: Colors.white),
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.white),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.blueAccent),
+                            ),
+                          ),
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                        const SizedBox(height: 20),
+                        TextFormField(
+                          controller: _correctAnswerController,
+                          decoration: const InputDecoration(
+                            labelText: 'Correct Answer',
+                            labelStyle: TextStyle(color: Colors.white),
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.white),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.blueAccent),
+                            ),
+                          ),
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                        const SizedBox(height: 20),
+                        ...List.generate(
+                          4,
+                          (index) => Padding(
+                            padding: const EdgeInsets.only(bottom: 20),
+                            child: TextFormField(
+                              controller: _optionControllers[index],
+                              decoration: InputDecoration(
+                                labelText: 'Option ${index + 1}',
+                                labelStyle:
+                                    const TextStyle(color: Colors.white),
+                                enabledBorder: const OutlineInputBorder(
+                                  borderSide: BorderSide(color: Colors.white),
+                                ),
+                                focusedBorder: const OutlineInputBorder(
+                                  borderSide:
+                                      BorderSide(color: Colors.blueAccent),
+                                ),
+                              ),
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                          ),
+                        ),
+                        ElevatedButton(
+                          onPressed: _addQuestion,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blueAccent,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 30,
+                              vertical: 15,
+                            ),
+                          ),
+                          child: const Text('Add Question'),
+                        ),
+                        const SizedBox(height: 30),
+                        if (_questions.isNotEmpty) ...[
+                          const Text(
+                            'Added Questions',
                             style: TextStyle(
-                              fontSize: 28,
+                              fontSize: 20,
                               fontWeight: FontWeight.bold,
-                              color: widget.currentTheme == 'beach'
-                                  ? Colors.black
-                                  : Colors.white,
+                              color: Colors.white,
                             ),
                           ),
-                          const SizedBox(height: 10),
-                          Text(
-                            'Select how you want to play:',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: widget.currentTheme == 'beach'
-                                  ? Colors.black
-                                  : Colors.white70,
-                            ),
-                          ),
-                          const SizedBox(height: 30),
-                          Expanded(
-                            child: GridView.count(
-                              crossAxisCount: 2,
-                              crossAxisSpacing: 20,
-                              mainAxisSpacing: 20,
-                              children: [
-                                _buildGameModeCard(
-                                  'Classic',
-                                  Icons.timer,
-                                  'Test your knowledge with timed questions',
-                                  () => _startGame('classic'),
+                          const SizedBox(height: 20),
+                          ...List.generate(
+                            _questions.length,
+                            (index) => Card(
+                              color: Colors.blueAccent.withOpacity(0.2),
+                              child: ListTile(
+                                title: Text(
+                                  _questions[index]['question'],
+                                  style: const TextStyle(color: Colors.white),
                                 ),
-                                _buildGameModeCard(
-                                  'Survival',
-                                  Icons.favorite,
-                                  'See how long you can last with limited lives',
-                                  () => _startGame('survival'),
+                                subtitle: Text(
+                                  'Correct Answer: ${_questions[index]['correct_answer']}',
+                                  style: TextStyle(
+                                    color: Colors.white.withOpacity(0.7),
+                                  ),
                                 ),
-                                _buildGameModeCard(
-                                  'Practice',
-                                  Icons.school,
-                                  'Learn at your own pace with no time limit',
-                                  () => _startGame('practice'),
-                                ),
-                                _buildGameModeCard(
-                                  'Challenge',
-                                  Icons.emoji_events,
-                                  'Compete for high scores and achievements',
-                                  () => _startGame('challenge'),
-                                ),
-                              ],
+                              ),
                             ),
                           ),
                         ],
-                      ),
+                        const SizedBox(height: 30),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: _createStudySet,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 30,
+                                vertical: 15,
+                              ),
+                            ),
+                            child: const Text('Create Study Set'),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -1599,223 +2958,123 @@ class _GameModeSelectionScreenState extends State<GameModeSelectionScreen>
     );
   }
 
-  Widget _buildGameModeCard(
-      String title, IconData icon, String description, VoidCallback onTap) {
-    return Hero(
-      tag: 'mode_$title',
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(15),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.blueAccent.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(15),
-              border: Border.all(color: Colors.blueAccent, width: 2),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 10,
-                  offset: const Offset(0, 5),
-                ),
-              ],
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  icon,
-                  size: 35,
-                  color: Colors.white,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  description,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: Colors.white.withOpacity(0.8),
-                  ),
-                ),
-              ],
+  void _importFromXLSX() async {
+    try {
+      FilePickerResult? result = await FilePicker.platform
+          .pickFiles(type: FileType.custom, allowedExtensions: ['xlsx']);
+      if (result != null && result.files.single.path != null) {
+        var bytes = await File(result.files.single.path!).readAsBytes();
+        var excelDoc = excel.Excel.decodeBytes(bytes);
+        // Assume first sheet
+        var sheet = excelDoc.tables.values.first;
+        int added = 0;
+        for (var row in sheet.rows.skip(1)) {
+          // skip header
+          if (row.length < 6) continue;
+          String? question = row[0]?.value?.toString();
+          String? correct = row[1]?.value?.toString();
+          List<String> options = [
+            row[2]?.value?.toString() ?? '',
+            row[3]?.value?.toString() ?? '',
+            row[4]?.value?.toString() ?? '',
+            row[5]?.value?.toString() ?? '',
+          ];
+          if (question != null &&
+              correct != null &&
+              options.every((o) => o.isNotEmpty)) {
+            setState(() {
+              _questions.add({
+                'question': question,
+                'correct_answer': correct,
+                'options': options,
+              });
+            });
+            added++;
+          }
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text('Imported $added questions from spreadsheet.')),
+        );
+      }
+    } catch (e) {
+      debugPrint('XLSX import error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to import from spreadsheet.')),
+      );
+    }
+  }
+
+  void _showQuizletImportDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        final quizletController = TextEditingController();
+        return AlertDialog(
+          title: const Text('Import from Quizlet'),
+          content: TextField(
+            controller: quizletController,
+            decoration: const InputDecoration(
+              labelText: 'Quizlet Set URL',
             ),
           ),
-        ),
-      ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _importFromQuizlet(quizletController.text);
+              },
+              child: const Text('Import'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _importFromQuizlet(String url) async {
+    // TODO: Implement Quizlet import logic
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Quizlet import coming soon!')),
     );
   }
 }
 
-class ShopScreen extends StatefulWidget {
+class StudySetOptionsScreen extends StatelessWidget {
+  final Map<String, dynamic> studySet;
   final String username;
   final String currentTheme;
 
-  const ShopScreen({
+  const StudySetOptionsScreen({
     super.key,
+    required this.studySet,
     required this.username,
     required this.currentTheme,
   });
 
   @override
-  _ShopScreenState createState() => _ShopScreenState();
-}
-
-class _ShopScreenState extends State<ShopScreen>
-    with SingleTickerProviderStateMixin {
-  final DatabaseHelper _dbHelper = DatabaseHelper();
-  int _userPoints = 0;
-  String _currentTheme = 'space';
-  late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
-  late Animation<Offset> _slideAnimation;
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadUserPoints();
-    _loadCurrentTheme();
-
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 1000),
-      vsync: this,
-    );
-
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: const Interval(0.0, 0.5, curve: Curves.easeIn),
-      ),
-    );
-
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.2),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: const Interval(0.0, 0.5, curve: Curves.easeOut),
-      ),
-    );
-
-    _animationController.forward();
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _loadUserPoints() async {
-    final points = await _dbHelper.getUserPoints(widget.username);
-    setState(() {
-      _userPoints = points;
-      _isLoading = false;
-    });
-  }
-
-  Future<void> _loadCurrentTheme() async {
-    final theme = await _dbHelper.getCurrentTheme(widget.username);
-    setState(() {
-      _currentTheme = theme ?? 'space';
-    });
-  }
-
-  Future<void> _purchaseTheme(String theme) async {
-    if (_userPoints >= 100) {
-      try {
-        await _dbHelper.purchaseTheme(widget.username, theme);
-        setState(() {
-          _userPoints -= 100;
-          _currentTheme = theme;
-        });
-        HapticFeedback.heavyImpact();
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Successfully purchased $theme theme!'),
-              backgroundColor: Colors.green,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Failed to purchase theme. Please try again.'),
-              backgroundColor: Colors.red,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        }
-      }
-    } else {
-      HapticFeedback.vibrate();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Not enough points!'),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Shop',
-          style: TextStyle(
+        title: Text(
+          studySet['name'],
+          style: const TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
             color: Colors.white,
           ),
         ),
         backgroundColor:
-            _currentTheme == 'beach' ? Colors.orange : const Color(0xFF1D1E33),
+            currentTheme == 'beach' ? Colors.orange : const Color(0xFF1D1E33),
         iconTheme: const IconThemeData(color: Colors.white),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: Center(
-              child: Row(
-                children: [
-                  const Icon(Icons.stars, color: Colors.amber),
-                  const SizedBox(width: 8),
-                  Text(
-                    '$_userPoints',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
       ),
       body: Stack(
         children: [
-          _currentTheme == 'beach'
+          currentTheme == 'beach'
               ? Image.asset(
                   'assets/images/beach.jpg',
                   fit: BoxFit.cover,
@@ -1823,185 +3082,104 @@ class _ShopScreenState extends State<ShopScreen>
                   height: double.infinity,
                 )
               : const SpaceBackground(),
-          _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: SlideTransition(
-                    position: _slideAnimation,
-                    child: Padding(
-                      padding: const EdgeInsets.all(20.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Available Themes',
-                            style: TextStyle(
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold,
-                              color: _currentTheme == 'beach'
-                                  ? Colors.black
-                                  : Colors.white,
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          Text(
-                            'Purchase new themes for 100 points each',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: _currentTheme == 'beach'
-                                  ? Colors.black
-                                  : Colors.white70,
-                            ),
-                          ),
-                          const SizedBox(height: 30),
-                          Expanded(
-                            child: GridView.count(
-                              crossAxisCount: 2,
-                              crossAxisSpacing: 20,
-                              mainAxisSpacing: 20,
-                              children: [
-                                _buildThemeCard(
-                                  'Space',
-                                  Icons.rocket_launch,
-                                  'A cosmic adventure',
-                                  'space',
-                                ),
-                                _buildThemeCard(
-                                  'Beach',
-                                  Icons.beach_access,
-                                  'Relaxing ocean vibes',
-                                  'beach',
-                                ),
-                                _buildThemeCard(
-                                  'Forest',
-                                  Icons.forest,
-                                  'Nature\'s tranquility',
-                                  'forest',
-                                ),
-                                _buildThemeCard(
-                                  'City',
-                                  Icons.location_city,
-                                  'Urban exploration',
-                                  'city',
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+          Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  studySet['description'],
+                  style: TextStyle(
+                    fontSize: 16,
+                    color:
+                        currentTheme == 'beach' ? Colors.black : Colors.white70,
                   ),
                 ),
+                const SizedBox(height: 30),
+                Expanded(
+                  child: GridView.count(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 20,
+                    mainAxisSpacing: 20,
+                    children: [
+                      _buildOptionCard(
+                        context,
+                        'Learn',
+                        Icons.school,
+                        'Coming soon!',
+                        () {},
+                      ),
+                      _buildOptionCard(
+                        context,
+                        'Practice',
+                        Icons.quiz,
+                        'Test your knowledge',
+                        () {
+                          Navigator.push(
+                            context,
+                            CustomPageRoute(
+                              page: PracticeModeScreen(
+                                studySet: studySet,
+                                username: username,
+                                currentTheme: currentTheme,
+                              ),
+                              routeName: '/practice_mode',
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildThemeCard(
-      String title, IconData icon, String description, String theme) {
-    final isOwned = theme == _currentTheme;
-    final canAfford = _userPoints >= 100;
-
-    return Hero(
-      tag: 'theme_$theme',
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: isOwned ? null : () => _purchaseTheme(theme),
-          borderRadius: BorderRadius.circular(15),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.blueAccent.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(15),
-              border: Border.all(
-                color: isOwned ? Colors.green : Colors.blueAccent,
-                width: 2,
+  Widget _buildOptionCard(BuildContext context, String title, IconData icon,
+      String description, VoidCallback onTap) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(15),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.blueAccent.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(15),
+            border: Border.all(color: Colors.blueAccent, width: 2),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 35,
+                color: Colors.white,
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 10,
-                  offset: const Offset(0, 5),
+              const SizedBox(height: 8),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
                 ),
-              ],
-            ),
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  icon,
-                  size: 35,
-                  color: isOwned ? Colors.green : Colors.white,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                description,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.white.withOpacity(0.8),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: isOwned ? Colors.green : Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  description,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: Colors.white.withOpacity(0.8),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                if (!isOwned)
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: canAfford ? Colors.green : Colors.red,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.stars, color: Colors.white, size: 16),
-                        const SizedBox(width: 5),
-                        const Text(
-                          '100',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                if (isOwned)
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.green,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.check, color: Colors.white, size: 16),
-                        SizedBox(width: 5),
-                        Text(
-                          'Owned',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -2009,199 +3187,83 @@ class _ShopScreenState extends State<ShopScreen>
   }
 }
 
-class QuestionSelectionScreen extends StatelessWidget {
-  final String subject;
-  final List<Question> questions;
+class PracticeModeScreen extends StatefulWidget {
+  final Map<String, dynamic> studySet;
   final String username;
   final String currentTheme;
 
-  const QuestionSelectionScreen({
+  const PracticeModeScreen({
     super.key,
-    required this.subject,
-    required this.questions,
+    required this.studySet,
     required this.username,
     required this.currentTheme,
   });
 
   @override
-  Widget build(BuildContext context) {
-    return QuizScreen(
-      subject: subject,
-      username: username,
-      questions: questions,
-      currentTheme: currentTheme,
-      gameMode: 'classic', // Add the gameMode parameter
-    );
-  }
+  _PracticeModeScreenState createState() => _PracticeModeScreenState();
 }
 
-class QuizScreen extends StatefulWidget {
-  final String subject;
-  final List<Question> questions;
-  final String username;
-  final String currentTheme;
-  final String gameMode;
-
-  const QuizScreen({
-    super.key,
-    required this.subject,
-    required this.questions,
-    required this.username,
-    required this.currentTheme,
-    required this.gameMode,
-  });
-
-  @override
-  _QuizScreenState createState() => _QuizScreenState();
-}
-
-class _QuizScreenState extends State<QuizScreen>
-    with SingleTickerProviderStateMixin {
-  int _currentQuestionIndex = 0;
-  int _score = 0;
-  bool _hasAnswered = false;
-  String? _selectedAnswer;
-  late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
-  late Animation<Offset> _slideAnimation;
-  bool _isLoading = false;
-  int _lives = 3;
-  int _timeLeft = 30;
-  Timer? _timer;
-  bool _isGameOver = false;
+class _PracticeModeScreenState extends State<PracticeModeScreen> {
+  final DatabaseHelper _dbHelper = DatabaseHelper();
+  List<Map<String, dynamic>> _questions = [];
+  bool _isLoading = true;
+  String _selectedMode = 'classic';
+  int _questionCount = 10;
 
   @override
   void initState() {
     super.initState();
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 500),
-      vsync: this,
-    );
+    _loadQuestions();
+  }
 
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: Curves.easeIn,
+  Future<void> _loadQuestions() async {
+    final questions =
+        await _dbHelper.getStudySetQuestions(widget.studySet['id']);
+    setState(() {
+      _questions = questions;
+      _isLoading = false;
+    });
+  }
+
+  void _startPractice() {
+    if (_questions.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No questions available in this study set'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    Navigator.push(
+      context,
+      CustomPageRoute(
+        page: QuizScreen(
+          subject: widget.studySet['name'],
+          username: widget.username,
+          questions: _questions
+              .map((q) => Question(
+                    questionText: q['question_text'],
+                    options: (q['options'] as String).split('|'),
+                    correctAnswer: q['correct_answer'],
+                  ))
+              .toList(),
+          currentTheme: widget.currentTheme,
+          gameMode: _selectedMode,
+          questionCount: _questionCount,
+        ),
+        routeName: '/quiz',
       ),
     );
-
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.2),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: Curves.easeOut,
-      ),
-    );
-
-    _startTimer();
-    _animationController.forward();
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    _animationController.dispose();
-    super.dispose();
-  }
-
-  void _startTimer() {
-    if (widget.gameMode == 'classic' || widget.gameMode == 'survival') {
-      _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-        if (_timeLeft > 0) {
-          setState(() {
-            _timeLeft--;
-          });
-        } else {
-          _handleTimeUp();
-        }
-      });
-    }
-  }
-
-  void _handleTimeUp() {
-    if (widget.gameMode == 'survival') {
-      setState(() {
-        _lives--;
-        if (_lives <= 0) {
-          _endGame();
-        } else {
-          _nextQuestion();
-        }
-      });
-    } else {
-      _nextQuestion();
-    }
-  }
-
-  void _endGame() {
-    setState(() {
-      _isGameOver = true;
-      _timer?.cancel();
-    });
-  }
-
-  void _checkAnswer(String answer) {
-    if (_hasAnswered) return;
-
-    setState(() {
-      _hasAnswered = true;
-      _selectedAnswer = answer;
-      _timer?.cancel();
-    });
-
-    HapticFeedback.mediumImpact();
-
-    if (answer == widget.questions[_currentQuestionIndex].correctAnswer) {
-      setState(() {
-        _score++;
-      });
-      HapticFeedback.heavyImpact();
-    } else if (widget.gameMode == 'survival') {
-      setState(() {
-        _lives--;
-      });
-      HapticFeedback.vibrate();
-    }
-
-    Future.delayed(const Duration(seconds: 1), () {
-      if (mounted) {
-        if (widget.gameMode == 'survival' && _lives <= 0) {
-          _endGame();
-        } else {
-          _nextQuestion();
-        }
-      }
-    });
-  }
-
-  void _nextQuestion() {
-    if (_currentQuestionIndex < widget.questions.length - 1) {
-      setState(() {
-        _currentQuestionIndex++;
-        _hasAnswered = false;
-        _selectedAnswer = null;
-        _timeLeft = 30;
-        _animationController.reset();
-        _animationController.forward();
-      });
-      _startTimer();
-    } else {
-      _endGame();
-    }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_isGameOver) {
-      return _buildGameOverScreen();
-    }
-
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          '${widget.subject} Quiz',
+          'Practice Mode',
           style: const TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
@@ -2225,239 +3287,118 @@ class _QuizScreenState extends State<QuizScreen>
               : const SpaceBackground(),
           _isLoading
               ? const Center(child: CircularProgressIndicator())
-              : FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: SlideTransition(
-                    position: _slideAnimation,
-                    child: Padding(
-                      padding: const EdgeInsets.all(20.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (widget.gameMode == 'classic' ||
-                              widget.gameMode == 'survival')
-                            LinearProgressIndicator(
-                              value: _timeLeft / 30,
-                              backgroundColor: Colors.grey.withOpacity(0.3),
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                _timeLeft > 10 ? Colors.green : Colors.red,
-                              ),
-                            ),
-                          const SizedBox(height: 20),
-                          Text(
-                            'Question ${_currentQuestionIndex + 1}/${widget.questions.length}',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: widget.currentTheme == 'beach'
-                                  ? Colors.black
-                                  : Colors.white70,
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          Text(
-                            widget
-                                .questions[_currentQuestionIndex].questionText,
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: widget.currentTheme == 'beach'
-                                  ? Colors.black
-                                  : Colors.white,
-                            ),
-                          ),
-                          const SizedBox(height: 30),
-                          Expanded(
-                            child: ListView.builder(
-                              itemCount: widget.questions[_currentQuestionIndex]
-                                  .options.length,
-                              itemBuilder: (context, index) {
-                                final option = widget
-                                    .questions[_currentQuestionIndex]
-                                    .options[index];
-                                final isCorrect = option ==
-                                    widget.questions[_currentQuestionIndex]
-                                        .correctAnswer;
-                                final isSelected = _selectedAnswer == option;
-                                Color backgroundColor =
-                                    Colors.blueAccent.withOpacity(0.2);
-                                Color borderColor = Colors.blueAccent;
-
-                                if (_hasAnswered) {
-                                  if (isCorrect) {
-                                    backgroundColor =
-                                        Colors.green.withOpacity(0.2);
-                                    borderColor = Colors.green;
-                                  } else if (isSelected) {
-                                    backgroundColor =
-                                        Colors.red.withOpacity(0.2);
-                                    borderColor = Colors.red;
-                                  }
-                                }
-
-                                return Padding(
-                                  padding: const EdgeInsets.only(bottom: 10),
-                                  child: Material(
-                                    color: Colors.transparent,
-                                    child: InkWell(
-                                      onTap: () => _checkAnswer(option),
-                                      borderRadius: BorderRadius.circular(15),
-                                      child: Container(
-                                        padding: const EdgeInsets.all(20),
-                                        decoration: BoxDecoration(
-                                          color: backgroundColor,
-                                          borderRadius:
-                                              BorderRadius.circular(15),
-                                          border: Border.all(
-                                              color: borderColor, width: 2),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color:
-                                                  Colors.black.withOpacity(0.1),
-                                              blurRadius: 10,
-                                              offset: const Offset(0, 5),
-                                            ),
-                                          ],
-                                        ),
-                                        child: Row(
-                                          children: [
-                                            Icon(
-                                              _hasAnswered
-                                                  ? (isCorrect
-                                                      ? Icons.check_circle
-                                                      : isSelected
-                                                          ? Icons.cancel
-                                                          : Icons
-                                                              .circle_outlined)
-                                                  : Icons.circle_outlined,
-                                              color: _hasAnswered
-                                                  ? (isCorrect
-                                                      ? Colors.green
-                                                      : isSelected
-                                                          ? Colors.red
-                                                          : Colors.white)
-                                                  : Colors.white,
-                                            ),
-                                            const SizedBox(width: 15),
-                                            Expanded(
-                                              child: Text(
-                                                option,
-                                                style: const TextStyle(
-                                                  fontSize: 18,
-                                                  color: Colors.white,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                        ],
+              : Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Select Practice Mode',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
-                    ),
+                      const SizedBox(height: 20),
+                      Card(
+                        color: Colors.blueAccent.withOpacity(0.2),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            children: [
+                              RadioListTile<String>(
+                                title: const Text(
+                                  'Classic Mode',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                                subtitle: const Text(
+                                  'Answer questions at your own pace',
+                                  style: TextStyle(color: Colors.white70),
+                                ),
+                                value: 'classic',
+                                groupValue: _selectedMode,
+                                onChanged: (value) {
+                                  setState(() {
+                                    _selectedMode = value!;
+                                  });
+                                },
+                                activeColor: Colors.blueAccent,
+                              ),
+                              RadioListTile<String>(
+                                title: const Text(
+                                  'Timed Mode',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                                subtitle: const Text(
+                                  'Answer questions against the clock',
+                                  style: TextStyle(color: Colors.white70),
+                                ),
+                                value: 'timed',
+                                groupValue: _selectedMode,
+                                onChanged: (value) {
+                                  setState(() {
+                                    _selectedMode = value!;
+                                  });
+                                },
+                                activeColor: Colors.blueAccent,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      const Text(
+                        'Number of Questions',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Slider(
+                        value: _questionCount.toDouble(),
+                        min: 5,
+                        max: _questions.length.toDouble(),
+                        divisions: (_questions.length ~/ 5) - 1,
+                        label: _questionCount.toString(),
+                        onChanged: (value) {
+                          setState(() {
+                            _questionCount = value.round();
+                          });
+                        },
+                      ),
+                      Text(
+                        '$_questionCount questions',
+                        style: const TextStyle(
+                          color: Colors.white70,
+                        ),
+                      ),
+                      const Spacer(),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: _startPractice,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blueAccent,
+                            padding: const EdgeInsets.symmetric(vertical: 15),
+                          ),
+                          child: const Text(
+                            'Start Practice',
+                            style: TextStyle(fontSize: 18),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
         ],
       ),
     );
   }
-
-  Widget _buildGameOverScreen() {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Game Over',
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        backgroundColor: widget.currentTheme == 'beach'
-            ? Colors.orange
-            : const Color(0xFF1D1E33),
-        iconTheme: const IconThemeData(color: Colors.white),
-      ),
-      body: Stack(
-        children: [
-          widget.currentTheme == 'beach'
-              ? Image.asset(
-                  'assets/images/beach.jpg',
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  height: double.infinity,
-                )
-              : const SpaceBackground(),
-          Center(
-            child: Container(
-              padding: const EdgeInsets.all(30),
-              margin: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.7),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.blueAccent, width: 2),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Final Score',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: widget.currentTheme == 'beach'
-                          ? Colors.orange
-                          : Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    '$_score/${widget.questions.length}',
-                    style: const TextStyle(
-                      fontSize: 48,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 30),
-                  ElevatedButton(
-                    onPressed: () {
-                      HapticFeedback.mediumImpact();
-                      Navigator.pop(context);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: widget.currentTheme == 'beach'
-                          ? Colors.orange
-                          : Colors.blueAccent,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 40, vertical: 15),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                    ),
-                    child: const Text(
-                      'Back to Menu',
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
-// Add this new class for custom page transitions
 class CustomPageRoute<T> extends PageRouteBuilder<T> {
   final Widget page;
   final String routeName;
@@ -2482,4 +3423,254 @@ class CustomPageRoute<T> extends PageRouteBuilder<T> {
           },
           transitionDuration: const Duration(milliseconds: 500),
         );
+}
+
+class QuizScreen extends StatefulWidget {
+  final String subject;
+  final String username;
+  final List<Question> questions;
+  final String currentTheme;
+  final String gameMode;
+  final int questionCount;
+
+  const QuizScreen({
+    super.key,
+    required this.subject,
+    required this.username,
+    required this.questions,
+    required this.currentTheme,
+    required this.gameMode,
+    required this.questionCount,
+  });
+
+  @override
+  _QuizScreenState createState() => _QuizScreenState();
+}
+
+class _QuizScreenState extends State<QuizScreen> {
+  int currentQuestionIndex = 0;
+  int score = 0;
+  bool isAnswered = false;
+  String? selectedAnswer;
+  Timer? timer;
+  int timeLeft = 30;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.gameMode == 'timed') {
+      startTimer();
+    }
+  }
+
+  @override
+  void dispose() {
+    timer?.cancel();
+    super.dispose();
+  }
+
+  void startTimer() {
+    timeLeft = 30;
+    timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (timeLeft > 0) {
+        setState(() {
+          timeLeft--;
+        });
+      } else {
+        nextQuestion();
+      }
+    });
+  }
+
+  void selectAnswer(String answer) {
+    if (isAnswered) return;
+
+    setState(() {
+      selectedAnswer = answer;
+      isAnswered = true;
+    });
+
+    if (answer == widget.questions[currentQuestionIndex].correctAnswer) {
+      score++;
+    }
+
+    Future.delayed(const Duration(seconds: 1), () {
+      nextQuestion();
+    });
+  }
+
+  void nextQuestion() {
+    timer?.cancel();
+
+    if (currentQuestionIndex < widget.questionCount - 1 &&
+        currentQuestionIndex < widget.questions.length - 1) {
+      setState(() {
+        currentQuestionIndex++;
+        isAnswered = false;
+        selectedAnswer = null;
+      });
+
+      if (widget.gameMode == 'timed') {
+        startTimer();
+      }
+    } else {
+      showResults();
+    }
+  }
+
+  void showResults() {
+    timer?.cancel();
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text('Quiz Complete!'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Your Score: $score/${widget.questionCount}'),
+            const SizedBox(height: 10),
+            Text(
+                'Percentage: ${((score / widget.questionCount) * 100).toStringAsFixed(1)}%'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context); // Close dialog
+              Navigator.pop(context); // Go back to previous screen
+            },
+            child: const Text('Done'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final question = widget.questions[currentQuestionIndex];
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.subject),
+        backgroundColor: const Color(0xFF1D1E33),
+        foregroundColor: Colors.white,
+        actions: [
+          if (widget.gameMode == 'timed')
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text(
+                '$timeLeft',
+                style:
+                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+        ],
+      ),
+      body: Stack(
+        children: [
+          const SpaceBackground(),
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Progress indicator
+                  LinearProgressIndicator(
+                    value: (currentQuestionIndex + 1) / widget.questionCount,
+                    backgroundColor: Colors.grey[300],
+                    valueColor:
+                        const AlwaysStoppedAnimation<Color>(Colors.blueAccent),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Question counter
+                  Text(
+                    'Question ${currentQuestionIndex + 1} of ${widget.questionCount}',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: Colors.white70,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+
+                  // Score
+                  Text(
+                    'Score: $score',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.amber,
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+
+                  // Question
+                  Card(
+                    elevation: 4,
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Text(
+                        question.questionText,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+
+                  // Answer options
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: question.options.length,
+                      itemBuilder: (context, index) {
+                        final option = question.options[index];
+                        Color cardColor = Colors.white;
+
+                        if (isAnswered) {
+                          if (option == question.correctAnswer) {
+                            cardColor = Colors.green;
+                          } else if (option == selectedAnswer) {
+                            cardColor = Colors.red;
+                          }
+                        }
+
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 15),
+                          child: Card(
+                            elevation: 2,
+                            color: cardColor,
+                            child: ListTile(
+                              title: Text(
+                                option,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color:
+                                      isAnswered ? Colors.white : Colors.black,
+                                ),
+                              ),
+                              onTap: () => selectAnswer(option),
+                              trailing: isAnswered &&
+                                      option == question.correctAnswer
+                                  ? const Icon(Icons.check, color: Colors.white)
+                                  : null,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
