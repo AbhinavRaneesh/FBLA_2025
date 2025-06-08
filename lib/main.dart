@@ -10,6 +10,9 @@ import 'package:flutter/services.dart'; // For haptic feedback
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 import 'package:excel/excel.dart' as excel;
+import 'package:http/http.dart' as http;
+import 'package:html/parser.dart' as html_parser;
+import 'package:html/dom.dart' as dom;
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -1548,7 +1551,7 @@ class _LearnTabState extends State<LearnTab>
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => CreateStudySetScreen(
+              builder: (context) => StudySetCreationOptionsScreen(
                 username: widget.username,
                 onStudySetCreated: _loadStudySets,
               ),
@@ -2614,131 +2617,15 @@ class _ProfileTabState extends State<ProfileTab>
   }
 }
 
-class CreateStudySetScreen extends StatefulWidget {
+class StudySetCreationOptionsScreen extends StatelessWidget {
   final String username;
   final VoidCallback onStudySetCreated;
 
-  const CreateStudySetScreen({
+  const StudySetCreationOptionsScreen({
     super.key,
     required this.username,
     required this.onStudySetCreated,
   });
-
-  @override
-  _CreateStudySetScreenState createState() => _CreateStudySetScreenState();
-}
-
-class _CreateStudySetScreenState extends State<CreateStudySetScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
-  final _descriptionController = TextEditingController();
-  final _dbHelper = DatabaseHelper();
-  bool _isLoading = false;
-  List<Map<String, dynamic>> _questions = [];
-  final _questionController = TextEditingController();
-  final _correctAnswerController = TextEditingController();
-  final List<TextEditingController> _optionControllers = [
-    TextEditingController(),
-    TextEditingController(),
-    TextEditingController(),
-    TextEditingController(),
-  ];
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _descriptionController.dispose();
-    _questionController.dispose();
-    _correctAnswerController.dispose();
-    for (var controller in _optionControllers) {
-      controller.dispose();
-    }
-    super.dispose();
-  }
-
-  Future<void> _createStudySet() async {
-    if (!_formKey.currentState!.validate()) return;
-    if (_questions.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please add at least one question'),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-      return;
-    }
-
-    setState(() => _isLoading = true);
-
-    try {
-      final studySetId = await _dbHelper.createStudySet(
-        _nameController.text,
-        _descriptionController.text,
-        widget.username,
-      );
-
-      for (var question in _questions) {
-        try {
-          await _dbHelper.addQuestionToStudySet(
-            studySetId,
-            question['question'],
-            question['correct_answer'],
-            question['options'],
-          );
-        } catch (e) {
-          debugPrint('Error adding question: $e');
-          throw Exception('Failed to add question: ${e.toString()}');
-        }
-      }
-
-      if (!mounted) return;
-      widget.onStudySetCreated();
-      Navigator.pop(context);
-    } catch (e) {
-      debugPrint('Error creating study set: $e');
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to create study set: ${e.toString()}'),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
-  }
-
-  void _addQuestion() {
-    if (_questionController.text.isEmpty ||
-        _correctAnswerController.text.isEmpty ||
-        _optionControllers.any((controller) => controller.text.isEmpty)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please fill in all fields'),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-      return;
-    }
-
-    setState(() {
-      _questions.add({
-        'question': _questionController.text,
-        'correct_answer': _correctAnswerController.text,
-        'options': _optionControllers.map((c) => c.text).toList(),
-      });
-      _questionController.clear();
-      _correctAnswerController.clear();
-      for (var controller in _optionControllers) {
-        controller.clear();
-      }
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -2758,426 +2645,158 @@ class _CreateStudySetScreenState extends State<CreateStudySetScreen> {
       body: Stack(
         children: [
           const SpaceBackground(),
-          _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : SingleChildScrollView(
-                  padding: const EdgeInsets.all(20),
-                  child: Form(
-                    key: _formKey,
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Choose how you\'d like to create your study set:',
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+                  Expanded(
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            ElevatedButton.icon(
-                              onPressed: _importFromXLSX,
-                              icon: const Icon(Icons.upload_file),
-                              label: const Text('Import from Spreadsheet'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.blueAccent,
+                        _buildOptionCard(
+                          context,
+                          'Import from Quizlet',
+                          'Import questions from an existing Quizlet set',
+                          Icons.link,
+                          Colors.green,
+                          () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => QuizletImportScreen(
+                                username: username,
+                                onStudySetCreated: onStudySetCreated,
                               ),
                             ),
-                            const SizedBox(width: 10),
-                            ElevatedButton.icon(
-                              onPressed: () => _showQuizletImportDialog(),
-                              icon: const Icon(Icons.link),
-                              label: const Text('Import from Quizlet'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.green,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        TextFormField(
-                          controller: _nameController,
-                          decoration: const InputDecoration(
-                            labelText: 'Study Set Name',
-                            labelStyle: TextStyle(color: Colors.white),
-                            enabledBorder: OutlineInputBorder(
-                              borderSide: BorderSide(color: Colors.white),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderSide: BorderSide(color: Colors.blueAccent),
-                            ),
-                          ),
-                          style: const TextStyle(color: Colors.white),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter a name';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 20),
-                        TextFormField(
-                          controller: _descriptionController,
-                          decoration: const InputDecoration(
-                            labelText: 'Description',
-                            labelStyle: TextStyle(color: Colors.white),
-                            enabledBorder: OutlineInputBorder(
-                              borderSide: BorderSide(color: Colors.white),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderSide: BorderSide(color: Colors.blueAccent),
-                            ),
-                          ),
-                          style: const TextStyle(color: Colors.white),
-                          maxLines: 3,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter a description';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 30),
-                        const Text(
-                          'Add Questions',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
                           ),
                         ),
                         const SizedBox(height: 20),
-                        TextFormField(
-                          controller: _questionController,
-                          decoration: const InputDecoration(
-                            labelText: 'Question',
-                            labelStyle: TextStyle(color: Colors.white),
-                            enabledBorder: OutlineInputBorder(
-                              borderSide: BorderSide(color: Colors.white),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderSide: BorderSide(color: Colors.blueAccent),
+                        _buildOptionCard(
+                          context,
+                          'Import from Spreadsheet',
+                          'Upload an Excel file with your questions and answers',
+                          Icons.upload_file,
+                          Colors.blue,
+                          () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => SpreadsheetImportScreen(
+                                username: username,
+                                onStudySetCreated: onStudySetCreated,
+                              ),
                             ),
                           ),
-                          style: const TextStyle(color: Colors.white),
                         ),
                         const SizedBox(height: 20),
-                        TextFormField(
-                          controller: _correctAnswerController,
-                          decoration: const InputDecoration(
-                            labelText: 'Correct Answer',
-                            labelStyle: TextStyle(color: Colors.white),
-                            enabledBorder: OutlineInputBorder(
-                              borderSide: BorderSide(color: Colors.white),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderSide: BorderSide(color: Colors.blueAccent),
-                            ),
-                          ),
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                        const SizedBox(height: 20),
-                        ...List.generate(
-                          4,
-                          (index) => Padding(
-                            padding: const EdgeInsets.only(bottom: 20),
-                            child: TextFormField(
-                              controller: _optionControllers[index],
-                              decoration: InputDecoration(
-                                labelText: 'Option ${index + 1}',
-                                labelStyle:
-                                    const TextStyle(color: Colors.white),
-                                enabledBorder: const OutlineInputBorder(
-                                  borderSide: BorderSide(color: Colors.white),
-                                ),
-                                focusedBorder: const OutlineInputBorder(
-                                  borderSide:
-                                      BorderSide(color: Colors.blueAccent),
-                                ),
-                              ),
-                              style: const TextStyle(color: Colors.white),
-                            ),
-                          ),
-                        ),
-                        ElevatedButton(
-                          onPressed: _addQuestion,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blueAccent,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 30,
-                              vertical: 15,
-                            ),
-                          ),
-                          child: const Text('Add Question'),
-                        ),
-                        const SizedBox(height: 30),
-                        if (_questions.isNotEmpty) ...[
-                          const Text(
-                            'Added Questions',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          ...List.generate(
-                            _questions.length,
-                            (index) => Card(
-                              color: Colors.blueAccent.withOpacity(0.2),
-                              child: ListTile(
-                                title: Text(
-                                  _questions[index]['question'],
-                                  style: const TextStyle(color: Colors.white),
-                                ),
-                                subtitle: Text(
-                                  'Correct Answer: ${_questions[index]['correct_answer']}',
-                                  style: TextStyle(
-                                    color: Colors.white.withOpacity(0.7),
-                                  ),
-                                ),
+                        _buildOptionCard(
+                          context,
+                          'Create Questions Manually',
+                          'Add questions one by one using our question builder',
+                          Icons.edit,
+                          Colors.purple,
+                          () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  ManualQuestionCreationScreen(
+                                username: username,
+                                onStudySetCreated: onStudySetCreated,
                               ),
                             ),
-                          ),
-                        ],
-                        const SizedBox(height: 30),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: _createStudySet,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 30,
-                                vertical: 15,
-                              ),
-                            ),
-                            child: const Text('Create Study Set'),
                           ),
                         ),
                       ],
                     ),
                   ),
-                ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
 
-  void _importFromXLSX() async {
-    try {
-      FilePickerResult? result = await FilePicker.platform
-          .pickFiles(type: FileType.custom, allowedExtensions: ['xlsx']);
-      if (result != null && result.files.single.path != null) {
-        var bytes = await File(result.files.single.path!).readAsBytes();
-        var excelDoc = excel.Excel.decodeBytes(bytes);
-        // Assume first sheet
-        var sheet = excelDoc.tables.values.first;
-        int added = 0;
-        for (var row in sheet.rows.skip(1)) {
-          // skip header
-          if (row.length < 6) continue;
-          String? question = row[0]?.value?.toString();
-          String? correct = row[1]?.value?.toString();
-          List<String> options = [
-            row[2]?.value?.toString() ?? '',
-            row[3]?.value?.toString() ?? '',
-            row[4]?.value?.toString() ?? '',
-            row[5]?.value?.toString() ?? '',
-          ];
-          if (question != null &&
-              correct != null &&
-              options.every((o) => o.isNotEmpty)) {
-            setState(() {
-              _questions.add({
-                'question': question,
-                'correct_answer': correct,
-                'options': options,
-              });
-            });
-            added++;
-          }
-        }
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text('Imported $added questions from spreadsheet.')),
-        );
-      }
-    } catch (e) {
-      debugPrint('XLSX import error: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to import from spreadsheet.')),
-      );
-    }
-  }
-
-  void _showQuizletImportDialog() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        final quizletController = TextEditingController();
-        return AlertDialog(
-          title: const Text('Import from Quizlet'),
-          content: TextField(
-            controller: quizletController,
-            decoration: const InputDecoration(
-              labelText: 'Quizlet Set URL',
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                _importFromQuizlet(quizletController.text);
-              },
-              child: const Text('Import'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _importFromQuizlet(String url) async {
-    // TODO: Implement Quizlet import logic
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Quizlet import coming soon!')),
-    );
-  }
-}
-
-class StudySetOptionsScreen extends StatelessWidget {
-  final Map<String, dynamic> studySet;
-  final String username;
-  final String currentTheme;
-
-  const StudySetOptionsScreen({
-    super.key,
-    required this.studySet,
-    required this.username,
-    required this.currentTheme,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          studySet['name'],
-          style: const TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        backgroundColor:
-            currentTheme == 'beach' ? Colors.orange : const Color(0xFF1D1E33),
-        iconTheme: const IconThemeData(color: Colors.white),
+  Widget _buildOptionCard(
+    BuildContext context,
+    String title,
+    String description,
+    IconData icon,
+    Color color,
+    VoidCallback onTap,
+  ) {
+    return Card(
+      elevation: 6,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
       ),
-      body: Stack(
-        children: [
-          currentTheme == 'beach'
-              ? Image.asset(
-                  'assets/images/beach.jpg',
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  height: double.infinity,
-                )
-              : const SpaceBackground(),
-          Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  studySet['description'],
-                  style: TextStyle(
-                    fontSize: 16,
-                    color:
-                        currentTheme == 'beach' ? Colors.black : Colors.white70,
-                  ),
-                ),
-                const SizedBox(height: 30),
-                Expanded(
-                  child: GridView.count(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 20,
-                    mainAxisSpacing: 20,
-                    children: [
-                      _buildOptionCard(
-                        context,
-                        'Learn',
-                        Icons.school,
-                        'Coming soon!',
-                        () {},
-                      ),
-                      _buildOptionCard(
-                        context,
-                        'Practice',
-                        Icons.quiz,
-                        'Test your knowledge',
-                        () {
-                          Navigator.push(
-                            context,
-                            CustomPageRoute(
-                              page: PracticeModeScreen(
-                                studySet: studySet,
-                                username: username,
-                                currentTheme: currentTheme,
-                              ),
-                              routeName: '/practice_mode',
-                            ),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                color.withOpacity(0.1),
+                color.withOpacity(0.05),
               ],
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildOptionCard(BuildContext context, String title, IconData icon,
-      String description, VoidCallback onTap) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(15),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.blueAccent.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(15),
-            border: Border.all(color: Colors.blueAccent, width: 2),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+          child: Row(
             children: [
-              Icon(
-                icon,
-                size: 35,
-                color: Colors.white,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  icon,
                   color: Colors.white,
+                  size: 32,
                 ),
               ),
-              const SizedBox(height: 4),
-              Text(
-                description,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 11,
-                  color: Colors.white.withOpacity(0.8),
+              const SizedBox(width: 20),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      description,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
                 ),
+              ),
+              Icon(
+                Icons.arrow_forward_ios,
+                color: Colors.grey[400],
+                size: 20,
               ),
             ],
           ),
@@ -3669,6 +3288,1280 @@ class _QuizScreenState extends State<QuizScreen> {
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class QuizletImportScreen extends StatefulWidget {
+  final String username;
+  final VoidCallback onStudySetCreated;
+
+  const QuizletImportScreen({
+    super.key,
+    required this.username,
+    required this.onStudySetCreated,
+  });
+
+  @override
+  _QuizletImportScreenState createState() => _QuizletImportScreenState();
+}
+
+class _QuizletImportScreenState extends State<QuizletImportScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
+  final _descriptionController = TextEditingController();
+  final _urlController = TextEditingController();
+  final _dbHelper = DatabaseHelper();
+  bool _isLoading = false;
+  List<Map<String, dynamic>> _questions = [];
+  bool _hasImported = false;
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _descriptionController.dispose();
+    _urlController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _importFromQuizlet() async {
+    if (_urlController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter a Quizlet URL'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final response = await http.get(Uri.parse(_urlController.text));
+      if (response.statusCode == 200) {
+        final document = html_parser.parse(response.body);
+        List<Map<String, dynamic>> parsedQuestions = [];
+
+        // Try to find JSON first
+        final scriptTags = document.getElementsByTagName('script');
+        String? jsonData;
+        for (var script in scriptTags) {
+          if (script.text.contains('window.Quizlet')) {
+            final start = script.text.indexOf('{');
+            final end = script.text.lastIndexOf('};');
+            if (start != -1 && end != -1) {
+              jsonData = script.text.substring(start, end + 1);
+              break;
+            }
+          }
+        }
+
+        if (jsonData != null) {
+          final termRegExp = RegExp(r'"word":"(.*?)","definition":"(.*?)"');
+          for (final match in termRegExp.allMatches(jsonData)) {
+            final question = match.group(1)?.replaceAll('\\u002F', '/') ?? '';
+            final answer = match.group(2)?.replaceAll('\\u002F', '/') ?? '';
+            if (question.isNotEmpty && answer.isNotEmpty) {
+              // Create 4 options with the correct answer as one of them
+              List<String> options = [answer];
+              // Add some dummy options for now - in a real app, you might generate these
+              while (options.length < 4) {
+                options.add('Option ${options.length}');
+              }
+              options.shuffle();
+
+              parsedQuestions.add({
+                'question': question,
+                'correct_answer': answer,
+                'options': options,
+              });
+            }
+          }
+        }
+
+        // Fallback: Try to parse HTML for terms
+        if (parsedQuestions.isEmpty) {
+          final termEls = document.querySelectorAll('.SetPageTerm-content');
+          for (var el in termEls) {
+            final question =
+                el.querySelector('.SetPageTerm-wordText')?.text.trim() ?? '';
+            final answer =
+                el.querySelector('.SetPageTerm-definitionText')?.text.trim() ??
+                    '';
+            if (question.isNotEmpty && answer.isNotEmpty) {
+              List<String> options = [answer];
+              while (options.length < 4) {
+                options.add('Option ${options.length}');
+              }
+              options.shuffle();
+
+              parsedQuestions.add({
+                'question': question,
+                'correct_answer': answer,
+                'options': options,
+              });
+            }
+          }
+        }
+
+        setState(() {
+          _questions = parsedQuestions;
+          _hasImported = parsedQuestions.isNotEmpty;
+          _isLoading = false;
+        });
+
+        if (parsedQuestions.isNotEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content:
+                  Text('Imported ${parsedQuestions.length} terms from Quizlet'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content:
+                  Text('Could not parse Quizlet set. Please check the URL.'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+      } else {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content:
+                Text('Failed to fetch Quizlet set: ${response.statusCode}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() => _isLoading = false);
+      debugPrint('Quizlet import error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to import from Quizlet. Please check the URL.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _createStudySet() async {
+    if (!_formKey.currentState!.validate()) return;
+    if (_questions.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please import questions from Quizlet first'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final studySetId = await _dbHelper.createStudySet(
+        _nameController.text,
+        _descriptionController.text,
+        widget.username,
+      );
+
+      for (var question in _questions) {
+        try {
+          await _dbHelper.addQuestionToStudySet(
+            studySetId,
+            question['question'],
+            question['correct_answer'],
+            question['options'],
+          );
+        } catch (e) {
+          debugPrint('Error adding question: $e');
+          throw Exception('Failed to add question: ${e.toString()}');
+        }
+      }
+
+      if (!mounted) return;
+      _showPostAddDialog(studySetId);
+    } catch (e) {
+      debugPrint('Error creating study set: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to create study set: ${e.toString()}'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  void _showPostAddDialog(int studySetId) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text('Study Set Created!'),
+        content: const Text('Your study set was created successfully.'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => PracticeModeScreen(
+                    studySet: {
+                      'id': studySetId,
+                      'name': _nameController.text,
+                      'description': _descriptionController.text,
+                    },
+                    username: widget.username,
+                    currentTheme: '',
+                  ),
+                ),
+              );
+            },
+            child: const Text('Practice Now'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              setState(() {
+                _nameController.clear();
+                _descriptionController.clear();
+                _urlController.clear();
+                _questions.clear();
+                _hasImported = false;
+              });
+            },
+            child: const Text('Create Another'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              widget.onStudySetCreated();
+              Navigator.pop(context);
+            },
+            child: const Text('Back to My Sets'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Import from Quizlet'),
+        backgroundColor: const Color(0xFF1D1E33),
+        foregroundColor: Colors.white,
+      ),
+      body: Stack(
+        children: [
+          const SpaceBackground(),
+          _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'How to use:',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Card(
+                          color: Colors.green.withOpacity(0.1),
+                          child: const Padding(
+                            padding: EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '1. Go to any Quizlet set',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                                Text(
+                                  '2. Copy the URL from your browser',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                                Text(
+                                  '3. Paste it below and click Import',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 30),
+                        TextFormField(
+                          controller: _nameController,
+                          decoration: const InputDecoration(
+                            labelText: 'Study Set Name',
+                            labelStyle: TextStyle(color: Colors.white),
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.white),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.blueAccent),
+                            ),
+                          ),
+                          style: const TextStyle(color: Colors.white),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter a name';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 20),
+                        TextFormField(
+                          controller: _descriptionController,
+                          decoration: const InputDecoration(
+                            labelText: 'Description',
+                            labelStyle: TextStyle(color: Colors.white),
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.white),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.blueAccent),
+                            ),
+                          ),
+                          style: const TextStyle(color: Colors.white),
+                          maxLines: 3,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter a description';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 30),
+                        const Text(
+                          'Quizlet URL',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        TextFormField(
+                          controller: _urlController,
+                          decoration: const InputDecoration(
+                            labelText: 'Paste Quizlet set URL here',
+                            labelStyle: TextStyle(color: Colors.white),
+                            hintText:
+                                'https://quizlet.com/123456789/sample-set',
+                            hintStyle: TextStyle(color: Colors.white54),
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.white),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.blueAccent),
+                            ),
+                            prefixIcon: Icon(Icons.link, color: Colors.white),
+                          ),
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                        const SizedBox(height: 20),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: _importFromQuizlet,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 30,
+                                vertical: 15,
+                              ),
+                            ),
+                            child: const Text('Import from Quizlet'),
+                          ),
+                        ),
+                        if (_questions.isNotEmpty) ...[
+                          const SizedBox(height: 30),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.check_circle,
+                                color: Colors.green,
+                                size: 24,
+                              ),
+                              const SizedBox(width: 10),
+                              Text(
+                                'Successfully imported ${_questions.length} terms',
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.green,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+                          const Text(
+                            'Preview',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          ...List.generate(
+                            _questions.take(3).length,
+                            (index) => Card(
+                              color: Colors.green.withOpacity(0.2),
+                              child: ListTile(
+                                title: Text(
+                                  _questions[index]['question'],
+                                  style: const TextStyle(color: Colors.white),
+                                ),
+                                subtitle: Text(
+                                  'Answer: ${_questions[index]['correct_answer']}',
+                                  style: TextStyle(
+                                    color: Colors.white.withOpacity(0.7),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          if (_questions.length > 3)
+                            Text(
+                              '... and ${_questions.length - 3} more terms',
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.7),
+                              ),
+                            ),
+                        ],
+                        const SizedBox(height: 30),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed:
+                                _questions.isNotEmpty ? _createStudySet : null,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: _questions.isNotEmpty
+                                  ? Colors.blueAccent
+                                  : Colors.grey,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 30,
+                                vertical: 15,
+                              ),
+                            ),
+                            child: const Text('Create Study Set'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+        ],
+      ),
+    );
+  }
+}
+
+class SpreadsheetImportScreen extends StatefulWidget {
+  final String username;
+  final VoidCallback onStudySetCreated;
+
+  const SpreadsheetImportScreen({
+    super.key,
+    required this.username,
+    required this.onStudySetCreated,
+  });
+
+  @override
+  _SpreadsheetImportScreenState createState() =>
+      _SpreadsheetImportScreenState();
+}
+
+class _SpreadsheetImportScreenState extends State<SpreadsheetImportScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
+  final _descriptionController = TextEditingController();
+  final _dbHelper = DatabaseHelper();
+  bool _isLoading = false;
+  List<Map<String, dynamic>> _questions = [];
+  bool _hasFile = false;
+  String _fileName = '';
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickFile() async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['xlsx'],
+      );
+
+      if (result != null && result.files.single.path != null) {
+        setState(() {
+          _fileName = result.files.single.name;
+          _hasFile = true;
+        });
+        await _parseExcelFile(result.files.single.path!);
+      }
+    } catch (e) {
+      debugPrint('File picker error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to pick file'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _parseExcelFile(String filePath) async {
+    try {
+      setState(() => _isLoading = true);
+
+      var bytes = await File(filePath).readAsBytes();
+      var excelDoc = excel.Excel.decodeBytes(bytes);
+      var sheet = excelDoc.tables.values.first;
+
+      List<Map<String, dynamic>> parsedQuestions = [];
+
+      for (var row in sheet.rows.skip(1)) {
+        // Skip header row
+        if (row.length < 6) continue;
+
+        String? question = row[0]?.value?.toString();
+        String? correct = row[1]?.value?.toString();
+        List<String> options = [
+          row[2]?.value?.toString() ?? '',
+          row[3]?.value?.toString() ?? '',
+          row[4]?.value?.toString() ?? '',
+          row[5]?.value?.toString() ?? '',
+        ];
+
+        if (question != null &&
+            correct != null &&
+            options.every((o) => o.isNotEmpty)) {
+          parsedQuestions.add({
+            'question': question,
+            'correct_answer': correct,
+            'options': options,
+          });
+        }
+      }
+
+      setState(() {
+        _questions = parsedQuestions;
+        _isLoading = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+              'Parsed ${parsedQuestions.length} questions from spreadsheet'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      setState(() => _isLoading = false);
+      debugPrint('Excel parsing error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content:
+              Text('Failed to parse spreadsheet. Please check the format.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _createStudySet() async {
+    if (!_formKey.currentState!.validate()) return;
+    if (_questions.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select a spreadsheet with questions'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final studySetId = await _dbHelper.createStudySet(
+        _nameController.text,
+        _descriptionController.text,
+        widget.username,
+      );
+
+      for (var question in _questions) {
+        try {
+          await _dbHelper.addQuestionToStudySet(
+            studySetId,
+            question['question'],
+            question['correct_answer'],
+            question['options'],
+          );
+        } catch (e) {
+          debugPrint('Error adding question: $e');
+          throw Exception('Failed to add question: ${e.toString()}');
+        }
+      }
+
+      if (!mounted) return;
+      _showPostAddDialog(studySetId);
+    } catch (e) {
+      debugPrint('Error creating study set: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to create study set: ${e.toString()}'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  void _showPostAddDialog(int studySetId) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text('Study Set Created!'),
+        content: const Text('Your study set was created successfully.'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => PracticeModeScreen(
+                    studySet: {
+                      'id': studySetId,
+                      'name': _nameController.text,
+                      'description': _descriptionController.text,
+                    },
+                    username: widget.username,
+                    currentTheme: '',
+                  ),
+                ),
+              );
+            },
+            child: const Text('Practice Now'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              setState(() {
+                _nameController.clear();
+                _descriptionController.clear();
+                _questions.clear();
+                _hasFile = false;
+                _fileName = '';
+              });
+            },
+            child: const Text('Create Another'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              widget.onStudySetCreated();
+              Navigator.pop(context);
+            },
+            child: const Text('Back to My Sets'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Import from Spreadsheet'),
+        backgroundColor: const Color(0xFF1D1E33),
+        foregroundColor: Colors.white,
+      ),
+      body: Stack(
+        children: [
+          const SpaceBackground(),
+          _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Expected Format:',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Card(
+                          color: Colors.blue.withOpacity(0.1),
+                          child: const Padding(
+                            padding: EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Column A: Question',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                                Text(
+                                  'Column B: Correct Answer',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                                Text(
+                                  'Columns C-F: Options 1-4',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 30),
+                        TextFormField(
+                          controller: _nameController,
+                          decoration: const InputDecoration(
+                            labelText: 'Study Set Name',
+                            labelStyle: TextStyle(color: Colors.white),
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.white),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.blueAccent),
+                            ),
+                          ),
+                          style: const TextStyle(color: Colors.white),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter a name';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 20),
+                        TextFormField(
+                          controller: _descriptionController,
+                          decoration: const InputDecoration(
+                            labelText: 'Description',
+                            labelStyle: TextStyle(color: Colors.white),
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.white),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.blueAccent),
+                            ),
+                          ),
+                          style: const TextStyle(color: Colors.white),
+                          maxLines: 3,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter a description';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 30),
+                        const Text(
+                          'Select Spreadsheet',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        Card(
+                          elevation: 4,
+                          child: ListTile(
+                            leading: Icon(
+                              _hasFile ? Icons.check_circle : Icons.upload_file,
+                              color: _hasFile ? Colors.green : Colors.blue,
+                              size: 40,
+                            ),
+                            title: Text(
+                              _hasFile ? 'File Selected' : 'Select Excel File',
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            subtitle: Text(
+                              _hasFile ? _fileName : 'Tap to select .xlsx file',
+                            ),
+                            trailing: const Icon(Icons.arrow_forward_ios),
+                            onTap: _pickFile,
+                          ),
+                        ),
+                        if (_questions.isNotEmpty) ...[
+                          const SizedBox(height: 30),
+                          Text(
+                            'Preview (${_questions.length} questions)',
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          ...List.generate(
+                            _questions.take(3).length,
+                            (index) => Card(
+                              color: Colors.blueAccent.withOpacity(0.2),
+                              child: ListTile(
+                                title: Text(
+                                  _questions[index]['question'],
+                                  style: const TextStyle(color: Colors.white),
+                                ),
+                                subtitle: Text(
+                                  'Answer: ${_questions[index]['correct_answer']}',
+                                  style: TextStyle(
+                                    color: Colors.white.withOpacity(0.7),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          if (_questions.length > 3)
+                            Text(
+                              '... and ${_questions.length - 3} more questions',
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.7),
+                              ),
+                            ),
+                        ],
+                        const SizedBox(height: 30),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed:
+                                _questions.isNotEmpty ? _createStudySet : null,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: _questions.isNotEmpty
+                                  ? Colors.green
+                                  : Colors.grey,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 30,
+                                vertical: 15,
+                              ),
+                            ),
+                            child: const Text('Create Study Set'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+        ],
+      ),
+    );
+  }
+}
+
+class ManualQuestionCreationScreen extends StatefulWidget {
+  final String username;
+  final VoidCallback onStudySetCreated;
+
+  const ManualQuestionCreationScreen({
+    super.key,
+    required this.username,
+    required this.onStudySetCreated,
+  });
+
+  @override
+  _ManualQuestionCreationScreenState createState() =>
+      _ManualQuestionCreationScreenState();
+}
+
+class _ManualQuestionCreationScreenState
+    extends State<ManualQuestionCreationScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
+  final _descriptionController = TextEditingController();
+  final _dbHelper = DatabaseHelper();
+  bool _isLoading = false;
+  List<Map<String, dynamic>> _questions = [];
+  final _questionController = TextEditingController();
+  final _correctAnswerController = TextEditingController();
+  final List<TextEditingController> _optionControllers = [
+    TextEditingController(),
+    TextEditingController(),
+    TextEditingController(),
+    TextEditingController(),
+  ];
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _descriptionController.dispose();
+    _questionController.dispose();
+    _correctAnswerController.dispose();
+    for (var controller in _optionControllers) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  Future<void> _createStudySet() async {
+    if (!_formKey.currentState!.validate()) return;
+    if (_questions.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please add at least one question'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final studySetId = await _dbHelper.createStudySet(
+        _nameController.text,
+        _descriptionController.text,
+        widget.username,
+      );
+
+      for (var question in _questions) {
+        try {
+          await _dbHelper.addQuestionToStudySet(
+            studySetId,
+            question['question'],
+            question['correct_answer'],
+            question['options'],
+          );
+        } catch (e) {
+          debugPrint('Error adding question: $e');
+          throw Exception('Failed to add question: ${e.toString()}');
+        }
+      }
+
+      if (!mounted) return;
+      _showPostAddDialog(studySetId);
+    } catch (e) {
+      debugPrint('Error creating study set: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to create study set: ${e.toString()}'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  void _addQuestion() {
+    if (_questionController.text.isEmpty ||
+        _correctAnswerController.text.isEmpty ||
+        _optionControllers.any((controller) => controller.text.isEmpty)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please fill in all fields'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _questions.add({
+        'question': _questionController.text,
+        'correct_answer': _correctAnswerController.text,
+        'options': _optionControllers.map((c) => c.text).toList(),
+      });
+      _questionController.clear();
+      _correctAnswerController.clear();
+      for (var controller in _optionControllers) {
+        controller.clear();
+      }
+    });
+  }
+
+  void _showPostAddDialog(int studySetId) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text('Study Set Created!'),
+        content: const Text('Your study set was created successfully.'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => PracticeModeScreen(
+                    studySet: {
+                      'id': studySetId,
+                      'name': _nameController.text,
+                      'description': _descriptionController.text,
+                    },
+                    username: widget.username,
+                    currentTheme: '',
+                  ),
+                ),
+              );
+            },
+            child: const Text('Practice Now'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              setState(() {
+                _nameController.clear();
+                _descriptionController.clear();
+                _questions.clear();
+                for (var c in _optionControllers) c.clear();
+              });
+            },
+            child: const Text('Create Another'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              widget.onStudySetCreated();
+              Navigator.pop(context);
+            },
+            child: const Text('Back to My Sets'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Create Questions Manually'),
+        backgroundColor: const Color(0xFF1D1E33),
+        foregroundColor: Colors.white,
+      ),
+      body: Stack(
+        children: [
+          const SpaceBackground(),
+          _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        TextFormField(
+                          controller: _nameController,
+                          decoration: const InputDecoration(
+                            labelText: 'Study Set Name',
+                            labelStyle: TextStyle(color: Colors.white),
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.white),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.blueAccent),
+                            ),
+                          ),
+                          style: const TextStyle(color: Colors.white),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter a name';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 20),
+                        TextFormField(
+                          controller: _descriptionController,
+                          decoration: const InputDecoration(
+                            labelText: 'Description',
+                            labelStyle: TextStyle(color: Colors.white),
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.white),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.blueAccent),
+                            ),
+                          ),
+                          style: const TextStyle(color: Colors.white),
+                          maxLines: 3,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter a description';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 30),
+                        const Text(
+                          'Add Questions',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        TextFormField(
+                          controller: _questionController,
+                          decoration: const InputDecoration(
+                            labelText: 'Question',
+                            labelStyle: TextStyle(color: Colors.white),
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.white),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.blueAccent),
+                            ),
+                          ),
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                        const SizedBox(height: 20),
+                        TextFormField(
+                          controller: _correctAnswerController,
+                          decoration: const InputDecoration(
+                            labelText: 'Correct Answer',
+                            labelStyle: TextStyle(color: Colors.white),
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.white),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.blueAccent),
+                            ),
+                          ),
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                        const SizedBox(height: 20),
+                        ...List.generate(
+                          4,
+                          (index) => Padding(
+                            padding: const EdgeInsets.only(bottom: 20),
+                            child: TextFormField(
+                              controller: _optionControllers[index],
+                              decoration: InputDecoration(
+                                labelText: 'Option ${index + 1}',
+                                labelStyle:
+                                    const TextStyle(color: Colors.white),
+                                enabledBorder: const OutlineInputBorder(
+                                  borderSide: BorderSide(color: Colors.white),
+                                ),
+                                focusedBorder: const OutlineInputBorder(
+                                  borderSide:
+                                      BorderSide(color: Colors.blueAccent),
+                                ),
+                              ),
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                          ),
+                        ),
+                        ElevatedButton(
+                          onPressed: _addQuestion,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blueAccent,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 30,
+                              vertical: 15,
+                            ),
+                          ),
+                          child: const Text('Add Question'),
+                        ),
+                        const SizedBox(height: 30),
+                        if (_questions.isNotEmpty) ...[
+                          const Text(
+                            'Added Questions',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          ...List.generate(
+                            _questions.length,
+                            (index) => Card(
+                              color: Colors.blueAccent.withOpacity(0.2),
+                              child: ListTile(
+                                title: Text(
+                                  _questions[index]['question'],
+                                  style: const TextStyle(color: Colors.white),
+                                ),
+                                subtitle: Text(
+                                  'Correct Answer: ${_questions[index]['correct_answer']}',
+                                  style: TextStyle(
+                                    color: Colors.white.withOpacity(0.7),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 30),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: _createStudySet,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 30,
+                                vertical: 15,
+                              ),
+                            ),
+                            child: const Text('Create Study Set'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
         ],
       ),
     );
