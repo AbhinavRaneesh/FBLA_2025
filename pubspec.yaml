@@ -17,10 +17,12 @@ dependencies:
   share_plus: ^7.0.0
   lottie: ^2.7.0 # For Lottie animations
   confetti: ^0.7.0 # For celebration effects
-  file_picker: ^6.1.1
+  file_picker: ^10.1.9
   excel: ^2.0.7
   http: ^1.1.0
   html: ^0.15.4
+  flutter_bloc: ^8.1.4 # For state management
+  dio: ^5.4.1 # For HTTP requests
 
 dev_dependencies:
   flutter_test:
