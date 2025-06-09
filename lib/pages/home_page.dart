@@ -2,22 +2,31 @@ import 'package:flutter/material.dart';
 import 'package:student_learning_app/bloc/chat_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../models/chat_message_model.dart';
+import '../database_helper.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  final String username;
+
+  const HomePage({
+    super.key,
+    required this.username,
+  });
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  _HomePageState createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
   final TextEditingController followupController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   late final ChatBloc _chatBloc; // Create bloc instance here
+  final DatabaseHelper _dbHelper = DatabaseHelper();
 
   int currentQuestionIndex = 0;
   String? selectedAnswer;
   bool isWaitingForQuestions = false;
+  String username = ''; // Add username field
+  int _score = 0;
 
   List<Map<String, dynamic>> scienceQuestions = [];
   List<bool> answeredCorrectly = []; // Track which questions were answered correctly
@@ -43,6 +52,15 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _chatBloc = ChatBloc(); // Initialize bloc once
+    _loadUsername(); // Load username when page initializes
+  }
+
+  Future<void> _loadUsername() async {
+    // Get the username from shared preferences or wherever it's stored
+    // For now, we'll use a default value
+    setState(() {
+      username = widget.username; // Replace with actual username loading logic
+    });
   }
 
   @override
@@ -461,14 +479,32 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _returnToHome() {
+    Navigator.of(context).popUntil((route) => route.isFirst);
+  }
+
+  void _submitAnswer() {
+    if (selectedAnswer == null) return;
+
+    final isCorrect = selectedAnswer == scienceQuestions[currentQuestionIndex]["answer"];
     setState(() {
-      currentQuestionIndex = 0;
       selectedAnswer = null;
-      showAnswer = false;
-      showScoreSummary = false;
-      showQuizArea = false;
-      scienceQuestions.clear();
-      answeredCorrectly.clear();
+      showAnswer = true;
+      if (isCorrect) {
+        answeredCorrectly[currentQuestionIndex] = true;
+        _dbHelper.updateUserPoints(username, 50);
+      }
+    });
+
+    // Move to next question after a delay
+    Future.delayed(const Duration(seconds: 1), () {
+      if (mounted) {
+        setState(() {
+          if (currentQuestionIndex + 1 < scienceQuestions.length) {
+            currentQuestionIndex++;
+            showAnswer = false;
+          }
+        });
+      }
     });
   }
 
@@ -726,14 +762,7 @@ class _HomePageState extends State<HomePage> {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 ElevatedButton(
-                  onPressed: selectedAnswer != null ? () {
-                    setState(() {
-                      showAnswer = true;
-                      // Record whether the answer was correct
-                      answeredCorrectly[currentQuestionIndex] =
-                          selectedAnswer == scienceQuestions[currentQuestionIndex]["answer"];
-                    });
-                  } : null,
+                  onPressed: selectedAnswer != null ? _submitAnswer : null,
                   child: Text("Submit"),
                 ),
                 ElevatedButton(
@@ -757,10 +786,10 @@ class _HomePageState extends State<HomePage> {
                   Text(
                     "Correct Answer: ${scienceQuestions[currentQuestionIndex]["answer"]}",
                     style: TextStyle(
-                        fontSize: 18,
-                        color: selectedAnswer == scienceQuestions[currentQuestionIndex]["answer"]
-                            ? Colors.green
-                            : Colors.red
+                      fontSize: 18,
+                      color: selectedAnswer == scienceQuestions[currentQuestionIndex]["answer"]
+                          ? Colors.green
+                          : Colors.red
                     ),
                   ),
                   SizedBox(height: 16),
@@ -780,92 +809,6 @@ class _HomePageState extends State<HomePage> {
               ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildScoreSummary() {
-    int correctAnswers = answeredCorrectly.where((correct) => correct).length;
-    double accuracy = (correctAnswers / scienceQuestions.length) * 100;
-
-    return Container(
-      padding: EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade800.withOpacity(0.9),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            "Quiz Completed!",
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-          SizedBox(height: 20),
-          Text(
-            "Your Score:",
-            style: TextStyle(
-              fontSize: 20,
-              color: Colors.white,
-            ),
-          ),
-          SizedBox(height: 10),
-          Text(
-            "$correctAnswers / ${scienceQuestions.length}",
-            style: TextStyle(
-              fontSize: 36,
-              fontWeight: FontWeight.bold,
-              color: Colors.purple,
-            ),
-          ),
-          SizedBox(height: 20),
-          Text(
-            "Accuracy: ${accuracy.toStringAsFixed(1)}%",
-            style: TextStyle(
-              fontSize: 20,
-              color: accuracy > 70 ? Colors.green : accuracy > 40 ? Colors.orange : Colors.red,
-            ),
-          ),
-          SizedBox(height: 30),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              ElevatedButton(
-                onPressed: _restartQuiz,
-                child: Text("Retry Quiz"),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                ),
-              ),
-              ElevatedButton(
-                onPressed: _returnToHome,
-                child: Text("New Quiz"),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.purple,
-                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: () {
-              String prompt = "I scored $correctAnswers out of ${scienceQuestions.length} ($accuracy%) in my $selectedSubject quiz. "
-                  "Can you analyze my performance and suggest areas to improve?";
-              _showChatModal(initialMessage: prompt);
-            },
-            child: Text("Get Performance Analysis"),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -948,6 +891,92 @@ class _HomePageState extends State<HomePage> {
         ),
       );
     }).toList();
+  }
+
+  Widget _buildScoreSummary() {
+    int correctAnswers = answeredCorrectly.where((correct) => correct).length;
+    double accuracy = (correctAnswers / scienceQuestions.length) * 100;
+
+    return Container(
+      padding: EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade800.withOpacity(0.9),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            "Quiz Completed!",
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          SizedBox(height: 20),
+          Text(
+            "Your Score:",
+            style: TextStyle(
+              fontSize: 20,
+              color: Colors.white,
+            ),
+          ),
+          SizedBox(height: 10),
+          Text(
+            "$correctAnswers / ${scienceQuestions.length}",
+            style: TextStyle(
+              fontSize: 36,
+              fontWeight: FontWeight.bold,
+              color: Colors.purple,
+            ),
+          ),
+          SizedBox(height: 20),
+          Text(
+            "Accuracy: ${accuracy.toStringAsFixed(1)}%",
+            style: TextStyle(
+              fontSize: 20,
+              color: accuracy > 70 ? Colors.green : accuracy > 40 ? Colors.orange : Colors.red,
+            ),
+          ),
+          SizedBox(height: 30),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              ElevatedButton(
+                onPressed: _restartQuiz,
+                child: Text("Retry Quiz"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: _returnToHome,
+                child: Text("Return Home"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.purple,
+                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 20),
+          ElevatedButton(
+            onPressed: () {
+              String prompt = "I scored $correctAnswers out of ${scienceQuestions.length} ($accuracy%) in my $selectedSubject quiz. "
+                  "Can you analyze my performance and suggest areas to improve?";
+              _showChatModal(initialMessage: prompt);
+            },
+            child: Text("Get Performance Analysis"),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildChatMessages(List<ChatMessageModel> messages, ScrollController scrollController) {
