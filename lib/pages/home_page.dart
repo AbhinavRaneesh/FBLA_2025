@@ -94,6 +94,11 @@ class _HomePageState extends State<HomePage> {
       isScrollControlled: true,
       isDismissible: true,
       builder: (BuildContext context) {
+        // Add post-frame callback to scroll to bottom after the modal is shown
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _scrollToBottom();
+        });
+        
         return DraggableScrollableSheet(
           initialChildSize: 0.5,
           minChildSize: 0.3,
@@ -483,7 +488,7 @@ class _HomePageState extends State<HomePage> {
         body: Container(
           decoration: BoxDecoration(
             image: DecorationImage(
-              image: AssetImage('assets/space_bg.jpg'),
+              image: AssetImage('assets/images/beach.jpg'),
               fit: BoxFit.cover,
               opacity: 0.5,
             ),
