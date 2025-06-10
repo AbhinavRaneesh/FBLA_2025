@@ -29,11 +29,13 @@ class _HomePageState extends State<HomePage> {
   int _score = 0;
 
   List<Map<String, dynamic>> scienceQuestions = [];
-  List<bool> answeredCorrectly = []; // Track which questions were answered correctly
+  List<bool> answeredCorrectly =
+      []; // Track which questions were answered correctly
 
   bool showAnswer = false;
   bool showQuizArea = false;
-  bool showScoreSummary = false; // New variable to control score summary visibility
+  bool showScoreSummary =
+      false; // New variable to control score summary visibility
   String selectedSubject = "Chemistry";
   int numberOfQuestions = 10; // New variable for question count
 
@@ -102,183 +104,126 @@ class _HomePageState extends State<HomePage> {
 
   // Function to show half-screen chat modal
   void _showChatModal({String? initialMessage}) {
-    if (initialMessage != null) {
-      _chatBloc.add(ChatGenerationNewTextMessageEvent(inputMessage: initialMessage));
-    }
-
-    showModalBottomSheet(
+    showDialog(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      isDismissible: true,
       builder: (BuildContext context) {
-        // Add post-frame callback to scroll to bottom after the modal is shown
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          _scrollToBottom();
-        });
-        
-        return DraggableScrollableSheet(
-          initialChildSize: 0.5,
-          minChildSize: 0.3,
-          maxChildSize: 0.9,
-          builder: (BuildContext context, ScrollController scrollController) {
-            return Container(
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(20),
-                  topRight: Radius.circular(20),
+        return Dialog(
+          backgroundColor: Colors.grey.shade900,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Container(
+            width: MediaQuery.of(context).size.width * 0.9,
+            height: MediaQuery.of(context).size.height * 0.7,
+            padding: EdgeInsets.all(16),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'AI Assistant',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.close, color: Colors.white),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ],
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.3),
-                    spreadRadius: 2,
-                    blurRadius: 10,
-                  )
-                ],
-              ),
-              child: Column(
-                children: [
-                  // Handle bar
-                  Container(
-                    margin: EdgeInsets.only(top: 8),
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[400],
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-
-                  // Header
-                  Container(
-                    padding: EdgeInsets.all(16),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          "Chat with QuestAI",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.purple,
-                          ),
-                        ),
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            // Close button with better styling
-                            Container(
+                Divider(color: Colors.grey),
+                Expanded(
+                  child: BlocBuilder<ChatBloc, ChatState>(
+                    bloc: _chatBloc,
+                    builder: (context, state) {
+                      if (state is ChatSuccessState) {
+                        return ListView.builder(
+                          controller: _scrollController,
+                          itemCount: state.messages.length,
+                          itemBuilder: (context, index) {
+                            final message = state.messages[index];
+                            return Container(
+                              margin: EdgeInsets.symmetric(vertical: 8),
+                              padding: EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: Colors.red.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(color: Colors.red.withOpacity(0.3)),
+                                color: message.role == "user"
+                                    ? Colors.blue.withOpacity(0.2)
+                                    : Colors.purple.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(12),
                               ),
-                              child: IconButton(
-                                onPressed: () => Navigator.pop(context),
-                                icon: Icon(Icons.close, color: Colors.red[700], size: 20),
-                                padding: EdgeInsets.all(4),
-                                constraints: BoxConstraints(
-                                  minWidth: 32,
-                                  minHeight: 32,
-                                ),
-                                tooltip: "Close Chat",
+                              child: Text(
+                                message.parts.first.text,
+                                style: TextStyle(color: Colors.white),
                               ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  Divider(height: 1, color: Colors.grey[300]),
-
-                  // Chat messages area
-                  Expanded(
-                    child: BlocBuilder<ChatBloc, ChatState>(
-                      bloc: _chatBloc,
-                      builder: (context, state) {
-                        if (state is ChatSuccessState) {
-                          // Auto scroll when new messages arrive
-                          WidgetsBinding.instance.addPostFrameCallback((_) {
-                            _scrollToBottom();
-                          });
-                          return _buildChatMessages(state.messages, scrollController);
-                        }
+                            );
+                          },
+                        );
+                      } else if (state is ChatErrorState) {
                         return Center(
                           child: Text(
-                            "Ask QuestAI anything!",
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: Colors.purple,
-                              fontWeight: FontWeight.bold,
-                            ),
+                            state.message,
+                            style: TextStyle(color: Colors.red),
                           ),
                         );
-                      },
-                    ),
+                      } else {
+                        return Center(
+                          child: CircularProgressIndicator(),
+                        );
+                      }
+                    },
                   ),
-
-                  // Input area
-                  Container(
-                    padding: EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      border: Border(top: BorderSide(color: Colors.grey[300]!)),
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: followupController,
-                            style: TextStyle(color: Colors.black),
-                            decoration: InputDecoration(
-                              fillColor: Colors.grey[100],
-                              filled: true,
-                              hintText: "Ask something from QuestAI",
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(25),
-                                borderSide: BorderSide(color: Colors.purple),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(25),
-                                borderSide: BorderSide(color: Colors.purple, width: 2),
-                              ),
-                              contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                ),
+                Divider(color: Colors.grey),
+                Padding(
+                  padding: EdgeInsets.only(bottom: 8),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: followupController,
+                          style: TextStyle(color: Colors.white),
+                          decoration: InputDecoration(
+                            hintText: 'Ask a follow-up question...',
+                            hintStyle: TextStyle(color: Colors.grey),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
                             ),
+                            filled: true,
+                            fillColor: Colors.grey.shade800,
                           ),
                         ),
-                        SizedBox(width: 8),
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Colors.purple,
-                            shape: BoxShape.circle,
-                          ),
-                          child: IconButton(
-                            onPressed: () {
-                              if (followupController.text.isNotEmpty) {
-                                _chatBloc.add(
-                                  ChatGenerationNewTextMessageEvent(
-                                    inputMessage: followupController.text,
-                                  ),
-                                );
-                                followupController.clear();
-                              }
-                            },
-                            icon: Icon(Icons.send, color: Colors.white),
-                            iconSize: 24,
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                      SizedBox(width: 8),
+                      IconButton(
+                        icon: Icon(Icons.send, color: Colors.purple),
+                        onPressed: () {
+                          if (followupController.text.isNotEmpty) {
+                            _chatBloc.add(ChatGenerationNewTextMessageEvent(
+                              inputMessage: followupController.text,
+                            ));
+                            followupController.clear();
+                          }
+                        },
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            );
-          },
+                ),
+              ],
+            ),
+          ),
         );
       },
     );
+
+    if (initialMessage != null) {
+      _chatBloc.add(ChatGenerationNewTextMessageEvent(
+        inputMessage: initialMessage,
+      ));
+    }
   }
 
   // Function to parse AI response and extract questions
@@ -318,7 +263,8 @@ class _HomePageState extends State<HomePage> {
         // Try splitting by double newlines first
         List<String> potentialQuestions = aiResponse.split('\n\n');
         for (String block in potentialQuestions) {
-          Map<String, dynamic>? parsedQuestion = _parseBracketFormat(block.trim());
+          Map<String, dynamic>? parsedQuestion =
+              _parseBracketFormat(block.trim());
           if (parsedQuestion != null) {
             newQuestions.add(parsedQuestion);
           }
@@ -327,7 +273,8 @@ class _HomePageState extends State<HomePage> {
         // If still not enough, try splitting by single newlines
         if (newQuestions.length < numberOfQuestions) {
           for (String line in lines) {
-            Map<String, dynamic>? parsedQuestion = _parseBracketFormat(line.trim());
+            Map<String, dynamic>? parsedQuestion =
+                _parseBracketFormat(line.trim());
             if (parsedQuestion != null) {
               newQuestions.add(parsedQuestion);
             }
@@ -359,7 +306,8 @@ class _HomePageState extends State<HomePage> {
         // Show success message
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Successfully loaded ${newQuestions.length} new $selectedSubject questions!'),
+            content: Text(
+                'Successfully loaded ${newQuestions.length} new $selectedSubject questions!'),
             backgroundColor: Colors.green,
           ),
         );
@@ -394,7 +342,8 @@ class _HomePageState extends State<HomePage> {
   Map<String, dynamic>? _parseBracketFormat(String line) {
     try {
       // Remove trailing comma if present
-      String cleanLine = line.endsWith(',') ? line.substring(0, line.length - 1) : line;
+      String cleanLine =
+          line.endsWith(',') ? line.substring(0, line.length - 1) : line;
 
       // Remove [ and ] brackets
       if (!cleanLine.startsWith('[') || !cleanLine.endsWith(']')) {
@@ -460,7 +409,8 @@ class _HomePageState extends State<HomePage> {
     answeredCorrectly.clear();
 
     _chatBloc.add(ChatGenerationNewTextMessageEvent(
-        inputMessage: "Give me exactly $numberOfQuestions $selectedSubject questions in the following format: [question, option1, option2, option3, option4, answerchoice]. "
+        inputMessage:
+            "Give me exactly $numberOfQuestions $selectedSubject questions in the following format: [question, option1, option2, option3, option4, answerchoice]. "
             "Provide only the questions in this exact format, with no additional text or explanations. "
             "Ensure you provide exactly $numberOfQuestions questions."));
 
@@ -485,7 +435,8 @@ class _HomePageState extends State<HomePage> {
   void _submitAnswer() {
     if (selectedAnswer == null) return;
 
-    final isCorrect = selectedAnswer == scienceQuestions[currentQuestionIndex]["answer"];
+    final isCorrect =
+        selectedAnswer == scienceQuestions[currentQuestionIndex]["answer"];
     setState(() {
       selectedAnswer = null;
       showAnswer = true;
@@ -523,7 +474,9 @@ class _HomePageState extends State<HomePage> {
           ),
           child: BlocListener<ChatBloc, ChatState>(
             listener: (context, state) {
-              if (state is ChatSuccessState && isWaitingForQuestions && state.messages.isNotEmpty) {
+              if (state is ChatSuccessState &&
+                  isWaitingForQuestions &&
+                  state.messages.isNotEmpty) {
                 var lastMessage = state.messages.last;
                 if (lastMessage.role != "user") {
                   _parseAndReplaceQuestions(lastMessage.parts.first.text);
@@ -550,7 +503,8 @@ class _HomePageState extends State<HomePage> {
                       // Show different sections based on app state
                       if (showScoreSummary) ...[
                         _buildScoreSummary()
-                      ] else if (showQuizArea && scienceQuestions.isNotEmpty) ...[
+                      ] else if (showQuizArea &&
+                          scienceQuestions.isNotEmpty) ...[
                         _buildQuizArea()
                       ] else ...[
                         _buildHomeScreen()
@@ -631,7 +585,8 @@ class _HomePageState extends State<HomePage> {
                       dropdownColor: Colors.grey.shade800,
                       style: TextStyle(color: Colors.white, fontSize: 16),
                       isExpanded: true,
-                      items: List.generate(20, (index) => index + 1).map((int value) {
+                      items: List.generate(20, (index) => index + 1)
+                          .map((int value) {
                         return DropdownMenuItem<int>(
                           value: value,
                           child: Text(value.toString()),
@@ -654,27 +609,29 @@ class _HomePageState extends State<HomePage> {
                 children: [
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: isWaitingForQuestions ? null : _generateQuestions,
+                      onPressed:
+                          isWaitingForQuestions ? null : _generateQuestions,
                       child: isWaitingForQuestions
                           ? Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
-                            ),
-                          ),
-                          SizedBox(width: 12),
-                          Text("Generating..."),
-                        ],
-                      )
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                ),
+                                SizedBox(width: 12),
+                                Text("Generating..."),
+                              ],
+                            )
                           : Text("Generate Quiz"),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.purple,
-                        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                       ),
                     ),
                   ),
@@ -685,7 +642,8 @@ class _HomePageState extends State<HomePage> {
                       child: Text("Chat with QuestAI"),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blue,
-                        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                       ),
                     ),
                   ),
@@ -712,7 +670,8 @@ class _HomePageState extends State<HomePage> {
                 ElevatedButton.icon(
                   onPressed: _returnToHome,
                   icon: Icon(Icons.arrow_back, color: Colors.white),
-                  label: Text("Back to Home", style: TextStyle(color: Colors.white)),
+                  label: Text("Back to Home",
+                      style: TextStyle(color: Colors.white)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.orange,
                     padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -735,10 +694,31 @@ class _HomePageState extends State<HomePage> {
                 color: Colors.grey.shade800.withOpacity(0.9),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Text(
-                scienceQuestions[currentQuestionIndex]["question"]!,
-                style: TextStyle(fontSize: 22, color: Colors.white),
-                textAlign: TextAlign.center,
+              child: Column(
+                children: [
+                  Text(
+                    scienceQuestions[currentQuestionIndex]["question"]!,
+                    style: TextStyle(fontSize: 22, color: Colors.white),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      String question =
+                          scienceQuestions[currentQuestionIndex]["question"]!;
+                      String prompt =
+                          "Please explain how to solve this question: '$question'. Provide a detailed step-by-step explanation with the fundamental concepts involved.";
+                      _showChatModal(initialMessage: prompt);
+                    },
+                    icon: Icon(Icons.help_outline, color: Colors.white),
+                    label: Text("Ask AI for Help"),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.purple,
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    ),
+                  ),
+                ],
               ),
             ),
 
@@ -779,23 +759,26 @@ class _HomePageState extends State<HomePage> {
                   Text(
                     "Correct Answer: ${scienceQuestions[currentQuestionIndex]["answer"]}",
                     style: TextStyle(
-                      fontSize: 18,
-                      color: selectedAnswer == scienceQuestions[currentQuestionIndex]["answer"]
-                          ? Colors.green
-                          : Colors.red
-                    ),
+                        fontSize: 18,
+                        color: selectedAnswer ==
+                                scienceQuestions[currentQuestionIndex]["answer"]
+                            ? Colors.green
+                            : Colors.red),
                   ),
                   SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () {
-                      String question = scienceQuestions[currentQuestionIndex]["question"]!;
-                      String prompt = "Please explain how to solve this question: '$question'. Provide a brief explanation with the fundamental concepts involved.";
+                      String question =
+                          scienceQuestions[currentQuestionIndex]["question"]!;
+                      String prompt =
+                          "Please explain how to solve this question: '$question'. Provide a brief explanation with the fundamental concepts involved.";
                       _showChatModal(initialMessage: prompt);
                     },
                     child: Text("ASK QuestAI for explanation"),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.purple,
-                      padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                     ),
                   ),
                 ],
@@ -811,17 +794,22 @@ class _HomePageState extends State<HomePage> {
 
     return options.map((option) {
       bool isSelected = selectedAnswer == option;
-      bool isCorrectAnswer = showAnswer && option == scienceQuestions[currentQuestionIndex]["answer"];
-      bool isWrongSelected = showAnswer && isSelected && option != scienceQuestions[currentQuestionIndex]["answer"];
+      bool isCorrectAnswer = showAnswer &&
+          option == scienceQuestions[currentQuestionIndex]["answer"];
+      bool isWrongSelected = showAnswer &&
+          isSelected &&
+          option != scienceQuestions[currentQuestionIndex]["answer"];
 
       return Padding(
         padding: const EdgeInsets.only(bottom: 8.0),
         child: InkWell(
-          onTap: showAnswer ? null : () {
-            setState(() {
-              selectedAnswer = option;
-            });
-          },
+          onTap: showAnswer
+              ? null
+              : () {
+                  setState(() {
+                    selectedAnswer = option;
+                  });
+                },
           child: Container(
             width: double.infinity,
             padding: EdgeInsets.all(12),
@@ -829,19 +817,19 @@ class _HomePageState extends State<HomePage> {
               color: isCorrectAnswer
                   ? Colors.green.withOpacity(0.9)
                   : isWrongSelected
-                  ? Colors.red.withOpacity(0.9)
-                  : isSelected
-                  ? Colors.blue.withOpacity(0.7)
-                  : Colors.grey.shade800.withOpacity(0.7),
+                      ? Colors.red.withOpacity(0.9)
+                      : isSelected
+                          ? Colors.blue.withOpacity(0.7)
+                          : Colors.grey.shade800.withOpacity(0.7),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
                 color: isCorrectAnswer
                     ? Colors.green
                     : isWrongSelected
-                    ? Colors.red
-                    : isSelected
-                    ? Colors.blue
-                    : Colors.grey,
+                        ? Colors.red
+                        : isSelected
+                            ? Colors.blue
+                            : Colors.grey,
                 width: isSelected || isWrongSelected || isCorrectAnswer ? 2 : 1,
               ),
             ),
@@ -851,22 +839,22 @@ class _HomePageState extends State<HomePage> {
                   height: 24,
                   width: 24,
                   decoration: BoxDecoration(
-                    color: isWrongSelected 
-                        ? Colors.red 
-                        : isCorrectAnswer 
-                            ? Colors.green 
-                            : isSelected 
-                                ? Colors.blue 
+                    color: isWrongSelected
+                        ? Colors.red
+                        : isCorrectAnswer
+                            ? Colors.green
+                            : isSelected
+                                ? Colors.blue
                                 : Colors.white,
                     shape: BoxShape.circle,
                     border: Border.all(
                       color: isCorrectAnswer
                           ? Colors.green
                           : isWrongSelected
-                          ? Colors.red
-                          : isSelected
-                          ? Colors.blue
-                          : Colors.grey,
+                              ? Colors.red
+                              : isSelected
+                                  ? Colors.blue
+                                  : Colors.grey,
                       width: 2,
                     ),
                   ),
@@ -886,7 +874,10 @@ class _HomePageState extends State<HomePage> {
                     option,
                     style: TextStyle(
                       fontSize: 16,
-                      fontWeight: isSelected || isWrongSelected || isCorrectAnswer ? FontWeight.bold : FontWeight.normal,
+                      fontWeight:
+                          isSelected || isWrongSelected || isCorrectAnswer
+                              ? FontWeight.bold
+                              : FontWeight.normal,
                       color: Colors.white,
                     ),
                   ),
@@ -944,7 +935,11 @@ class _HomePageState extends State<HomePage> {
             "Accuracy: ${accuracy.toStringAsFixed(1)}%",
             style: TextStyle(
               fontSize: 20,
-              color: accuracy > 70 ? Colors.green : accuracy > 40 ? Colors.orange : Colors.red,
+              color: accuracy > 70
+                  ? Colors.green
+                  : accuracy > 40
+                      ? Colors.orange
+                      : Colors.red,
             ),
           ),
           SizedBox(height: 30),
@@ -972,7 +967,8 @@ class _HomePageState extends State<HomePage> {
           SizedBox(height: 20),
           ElevatedButton(
             onPressed: () {
-              String prompt = "I scored $correctAnswers out of ${scienceQuestions.length} ($accuracy%) in my $selectedSubject quiz. "
+              String prompt =
+                  "I scored $correctAnswers out of ${scienceQuestions.length} ($accuracy%) in my $selectedSubject quiz. "
                   "Can you analyze my performance and suggest areas to improve?";
               _showChatModal(initialMessage: prompt);
             },
@@ -987,7 +983,8 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildChatMessages(List<ChatMessageModel> messages, ScrollController scrollController) {
+  Widget _buildChatMessages(
+      List<ChatMessageModel> messages, ScrollController scrollController) {
     return Scrollbar(
       controller: scrollController,
       thumbVisibility: true,
@@ -1004,7 +1001,8 @@ class _HomePageState extends State<HomePage> {
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: 8.0),
             child: Row(
-              mainAxisAlignment: isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+              mainAxisAlignment:
+                  isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
               children: [
                 Container(
                   padding: EdgeInsets.all(12),
@@ -1012,7 +1010,8 @@ class _HomePageState extends State<HomePage> {
                     color: isUser ? Colors.blue : Colors.purple,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
+                  constraints: BoxConstraints(
+                      maxWidth: MediaQuery.of(context).size.width * 0.75),
                   child: Text(
                     message.parts.first.text,
                     style: TextStyle(color: Colors.white),

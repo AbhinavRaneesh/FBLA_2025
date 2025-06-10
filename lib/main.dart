@@ -11,6 +11,7 @@ import 'package:html/dom.dart' as html_dom;
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -1571,7 +1572,6 @@ class _LearnTabState extends State<LearnTab>
         backgroundColor: Colors.blueAccent,
         icon: const Icon(Icons.add),
         label: const Text('Create Set'),
->>>>>>> Stashed changes
       ),
     );
   }
@@ -3155,8 +3155,10 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
                         min: _questions.length < 5 ? 1.0 : 5.0,
                         max: _questions.length.toDouble(),
                         divisions: _questions.length < 5
-                            ? _questions.length - 1
-                            : (_questions.length ~/ 5),
+                            ? (_questions.length - 1)
+                                .clamp(1, _questions.length)
+                            : (_questions.length ~/ 5)
+                                .clamp(1, _questions.length),
                         label: _questionCount.toString(),
                         onChanged: (value) {
                           setState(() {

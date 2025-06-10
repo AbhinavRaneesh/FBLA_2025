@@ -17,9 +17,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   List<ChatMessageModel> messages = [];
 
   Future<void> _handleChatGeneration(
-      ChatGenerationNewTextMessageEvent event,
-      Emitter<ChatState> emit,
-      ) async {
+    ChatGenerationNewTextMessageEvent event,
+    Emitter<ChatState> emit,
+  ) async {
     try {
       // Add user message
       messages.add(ChatMessageModel(
@@ -41,16 +41,15 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         parts: [ChatPartModel(text: generatedText)],
       ));
       emit(ChatSuccessState(messages: messages));
-
     } catch (e) {
       emit(ChatErrorState(message: "Error: ${e.toString()}"));
     }
   }
 
   void _handleChatClearHistory(
-      ChatClearHistoryEvent event,
-      Emitter<ChatState> emit,
-      ) {
+    ChatClearHistoryEvent event,
+    Emitter<ChatState> emit,
+  ) {
     messages.clear(); // Clear all messages
     emit(ChatSuccessState(messages: []));
   }

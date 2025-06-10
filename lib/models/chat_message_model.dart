@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 class ChatMessageModel {
-
   final String role;
   final List<ChatPartModel> parts;
 

@@ -11,35 +11,24 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  sqflite: ^2.3.0 # For SQLite database operations
-  path: ^1.8.3 # For path manipulation (used with sqflite)
-  google_sign_in: ^6.1.0
-  share_plus: ^7.0.0
-  lottie: ^2.7.0 # For Lottie animations
-  confetti: ^0.7.0 # For celebration effects
-  file_picker: ^10.1.9
-  excel: ^2.0.7
+  sqflite: ^2.3.0
+  path: ^1.8.3
+  shared_preferences: ^2.2.2
+  flutter_bloc: ^8.1.4
+  dio: ^5.4.1
   http: ^1.1.0
   html: ^0.15.4
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-  flutter_bloc: ^8.1.4 # For state management
-  dio: ^5.4.1 # For HTTP requests
-=======
-  shared_preferences: ^2.2.2
->>>>>>> Stashed changes
-=======
-  shared_preferences: ^2.2.2
->>>>>>> Stashed changes
-=======
-  shared_preferences: ^2.2.2
->>>>>>> Stashed changes
+  confetti: ^0.7.0
+  lottie: ^2.7.0
+  share_plus: ^7.2.2
+  excel: ^2.1.0
+  google_sign_in: ^6.1.0
+  file_picker: ^6.1.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^3.0.0 # For linting and code analysis
+  flutter_lints: ^3.0.0
 
 flutter:
   uses-material-design: true
