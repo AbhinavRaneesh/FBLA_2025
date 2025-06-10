@@ -7,7 +7,17 @@ import 'package:file_picker/file_picker.dart';
 import 'package:excel/excel.dart';
 import 'package:http/http.dart' as http;
 import 'package:html/parser.dart' as html_parser;
-import 'package:html/dom.dart' as dom;
+import 'package:html/dom.dart' as html_dom;
+import 'package:sqflite/sqflite.dart';
+import 'package:path/path.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+import 'dart:math';
+import 'database_helper.dart';
+import 'questions.dart';
+import 'premade_sets_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -1549,7 +1559,7 @@ class _LearnTabState extends State<LearnTab>
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           Navigator.push(
-            context,
+            this.context,
             MaterialPageRoute(
               builder: (context) => StudySetCreationOptionsScreen(
                 username: widget.username,

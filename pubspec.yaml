@@ -23,8 +23,12 @@ dependencies:
   html: ^0.15.4
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
   flutter_bloc: ^8.1.4 # For state management
   dio: ^5.4.1 # For HTTP requests
+=======
+  shared_preferences: ^2.2.2
+>>>>>>> Stashed changes
 =======
   shared_preferences: ^2.2.2
 >>>>>>> Stashed changes
