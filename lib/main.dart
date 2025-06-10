@@ -1577,6 +1577,46 @@ class _MainScreenState extends State<MainScreen> {
           ),
         ],
       ),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 16.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            FloatingActionButton.extended(
+              onPressed: () {
+                Navigator.push(
+                  this.context,
+                  MaterialPageRoute(
+                    builder: (context) => HomePage(
+                      username: widget.username,
+                    ),
+                  ),
+                );
+              },
+              backgroundColor: Colors.green,
+              icon: const Icon(Icons.auto_awesome),
+              label: const Text('Generate Questions'),
+            ),
+            const SizedBox(width: 16),
+            FloatingActionButton.extended(
+              onPressed: () {
+                Navigator.push(
+                  this.context,
+                  MaterialPageRoute(
+                    builder: (context) => StudySetCreationOptionsScreen(
+                      username: widget.username,
+                      onStudySetCreated: _loadStudySets,
+                    ),
+                  ),
+                );
+              },
+              backgroundColor: Colors.blueAccent,
+              icon: const Icon(Icons.add),
+              label: const Text('Create Set'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
