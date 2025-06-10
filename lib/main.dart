@@ -1,19 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
-import 'database_helper.dart';
-import 'questions.dart';
-import 'dart:math'; // For random star positions
-import 'package:google_sign_in/google_sign_in.dart'; // For Google Sign-In
-import 'package:share_plus/share_plus.dart'; // For sharing the app
-import 'dart:async';
-import 'package:flutter/services.dart'; // For haptic feedback
+import 'package:flutter/services.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:file_picker/file_picker.dart';
-import 'dart:io';
-import 'package:excel/excel.dart' as excel;
+import 'package:excel/excel.dart';
 import 'package:http/http.dart' as http;
 import 'package:html/parser.dart' as html_parser;
+<<<<<<< Updated upstream
 import 'package:html/dom.dart' as dom;
 import 'pages/home_page.dart'; // Import HomePage
+=======
+import 'package:html/dom.dart' as html_dom;
+import 'package:sqflite/sqflite.dart';
+import 'package:path/path.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+import 'dart:math';
+import 'database_helper.dart';
+import 'questions.dart';
+import 'premade_sets_screen.dart';
+>>>>>>> Stashed changes
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -106,10 +115,15 @@ class _SplashScreenState extends State<SplashScreen>
 
     Future.delayed(const Duration(seconds: 3), () {
       Navigator.pushReplacement(
-        context,
+        this.context,
         PageRouteBuilder(
-          pageBuilder: (context, animation, secondaryAnimation) => SignInPage(),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          pageBuilder: (BuildContext context, Animation<double> animation,
+                  Animation<double> secondaryAnimation) =>
+              SignInPage(),
+          transitionsBuilder: (BuildContext context,
+              Animation<double> animation,
+              Animation<double> secondaryAnimation,
+              Widget child) {
             return FadeTransition(
               opacity: animation,
               child: child,
@@ -296,10 +310,10 @@ class _FlappyBirdGameScreenState extends State<FlappyBirdGameScreen> {
 
     // Show game over dialog
     showDialog(
-      context: context,
+      context: this.context,
       barrierDismissible:
           false, // Prevent dismissing the dialog by tapping outside
-      builder: (context) => Theme(
+      builder: (BuildContext context) => Theme(
         data: Theme.of(context).copyWith(
           dialogBackgroundColor: widget.currentTheme == 'beach'
               ? Colors.orange.withOpacity(0.9)
@@ -369,10 +383,10 @@ class _FlappyBirdGameScreenState extends State<FlappyBirdGameScreen> {
   void showQuestion() {
     // Show a question dialog
     showDialog(
-      context: context,
+      context: this.context,
       barrierDismissible:
           false, // Prevent dismissing the dialog by tapping outside
-      builder: (context) => Theme(
+      builder: (BuildContext context) => Theme(
         data: Theme.of(context).copyWith(
           dialogBackgroundColor: widget.currentTheme == 'beach'
               ? Colors.orange.withOpacity(0.9)
@@ -742,7 +756,7 @@ class _SignInPageState extends State<SignInPage>
         HapticFeedback.heavyImpact();
         if (!mounted) return;
         Navigator.pushReplacement(
-          context,
+          this.context,
           CustomPageRoute(
             page: MainScreen(username: username),
             routeName: '/home',
@@ -751,7 +765,7 @@ class _SignInPageState extends State<SignInPage>
       } else {
         HapticFeedback.vibrate();
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
+        ScaffoldMessenger.of(this.context).showSnackBar(
           SnackBar(
             content: Row(
               children: [
@@ -771,7 +785,7 @@ class _SignInPageState extends State<SignInPage>
     } catch (e) {
       debugPrint('Error during sign-in: $e');
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(this.context).showSnackBar(
         SnackBar(
           content: Text(e.toString().replaceAll('Exception: ', '')),
           backgroundColor: Colors.red,
@@ -796,7 +810,7 @@ class _SignInPageState extends State<SignInPage>
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       if (googleUser == null) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
+        ScaffoldMessenger.of(this.context).showSnackBar(
           SnackBar(
             content: Text('Google sign in was cancelled'),
             backgroundColor: Colors.orange,
@@ -809,7 +823,7 @@ class _SignInPageState extends State<SignInPage>
       HapticFeedback.heavyImpact();
       if (!mounted) return;
       Navigator.pushReplacement(
-        context,
+        this.context,
         CustomPageRoute(
           page: MainScreen(username: googleUser.email),
           routeName: '/home',
@@ -818,7 +832,7 @@ class _SignInPageState extends State<SignInPage>
     } catch (e) {
       debugPrint('Error during Google Sign-In: $e');
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(this.context).showSnackBar(
         SnackBar(
           content: Text('Failed to sign in with Google: ${e.toString()}'),
           backgroundColor: Colors.red,
@@ -1028,7 +1042,7 @@ class _SignInPageState extends State<SignInPage>
                         TextButton(
                           onPressed: () {
                             Navigator.push(
-                              context,
+                              this.context,
                               CustomPageRoute(
                                 page: SignUpPage(),
                                 routeName: '/signup',
@@ -1106,7 +1120,7 @@ class _SignUpPageState extends State<SignUpPage> {
     final password = _passwordController.text.trim();
 
     if (username.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(this.context).showSnackBar(
         const SnackBar(content: Text('Please fill in all fields.')),
       );
       return;
@@ -1116,7 +1130,7 @@ class _SignUpPageState extends State<SignUpPage> {
       final userExists = await _dbHelper.usernameExists(username);
 
       if (userExists) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        ScaffoldMessenger.of(this.context).showSnackBar(
           const SnackBar(
               content: Text(
                   'Username already exists. Please choose a different one.')),
@@ -1126,13 +1140,13 @@ class _SignUpPageState extends State<SignUpPage> {
 
       final success = await _dbHelper.addUser(username, password);
       if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        ScaffoldMessenger.of(this.context).showSnackBar(
           const SnackBar(content: Text('Account created successfully!')),
         );
 
-        Navigator.pop(context);
+        Navigator.pop(this.context);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
+        ScaffoldMessenger.of(this.context).showSnackBar(
           const SnackBar(
               content: Text('Something went wrong. Please try again.')),
         );
@@ -1140,7 +1154,7 @@ class _SignUpPageState extends State<SignUpPage> {
     } catch (e) {
       debugPrint('Error during sign-up: $e');
       if (!mounted) return; // Add mounted check
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(this.context).showSnackBar(
         SnackBar(
           content: Text('An error occurred during sign-up: ${e.toString()}'),
           backgroundColor: Colors.red,
@@ -1281,7 +1295,7 @@ class _SignUpPageState extends State<SignUpPage> {
                     TextButton(
                       onPressed: () {
                         Navigator.pop(
-                            context); // Navigate back to the SignInPage
+                            this.context); // Navigate back to the SignInPage
                       },
                       child: const Text(
                         'Already have an account? Sign in',
@@ -1440,10 +1454,10 @@ class _LearnTabState extends State<LearnTab>
 
   Future<void> _loadStudySets() async {
     final userSets = await _dbHelper.getUserStudySets(widget.username);
-    final premadeSets = await _dbHelper.getPremadeStudySets();
+    final importedSets = await _dbHelper.getUserImportedSets(widget.username);
     setState(() {
       _studySets = userSets;
-      _premadeStudySets = premadeSets;
+      _premadeStudySets = importedSets;
       _isLoading = false;
     });
   }
@@ -1547,6 +1561,7 @@ class _LearnTabState extends State<LearnTab>
           ),
         ],
       ),
+<<<<<<< Updated upstream
       floatingActionButton: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
@@ -1581,12 +1596,30 @@ class _LearnTabState extends State<LearnTab>
             label: const Text('Generate Questions'),
           ),
         ],
+=======
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          Navigator.push(
+            this.context,
+            MaterialPageRoute(
+              builder: (context) => StudySetCreationOptionsScreen(
+                username: widget.username,
+                onStudySetCreated: _loadStudySets,
+              ),
+            ),
+          );
+        },
+        backgroundColor: Colors.blueAccent,
+        icon: const Icon(Icons.add),
+        label: const Text('Create Set'),
+>>>>>>> Stashed changes
       ),
     );
   }
 
   Widget _buildMyStudySets() {
-    if (_studySets.isEmpty) {
+    final allSets = [..._studySets, ..._premadeStudySets];
+    if (allSets.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -1606,10 +1639,33 @@ class _LearnTabState extends State<LearnTab>
             ),
             const SizedBox(height: 10),
             Text(
-              'Create your first study set to get started!',
+              'Create your first study set or import a premade one!',
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.white.withOpacity(0.5),
+              ),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  this.context,
+                  MaterialPageRoute(
+                    builder: (context) => PremadeSetsScreen(
+                      username: widget.username,
+                      onSetImported: _loadStudySets,
+                    ),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.download),
+              label: const Text('Browse Premade Sets'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blueAccent,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
               ),
             ),
           ],
@@ -1619,9 +1675,10 @@ class _LearnTabState extends State<LearnTab>
 
     return ListView.builder(
       padding: const EdgeInsets.all(16),
-      itemCount: _studySets.length,
-      itemBuilder: (context, index) {
-        final studySet = _studySets[index];
+      itemCount: allSets.length,
+      itemBuilder: (BuildContext context, int index) {
+        final studySet = allSets[index];
+        final isImported = _premadeStudySets.contains(studySet);
         return Card(
           margin: const EdgeInsets.only(bottom: 12),
           elevation: 4,
@@ -1629,18 +1686,42 @@ class _LearnTabState extends State<LearnTab>
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           child: ListTile(
             contentPadding: const EdgeInsets.all(16),
-            title: Text(
-              studySet['name'],
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-              ),
+            title: Row(
+              children: [
+                Text(
+                  studySet['name'],
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
+                ),
+                if (isImported)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8.0),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.blueAccent.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Text(
+                        'Imported',
+                        style: TextStyle(
+                          color: Colors.blueAccent,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
             subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 5),
-                Text(studySet['description']),
+                Text(studySet['description'] ?? ''),
                 const SizedBox(height: 5),
                 Text(
                   'Created: ${_formatDate(studySet['created_at'])}',
@@ -1658,10 +1739,11 @@ class _LearnTabState extends State<LearnTab>
                   icon: const Icon(Icons.play_arrow, color: Colors.green),
                   onPressed: () => _startPractice(studySet),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.red),
-                  onPressed: () => _deleteStudySet(studySet['id']),
-                ),
+                if (!isImported)
+                  IconButton(
+                    icon: const Icon(Icons.delete, color: Colors.red),
+                    onPressed: () => _deleteStudySet(studySet['id']),
+                  ),
               ],
             ),
           ),
@@ -1671,49 +1753,169 @@ class _LearnTabState extends State<LearnTab>
   }
 
   Widget _buildBrowseStudySets() {
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: _premadeStudySets.length,
-      itemBuilder: (context, index) {
-        final studySet = _premadeStudySets[index];
-        return Card(
-          margin: const EdgeInsets.only(bottom: 12),
-          elevation: 4,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          child: ListTile(
-            contentPadding: const EdgeInsets.all(16),
-            leading: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.blueAccent.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(Icons.school, color: Colors.blueAccent),
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: _dbHelper.getPremadeStudySets(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasError) {
+          return Center(
+            child: Text(
+              'Error loading study sets: ${snapshot.error}',
+              style: const TextStyle(color: Colors.red),
             ),
-            title: Text(
-              studySet['name'],
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-              ),
+          );
+        }
+
+        final premadeSets = snapshot.data ?? [];
+        if (premadeSets.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.school_outlined,
+                  size: 80,
+                  color: Colors.white.withOpacity(0.5),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'No premade sets available',
+                  style: TextStyle(
+                    fontSize: 20,
+                    color: Colors.white.withOpacity(0.7),
+                  ),
+                ),
+              ],
             ),
-            subtitle: Text(studySet['description']),
-            trailing: ElevatedButton(
-              onPressed: () => _startPractice(studySet),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blueAccent,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+          );
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: premadeSets.length,
+          itemBuilder: (context, index) {
+            final set = premadeSets[index];
+            final isImported =
+                _premadeStudySets.any((s) => s['id'] == set['id']);
+
+            return Card(
+              margin: const EdgeInsets.only(bottom: 16),
+              color: const Color(0xFF2A2D3E),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          _getSubjectIcon(set['name']),
+                          color: Colors.blueAccent,
+                          size: 24,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                set['name'],
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                set['description'],
+                                style: TextStyle(
+                                  color: Colors.white.withOpacity(0.7),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        if (isImported)
+                          TextButton.icon(
+                            onPressed: () async {
+                              await _dbHelper.removeImportedSet(
+                                widget.username,
+                                set['id'],
+                              );
+                              _loadStudySets();
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Set removed successfully'),
+                                    backgroundColor: Colors.green,
+                                  ),
+                                );
+                              }
+                            },
+                            icon: const Icon(Icons.delete_outline,
+                                color: Colors.red),
+                            label: const Text(
+                              'Remove',
+                              style: TextStyle(color: Colors.red),
+                            ),
+                          )
+                        else
+                          ElevatedButton.icon(
+                            onPressed: () async {
+                              await _dbHelper.addStudySetToUser(
+                                widget.username,
+                                set['id'],
+                              );
+                              _loadStudySets();
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Set imported successfully'),
+                                    backgroundColor: Colors.green,
+                                  ),
+                                );
+                              }
+                            },
+                            icon: const Icon(Icons.add),
+                            label: const Text('Import'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blueAccent,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-              child:
-                  const Text('Practice', style: TextStyle(color: Colors.white)),
-            ),
-          ),
+            );
+          },
         );
       },
     );
+  }
+
+  IconData _getSubjectIcon(String setName) {
+    if (setName.toLowerCase().contains('math')) {
+      return Icons.calculate;
+    } else if (setName.toLowerCase().contains('physics')) {
+      return Icons.science;
+    } else if (setName.toLowerCase().contains('computer')) {
+      return Icons.computer;
+    } else if (setName.toLowerCase().contains('chemistry')) {
+      return Icons.science;
+    } else {
+      return Icons.school;
+    }
   }
 
   Widget _buildQuickPlay() {
@@ -1750,7 +1952,7 @@ class _LearnTabState extends State<LearnTab>
                 childAspectRatio: 1.2,
               ),
               itemCount: subjects.length,
-              itemBuilder: (context, index) {
+              itemBuilder: (BuildContext context, int index) {
                 final subject = subjects[index];
                 return Card(
                   elevation: 4,
@@ -1818,21 +2020,6 @@ class _LearnTabState extends State<LearnTab>
     }
   }
 
-  IconData _getSubjectIcon(String subject) {
-    switch (subject) {
-      case 'Math':
-        return Icons.calculate;
-      case 'Science':
-        return Icons.science;
-      case 'History':
-        return Icons.history_edu;
-      case 'English':
-        return Icons.menu_book;
-      default:
-        return Icons.school;
-    }
-  }
-
   String _formatDate(String dateString) {
     final date = DateTime.parse(dateString);
     return '${date.day}/${date.month}/${date.year}';
@@ -1840,7 +2027,7 @@ class _LearnTabState extends State<LearnTab>
 
   void _startPractice(Map<String, dynamic> studySet) {
     Navigator.push(
-      context,
+      this.context,
       MaterialPageRoute(
         builder: (context) => PracticeModeScreen(
           studySet: studySet,
@@ -1854,7 +2041,7 @@ class _LearnTabState extends State<LearnTab>
   void _startQuickPlay(String subject) {
     final questions = QuestionsRepository.getQuestionsForSubject(subject);
     Navigator.push(
-      context,
+      this.context,
       MaterialPageRoute(
         builder: (context) => QuizScreen(
           subject: subject,
@@ -1870,7 +2057,7 @@ class _LearnTabState extends State<LearnTab>
 
   void _deleteStudySet(int studySetId) {
     showDialog(
-      context: context,
+      context: this.context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Study Set'),
         content: const Text('Are you sure you want to delete this study set?'),
@@ -2026,7 +2213,7 @@ class _ShopTabState extends State<ShopTab> with AutomaticKeepAliveClientMixin {
                       childAspectRatio: 0.8,
                     ),
                     itemCount: _themes.length,
-                    itemBuilder: (context, index) {
+                    itemBuilder: (BuildContext context, int index) {
                       final theme = _themes[index];
                       final isOwned = theme['price'] == 0 ||
                           widget.currentTheme == theme['name'].toLowerCase();
@@ -2170,7 +2357,7 @@ class _ShopTabState extends State<ShopTab> with AutomaticKeepAliveClientMixin {
 
   Future<void> _purchaseTheme(Map<String, dynamic> theme) async {
     if (widget.userPoints < (theme['price'] as int)) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(this.context).showSnackBar(
         const SnackBar(
           content: Text('Not enough points!'),
           backgroundColor: Colors.red,
@@ -2188,14 +2375,14 @@ class _ShopTabState extends State<ShopTab> with AutomaticKeepAliveClientMixin {
       widget.onPointsUpdated(newPoints);
       widget.onThemeChanged(theme['name'].toLowerCase());
 
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(this.context).showSnackBar(
         SnackBar(
           content: Text('Successfully purchased ${theme['name']} theme!'),
           backgroundColor: Colors.green,
         ),
       );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(this.context).showSnackBar(
         SnackBar(
           content: Text('Failed to purchase theme: $e'),
           backgroundColor: Colors.red,
@@ -2209,14 +2396,14 @@ class _ShopTabState extends State<ShopTab> with AutomaticKeepAliveClientMixin {
       await _dbHelper.updateCurrentTheme(widget.username, themeName);
       widget.onThemeChanged(themeName);
 
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(this.context).showSnackBar(
         SnackBar(
           content: Text('Theme changed to $themeName!'),
           backgroundColor: Colors.green,
         ),
       );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(this.context).showSnackBar(
         SnackBar(
           content: Text('Failed to change theme: $e'),
           backgroundColor: Colors.red,
@@ -2513,7 +2700,7 @@ class _ProfileTabState extends State<ProfileTab>
     final confirmPasswordController = TextEditingController();
 
     showDialog(
-      context: context,
+      context: this.context,
       builder: (context) => AlertDialog(
         title: const Text('Change Password'),
         content: Column(
@@ -2556,7 +2743,7 @@ class _ProfileTabState extends State<ProfileTab>
             onPressed: () {
               // Implement password change logic
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
+              ScaffoldMessenger.of(this.context).showSnackBar(
                 const SnackBar(
                     content: Text('Password change feature coming soon!')),
               );
@@ -2570,7 +2757,7 @@ class _ProfileTabState extends State<ProfileTab>
 
   void _showAboutDialog() {
     showDialog(
-      context: context,
+      context: this.context,
       builder: (context) => AlertDialog(
         title: const Text('About EduQuest'),
         content: const Column(
@@ -2609,7 +2796,7 @@ class _ProfileTabState extends State<ProfileTab>
 
   void _showSignOutDialog() {
     showDialog(
-      context: context,
+      context: this.context,
       builder: (context) => AlertDialog(
         title: const Text('Sign Out'),
         content: const Text('Are you sure you want to sign out?'),
@@ -2856,17 +3043,25 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
   }
 
   Future<void> _loadQuestions() async {
+    setState(() {
+      _isLoading = true;
+    });
     final questions =
         await _dbHelper.getStudySetQuestions(widget.studySet['id']);
     setState(() {
       _questions = questions;
+      if (questions.length < 5) {
+        _questionCount = questions.length;
+      } else {
+        _questionCount = 5;
+      }
       _isLoading = false;
     });
   }
 
   void _startPractice() {
     if (_questions.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(this.context).showSnackBar(
         const SnackBar(
           content: Text('No questions available in this study set'),
           backgroundColor: Colors.red,
@@ -2876,7 +3071,7 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
     }
 
     Navigator.push(
-      context,
+      this.context,
       CustomPageRoute(
         page: QuizScreen(
           subject: widget.studySet['name'],
@@ -2998,9 +3193,11 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
                       const SizedBox(height: 10),
                       Slider(
                         value: _questionCount.toDouble(),
-                        min: 5,
+                        min: _questions.length < 5 ? 1.0 : 5.0,
                         max: _questions.length.toDouble(),
-                        divisions: (_questions.length ~/ 5) - 1,
+                        divisions: _questions.length < 5
+                            ? _questions.length - 1
+                            : (_questions.length ~/ 5),
                         label: _questionCount.toString(),
                         onChanged: (value) {
                           setState(() {
@@ -3045,8 +3242,13 @@ class CustomPageRoute<T> extends PageRouteBuilder<T> {
   CustomPageRoute({required this.page, required this.routeName})
       : super(
           settings: RouteSettings(name: routeName),
-          pageBuilder: (context, animation, secondaryAnimation) => page,
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          pageBuilder: (BuildContext context, Animation<double> animation,
+                  Animation<double> secondaryAnimation) =>
+              page,
+          transitionsBuilder: (BuildContext context,
+              Animation<double> animation,
+              Animation<double> secondaryAnimation,
+              Widget child) {
             const begin = Offset(1.0, 0.0);
             const end = Offset.zero;
             const curve = Curves.easeInOutCubic;
@@ -3092,7 +3294,8 @@ class _QuizScreenState extends State<QuizScreen> {
   bool isAnswered = false;
   String? selectedAnswer;
   Timer? timer;
-  int timeLeft = 30;
+  double timeLeft = 10.0; // Changed to double
+  double timerProgress = 1.0;
 
   @override
   void initState() {
@@ -3109,11 +3312,13 @@ class _QuizScreenState extends State<QuizScreen> {
   }
 
   void startTimer() {
-    timeLeft = 30;
-    timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+    timeLeft = 45.0; // Reset to 45 seconds
+    timerProgress = 1.0;
+    timer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
       if (timeLeft > 0) {
         setState(() {
-          timeLeft--;
+          timeLeft -= 0.1;
+          timerProgress = timeLeft / 45.0;
         });
       } else {
         nextQuestion();
@@ -3161,7 +3366,7 @@ class _QuizScreenState extends State<QuizScreen> {
     timer?.cancel();
 
     showDialog(
-      context: context,
+      context: this.context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
         title: const Text('Quiz Complete!'),
@@ -3200,10 +3405,28 @@ class _QuizScreenState extends State<QuizScreen> {
           if (widget.gameMode == 'timed')
             Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Text(
-                '$timeLeft',
-                style:
-                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      value: timerProgress,
+                      strokeWidth: 2,
+                      backgroundColor: Colors.grey[300],
+                      valueColor: const AlwaysStoppedAnimation<Color>(
+                          Colors.blueAccent),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    '${timeLeft.toStringAsFixed(1)}s',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
               ),
             ),
         ],
@@ -3348,7 +3571,7 @@ class _QuizletImportScreenState extends State<QuizletImportScreen> {
 
   Future<void> _importFromQuizlet() async {
     if (_urlController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(this.context).showSnackBar(
         const SnackBar(
           content: Text('Please enter a Quizlet URL'),
           backgroundColor: Colors.red,
@@ -3434,7 +3657,7 @@ class _QuizletImportScreenState extends State<QuizletImportScreen> {
         });
 
         if (parsedQuestions.isNotEmpty) {
-          ScaffoldMessenger.of(context).showSnackBar(
+          ScaffoldMessenger.of(this.context).showSnackBar(
             SnackBar(
               content:
                   Text('Imported ${parsedQuestions.length} terms from Quizlet'),
@@ -3442,7 +3665,7 @@ class _QuizletImportScreenState extends State<QuizletImportScreen> {
             ),
           );
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
+          ScaffoldMessenger.of(this.context).showSnackBar(
             const SnackBar(
               content:
                   Text('Could not parse Quizlet set. Please check the URL.'),
@@ -3452,7 +3675,7 @@ class _QuizletImportScreenState extends State<QuizletImportScreen> {
         }
       } else {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
+        ScaffoldMessenger.of(this.context).showSnackBar(
           SnackBar(
             content:
                 Text('Failed to fetch Quizlet set: ${response.statusCode}'),
@@ -3463,7 +3686,7 @@ class _QuizletImportScreenState extends State<QuizletImportScreen> {
     } catch (e) {
       setState(() => _isLoading = false);
       debugPrint('Quizlet import error: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(this.context).showSnackBar(
         const SnackBar(
           content: Text('Failed to import from Quizlet. Please check the URL.'),
           backgroundColor: Colors.red,
@@ -3475,7 +3698,7 @@ class _QuizletImportScreenState extends State<QuizletImportScreen> {
   Future<void> _createStudySet() async {
     if (!_formKey.currentState!.validate()) return;
     if (_questions.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(this.context).showSnackBar(
         const SnackBar(
           content: Text('Please import questions from Quizlet first'),
           backgroundColor: Colors.red,
@@ -3513,7 +3736,7 @@ class _QuizletImportScreenState extends State<QuizletImportScreen> {
     } catch (e) {
       debugPrint('Error creating study set: $e');
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(this.context).showSnackBar(
         SnackBar(
           content: Text('Failed to create study set: ${e.toString()}'),
           backgroundColor: Colors.red,
@@ -3529,7 +3752,7 @@ class _QuizletImportScreenState extends State<QuizletImportScreen> {
 
   void _showPostAddDialog(int studySetId) {
     showDialog(
-      context: context,
+      context: this.context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
         title: const Text('Study Set Created!'),
@@ -3851,7 +4074,7 @@ class _SpreadsheetImportScreenState extends State<SpreadsheetImportScreen> {
       }
     } catch (e) {
       debugPrint('File picker error: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(this.context).showSnackBar(
         const SnackBar(
           content: Text('Failed to pick file'),
           backgroundColor: Colors.red,
@@ -3865,7 +4088,7 @@ class _SpreadsheetImportScreenState extends State<SpreadsheetImportScreen> {
       setState(() => _isLoading = true);
 
       var bytes = await File(filePath).readAsBytes();
-      var excelDoc = excel.Excel.decodeBytes(bytes);
+      var excelDoc = Excel.decodeBytes(bytes);
       var sheet = excelDoc.tables.values.first;
 
       List<Map<String, dynamic>> parsedQuestions = [];
@@ -3899,7 +4122,7 @@ class _SpreadsheetImportScreenState extends State<SpreadsheetImportScreen> {
         _isLoading = false;
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(this.context).showSnackBar(
         SnackBar(
           content: Text(
               'Parsed ${parsedQuestions.length} questions from spreadsheet'),
@@ -3909,7 +4132,7 @@ class _SpreadsheetImportScreenState extends State<SpreadsheetImportScreen> {
     } catch (e) {
       setState(() => _isLoading = false);
       debugPrint('Excel parsing error: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(this.context).showSnackBar(
         const SnackBar(
           content:
               Text('Failed to parse spreadsheet. Please check the format.'),
@@ -3922,7 +4145,7 @@ class _SpreadsheetImportScreenState extends State<SpreadsheetImportScreen> {
   Future<void> _createStudySet() async {
     if (!_formKey.currentState!.validate()) return;
     if (_questions.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(this.context).showSnackBar(
         const SnackBar(
           content: Text('Please select a spreadsheet with questions'),
           backgroundColor: Colors.red,
@@ -3960,7 +4183,7 @@ class _SpreadsheetImportScreenState extends State<SpreadsheetImportScreen> {
     } catch (e) {
       debugPrint('Error creating study set: $e');
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(this.context).showSnackBar(
         SnackBar(
           content: Text('Failed to create study set: ${e.toString()}'),
           backgroundColor: Colors.red,
@@ -3976,7 +4199,7 @@ class _SpreadsheetImportScreenState extends State<SpreadsheetImportScreen> {
 
   void _showPostAddDialog(int studySetId) {
     showDialog(
-      context: context,
+      context: this.context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
         title: const Text('Study Set Created!'),
@@ -4265,7 +4488,7 @@ class _ManualQuestionCreationScreenState
   Future<void> _createStudySet() async {
     if (!_formKey.currentState!.validate()) return;
     if (_questions.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(this.context).showSnackBar(
         const SnackBar(
           content: Text('Please add at least one question'),
           backgroundColor: Colors.red,
@@ -4303,7 +4526,7 @@ class _ManualQuestionCreationScreenState
     } catch (e) {
       debugPrint('Error creating study set: $e');
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(this.context).showSnackBar(
         SnackBar(
           content: Text('Failed to create study set: ${e.toString()}'),
           backgroundColor: Colors.red,
@@ -4321,7 +4544,7 @@ class _ManualQuestionCreationScreenState
     if (_questionController.text.isEmpty ||
         _correctAnswerController.text.isEmpty ||
         _optionControllers.any((controller) => controller.text.isEmpty)) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(this.context).showSnackBar(
         const SnackBar(
           content: Text('Please fill in all fields'),
           backgroundColor: Colors.red,
@@ -4347,7 +4570,7 @@ class _ManualQuestionCreationScreenState
 
   void _showPostAddDialog(int studySetId) {
     showDialog(
-      context: context,
+      context: this.context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
         title: const Text('Study Set Created!'),

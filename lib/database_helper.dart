@@ -1,6 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:flutter/foundation.dart';
+import 'premade_study_sets.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
@@ -80,103 +81,37 @@ class DatabaseHelper {
   }
 
   Future<void> _insertPremadeStudySets(Database db) async {
-    // AP Study Sets
-    final apSets = [
-      {
-        'name': 'AP Calculus AB',
-        'description': 'Comprehensive review of AP Calculus AB concepts',
-        'is_premade': 1,
-      },
-      {
-        'name': 'AP Calculus BC',
-        'description': 'Advanced calculus concepts for AP Calculus BC',
-        'is_premade': 1,
-      },
-      {
-        'name': 'AP Physics 1',
-        'description': 'Algebra-based physics concepts',
-        'is_premade': 1,
-      },
-      {
-        'name': 'AP Physics 2',
-        'description': 'Advanced algebra-based physics',
-        'is_premade': 1,
-      },
-      {
-        'name': 'AP Chemistry',
-        'description': 'Comprehensive AP Chemistry review',
-        'is_premade': 1,
-      },
-      {
-        'name': 'AP Biology',
-        'description': 'Complete AP Biology curriculum',
-        'is_premade': 1,
-      },
-      {
-        'name': 'AP Computer Science A',
-        'description': 'Java programming and computer science concepts',
-        'is_premade': 1,
-      },
-      {
-        'name': 'AP Computer Science Principles',
-        'description': 'Foundational computer science concepts',
-        'is_premade': 1,
-      },
-      {
-        'name': 'AP Statistics',
-        'description': 'Statistical concepts and methods',
-        'is_premade': 1,
-      },
-      {
-        'name': 'AP Environmental Science',
-        'description': 'Environmental systems and processes',
-        'is_premade': 1,
-      },
-    ];
+    // Import premade sets from repository
+    final premadeSets = PremadeStudySetsRepository.getPremadeSets();
 
-    // IB Study Sets
-    final ibSets = [
-      {
-        'name': 'IB Mathematics: Analysis and Approaches HL',
-        'description': 'Higher level mathematics concepts',
-        'is_premade': 1,
-      },
-      {
-        'name': 'IB Mathematics: Applications and Interpretation HL',
-        'description': 'Applied mathematics concepts',
-        'is_premade': 1,
-      },
-      {
-        'name': 'IB Physics HL',
-        'description': 'Advanced physics concepts',
-        'is_premade': 1,
-      },
-      {
-        'name': 'IB Chemistry HL',
-        'description': 'Advanced chemistry concepts',
-        'is_premade': 1,
-      },
-      {
-        'name': 'IB Biology HL',
-        'description': 'Advanced biology concepts',
-        'is_premade': 1,
-      },
-      {
-        'name': 'IB Computer Science HL',
-        'description': 'Advanced computer science concepts',
-        'is_premade': 1,
-      },
-    ];
+    for (var set in premadeSets) {
+      // Check if set already exists
+      final existingSets = await db.query(
+        'study_sets',
+        where: 'name = ? AND is_premade = ?',
+        whereArgs: [set.name, 1],
+      );
 
-    // Insert all premade sets
-    for (var set in [...apSets, ...ibSets]) {
-      await db.insert('study_sets', {
-        'name': set['name'],
-        'description': set['description'],
-        'username': 'system',
-        'is_premade': 1,
-        'created_at': DateTime.now().toIso8601String(),
-      });
+      if (existingSets.isEmpty) {
+        // Insert the study set
+        final studySetId = await db.insert('study_sets', {
+          'name': set.name,
+          'description': set.description,
+          'username': 'system',
+          'is_premade': 1,
+          'created_at': DateTime.now().toIso8601String(),
+        });
+
+        // Insert the questions
+        for (var question in set.questions) {
+          await db.insert('study_set_questions', {
+            'study_set_id': studySetId,
+            'question_text': question.questionText,
+            'correct_answer': question.correctAnswer,
+            'options': question.options.join('|'),
+          });
+        }
+      }
     }
   }
 
@@ -286,11 +221,36 @@ class DatabaseHelper {
 
   Future<List<Map<String, dynamic>>> getPremadeStudySets() async {
     final db = await database;
-    return await db.query(
+    final sets = await db.query(
+      'study_sets',
+      where: 'is_premade = ?',
+      whereArgs: [1],
+      orderBy: 'name ASC',
+    );
+
+    // If no premade sets exist, insert them
+    if (sets.isEmpty) {
+      await _insertPremadeStudySets(db);
+      return await db.query(
+        'study_sets',
+        where: 'is_premade = ?',
+        whereArgs: [1],
+        orderBy: 'name ASC',
+      );
+    }
+    return sets;
+  }
+
+  Future<void> refreshPremadeSets() async {
+    final db = await database;
+    // Delete existing premade sets
+    await db.delete(
       'study_sets',
       where: 'is_premade = ?',
       whereArgs: [1],
     );
+    // Reinsert all premade sets
+    await _insertPremadeStudySets(db);
   }
 
   Future<void> addStudySetToUser(String username, int studySetId) async {
@@ -365,6 +325,48 @@ class DatabaseHelper {
       {'current_theme': theme},
       where: 'username = ?',
       whereArgs: [username],
+    );
+  }
+
+  Future<void> importPremadeSet(String username, int studySetId) async {
+    final db = await database;
+    final userId = await getUserId(username);
+
+    // Check if user already has this set
+    final existingSet = await db.query(
+      'user_study_sets',
+      where: 'user_id = ? AND study_set_id = ?',
+      whereArgs: [userId, studySetId],
+    );
+
+    if (existingSet.isEmpty) {
+      await db.insert('user_study_sets', {
+        'user_id': userId,
+        'study_set_id': studySetId,
+      });
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getUserImportedSets(
+      String username) async {
+    final db = await database;
+    final userId = await getUserId(username);
+
+    return await db.rawQuery('''
+      SELECT s.* FROM study_sets s
+      INNER JOIN user_study_sets us ON s.id = us.study_set_id
+      WHERE us.user_id = ?
+    ''', [userId]);
+  }
+
+  Future<void> removeImportedSet(String username, int studySetId) async {
+    final db = await database;
+    final userId = await getUserId(username);
+
+    await db.delete(
+      'user_study_sets',
+      where: 'user_id = ? AND study_set_id = ?',
+      whereArgs: [userId, studySetId],
     );
   }
 }
