@@ -7,22 +7,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:excel/excel.dart';
 import 'package:http/http.dart' as http;
 import 'package:html/parser.dart' as html_parser;
-<<<<<<< Updated upstream
 import 'package:html/dom.dart' as dom;
-import 'pages/home_page.dart'; // Import HomePage
-=======
-import 'package:html/dom.dart' as html_dom;
-import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
-import 'dart:math';
-import 'database_helper.dart';
-import 'questions.dart';
-import 'premade_sets_screen.dart';
->>>>>>> Stashed changes
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -1561,46 +1546,10 @@ class _LearnTabState extends State<LearnTab>
           ),
         ],
       ),
-<<<<<<< Updated upstream
-      floatingActionButton: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          FloatingActionButton.extended(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => StudySetCreationOptionsScreen(
-                    username: widget.username,
-                    onStudySetCreated: () {}, // Temporarily removed _loadStudySets
-                  ),
-                ),
-              );
-            },
-            backgroundColor: Colors.blueAccent,
-            icon: const Icon(Icons.add),
-            label: const Text('Create Set'),
-          ),
-          const SizedBox(width: 16),
-          FloatingActionButton.extended(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const HomePage(),
-                ),
-              );
-            },
-            backgroundColor: Colors.green,
-            icon: const Icon(Icons.auto_awesome),
-            label: const Text('Generate Questions'),
-          ),
-        ],
-=======
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           Navigator.push(
-            this.context,
+            context,
             MaterialPageRoute(
               builder: (context) => StudySetCreationOptionsScreen(
                 username: widget.username,
