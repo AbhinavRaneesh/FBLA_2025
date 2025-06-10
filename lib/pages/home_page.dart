@@ -108,8 +108,8 @@ class _HomePageState extends State<HomePage> {
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.transparent,
       isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       isDismissible: true,
       builder: (BuildContext context) {
         // Add post-frame callback to scroll to bottom after the modal is shown
@@ -157,7 +157,7 @@ class _HomePageState extends State<HomePage> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          "Chat with KushalGPT",
+                          "Chat with QuestAI",
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -207,7 +207,7 @@ class _HomePageState extends State<HomePage> {
                         }
                         return Center(
                           child: Text(
-                            "Ask KushalGPT anything!",
+                            "Ask QuestAI anything!",
                             style: TextStyle(
                               fontSize: 18,
                               color: Colors.purple,
@@ -235,7 +235,7 @@ class _HomePageState extends State<HomePage> {
                             decoration: InputDecoration(
                               fillColor: Colors.grey[100],
                               filled: true,
-                              hintText: "Ask something from KushalGPT",
+                              hintText: "Ask something from QuestAI",
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(25),
                                 borderSide: BorderSide(color: Colors.purple),
@@ -494,18 +494,6 @@ class _HomePageState extends State<HomePage> {
         _dbHelper.updateUserPoints(username, 50);
       }
     });
-
-    // Move to next question after a delay
-    Future.delayed(const Duration(seconds: 1), () {
-      if (mounted) {
-        setState(() {
-          if (currentQuestionIndex + 1 < scienceQuestions.length) {
-            currentQuestionIndex++;
-            showAnswer = false;
-          }
-        });
-      }
-    });
   }
 
   @override
@@ -520,6 +508,10 @@ class _HomePageState extends State<HomePage> {
           backgroundColor: Colors.purple,
           child: Icon(Icons.message, color: Colors.white),
           heroTag: "chatFAB",
+        ),
+        appBar: AppBar(
+          title: Text("QuestAI Quiz App"),
+          backgroundColor: Colors.purple,
         ),
         body: Container(
           decoration: BoxDecoration(
@@ -546,7 +538,7 @@ class _HomePageState extends State<HomePage> {
                     children: [
                       SizedBox(height: 60),
                       Text(
-                        "KushalGPT Quiz App",
+                        "QuestAI Quiz App",
                         style: TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
@@ -690,7 +682,7 @@ class _HomePageState extends State<HomePage> {
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () => _showChatModal(),
-                      child: Text("Chat with KushalGPT"),
+                      child: Text("Chat with QuestAI"),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blue,
                         padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
@@ -765,17 +757,18 @@ class _HomePageState extends State<HomePage> {
                   onPressed: selectedAnswer != null ? _submitAnswer : null,
                   child: Text("Submit"),
                 ),
-                ElevatedButton(
-                  onPressed: goToNextQuestion,
-                  child: Text(
-                    currentQuestionIndex + 1 == scienceQuestions.length
-                        ? "Finish Quiz"
-                        : "Next Question",
+                if (showAnswer) // Only show Next Question button after submitting
+                  ElevatedButton(
+                    onPressed: goToNextQuestion,
+                    child: Text(
+                      currentQuestionIndex + 1 == scienceQuestions.length
+                          ? "Finish Quiz"
+                          : "Next Question",
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                    ),
                   ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                  ),
-                ),
               ],
             ),
 
@@ -799,7 +792,7 @@ class _HomePageState extends State<HomePage> {
                       String prompt = "Please explain how to solve this question: '$question'. Provide a brief explanation with the fundamental concepts involved.";
                       _showChatModal(initialMessage: prompt);
                     },
-                    child: Text("ASK KUSHALGPT for explanation"),
+                    child: Text("ASK QuestAI for explanation"),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.purple,
                       padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
@@ -834,9 +827,9 @@ class _HomePageState extends State<HomePage> {
             padding: EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: isCorrectAnswer
-                  ? Colors.green.withOpacity(0.7)
+                  ? Colors.green.withOpacity(0.9)
                   : isWrongSelected
-                  ? Colors.red.withOpacity(0.7)
+                  ? Colors.red.withOpacity(0.9)
                   : isSelected
                   ? Colors.blue.withOpacity(0.7)
                   : Colors.grey.shade800.withOpacity(0.7),
@@ -849,7 +842,7 @@ class _HomePageState extends State<HomePage> {
                     : isSelected
                     ? Colors.blue
                     : Colors.grey,
-                width: isSelected ? 2 : 1,
+                width: isSelected || isWrongSelected || isCorrectAnswer ? 2 : 1,
               ),
             ),
             child: Row(
@@ -858,7 +851,13 @@ class _HomePageState extends State<HomePage> {
                   height: 24,
                   width: 24,
                   decoration: BoxDecoration(
-                    color: isSelected ? (isWrongSelected ? Colors.red : Colors.blue) : Colors.white,
+                    color: isWrongSelected 
+                        ? Colors.red 
+                        : isCorrectAnswer 
+                            ? Colors.green 
+                            : isSelected 
+                                ? Colors.blue 
+                                : Colors.white,
                     shape: BoxShape.circle,
                     border: Border.all(
                       color: isCorrectAnswer
@@ -868,9 +867,18 @@ class _HomePageState extends State<HomePage> {
                           : isSelected
                           ? Colors.blue
                           : Colors.grey,
+                      width: 2,
                     ),
                   ),
-                  child: isSelected ? Icon(Icons.check, size: 16, color: Colors.white) : null,
+                  child: showAnswer
+                      ? (isCorrectAnswer
+                          ? Icon(Icons.check, size: 16, color: Colors.white)
+                          : isWrongSelected
+                              ? Icon(Icons.close, size: 16, color: Colors.white)
+                              : null)
+                      : (isSelected
+                          ? Icon(Icons.check, size: 16, color: Colors.white)
+                          : null),
                 ),
                 SizedBox(width: 12),
                 Expanded(
@@ -878,7 +886,7 @@ class _HomePageState extends State<HomePage> {
                     option,
                     style: TextStyle(
                       fontSize: 16,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      fontWeight: isSelected || isWrongSelected || isCorrectAnswer ? FontWeight.bold : FontWeight.normal,
                       color: Colors.white,
                     ),
                   ),
@@ -1015,6 +1023,49 @@ class _HomePageState extends State<HomePage> {
           );
         },
       ),
+    );
+  }
+
+  void _showSubjectSelectionModal() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Select a Subject'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildSubjectButton('Science'),
+              _buildSubjectButton('Mathematics'),
+              _buildSubjectButton('History'),
+              _buildSubjectButton('Geography'),
+              _buildSubjectButton('English'),
+              _buildSubjectButton('Computer Science'),
+              _buildSubjectButton('Physics'),
+              _buildSubjectButton('Chemistry'),
+              _buildSubjectButton('Biology'),
+              _buildSubjectButton('Economics'),
+              _buildSubjectButton('Psychology'),
+              _buildSubjectButton('Literature'),
+              _buildSubjectButton('Art'),
+              _buildSubjectButton('Music'),
+              _buildSubjectButton('Philosophy'),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSubjectButton(String subject) {
+    return ElevatedButton(
+      onPressed: () {
+        setState(() {
+          selectedSubject = subject;
+        });
+        Navigator.of(context).pop();
+      },
+      child: Text(subject),
     );
   }
 }
