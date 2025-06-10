@@ -205,40 +205,23 @@ class DatabaseHelper {
     );
   }
 
-  Future<void> deleteStudySet(int studySetId) async {
+  Future<void> deleteStudySet(String username, String setName) async {
     final db = await database;
     await db.delete(
-      'study_set_questions',
-      where: 'study_set_id = ?',
-      whereArgs: [studySetId],
-    );
-    await db.delete(
-      'study_sets',
-      where: 'id = ?',
-      whereArgs: [studySetId],
+      'user_study_sets',
+      where: 'username = ? AND set_name = ?',
+      whereArgs: [username, setName],
     );
   }
 
   Future<List<Map<String, dynamic>>> getPremadeStudySets() async {
     final db = await database;
-    final sets = await db.query(
+    return await db.query(
       'study_sets',
       where: 'is_premade = ?',
       whereArgs: [1],
       orderBy: 'name ASC',
     );
-
-    // If no premade sets exist, insert them
-    if (sets.isEmpty) {
-      await _insertPremadeStudySets(db);
-      return await db.query(
-        'study_sets',
-        where: 'is_premade = ?',
-        whereArgs: [1],
-        orderBy: 'name ASC',
-      );
-    }
-    return sets;
   }
 
   Future<void> refreshPremadeSets() async {
@@ -320,6 +303,18 @@ class DatabaseHelper {
 
   Future<void> purchaseTheme(String username, String theme) async {
     final db = await database;
+    final result = await db.query(
+      'users',
+      columns: ['current_theme'],
+      where: 'username = ?',
+      whereArgs: [username],
+    );
+
+    final currentTheme = result.first['current_theme'] as String;
+    if (currentTheme == theme) {
+      throw Exception('You already have this theme');
+    }
+
     await db.update(
       'users',
       {'current_theme': theme},
@@ -359,14 +354,13 @@ class DatabaseHelper {
     ''', [userId]);
   }
 
-  Future<void> removeImportedSet(String username, int studySetId) async {
+  Future<void> removeImportedSet(String username, int setId) async {
     final db = await database;
     final userId = await getUserId(username);
-
     await db.delete(
       'user_study_sets',
       where: 'user_id = ? AND study_set_id = ?',
-      whereArgs: [userId, studySetId],
+      whereArgs: [userId, setId],
     );
   }
 }

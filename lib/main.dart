@@ -1,19 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
-import 'database_helper.dart';
-import 'questions.dart';
-import 'dart:math'; // For random star positions
-import 'package:google_sign_in/google_sign_in.dart'; // For Google Sign-In
-import 'package:share_plus/share_plus.dart'; // For sharing the app
-import 'dart:async';
-import 'package:flutter/services.dart'; // For haptic feedback
+import 'package:flutter/services.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:file_picker/file_picker.dart';
-import 'dart:io';
 import 'package:excel/excel.dart' as excel;
 import 'package:http/http.dart' as http;
 import 'package:html/parser.dart' as html_parser;
-import 'package:html/dom.dart' as dom;
-import 'pages/home_page.dart'; // Import HomePage
+import 'package:html/dom.dart' as html_dom;
+import 'package:sqflite/sqflite.dart';
+import 'package:path/path.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+import 'dart:math';
+import 'database_helper.dart';
+import 'questions.dart' as quiz;
+import 'premade_sets_screen.dart';
+import 'premade_study_sets.dart' as premade;
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -106,10 +112,15 @@ class _SplashScreenState extends State<SplashScreen>
 
     Future.delayed(const Duration(seconds: 3), () {
       Navigator.pushReplacement(
-        context,
+        this.context,
         PageRouteBuilder(
-          pageBuilder: (context, animation, secondaryAnimation) => SignInPage(),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          pageBuilder: (BuildContext context, Animation<double> animation,
+                  Animation<double> secondaryAnimation) =>
+              SignInPage(),
+          transitionsBuilder: (BuildContext context,
+              Animation<double> animation,
+              Animation<double> secondaryAnimation,
+              Widget child) {
             return FadeTransition(
               opacity: animation,
               child: child,
@@ -177,7 +188,7 @@ class _SplashScreenState extends State<SplashScreen>
 class FlappyBirdGameScreen extends StatefulWidget {
   final String username;
   final String currentTheme;
-  final List<Question> questions;
+  final List<quiz.Question> questions;
 
   const FlappyBirdGameScreen({
     super.key,
@@ -296,10 +307,10 @@ class _FlappyBirdGameScreenState extends State<FlappyBirdGameScreen> {
 
     // Show game over dialog
     showDialog(
-      context: context,
+      context: this.context,
       barrierDismissible:
           false, // Prevent dismissing the dialog by tapping outside
-      builder: (context) => Theme(
+      builder: (BuildContext context) => Theme(
         data: Theme.of(context).copyWith(
           dialogBackgroundColor: widget.currentTheme == 'beach'
               ? Colors.orange.withOpacity(0.9)
@@ -369,10 +380,10 @@ class _FlappyBirdGameScreenState extends State<FlappyBirdGameScreen> {
   void showQuestion() {
     // Show a question dialog
     showDialog(
-      context: context,
+      context: this.context,
       barrierDismissible:
           false, // Prevent dismissing the dialog by tapping outside
-      builder: (context) => Theme(
+      builder: (BuildContext context) => Theme(
         data: Theme.of(context).copyWith(
           dialogBackgroundColor: widget.currentTheme == 'beach'
               ? Colors.orange.withOpacity(0.9)
@@ -662,7 +673,7 @@ class _SignInPageState extends State<SignInPage>
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _dbHelper = DatabaseHelper();
-  bool _showPassword = false;
+  bool _obscurePassword = true;
   bool _isFormValid = false;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
   late AnimationController _animationController;
@@ -684,7 +695,7 @@ class _SignInPageState extends State<SignInPage>
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _animationController,
-        curve: const Interval(0.0, 0.5, curve: Curves.easeIn),
+        curve: const Interval(0.3, 0.8, curve: Curves.easeIn),
       ),
     );
 
@@ -694,7 +705,7 @@ class _SignInPageState extends State<SignInPage>
     ).animate(
       CurvedAnimation(
         parent: _animationController,
-        curve: const Interval(0.0, 0.5, curve: Curves.easeOut),
+        curve: const Interval(0.3, 1.0, curve: Curves.easeOut),
       ),
     );
 
@@ -742,7 +753,7 @@ class _SignInPageState extends State<SignInPage>
         HapticFeedback.heavyImpact();
         if (!mounted) return;
         Navigator.pushReplacement(
-          context,
+          this.context,
           CustomPageRoute(
             page: MainScreen(username: username),
             routeName: '/home',
@@ -751,7 +762,7 @@ class _SignInPageState extends State<SignInPage>
       } else {
         HapticFeedback.vibrate();
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
+        ScaffoldMessenger.of(this.context).showSnackBar(
           SnackBar(
             content: Row(
               children: [
@@ -771,7 +782,7 @@ class _SignInPageState extends State<SignInPage>
     } catch (e) {
       debugPrint('Error during sign-in: $e');
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(this.context).showSnackBar(
         SnackBar(
           content: Text(e.toString().replaceAll('Exception: ', '')),
           backgroundColor: Colors.red,
@@ -796,7 +807,7 @@ class _SignInPageState extends State<SignInPage>
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       if (googleUser == null) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
+        ScaffoldMessenger.of(this.context).showSnackBar(
           SnackBar(
             content: Text('Google sign in was cancelled'),
             backgroundColor: Colors.orange,
@@ -809,7 +820,7 @@ class _SignInPageState extends State<SignInPage>
       HapticFeedback.heavyImpact();
       if (!mounted) return;
       Navigator.pushReplacement(
-        context,
+        this.context,
         CustomPageRoute(
           page: MainScreen(username: googleUser.email),
           routeName: '/home',
@@ -818,7 +829,7 @@ class _SignInPageState extends State<SignInPage>
     } catch (e) {
       debugPrint('Error during Google Sign-In: $e');
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(this.context).showSnackBar(
         SnackBar(
           content: Text('Failed to sign in with Google: ${e.toString()}'),
           backgroundColor: Colors.red,
@@ -840,222 +851,243 @@ class _SignInPageState extends State<SignInPage>
       body: Stack(
         children: [
           const SpaceBackground(),
-          Positioned(
-            top: 10,
-            left: 20,
-            child: Hero(
-              tag: 'planet',
-              child: Image.asset(
-                'assets/images/planet.png',
-                height: 190,
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: -15,
-            right: 0,
-            child: Hero(
-              tag: 'astronaut',
-              child: Image.asset(
-                'assets/images/astronaut.png',
-                height: 195,
-              ),
-            ),
-          ),
-          Center(
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: SlideTransition(
-                    position: _slideAnimation,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text(
-                          'Welcome To EduQuest!',
-                          style: TextStyle(
-                            fontSize: 30,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(height: 30),
-                        Card(
-                          elevation: 8,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(20.0),
-                            child: SingleChildScrollView(
-                              child: Column(
-                                children: [
-                                  TextField(
-                                    controller: _usernameController,
-                                    decoration: InputDecoration(
-                                      labelText: 'Username',
-                                      labelStyle:
-                                          const TextStyle(color: Colors.black),
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      prefixIcon: const Icon(Icons.person,
-                                          color: Colors.black),
-                                      filled: true,
-                                      fillColor: Colors.white,
-                                    ),
-                                    style: const TextStyle(color: Colors.black),
-                                  ),
-                                  const SizedBox(height: 15),
-                                  TextField(
-                                    controller: _passwordController,
-                                    obscureText: !_showPassword,
-                                    decoration: InputDecoration(
-                                      labelText: 'Password',
-                                      labelStyle:
-                                          const TextStyle(color: Colors.black),
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      prefixIcon: const Icon(Icons.lock,
-                                          color: Colors.black),
-                                      suffixIcon: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Checkbox(
-                                            value: _showPassword,
-                                            onChanged: (bool? value) {
-                                              setState(() {
-                                                _showPassword = value ?? false;
-                                              });
-                                            },
-                                          ),
-                                          const Text('Show Password',
-                                              style: TextStyle(
-                                                  fontSize: 12,
-                                                  color: Colors.black)),
-                                          const SizedBox(width: 8),
-                                        ],
-                                      ),
-                                      filled: true,
-                                      fillColor: Colors.white,
-                                    ),
-                                    style: const TextStyle(color: Colors.black),
-                                  ),
-                                  const SizedBox(height: 20),
-                                  Container(
-                                    width:
-                                        MediaQuery.of(context).size.width * 0.9,
-                                    child: ElevatedButton(
-                                      onPressed: _isLoading
-                                          ? null
-                                          : (_isFormValid ? _signIn : null),
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: _isFormValid
-                                            ? Colors.blueAccent
-                                            : Colors.grey,
-                                        padding: const EdgeInsets.symmetric(
-                                            vertical: 15, horizontal: 30),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(10),
-                                          side: BorderSide(
-                                              color: _isFormValid
-                                                  ? Colors.blueAccent
-                                                  : Colors.grey,
-                                              width: 2),
-                                        ),
-                                      ),
-                                      child: _isLoading
-                                          ? const SizedBox(
-                                              height: 20,
-                                              width: 20,
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 2,
-                                                valueColor:
-                                                    AlwaysStoppedAnimation<
-                                                        Color>(Colors.white),
-                                              ),
-                                            )
-                                          : const Text(
-                                              'Sign In',
-                                              style: TextStyle(
-                                                  fontSize: 18,
-                                                  color: Colors.white),
-                                              textAlign: TextAlign.center,
-                                            ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 10),
-                                  ElevatedButton(
-                                    onPressed:
-                                        _isLoading ? null : _signInWithGoogle,
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.white,
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 12),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                    ),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Image.asset(
-                                          'assets/images/google_icon.png',
-                                          height: 24,
-                                        ),
-                                        const SizedBox(width: 10),
-                                        const Text(
-                                          'Sign in with Google',
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            color: Colors.black,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
+          SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Header
+                    FadeTransition(
+                      opacity: _fadeAnimation,
+                      child: SlideTransition(
+                        position: _slideAnimation,
+                        child: Column(
+                          children: [
+                            Image.asset(
+                              'assets/images/eduquest_logo.png',
+                              height: 120,
+                            ),
+                            const SizedBox(height: 16),
+                            const Text(
+                              'Welcome to EduQuest',
+                              style: TextStyle(
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
                               ),
                             ),
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              CustomPageRoute(
-                                page: SignUpPage(),
-                                routeName: '/signup',
+                            const SizedBox(height: 8),
+                            Text(
+                              'Sign in to continue your journey',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.white.withOpacity(0.7),
                               ),
-                            );
-                          },
-                          child: RichText(
-                            text: const TextSpan(
-                              children: [
-                                TextSpan(
-                                  text: 'Don\'t have an account? ',
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                                TextSpan(
-                                  text: 'Sign Up',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    decoration: TextDecoration.underline,
-                                  ),
-                                ),
-                              ],
                             ),
-                          ),
-                        )
-                      ],
+                          ],
+                        ),
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: 48),
+
+                    // Form
+                    FadeTransition(
+                      opacity: _fadeAnimation,
+                      child: SlideTransition(
+                        position: _slideAnimation,
+                        child: Column(
+                          children: [
+                            // Username field
+                            TextFormField(
+                              controller: _usernameController,
+                              style: const TextStyle(color: Colors.white),
+                              decoration: InputDecoration(
+                                labelText: 'Username',
+                                labelStyle:
+                                    const TextStyle(color: Colors.white70),
+                                prefixIcon: const Icon(Icons.person,
+                                    color: Colors.white70),
+                                filled: true,
+                                fillColor: Colors.white.withOpacity(0.1),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide.none,
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(
+                                    color: Colors.white.withOpacity(0.2),
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(
+                                    color: Colors.blueAccent,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+
+                            // Password field
+                            TextFormField(
+                              controller: _passwordController,
+                              obscureText: _obscurePassword,
+                              style: const TextStyle(color: Colors.white),
+                              decoration: InputDecoration(
+                                labelText: 'Password',
+                                labelStyle:
+                                    const TextStyle(color: Colors.white70),
+                                prefixIcon: const Icon(Icons.lock,
+                                    color: Colors.white70),
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _obscurePassword
+                                        ? Icons.visibility_off
+                                        : Icons.visibility,
+                                    color: Colors.white70,
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      _obscurePassword = !_obscurePassword;
+                                    });
+                                  },
+                                ),
+                                filled: true,
+                                fillColor: Colors.white.withOpacity(0.1),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide.none,
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(
+                                    color: Colors.white.withOpacity(0.2),
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(
+                                    color: Colors.blueAccent,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 32),
+
+                            // Sign In button
+                            Container(
+                              height: 50,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: _isFormValid
+                                      ? [
+                                          const Color(0xFF4facfe),
+                                          const Color(0xFF00f2fe)
+                                        ]
+                                      : [Colors.grey, Colors.grey.shade700],
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                                boxShadow: _isFormValid
+                                    ? [
+                                        BoxShadow(
+                                          color: const Color(0xFF4facfe)
+                                              .withOpacity(0.3),
+                                          blurRadius: 10,
+                                          offset: const Offset(0, 5),
+                                        ),
+                                      ]
+                                    : [],
+                              ),
+                              child: ElevatedButton(
+                                onPressed: _isLoading
+                                    ? null
+                                    : (_isFormValid ? _signIn : null),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.transparent,
+                                  shadowColor: Colors.transparent,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                child: _isLoading
+                                    ? const SizedBox(
+                                        height: 20,
+                                        width: 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                                  Colors.white),
+                                        ),
+                                      )
+                                    : const Text(
+                                        'Sign In',
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+
+                            // Google Sign In button
+                            ElevatedButton.icon(
+                              onPressed: _isLoading ? null : _signInWithGoogle,
+                              icon: Image.asset(
+                                'assets/images/google_icon.png',
+                                height: 24,
+                              ),
+                              label: const Text('Sign in with Google'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                foregroundColor: Colors.black,
+                                minimumSize: const Size(double.infinity, 50),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+
+                            // Sign up text
+                            TextButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  CustomPageRoute(
+                                    page: SignUpPage(),
+                                    routeName: '/signup',
+                                  ),
+                                );
+                              },
+                              child: RichText(
+                                text: TextSpan(
+                                  style: const TextStyle(color: Colors.white70),
+                                  children: [
+                                    const TextSpan(
+                                        text: 'Don\'t have an account? '),
+                                    TextSpan(
+                                      text: 'Sign Up',
+                                      style: TextStyle(
+                                        color: Colors.blueAccent[200],
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -1071,18 +1103,47 @@ class SignUpPage extends StatefulWidget {
   _SignUpPageState createState() => _SignUpPageState();
 }
 
-class _SignUpPageState extends State<SignUpPage> {
+class _SignUpPageState extends State<SignUpPage>
+    with SingleTickerProviderStateMixin {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _dbHelper = DatabaseHelper();
-  bool _showPassword = false;
+  bool _obscurePassword = true;
   bool _isFormValid = false;
+  bool _isLoading = false;
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
 
   @override
   void initState() {
     super.initState();
     _usernameController.addListener(_updateFormState);
     _passwordController.addListener(_updateFormState);
+
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    );
+
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: const Interval(0.3, 0.8, curve: Curves.easeIn),
+      ),
+    );
+
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.5),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: const Interval(0.3, 1.0, curve: Curves.easeOut),
+      ),
+    );
+
+    _animationController.forward();
   }
 
   @override
@@ -1091,6 +1152,7 @@ class _SignUpPageState extends State<SignUpPage> {
     _passwordController.removeListener(_updateFormState);
     _usernameController.dispose();
     _passwordController.dispose();
+    _animationController.dispose();
     super.dispose();
   }
 
@@ -1102,51 +1164,66 @@ class _SignUpPageState extends State<SignUpPage> {
   }
 
   Future<void> _signUp() async {
+    if (!_isFormValid) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
     final username = _usernameController.text.trim();
     final password = _passwordController.text.trim();
 
-    if (username.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill in all fields.')),
-      );
-      return;
-    }
-
     try {
+      if (username.isEmpty || password.isEmpty) {
+        throw Exception('Please fill in all fields');
+      }
+
       final userExists = await _dbHelper.usernameExists(username);
 
       if (userExists) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text(
-                  'Username already exists. Please choose a different one.')),
-        );
-        return;
+        throw Exception('Username already exists. Please choose another.');
       }
 
       final success = await _dbHelper.addUser(username, password);
       if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Account created successfully!')),
+        if (!mounted) return;
+        ScaffoldMessenger.of(this.context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white),
+                const SizedBox(width: 8),
+                const Text('Account created successfully!'),
+              ],
+            ),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
         );
 
-        Navigator.pop(context);
+        Navigator.pop(this.context);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Something went wrong. Please try again.')),
-        );
+        throw Exception('Something went wrong. Please try again.');
       }
     } catch (e) {
       debugPrint('Error during sign-up: $e');
-      if (!mounted) return; // Add mounted check
-      ScaffoldMessenger.of(context).showSnackBar(
+      if (!mounted) return;
+      ScaffoldMessenger.of(this.context).showSnackBar(
         SnackBar(
-          content: Text('An error occurred during sign-up: ${e.toString()}'),
+          content: Text(e.toString().replaceAll('Exception: ', '')),
           backgroundColor: Colors.red,
           behavior: SnackBarBehavior.floating,
         ),
       );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -1156,138 +1233,214 @@ class _SignUpPageState extends State<SignUpPage> {
       body: Stack(
         children: [
           const SpaceBackground(),
-          Positioned(
-            top: 10,
-            left: 20,
-            child: Image.asset(
-              'assets/images/planet.png',
-              height: 190,
-            ),
-          ),
-          Positioned(
-            bottom: -15,
-            right: 0,
-            child: Image.asset(
-              'assets/images/astronaut.png',
-              height: 195,
-            ),
-          ),
-          Center(
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
+          SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Text(
-                      'Create an Account',
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 30),
-                    Card(
-                      elevation: 5,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(20.0),
-                        child: SingleChildScrollView(
-                          child: Column(
-                            children: [
-                              TextField(
-                                controller: _usernameController,
-                                decoration: const InputDecoration(
-                                  labelText: 'Username',
-                                  labelStyle: TextStyle(color: Colors.black),
-                                  border: OutlineInputBorder(),
-                                  prefixIcon:
-                                      Icon(Icons.person, color: Colors.black),
-                                ),
-                                style: const TextStyle(color: Colors.black),
+                    // Header
+                    FadeTransition(
+                      opacity: _fadeAnimation,
+                      child: SlideTransition(
+                        position: _slideAnimation,
+                        child: Column(
+                          children: [
+                            Image.asset(
+                              'assets/images/eduquest_logo.png',
+                              height: 120,
+                            ),
+                            const SizedBox(height: 16),
+                            const Text(
+                              'Create Your Account',
+                              style: TextStyle(
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
                               ),
-                              const SizedBox(height: 15),
-                              TextField(
-                                controller: _passwordController,
-                                obscureText: !_showPassword,
-                                decoration: InputDecoration(
-                                  labelText: 'Password',
-                                  labelStyle:
-                                      const TextStyle(color: Colors.black),
-                                  border: const OutlineInputBorder(),
-                                  prefixIcon: const Icon(Icons.lock,
-                                      color: Colors.black),
-                                  suffixIcon: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Checkbox(
-                                        value: _showPassword,
-                                        onChanged: (bool? value) {
-                                          setState(() {
-                                            _showPassword = value ?? false;
-                                          });
-                                        },
-                                      ),
-                                      const Text('Show Password',
-                                          style: TextStyle(
-                                              fontSize: 12,
-                                              color: Colors.black)),
-                                      const SizedBox(width: 8),
-                                    ],
-                                  ),
-                                ),
-                                style: const TextStyle(color: Colors.black),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Join the quest for knowledge',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.white.withOpacity(0.7),
                               ),
-                              const SizedBox(height: 20),
-                              // Sign Up Button
-                              Container(
-                                width: MediaQuery.of(context).size.width * 0.9,
-                                child: ElevatedButton(
-                                  onPressed: _isFormValid
-                                      ? _signUp
-                                      : null, // Disable if form is invalid
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: _isFormValid
-                                        ? Colors.blueAccent
-                                        : Colors.grey, // Grey out if disabled
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 15, horizontal: 30),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                      side: BorderSide(
-                                          color: _isFormValid
-                                              ? Colors.blueAccent
-                                              : Colors.grey,
-                                          width: 2),
-                                    ),
-                                  ),
-                                  child: const Text(
-                                    'Sign Up',
-                                    style: TextStyle(
-                                        fontSize: 18, color: Colors.white),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
-                    const SizedBox(height: 10),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pop(
-                            context); // Navigate back to the SignInPage
-                      },
-                      child: const Text(
-                        'Already have an account? Sign in',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.white,
+                    const SizedBox(height: 48),
+
+                    // Form
+                    FadeTransition(
+                      opacity: _fadeAnimation,
+                      child: SlideTransition(
+                        position: _slideAnimation,
+                        child: Column(
+                          children: [
+                            // Username field
+                            TextFormField(
+                              controller: _usernameController,
+                              style: const TextStyle(color: Colors.white),
+                              decoration: InputDecoration(
+                                labelText: 'Username',
+                                labelStyle:
+                                    const TextStyle(color: Colors.white70),
+                                prefixIcon: const Icon(Icons.person,
+                                    color: Colors.white70),
+                                filled: true,
+                                fillColor: Colors.white.withOpacity(0.1),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide.none,
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(
+                                    color: Colors.white.withOpacity(0.2),
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(
+                                    color: Colors.blueAccent,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+
+                            // Password field
+                            TextFormField(
+                              controller: _passwordController,
+                              obscureText: _obscurePassword,
+                              style: const TextStyle(color: Colors.white),
+                              decoration: InputDecoration(
+                                labelText: 'Password',
+                                labelStyle:
+                                    const TextStyle(color: Colors.white70),
+                                prefixIcon: const Icon(Icons.lock,
+                                    color: Colors.white70),
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _obscurePassword
+                                        ? Icons.visibility_off
+                                        : Icons.visibility,
+                                    color: Colors.white70,
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      _obscurePassword = !_obscurePassword;
+                                    });
+                                  },
+                                ),
+                                filled: true,
+                                fillColor: Colors.white.withOpacity(0.1),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide.none,
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(
+                                    color: Colors.white.withOpacity(0.2),
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(
+                                    color: Colors.blueAccent,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 32),
+
+                            // Sign Up button
+                            Container(
+                              height: 50,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: _isFormValid
+                                      ? [
+                                          const Color(0xFF4facfe),
+                                          const Color(0xFF00f2fe)
+                                        ]
+                                      : [Colors.grey, Colors.grey.shade700],
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                                boxShadow: _isFormValid
+                                    ? [
+                                        BoxShadow(
+                                          color: const Color(0xFF4facfe)
+                                              .withOpacity(0.3),
+                                          blurRadius: 10,
+                                          offset: const Offset(0, 5),
+                                        ),
+                                      ]
+                                    : [],
+                              ),
+                              child: ElevatedButton(
+                                onPressed: _isLoading
+                                    ? null
+                                    : (_isFormValid ? _signUp : null),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.transparent,
+                                  shadowColor: Colors.transparent,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                child: _isLoading
+                                    ? const SizedBox(
+                                        height: 20,
+                                        width: 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                                  Colors.white),
+                                        ),
+                                      )
+                                    : const Text(
+                                        'Sign Up',
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+
+                            // Sign in text
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                              },
+                              child: RichText(
+                                text: TextSpan(
+                                  style: const TextStyle(color: Colors.white70),
+                                  children: [
+                                    const TextSpan(
+                                        text: 'Already have an account? '),
+                                    TextSpan(
+                                      text: 'Sign In',
+                                      style: TextStyle(
+                                        color: Colors.blueAccent[200],
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -1377,46 +1530,7 @@ class _MainScreenState extends State<MainScreen> {
     ];
 
     return Scaffold(
-      body: Stack(
-        children: [
-          _children[_currentIndex],
-          // Persistent points display
-          Positioned(
-            top: 0,
-            right: 0,
-            child: Container(
-              margin: const EdgeInsets.all(16),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.amber,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.star, color: Colors.white, size: 20),
-                  const SizedBox(width: 5),
-                  Text(
-                    '$_userPoints',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
+      body: _children[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
         onTap: _onTabTapped,
         currentIndex: _currentIndex,
@@ -1424,17 +1538,22 @@ class _MainScreenState extends State<MainScreen> {
         backgroundColor: const Color(0xFF1D1E33),
         selectedItemColor: Colors.blueAccent,
         unselectedItemColor: Colors.white70,
+        elevation: 20,
+        selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.school),
+            icon: Icon(Icons.school_outlined),
+            activeIcon: Icon(Icons.school),
             label: 'Learn',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.shopping_cart),
+            icon: Icon(Icons.shopping_bag_outlined),
+            activeIcon: Icon(Icons.shopping_bag),
             label: 'Shop',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person),
+            icon: Icon(Icons.person_outline),
+            activeIcon: Icon(Icons.person),
             label: 'Profile',
           ),
         ],
@@ -1478,13 +1597,17 @@ class _LearnTabState extends State<LearnTab>
   }
 
   Future<void> _loadStudySets() async {
+    if (!mounted) return;
+    setState(() => _isLoading = true);
     final userSets = await _dbHelper.getUserStudySets(widget.username);
-    final premadeSets = await _dbHelper.getPremadeStudySets();
-    setState(() {
-      _studySets = userSets;
-      _premadeStudySets = premadeSets;
-      _isLoading = false;
-    });
+    final importedSets = await _dbHelper.getUserImportedSets(widget.username);
+    if (mounted) {
+      setState(() {
+        _studySets = userSets;
+        _premadeStudySets = importedSets;
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -1498,8 +1621,8 @@ class _LearnTabState extends State<LearnTab>
             child: Column(
               children: [
                 // Header with points
-                Container(
-                  padding: const EdgeInsets.all(20),
+                Padding(
+                  padding: const EdgeInsets.all(20.0),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -1509,7 +1632,7 @@ class _LearnTabState extends State<LearnTab>
                           Text(
                             'Welcome, ${widget.username}!',
                             style: const TextStyle(
-                              fontSize: 24,
+                              fontSize: 28,
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
                             ),
@@ -1528,8 +1651,17 @@ class _LearnTabState extends State<LearnTab>
                         padding: const EdgeInsets.symmetric(
                             horizontal: 16, vertical: 8),
                         decoration: BoxDecoration(
-                          color: Colors.amber,
+                          gradient: const LinearGradient(
+                            colors: [Colors.amber, Colors.orange],
+                          ),
                           borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.amber.withOpacity(0.3),
+                              blurRadius: 10,
+                              offset: const Offset(0, 5),
+                            ),
+                          ],
                         ),
                         child: Row(
                           children: [
@@ -1586,46 +1718,28 @@ class _LearnTabState extends State<LearnTab>
           ),
         ],
       ),
-      floatingActionButton: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          FloatingActionButton.extended(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => StudySetCreationOptionsScreen(
-                    username: widget.username,
-                    onStudySetCreated: () {}, // Temporarily removed _loadStudySets
-                  ),
-                ),
-              );
-            },
-            backgroundColor: Colors.blueAccent,
-            icon: const Icon(Icons.add),
-            label: const Text('Create Set'),
-          ),
-          const SizedBox(width: 16),
-          FloatingActionButton.extended(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => HomePage(username: widget.username),
-                ),
-              );
-            },
-            backgroundColor: Colors.green,
-            icon: const Icon(Icons.auto_awesome),
-            label: const Text('Generate Questions'),
-          ),
-        ],
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          Navigator.push(
+            this.context,
+            MaterialPageRoute(
+              builder: (context) => StudySetCreationOptionsScreen(
+                username: widget.username,
+                onStudySetCreated: _loadStudySets,
+              ),
+            ),
+          );
+        },
+        backgroundColor: Colors.blueAccent,
+        icon: const Icon(Icons.add),
+        label: const Text('Create Set'),
       ),
     );
   }
 
   Widget _buildMyStudySets() {
-    if (_studySets.isEmpty) {
+    final allSets = [..._studySets, ..._premadeStudySets];
+    if (allSets.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -1645,10 +1759,33 @@ class _LearnTabState extends State<LearnTab>
             ),
             const SizedBox(height: 10),
             Text(
-              'Create your first study set to get started!',
+              'Create your first study set or import a premade one!',
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.white.withOpacity(0.5),
+              ),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  this.context,
+                  MaterialPageRoute(
+                    builder: (context) => PremadeSetsScreen(
+                      username: widget.username,
+                      onSetImported: _loadStudySets,
+                    ),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.download),
+              label: const Text('Browse Premade Sets'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blueAccent,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
               ),
             ),
           ],
@@ -1658,50 +1795,144 @@ class _LearnTabState extends State<LearnTab>
 
     return ListView.builder(
       padding: const EdgeInsets.all(16),
-      itemCount: _studySets.length,
-      itemBuilder: (context, index) {
-        final studySet = _studySets[index];
+      itemCount: allSets.length,
+      itemBuilder: (BuildContext context, int index) {
+        final studySet = allSets[index];
+        final isImported =
+            _premadeStudySets.any((s) => s['id'] == studySet['id']);
         return Card(
-          margin: const EdgeInsets.only(bottom: 12),
-          elevation: 4,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          child: ListTile(
-            contentPadding: const EdgeInsets.all(16),
-            title: Text(
-              studySet['name'],
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
+          margin: const EdgeInsets.only(bottom: 20),
+          elevation: 10,
+          shadowColor: Colors.black.withOpacity(0.4),
+          clipBehavior: Clip.antiAlias,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  const Color(0xFF2A2D3E).withOpacity(0.9),
+                  const Color(0xFF1D1E33),
+                ],
               ),
             ),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 5),
-                Text(studySet['description']),
-                const SizedBox(height: 5),
-                Text(
-                  'Created: ${_formatDate(studySet['created_at'])}',
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 12,
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.blueAccent.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Icon(
+                          _getSubjectIcon(studySet['name']),
+                          color: Colors.blueAccent,
+                          size: 32,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              studySet['name'],
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              studySet['description'] ?? '',
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.7),
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (isImported)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const Text(
+                            'Imported',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
-                ),
-              ],
-            ),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.play_arrow, color: Colors.green),
-                  onPressed: () => _startPractice(studySet),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.red),
-                  onPressed: () => _deleteStudySet(studySet['id']),
-                ),
-              ],
+                  const SizedBox(height: 12),
+                  Text(
+                    'Created: ${_formatDate(studySet['created_at'])}',
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.5),
+                      fontSize: 12,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      ElevatedButton.icon(
+                        onPressed: () => _deleteStudySet(studySet['id']),
+                        icon: const Icon(Icons.delete, size: 18),
+                        label: const Text('Delete'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.redAccent.withOpacity(0.8),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 10,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      ElevatedButton.icon(
+                        onPressed: () => _startPractice(studySet),
+                        icon: const Icon(Icons.play_arrow, size: 18),
+                        label: const Text('Practice'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green.withOpacity(0.8),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 10,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         );
@@ -1710,49 +1941,217 @@ class _LearnTabState extends State<LearnTab>
   }
 
   Widget _buildBrowseStudySets() {
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: _premadeStudySets.length,
-      itemBuilder: (context, index) {
-        final studySet = _premadeStudySets[index];
-        return Card(
-          margin: const EdgeInsets.only(bottom: 12),
-          elevation: 4,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          child: ListTile(
-            contentPadding: const EdgeInsets.all(16),
-            leading: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.blueAccent.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(Icons.school, color: Colors.blueAccent),
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: _dbHelper.getPremadeStudySets(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasError) {
+          return Center(
+            child: Text(
+              'Error loading study sets: ${snapshot.error}',
+              style: const TextStyle(color: Colors.red),
             ),
-            title: Text(
-              studySet['name'],
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-              ),
+          );
+        }
+
+        final premadeSets = snapshot.data ?? [];
+        if (premadeSets.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.school_outlined,
+                  size: 80,
+                  color: Colors.white.withOpacity(0.5),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'No premade sets available',
+                  style: TextStyle(
+                    fontSize: 20,
+                    color: Colors.white.withOpacity(0.7),
+                  ),
+                ),
+              ],
             ),
-            subtitle: Text(studySet['description']),
-            trailing: ElevatedButton(
-              onPressed: () => _startPractice(studySet),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blueAccent,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+          );
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: premadeSets.length,
+          itemBuilder: (context, index) {
+            final set = premadeSets[index];
+            final isImported =
+                _premadeStudySets.any((s) => s['id'] == set['id']);
+
+            return Card(
+              margin: const EdgeInsets.only(bottom: 20),
+              elevation: 10,
+              shadowColor: Colors.black.withOpacity(0.4),
+              clipBehavior: Clip.antiAlias,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      const Color(0xFF2A2D3E).withOpacity(0.9),
+                      const Color(0xFF1D1E33),
+                    ],
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.blueAccent.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Icon(
+                              _getSubjectIcon(set['name']),
+                              color: Colors.blueAccent,
+                              size: 32,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  set['name'],
+                                  style: const TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  set['description'] ?? '',
+                                  style: TextStyle(
+                                    color: Colors.white.withOpacity(0.7),
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          if (isImported)
+                            ElevatedButton.icon(
+                              onPressed: () async {
+                                await _dbHelper.removeImportedSet(
+                                    widget.username, set['id']);
+                                setState(() {
+                                  _premadeStudySets = List.from(
+                                      _premadeStudySets)
+                                    ..removeWhere((s) => s['id'] == set['id']);
+                                });
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Set removed successfully'),
+                                      backgroundColor: Colors.green,
+                                    ),
+                                  );
+                                }
+                              },
+                              icon: const Icon(Icons.check, size: 18),
+                              label: const Text('Imported'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green.withOpacity(0.8),
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 10,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            )
+                          else
+                            ElevatedButton.icon(
+                              onPressed: () async {
+                                await _dbHelper.importPremadeSet(
+                                  widget.username,
+                                  set['id'],
+                                );
+                                setState(() {
+                                  _premadeStudySets =
+                                      List.from(_premadeStudySets)..add(set);
+                                });
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content:
+                                          Text('Set imported successfully'),
+                                      backgroundColor: Colors.green,
+                                    ),
+                                  );
+                                }
+                              },
+                              icon: const Icon(Icons.add, size: 18),
+                              label: const Text('Import'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor:
+                                    Colors.blueAccent.withOpacity(0.8),
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 10,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              child:
-                  const Text('Practice', style: TextStyle(color: Colors.white)),
-            ),
-          ),
+            );
+          },
         );
       },
     );
+  }
+
+  IconData _getSubjectIcon(String setName) {
+    if (setName.toLowerCase().contains('math')) {
+      return Icons.calculate;
+    } else if (setName.toLowerCase().contains('physics')) {
+      return Icons.science;
+    } else if (setName.toLowerCase().contains('computer')) {
+      return Icons.computer;
+    } else if (setName.toLowerCase().contains('chemistry')) {
+      return Icons.science;
+    } else {
+      return Icons.school;
+    }
   }
 
   Widget _buildQuickPlay() {
@@ -1784,30 +2183,28 @@ class _LearnTabState extends State<LearnTab>
             child: GridView.builder(
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-                childAspectRatio: 1.2,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                childAspectRatio: 1.1,
               ),
               itemCount: subjects.length,
-              itemBuilder: (context, index) {
+              itemBuilder: (BuildContext context, int index) {
                 final subject = subjects[index];
-                return Card(
-                  elevation: 4,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: InkWell(
-                    onTap: () => _startQuickPlay(subject),
-                    borderRadius: BorderRadius.circular(16),
+                return GestureDetector(
+                  onTap: () => _startQuickPlay(subject),
+                  child: Card(
+                    elevation: 6,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
                     child: Container(
-                      padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(20),
                         gradient: LinearGradient(
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                           colors: [
-                            _getSubjectColor(subject),
+                            _getSubjectColor(subject).withOpacity(0.9),
                             _getSubjectColor(subject).withOpacity(0.7),
                           ],
                         ),
@@ -1815,12 +2212,19 @@ class _LearnTabState extends State<LearnTab>
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(
-                            _getSubjectIcon(subject),
-                            size: 40,
-                            color: Colors.white,
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              _getSubjectIcon(subject),
+                              size: 32,
+                              color: Colors.white,
+                            ),
                           ),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 12),
                           Text(
                             subject,
                             style: const TextStyle(
@@ -1857,21 +2261,6 @@ class _LearnTabState extends State<LearnTab>
     }
   }
 
-  IconData _getSubjectIcon(String subject) {
-    switch (subject) {
-      case 'Math':
-        return Icons.calculate;
-      case 'Science':
-        return Icons.science;
-      case 'History':
-        return Icons.history_edu;
-      case 'English':
-        return Icons.menu_book;
-      default:
-        return Icons.school;
-    }
-  }
-
   String _formatDate(String dateString) {
     final date = DateTime.parse(dateString);
     return '${date.day}/${date.month}/${date.year}';
@@ -1879,21 +2268,22 @@ class _LearnTabState extends State<LearnTab>
 
   void _startPractice(Map<String, dynamic> studySet) {
     Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => PracticeModeScreen(
+      this.context,
+      CustomPageRoute(
+        page: PracticeModeScreen(
           studySet: studySet,
           username: widget.username,
           currentTheme: widget.currentTheme,
         ),
+        routeName: '/practice',
       ),
     );
   }
 
   void _startQuickPlay(String subject) {
-    final questions = QuestionsRepository.getQuestionsForSubject(subject);
+    final questions = quiz.QuestionsRepository.getQuestionsForSubject(subject);
     Navigator.push(
-      context,
+      this.context,
       MaterialPageRoute(
         builder: (context) => QuizScreen(
           subject: subject,
@@ -1909,7 +2299,7 @@ class _LearnTabState extends State<LearnTab>
 
   void _deleteStudySet(int studySetId) {
     showDialog(
-      context: context,
+      context: this.context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Study Set'),
         content: const Text('Are you sure you want to delete this study set?'),
@@ -1920,7 +2310,7 @@ class _LearnTabState extends State<LearnTab>
           ),
           TextButton(
             onPressed: () async {
-              await _dbHelper.deleteStudySet(studySetId);
+              await _dbHelper.removeImportedSet(widget.username, studySetId);
               Navigator.pop(context);
               _loadStudySets();
             },
@@ -2065,7 +2455,7 @@ class _ShopTabState extends State<ShopTab> with AutomaticKeepAliveClientMixin {
                       childAspectRatio: 0.8,
                     ),
                     itemCount: _themes.length,
-                    itemBuilder: (context, index) {
+                    itemBuilder: (BuildContext context, int index) {
                       final theme = _themes[index];
                       final isOwned = theme['price'] == 0 ||
                           widget.currentTheme == theme['name'].toLowerCase();
@@ -2209,7 +2599,7 @@ class _ShopTabState extends State<ShopTab> with AutomaticKeepAliveClientMixin {
 
   Future<void> _purchaseTheme(Map<String, dynamic> theme) async {
     if (widget.userPoints < (theme['price'] as int)) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(this.context).showSnackBar(
         const SnackBar(
           content: Text('Not enough points!'),
           backgroundColor: Colors.red,
@@ -2227,14 +2617,14 @@ class _ShopTabState extends State<ShopTab> with AutomaticKeepAliveClientMixin {
       widget.onPointsUpdated(newPoints);
       widget.onThemeChanged(theme['name'].toLowerCase());
 
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(this.context).showSnackBar(
         SnackBar(
           content: Text('Successfully purchased ${theme['name']} theme!'),
           backgroundColor: Colors.green,
         ),
       );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(this.context).showSnackBar(
         SnackBar(
           content: Text('Failed to purchase theme: $e'),
           backgroundColor: Colors.red,
@@ -2248,14 +2638,14 @@ class _ShopTabState extends State<ShopTab> with AutomaticKeepAliveClientMixin {
       await _dbHelper.updateCurrentTheme(widget.username, themeName);
       widget.onThemeChanged(themeName);
 
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(this.context).showSnackBar(
         SnackBar(
           content: Text('Theme changed to $themeName!'),
           backgroundColor: Colors.green,
         ),
       );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(this.context).showSnackBar(
         SnackBar(
           content: Text('Failed to change theme: $e'),
           backgroundColor: Colors.red,
@@ -2320,83 +2710,85 @@ class _ProfileTabState extends State<ProfileTab>
                 child: Column(
                   children: [
                     // Profile Header
-                    Card(
-                      elevation: 6,
-                      shape: RoundedRectangleBorder(
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(24),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20),
-                          gradient: const LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [Colors.blueAccent, Colors.blue],
-                          ),
+                        gradient: const LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [Color(0xFF4facfe), Color(0xFF00f2fe)],
                         ),
-                        child: Column(
-                          children: [
-                            CircleAvatar(
-                              radius: 50,
-                              backgroundColor: Colors.white,
-                              child: Text(
-                                widget.username.isNotEmpty
-                                    ? widget.username[0].toUpperCase()
-                                    : 'U',
-                                style: const TextStyle(
-                                  fontSize: 32,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.blueAccent,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              widget.username,
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF4facfe).withOpacity(0.3),
+                            blurRadius: 20,
+                            offset: const Offset(0, 10),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          CircleAvatar(
+                            radius: 50,
+                            backgroundColor: Colors.white.withOpacity(0.2),
+                            child: Text(
+                              widget.username.isNotEmpty
+                                  ? widget.username[0].toUpperCase()
+                                  : 'U',
                               style: const TextStyle(
-                                fontSize: 24,
+                                fontSize: 40,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
                               ),
                             ),
-                            const SizedBox(height: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 8),
-                              decoration: BoxDecoration(
-                                color: Colors.amber,
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(Icons.star,
-                                      color: Colors.white, size: 20),
-                                  const SizedBox(width: 5),
-                                  Text(
-                                    '${widget.userPoints} points',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            widget.username,
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
                             ),
-                          ],
-                        ),
+                          ),
+                          const SizedBox(height: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.star,
+                                    color: Colors.amber, size: 20),
+                                const SizedBox(width: 8),
+                                Text(
+                                  '${widget.userPoints} points',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ),
 
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 24),
 
                     // Stats Section
                     if (_userStats != null) ...[
                       Card(
                         elevation: 4,
+                        color: Colors.white.withOpacity(0.1),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),
@@ -2408,9 +2800,9 @@ class _ProfileTabState extends State<ProfileTab>
                               const Text(
                                 'Statistics',
                                 style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white),
                               ),
                               const SizedBox(height: 16),
                               Row(
@@ -2441,43 +2833,56 @@ class _ProfileTabState extends State<ProfileTab>
                     // Account Settings
                     Card(
                       elevation: 4,
+                      color: Colors.white.withOpacity(0.1),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Padding(
-                        padding: const EdgeInsets.all(20),
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
-                              'Account Settings',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
+                            const Padding(
+                              padding: EdgeInsets.fromLTRB(20, 12, 20, 8),
+                              child: Text(
+                                'Account Settings',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
                               ),
                             ),
-                            const SizedBox(height: 16),
                             _buildSettingsItem(
                               'Change Password',
                               Icons.lock,
                               Colors.orange,
                               () => _showChangePasswordDialog(),
                             ),
-                            const Divider(),
+                            const Divider(
+                                color: Colors.white24,
+                                indent: 20,
+                                endIndent: 20),
                             _buildSettingsItem(
                               'About App',
                               Icons.info,
                               Colors.blue,
                               () => _showAboutDialog(),
                             ),
-                            const Divider(),
+                            const Divider(
+                                color: Colors.white24,
+                                indent: 20,
+                                endIndent: 20),
                             _buildSettingsItem(
                               'Share App',
                               Icons.share,
                               Colors.green,
                               () => _shareApp(),
                             ),
-                            const Divider(),
+                            const Divider(
+                                color: Colors.white24,
+                                indent: 20,
+                                endIndent: 20),
                             _buildSettingsItem(
                               'Sign Out',
                               Icons.logout,
@@ -2503,26 +2908,29 @@ class _ProfileTabState extends State<ProfileTab>
     return Column(
       children: [
         Container(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withOpacity(0.2),
             shape: BoxShape.circle,
+            border: Border.all(color: color, width: 2),
           ),
-          child: Icon(icon, color: color, size: 24),
+          child: Icon(icon, color: color, size: 28),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 12),
         Text(
           value,
           style: const TextStyle(
-            fontSize: 18,
+            fontSize: 20,
             fontWeight: FontWeight.bold,
+            color: Colors.white,
           ),
         ),
+        const SizedBox(height: 4),
         Text(
           label,
           style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey[600],
+            fontSize: 14,
+            color: Colors.white.withOpacity(0.7),
           ),
         ),
       ],
@@ -2533,15 +2941,16 @@ class _ProfileTabState extends State<ProfileTab>
       String title, IconData icon, Color color, VoidCallback onTap) {
     return ListTile(
       leading: Container(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
           color: color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(12),
         ),
         child: Icon(icon, color: color),
       ),
-      title: Text(title),
-      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+      title: Text(title, style: const TextStyle(color: Colors.white)),
+      trailing:
+          const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.white70),
       onTap: onTap,
     );
   }
@@ -2552,7 +2961,7 @@ class _ProfileTabState extends State<ProfileTab>
     final confirmPasswordController = TextEditingController();
 
     showDialog(
-      context: context,
+      context: this.context,
       builder: (context) => AlertDialog(
         title: const Text('Change Password'),
         content: Column(
@@ -2595,7 +3004,7 @@ class _ProfileTabState extends State<ProfileTab>
             onPressed: () {
               // Implement password change logic
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
+              ScaffoldMessenger.of(this.context).showSnackBar(
                 const SnackBar(
                     content: Text('Password change feature coming soon!')),
               );
@@ -2609,7 +3018,7 @@ class _ProfileTabState extends State<ProfileTab>
 
   void _showAboutDialog() {
     showDialog(
-      context: context,
+      context: this.context,
       builder: (context) => AlertDialog(
         title: const Text('About EduQuest'),
         content: const Column(
@@ -2648,7 +3057,7 @@ class _ProfileTabState extends State<ProfileTab>
 
   void _showSignOutDialog() {
     showDialog(
-      context: context,
+      context: this.context,
       builder: (context) => AlertDialog(
         title: const Text('Sign Out'),
         content: const Text('Are you sure you want to sign out?'),
@@ -2700,6 +3109,7 @@ class StudySetCreationOptionsScreen extends StatelessWidget {
         ),
         backgroundColor: const Color(0xFF1D1E33),
         iconTheme: const IconThemeData(color: Colors.white),
+        elevation: 0,
       ),
       body: Stack(
         children: [
@@ -2711,23 +3121,31 @@ class StudySetCreationOptionsScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Choose how you\'d like to create your study set:',
+                    'Choose Creation Method',
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: 22,
                       color: Colors.white,
-                      fontWeight: FontWeight.w500,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    'How would you like to build your set?',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.white.withOpacity(0.7),
                     ),
                   ),
                   const SizedBox(height: 30),
                   Expanded(
-                    child: Column(
+                    child: ListView(
                       children: [
                         _buildOptionCard(
                           context,
                           'Import from Quizlet',
-                          'Import questions from an existing Quizlet set',
+                          'Use a public Quizlet set URL',
                           Icons.link,
-                          Colors.green,
+                          const [Color(0xFF16A085), Color(0xFF1ABC9C)],
                           () => Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -2742,9 +3160,9 @@ class StudySetCreationOptionsScreen extends StatelessWidget {
                         _buildOptionCard(
                           context,
                           'Import from Spreadsheet',
-                          'Upload an Excel file with your questions and answers',
+                          'Upload an Excel (.xlsx) file',
                           Icons.upload_file,
-                          Colors.blue,
+                          const [Color(0xFF2980B9), Color(0xFF3498DB)],
                           () => Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -2759,9 +3177,9 @@ class StudySetCreationOptionsScreen extends StatelessWidget {
                         _buildOptionCard(
                           context,
                           'Create Questions Manually',
-                          'Add questions one by one using our question builder',
-                          Icons.edit,
-                          Colors.purple,
+                          'Add questions one-by-one',
+                          Icons.edit_note,
+                          const [Color(0xFF8E44AD), Color(0xFF9B59B6)],
                           () => Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -2790,28 +3208,24 @@ class StudySetCreationOptionsScreen extends StatelessWidget {
     String title,
     String description,
     IconData icon,
-    Color color,
+    List<Color> colors,
     VoidCallback onTap,
   ) {
-    return Card(
-      elevation: 6,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+    return GestureDetector(
+      onTap: onTap,
+      child: Card(
+        elevation: 8,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        clipBehavior: Clip.antiAlias,
         child: Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                color.withOpacity(0.1),
-                color.withOpacity(0.05),
-              ],
+              colors: colors,
             ),
           ),
           child: Row(
@@ -2819,8 +3233,8 @@ class StudySetCreationOptionsScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: color,
-                  borderRadius: BorderRadius.circular(12),
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(16),
                 ),
                 child: Icon(
                   icon,
@@ -2838,7 +3252,7 @@ class StudySetCreationOptionsScreen extends StatelessWidget {
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black87,
+                        color: Colors.white,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -2846,15 +3260,15 @@ class StudySetCreationOptionsScreen extends StatelessWidget {
                       description,
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.grey[600],
+                        color: Colors.white.withOpacity(0.9),
                       ),
                     ),
                   ],
                 ),
               ),
-              Icon(
+              const Icon(
                 Icons.arrow_forward_ios,
-                color: Colors.grey[400],
+                color: Colors.white70,
                 size: 20,
               ),
             ],
@@ -2884,9 +3298,18 @@ class PracticeModeScreen extends StatefulWidget {
 class _PracticeModeScreenState extends State<PracticeModeScreen> {
   final DatabaseHelper _dbHelper = DatabaseHelper();
   List<Map<String, dynamic>> _questions = [];
+  int _currentQuestionIndex = 0;
+  String? _selectedAnswer;
+  bool _showAnswer = false;
+  int _correctAnswers = 0;
   bool _isLoading = true;
+  bool _hasError = false;
+  String _errorMessage = '';
   String _selectedMode = 'classic';
   int _questionCount = 10;
+  bool _showModeSelection = true;
+  bool _showQuizArea = false;
+  bool _showScoreSummary = false;
 
   @override
   void initState() {
@@ -2895,16 +3318,48 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
   }
 
   Future<void> _loadQuestions() async {
-    final questions =
-        await _dbHelper.getStudySetQuestions(widget.studySet['id']);
-    setState(() {
-      _questions = questions;
-      _isLoading = false;
-    });
+    try {
+      setState(() {
+        _isLoading = true;
+        _hasError = false;
+      });
+
+      final questions =
+          await _dbHelper.getStudySetQuestions(widget.studySet['id']);
+
+      if (!mounted) return;
+
+      if (questions.isEmpty) {
+        setState(() {
+          _hasError = true;
+          _errorMessage = 'No questions available in this study set';
+          _isLoading = false;
+        });
+        return;
+      }
+
+      setState(() {
+        _questions = questions;
+        if (_questions.length < 5) {
+          _questionCount = _questions.length;
+        } else {
+          _questionCount = 5;
+        }
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _hasError = true;
+        _errorMessage = 'Error loading questions: ${e.toString()}';
+        _isLoading = false;
+      });
+    }
   }
 
-  void _startPractice() {
+  void _startPractice(BuildContext context) {
     if (_questions.isEmpty) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('No questions available in this study set'),
@@ -2914,46 +3369,122 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
       return;
     }
 
-    Navigator.push(
-      context,
-      CustomPageRoute(
-        page: QuizScreen(
-          subject: widget.studySet['name'],
-          username: widget.username,
-          questions: _questions
-              .map((q) => Question(
-                    questionText: q['question_text'],
-                    options: (q['options'] as String).split('|'),
-                    correctAnswer: q['correct_answer'],
-                  ))
-              .toList(),
-          currentTheme: widget.currentTheme,
-          gameMode: _selectedMode,
-          questionCount: _questionCount,
-        ),
-        routeName: '/quiz',
-      ),
-    );
+    setState(() {
+      _showModeSelection = false;
+      _showQuizArea = true;
+      _currentQuestionIndex = 0;
+      _selectedAnswer = null;
+      _showAnswer = false;
+      _showScoreSummary = false;
+      _correctAnswers = 0;
+    });
+  }
+
+  void _checkAnswer(String answer) {
+    if (_showAnswer) return;
+
+    setState(() {
+      _selectedAnswer = answer;
+      _showAnswer = true;
+      if (answer == _questions[_currentQuestionIndex]['correct_answer']) {
+        _correctAnswers++;
+        _dbHelper.updateUserPoints(widget.username, 50);
+      }
+    });
+
+    Future.delayed(const Duration(seconds: 2), () {
+      if (!mounted) return;
+      setState(() {
+        if (_currentQuestionIndex < _questionCount - 1) {
+          _currentQuestionIndex++;
+          _selectedAnswer = null;
+          _showAnswer = false;
+        } else {
+          _showQuizArea = false;
+          _showScoreSummary = true;
+        }
+      });
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Practice Mode',
-          style: const TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        backgroundColor: widget.currentTheme == 'beach'
-            ? Colors.orange
-            : const Color(0xFF1D1E33),
-        iconTheme: const IconThemeData(color: Colors.white),
-      ),
       body: Stack(
+        children: [
+          const SpaceBackground(),
+          SafeArea(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 500),
+              transitionBuilder: (Widget child, Animation<double> animation) {
+                return FadeTransition(opacity: animation, child: child);
+              },
+              child: _isLoading
+                  ? const Center(
+                      key: ValueKey('loading'),
+                      child: CircularProgressIndicator(
+                        valueColor:
+                            AlwaysStoppedAnimation<Color>(Colors.blueAccent),
+                      ),
+                    )
+                  : _hasError
+                      ? _buildErrorWidget()
+                      : _showModeSelection
+                          ? _buildModeSelection()
+                          : _showScoreSummary
+                              ? _buildScoreSummary()
+                              : _buildQuizArea(context),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorWidget() {
+    return Center(
+      key: const ValueKey('error'),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(
+            Icons.error_outline,
+            size: 48,
+            color: Colors.red,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            _errorMessage,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: _loadQuestions,
+            icon: const Icon(Icons.refresh),
+            label: const Text('Try Again'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blueAccent,
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24,
+                vertical: 12,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildModeSelection() {
+    return SingleChildScrollView(
+      key: const ValueKey('modeSelection'),
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           widget.currentTheme == 'beach'
               ? Image.asset(
@@ -3038,8 +3569,8 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
                       Slider(
                         value: _questionCount.toDouble(),
                         min: 1,
-                        max: _questions.isEmpty ? 1.0 : _questions.length.toDouble(),
-                        divisions: _questions.isEmpty ? 0 : _questions.length - 1,
+                        max: _questions.length.toDouble(),
+                        divisions: _questions.length - 1,
                         label: _questionCount.toString(),
                         onChanged: (value) {
                           setState(() {
@@ -3106,7 +3637,7 @@ class CustomPageRoute<T> extends PageRouteBuilder<T> {
 class QuizScreen extends StatefulWidget {
   final String subject;
   final String username;
-  final List<Question> questions;
+  final List<quiz.Question> questions;
   final String currentTheme;
   final String gameMode;
   final int questionCount;
@@ -3131,8 +3662,12 @@ class _QuizScreenState extends State<QuizScreen> {
   bool isAnswered = false;
   String? selectedAnswer;
   Timer? timer;
-  int timeLeft = 30;
-  final DatabaseHelper _dbHelper = DatabaseHelper();
+  double timeLeft = 10.0; // Changed to double
+  double timerProgress = 1.0;
+  bool showAnswer = false;
+  List<bool> answeredCorrectly = [];
+  bool showScoreSummary = false;
+  bool showQuizArea = true;
 
   @override
   void initState() {
@@ -3149,11 +3684,13 @@ class _QuizScreenState extends State<QuizScreen> {
   }
 
   void startTimer() {
-    timeLeft = 30;
-    timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+    timeLeft = 45.0; // Reset to 45 seconds
+    timerProgress = 1.0;
+    timer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
       if (timeLeft > 0) {
         setState(() {
-          timeLeft--;
+          timeLeft -= 0.1;
+          timerProgress = timeLeft / 45.0;
         });
       } else {
         nextQuestion();
@@ -3171,11 +3708,6 @@ class _QuizScreenState extends State<QuizScreen> {
 
     if (answer == widget.questions[currentQuestionIndex].correctAnswer) {
       score++;
-      // Award 50 points for correct answer
-      _dbHelper.getUserPoints(widget.username).then((currentPoints) {
-        final newPoints = currentPoints + 50;
-        _dbHelper.updateUserPoints(widget.username, newPoints);
-      });
     }
 
     Future.delayed(const Duration(seconds: 1), () {
@@ -3206,7 +3738,7 @@ class _QuizScreenState extends State<QuizScreen> {
     timer?.cancel();
 
     showDialog(
-      context: context,
+      context: this.context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
         title: const Text('Quiz Complete!'),
@@ -3245,10 +3777,28 @@ class _QuizScreenState extends State<QuizScreen> {
           if (widget.gameMode == 'timed')
             Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Text(
-                '$timeLeft',
-                style:
-                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      value: timerProgress,
+                      strokeWidth: 2,
+                      backgroundColor: Colors.grey[300],
+                      valueColor: const AlwaysStoppedAnimation<Color>(
+                          Colors.blueAccent),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    '${timeLeft.toStringAsFixed(1)}s',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
               ),
             ),
         ],
@@ -3329,6 +3879,10 @@ class _QuizScreenState extends State<QuizScreen> {
                           child: Card(
                             elevation: 2,
                             color: cardColor,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              side: BorderSide(color: Colors.grey.shade300),
+                            ),
                             child: ListTile(
                               title: Text(
                                 option,
@@ -3393,7 +3947,7 @@ class _QuizletImportScreenState extends State<QuizletImportScreen> {
 
   Future<void> _importFromQuizlet() async {
     if (_urlController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(this.context).showSnackBar(
         const SnackBar(
           content: Text('Please enter a Quizlet URL'),
           backgroundColor: Colors.red,
@@ -3479,7 +4033,7 @@ class _QuizletImportScreenState extends State<QuizletImportScreen> {
         });
 
         if (parsedQuestions.isNotEmpty) {
-          ScaffoldMessenger.of(context).showSnackBar(
+          ScaffoldMessenger.of(this.context).showSnackBar(
             SnackBar(
               content:
                   Text('Imported ${parsedQuestions.length} terms from Quizlet'),
@@ -3487,7 +4041,7 @@ class _QuizletImportScreenState extends State<QuizletImportScreen> {
             ),
           );
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
+          ScaffoldMessenger.of(this.context).showSnackBar(
             const SnackBar(
               content:
                   Text('Could not parse Quizlet set. Please check the URL.'),
@@ -3497,7 +4051,7 @@ class _QuizletImportScreenState extends State<QuizletImportScreen> {
         }
       } else {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
+        ScaffoldMessenger.of(this.context).showSnackBar(
           SnackBar(
             content:
                 Text('Failed to fetch Quizlet set: ${response.statusCode}'),
@@ -3508,7 +4062,7 @@ class _QuizletImportScreenState extends State<QuizletImportScreen> {
     } catch (e) {
       setState(() => _isLoading = false);
       debugPrint('Quizlet import error: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(this.context).showSnackBar(
         const SnackBar(
           content: Text('Failed to import from Quizlet. Please check the URL.'),
           backgroundColor: Colors.red,
@@ -3520,7 +4074,7 @@ class _QuizletImportScreenState extends State<QuizletImportScreen> {
   Future<void> _createStudySet() async {
     if (!_formKey.currentState!.validate()) return;
     if (_questions.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(this.context).showSnackBar(
         const SnackBar(
           content: Text('Please import questions from Quizlet first'),
           backgroundColor: Colors.red,
@@ -3558,7 +4112,7 @@ class _QuizletImportScreenState extends State<QuizletImportScreen> {
     } catch (e) {
       debugPrint('Error creating study set: $e');
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(this.context).showSnackBar(
         SnackBar(
           content: Text('Failed to create study set: ${e.toString()}'),
           backgroundColor: Colors.red,
@@ -3574,7 +4128,7 @@ class _QuizletImportScreenState extends State<QuizletImportScreen> {
 
   void _showPostAddDialog(int studySetId) {
     showDialog(
-      context: context,
+      context: this.context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
         title: const Text('Study Set Created!'),
@@ -3633,6 +4187,7 @@ class _QuizletImportScreenState extends State<QuizletImportScreen> {
         title: const Text('Import from Quizlet'),
         backgroundColor: const Color(0xFF1D1E33),
         foregroundColor: Colors.white,
+        elevation: 0,
       ),
       body: Stack(
         children: [
@@ -3640,87 +4195,18 @@ class _QuizletImportScreenState extends State<QuizletImportScreen> {
           _isLoading
               ? const Center(child: CircularProgressIndicator())
               : SingleChildScrollView(
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.all(24),
                   child: Form(
                     key: _formKey,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'How to use:',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        Card(
-                          color: Colors.green.withOpacity(0.1),
-                          child: const Padding(
-                            padding: EdgeInsets.all(16),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  '1. Go to any Quizlet set',
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                                Text(
-                                  '2. Copy the URL from your browser',
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                                Text(
-                                  '3. Paste it below and click Import',
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 30),
-                        TextFormField(
-                          controller: _nameController,
-                          decoration: const InputDecoration(
-                            labelText: 'Study Set Name',
-                            labelStyle: TextStyle(color: Colors.white),
-                            enabledBorder: OutlineInputBorder(
-                              borderSide: BorderSide(color: Colors.white),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderSide: BorderSide(color: Colors.blueAccent),
-                            ),
-                          ),
-                          style: const TextStyle(color: Colors.white),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter a name';
-                            }
-                            return null;
-                          },
-                        ),
+                        _buildFormField(
+                            _nameController, 'Study Set Name', 'Enter a name'),
                         const SizedBox(height: 20),
-                        TextFormField(
-                          controller: _descriptionController,
-                          decoration: const InputDecoration(
-                            labelText: 'Description',
-                            labelStyle: TextStyle(color: Colors.white),
-                            enabledBorder: OutlineInputBorder(
-                              borderSide: BorderSide(color: Colors.white),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderSide: BorderSide(color: Colors.blueAccent),
-                            ),
-                          ),
-                          style: const TextStyle(color: Colors.white),
-                          maxLines: 3,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter a description';
-                            }
-                            return null;
-                          },
-                        ),
+                        _buildFormField(_descriptionController, 'Description',
+                            'Enter a description',
+                            maxLines: 3),
                         const SizedBox(height: 30),
                         const Text(
                           'Quizlet URL',
@@ -3730,119 +4216,186 @@ class _QuizletImportScreenState extends State<QuizletImportScreen> {
                             color: Colors.white,
                           ),
                         ),
-                        const SizedBox(height: 20),
-                        TextFormField(
-                          controller: _urlController,
-                          decoration: const InputDecoration(
-                            labelText: 'Paste Quizlet set URL here',
-                            labelStyle: TextStyle(color: Colors.white),
-                            hintText:
-                                'https://quizlet.com/123456789/sample-set',
-                            hintStyle: TextStyle(color: Colors.white54),
-                            enabledBorder: OutlineInputBorder(
-                              borderSide: BorderSide(color: Colors.white),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderSide: BorderSide(color: Colors.blueAccent),
-                            ),
-                            prefixIcon: Icon(Icons.link, color: Colors.white),
-                          ),
-                          style: const TextStyle(color: Colors.white),
+                        const SizedBox(height: 12),
+                        _buildFormField(
+                          _urlController,
+                          'Paste Quizlet URL here',
+                          'Please enter a valid URL',
+                          prefixIcon: Icons.link,
                         ),
-                        const SizedBox(height: 20),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: _importFromQuizlet,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 30,
-                                vertical: 15,
-                              ),
-                            ),
-                            child: const Text('Import from Quizlet'),
-                          ),
+                        const SizedBox(height: 24),
+                        _buildGradientButton(
+                          'Import from Quizlet',
+                          _importFromQuizlet,
+                          Icons.download,
+                          const [Color(0xFF16A085), Color(0xFF1ABC9C)],
                         ),
                         if (_questions.isNotEmpty) ...[
                           const SizedBox(height: 30),
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.check_circle,
-                                color: Colors.green,
-                                size: 24,
-                              ),
-                              const SizedBox(width: 10),
-                              Text(
-                                'Successfully imported ${_questions.length} terms',
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.green,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 20),
-                          const Text(
-                            'Preview',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          ...List.generate(
-                            _questions.take(3).length,
-                            (index) => Card(
-                              color: Colors.green.withOpacity(0.2),
-                              child: ListTile(
-                                title: Text(
-                                  _questions[index]['question'],
-                                  style: const TextStyle(color: Colors.white),
-                                ),
-                                subtitle: Text(
-                                  'Answer: ${_questions[index]['correct_answer']}',
-                                  style: TextStyle(
-                                    color: Colors.white.withOpacity(0.7),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          if (_questions.length > 3)
-                            Text(
-                              '... and ${_questions.length - 3} more terms',
-                              style: TextStyle(
-                                color: Colors.white.withOpacity(0.7),
-                              ),
-                            ),
+                          _buildPreviewSection(),
                         ],
                         const SizedBox(height: 30),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed:
-                                _questions.isNotEmpty ? _createStudySet : null,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: _questions.isNotEmpty
-                                  ? Colors.blueAccent
-                                  : Colors.grey,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 30,
-                                vertical: 15,
-                              ),
-                            ),
-                            child: const Text('Create Study Set'),
-                          ),
+                        _buildGradientButton(
+                          'Create Study Set',
+                          _questions.isNotEmpty ? _createStudySet : null,
+                          Icons.check_circle,
+                          const [Color(0xFF2980B9), Color(0xFF3498DB)],
                         ),
                       ],
                     ),
                   ),
                 ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildFormField(
+      TextEditingController controller, String label, String validationMessage,
+      {int maxLines = 1, IconData? prefixIcon}) {
+    return TextFormField(
+      controller: controller,
+      style: const TextStyle(color: Colors.white),
+      maxLines: maxLines,
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(color: Colors.white70),
+        prefixIcon:
+            prefixIcon != null ? Icon(prefixIcon, color: Colors.white70) : null,
+        filled: true,
+        fillColor: Colors.white.withOpacity(0.1),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: Colors.white.withOpacity(0.2),
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(
+            color: Colors.blueAccent,
+          ),
+        ),
+      ),
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return validationMessage;
+        }
+        return null;
+      },
+    );
+  }
+
+  Widget _buildPreviewSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Icon(
+              Icons.check_circle,
+              color: Colors.greenAccent,
+              size: 24,
+            ),
+            const SizedBox(width: 10),
+            Text(
+              'Imported ${_questions.length} terms',
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.greenAccent,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        const Text(
+          'Preview',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          height: 150,
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: ListView.builder(
+            itemCount: _questions.length,
+            itemBuilder: (context, index) {
+              return ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: Colors.blueAccent,
+                  child: Text('${index + 1}',
+                      style: const TextStyle(color: Colors.white)),
+                ),
+                title: Text(
+                  _questions[index]['question'],
+                  style: const TextStyle(color: Colors.white),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                subtitle: Text(
+                  'Answer: ${_questions[index]['correct_answer']}',
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.7),
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildGradientButton(
+      String text, VoidCallback? onPressed, IconData icon, List<Color> colors) {
+    return Container(
+      height: 50,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors:
+              onPressed != null ? colors : [Colors.grey, Colors.grey.shade700],
+        ),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: onPressed != null
+            ? [
+                BoxShadow(
+                  color: colors.first.withOpacity(0.3),
+                  blurRadius: 10,
+                  offset: const Offset(0, 5),
+                ),
+              ]
+            : [],
+      ),
+      child: ElevatedButton.icon(
+        onPressed: onPressed,
+        icon: Icon(icon, color: Colors.white),
+        label: Text(
+          text,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.transparent,
+          shadowColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
       ),
     );
   }
@@ -3896,7 +4449,7 @@ class _SpreadsheetImportScreenState extends State<SpreadsheetImportScreen> {
       }
     } catch (e) {
       debugPrint('File picker error: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(this.context).showSnackBar(
         const SnackBar(
           content: Text('Failed to pick file'),
           backgroundColor: Colors.red,
@@ -3910,8 +4463,8 @@ class _SpreadsheetImportScreenState extends State<SpreadsheetImportScreen> {
       setState(() => _isLoading = true);
 
       var bytes = await File(filePath).readAsBytes();
-      var excelDoc = excel.Excel.decodeBytes(bytes);
-      var sheet = excelDoc.tables.values.first;
+      final excelFile = excel.Excel.decodeBytes(bytes);
+      var sheet = excelFile.tables.values.first;
 
       List<Map<String, dynamic>> parsedQuestions = [];
 
@@ -3944,7 +4497,7 @@ class _SpreadsheetImportScreenState extends State<SpreadsheetImportScreen> {
         _isLoading = false;
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(this.context).showSnackBar(
         SnackBar(
           content: Text(
               'Parsed ${parsedQuestions.length} questions from spreadsheet'),
@@ -3954,7 +4507,7 @@ class _SpreadsheetImportScreenState extends State<SpreadsheetImportScreen> {
     } catch (e) {
       setState(() => _isLoading = false);
       debugPrint('Excel parsing error: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(this.context).showSnackBar(
         const SnackBar(
           content:
               Text('Failed to parse spreadsheet. Please check the format.'),
@@ -3967,7 +4520,7 @@ class _SpreadsheetImportScreenState extends State<SpreadsheetImportScreen> {
   Future<void> _createStudySet() async {
     if (!_formKey.currentState!.validate()) return;
     if (_questions.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(this.context).showSnackBar(
         const SnackBar(
           content: Text('Please select a spreadsheet with questions'),
           backgroundColor: Colors.red,
@@ -4005,7 +4558,7 @@ class _SpreadsheetImportScreenState extends State<SpreadsheetImportScreen> {
     } catch (e) {
       debugPrint('Error creating study set: $e');
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(this.context).showSnackBar(
         SnackBar(
           content: Text('Failed to create study set: ${e.toString()}'),
           backgroundColor: Colors.red,
@@ -4021,7 +4574,7 @@ class _SpreadsheetImportScreenState extends State<SpreadsheetImportScreen> {
 
   void _showPostAddDialog(int studySetId) {
     showDialog(
-      context: context,
+      context: this.context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
         title: const Text('Study Set Created!'),
@@ -4080,184 +4633,248 @@ class _SpreadsheetImportScreenState extends State<SpreadsheetImportScreen> {
         title: const Text('Import from Spreadsheet'),
         backgroundColor: const Color(0xFF1D1E33),
         foregroundColor: Colors.white,
+        elevation: 0,
       ),
       body: Stack(
         children: [
           const SpaceBackground(),
           _isLoading
-              ? const Center(child: CircularProgressIndicator())
+              ? const Center(
+                  child: CircularProgressIndicator(
+                    valueColor:
+                        AlwaysStoppedAnimation<Color>(Colors.blueAccent),
+                  ),
+                )
               : SingleChildScrollView(
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.all(24),
                   child: Form(
                     key: _formKey,
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        const Text(
-                          'Expected Format:',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        Card(
-                          color: Colors.blue.withOpacity(0.1),
-                          child: const Padding(
-                            padding: EdgeInsets.all(16),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Column A: Question',
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                                Text(
-                                  'Column B: Correct Answer',
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                                Text(
-                                  'Columns C-F: Options 1-4',
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 30),
-                        TextFormField(
-                          controller: _nameController,
-                          decoration: const InputDecoration(
-                            labelText: 'Study Set Name',
-                            labelStyle: TextStyle(color: Colors.white),
-                            enabledBorder: OutlineInputBorder(
-                              borderSide: BorderSide(color: Colors.white),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderSide: BorderSide(color: Colors.blueAccent),
-                            ),
-                          ),
-                          style: const TextStyle(color: Colors.white),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter a name';
-                            }
-                            return null;
-                          },
-                        ),
+                        _buildFormField(
+                            _nameController, 'Study Set Name', 'Enter a name'),
                         const SizedBox(height: 20),
-                        TextFormField(
-                          controller: _descriptionController,
-                          decoration: const InputDecoration(
-                            labelText: 'Description',
-                            labelStyle: TextStyle(color: Colors.white),
-                            enabledBorder: OutlineInputBorder(
-                              borderSide: BorderSide(color: Colors.white),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderSide: BorderSide(color: Colors.blueAccent),
-                            ),
-                          ),
-                          style: const TextStyle(color: Colors.white),
-                          maxLines: 3,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter a description';
-                            }
-                            return null;
-                          },
-                        ),
+                        _buildFormField(_descriptionController, 'Description',
+                            'Enter a description',
+                            maxLines: 3),
                         const SizedBox(height: 30),
                         const Text(
-                          'Select Spreadsheet',
+                          'Upload File',
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),
                         ),
-                        const SizedBox(height: 20),
-                        Card(
-                          elevation: 4,
-                          child: ListTile(
-                            leading: Icon(
-                              _hasFile ? Icons.check_circle : Icons.upload_file,
-                              color: _hasFile ? Colors.green : Colors.blue,
-                              size: 40,
+                        const SizedBox(height: 12),
+                        GestureDetector(
+                          onTap: _pickFile,
+                          child: Container(
+                            height: 150,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: Colors.white.withOpacity(0.2),
+                                width: 2,
+                                style: BorderStyle.solid,
+                              ),
                             ),
-                            title: Text(
-                              _hasFile ? 'File Selected' : 'Select Excel File',
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.bold),
+                            child: Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    _hasFile
+                                        ? Icons.check_circle
+                                        : Icons.upload_file,
+                                    color: _hasFile
+                                        ? Colors.greenAccent
+                                        : Colors.white70,
+                                    size: 48,
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    _hasFile
+                                        ? _fileName
+                                        : 'Tap to select .xlsx file',
+                                    style: TextStyle(
+                                      color: _hasFile
+                                          ? Colors.white
+                                          : Colors.white70,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                            subtitle: Text(
-                              _hasFile ? _fileName : 'Tap to select .xlsx file',
-                            ),
-                            trailing: const Icon(Icons.arrow_forward_ios),
-                            onTap: _pickFile,
                           ),
                         ),
                         if (_questions.isNotEmpty) ...[
                           const SizedBox(height: 30),
-                          Text(
-                            'Preview (${_questions.length} questions)',
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          ...List.generate(
-                            _questions.take(3).length,
-                            (index) => Card(
-                              color: Colors.blueAccent.withOpacity(0.2),
-                              child: ListTile(
-                                title: Text(
-                                  _questions[index]['question'],
-                                  style: const TextStyle(color: Colors.white),
-                                ),
-                                subtitle: Text(
-                                  'Answer: ${_questions[index]['correct_answer']}',
-                                  style: TextStyle(
-                                    color: Colors.white.withOpacity(0.7),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          if (_questions.length > 3)
-                            Text(
-                              '... and ${_questions.length - 3} more questions',
-                              style: TextStyle(
-                                color: Colors.white.withOpacity(0.7),
-                              ),
-                            ),
+                          _buildPreviewSection(),
                         ],
                         const SizedBox(height: 30),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed:
-                                _questions.isNotEmpty ? _createStudySet : null,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: _questions.isNotEmpty
-                                  ? Colors.green
-                                  : Colors.grey,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 30,
-                                vertical: 15,
-                              ),
-                            ),
-                            child: const Text('Create Study Set'),
-                          ),
+                        _buildGradientButton(
+                          'Create Study Set',
+                          _questions.isNotEmpty ? _createStudySet : null,
+                          Icons.check_circle,
+                          const [Color(0xFF2980B9), Color(0xFF3498DB)],
                         ),
                       ],
                     ),
                   ),
                 ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildFormField(
+      TextEditingController controller, String label, String validationMessage,
+      {int maxLines = 1}) {
+    return TextFormField(
+      controller: controller,
+      style: const TextStyle(color: Colors.white),
+      maxLines: maxLines,
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(color: Colors.white70),
+        filled: true,
+        fillColor: Colors.white.withOpacity(0.1),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: Colors.white.withOpacity(0.2),
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(
+            color: Colors.blueAccent,
+          ),
+        ),
+      ),
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return validationMessage;
+        }
+        return null;
+      },
+    );
+  }
+
+  Widget _buildPreviewSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Icon(
+              Icons.check_circle,
+              color: Colors.greenAccent,
+              size: 24,
+            ),
+            const SizedBox(width: 10),
+            Text(
+              'Parsed ${_questions.length} questions',
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.greenAccent,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        const Text(
+          'Preview',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          height: 150,
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: ListView.builder(
+            itemCount: _questions.length,
+            itemBuilder: (context, index) {
+              return ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: Colors.blueAccent,
+                  child: Text('${index + 1}',
+                      style: const TextStyle(color: Colors.white)),
+                ),
+                title: Text(
+                  _questions[index]['question'],
+                  style: const TextStyle(color: Colors.white),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                subtitle: Text(
+                  'Answer: ${_questions[index]['correct_answer']}',
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.7),
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildGradientButton(
+      String text, VoidCallback? onPressed, IconData icon, List<Color> colors) {
+    return Container(
+      height: 50,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors:
+              onPressed != null ? colors : [Colors.grey, Colors.grey.shade700],
+        ),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: onPressed != null
+            ? [
+                BoxShadow(
+                  color: colors.first.withOpacity(0.3),
+                  blurRadius: 10,
+                  offset: const Offset(0, 5),
+                ),
+              ]
+            : [],
+      ),
+      child: ElevatedButton.icon(
+        onPressed: onPressed,
+        icon: Icon(icon, color: Colors.white),
+        label: Text(
+          text,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.transparent,
+          shadowColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
       ),
     );
   }
@@ -4310,7 +4927,7 @@ class _ManualQuestionCreationScreenState
   Future<void> _createStudySet() async {
     if (!_formKey.currentState!.validate()) return;
     if (_questions.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(this.context).showSnackBar(
         const SnackBar(
           content: Text('Please add at least one question'),
           backgroundColor: Colors.red,
@@ -4348,7 +4965,7 @@ class _ManualQuestionCreationScreenState
     } catch (e) {
       debugPrint('Error creating study set: $e');
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(this.context).showSnackBar(
         SnackBar(
           content: Text('Failed to create study set: ${e.toString()}'),
           backgroundColor: Colors.red,
@@ -4366,7 +4983,7 @@ class _ManualQuestionCreationScreenState
     if (_questionController.text.isEmpty ||
         _correctAnswerController.text.isEmpty ||
         _optionControllers.any((controller) => controller.text.isEmpty)) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(this.context).showSnackBar(
         const SnackBar(
           content: Text('Please fill in all fields'),
           backgroundColor: Colors.red,
@@ -4392,7 +5009,7 @@ class _ManualQuestionCreationScreenState
 
   void _showPostAddDialog(int studySetId) {
     showDialog(
-      context: context,
+      context: this.context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
         title: const Text('Study Set Created!'),
@@ -4447,188 +5064,405 @@ class _ManualQuestionCreationScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Create Questions Manually'),
+        title: const Text('Create Manually'),
         backgroundColor: const Color(0xFF1D1E33),
         foregroundColor: Colors.white,
+        elevation: 0,
       ),
       body: Stack(
         children: [
           const SpaceBackground(),
           _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : SingleChildScrollView(
-                  padding: const EdgeInsets.all(20),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        TextFormField(
-                          controller: _nameController,
-                          decoration: const InputDecoration(
-                            labelText: 'Study Set Name',
-                            labelStyle: TextStyle(color: Colors.white),
-                            enabledBorder: OutlineInputBorder(
-                              borderSide: BorderSide(color: Colors.white),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderSide: BorderSide(color: Colors.blueAccent),
-                            ),
-                          ),
-                          style: const TextStyle(color: Colors.white),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter a name';
-                            }
-                            return null;
-                          },
+              ? const Center(
+                  child: CircularProgressIndicator(
+                    valueColor:
+                        AlwaysStoppedAnimation<Color>(Colors.blueAccent),
+                  ),
+                )
+              : Form(
+                  key: _formKey,
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildFormField(_nameController, 'Study Set Name',
+                                'Enter a name'),
+                            const SizedBox(height: 20),
+                            _buildFormField(_descriptionController,
+                                'Description', 'Enter a description',
+                                maxLines: 2),
+                          ],
                         ),
-                        const SizedBox(height: 20),
-                        TextFormField(
-                          controller: _descriptionController,
-                          decoration: const InputDecoration(
-                            labelText: 'Description',
-                            labelStyle: TextStyle(color: Colors.white),
-                            enabledBorder: OutlineInputBorder(
-                              borderSide: BorderSide(color: Colors.white),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderSide: BorderSide(color: Colors.blueAccent),
-                            ),
-                          ),
-                          style: const TextStyle(color: Colors.white),
-                          maxLines: 3,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter a description';
-                            }
-                            return null;
-                          },
+                      ),
+                      const Divider(color: Colors.white24, height: 1),
+                      Expanded(
+                        child: _questions.isEmpty
+                            ? _buildEmptyState()
+                            : _buildQuestionList(),
+                      ),
+                      _buildAddQuestionButton(),
+                      const SizedBox(height: 12),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                        child: _buildGradientButton(
+                          'Create Study Set',
+                          _questions.isNotEmpty ? _createStudySet : null,
+                          Icons.check_circle,
+                          const [Color(0xFF2980B9), Color(0xFF3498DB)],
                         ),
-                        const SizedBox(height: 30),
-                        const Text(
-                          'Add Questions',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        TextFormField(
-                          controller: _questionController,
-                          decoration: const InputDecoration(
-                            labelText: 'Question',
-                            labelStyle: TextStyle(color: Colors.white),
-                            enabledBorder: OutlineInputBorder(
-                              borderSide: BorderSide(color: Colors.white),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderSide: BorderSide(color: Colors.blueAccent),
-                            ),
-                          ),
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                        const SizedBox(height: 20),
-                        TextFormField(
-                          controller: _correctAnswerController,
-                          decoration: const InputDecoration(
-                            labelText: 'Correct Answer',
-                            labelStyle: TextStyle(color: Colors.white),
-                            enabledBorder: OutlineInputBorder(
-                              borderSide: BorderSide(color: Colors.white),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderSide: BorderSide(color: Colors.blueAccent),
-                            ),
-                          ),
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                        const SizedBox(height: 20),
-                        ...List.generate(
-                          4,
-                          (index) => Padding(
-                            padding: const EdgeInsets.only(bottom: 20),
-                            child: TextFormField(
-                              controller: _optionControllers[index],
-                              decoration: InputDecoration(
-                                labelText: 'Option ${index + 1}',
-                                labelStyle:
-                                    const TextStyle(color: Colors.white),
-                                enabledBorder: const OutlineInputBorder(
-                                  borderSide: BorderSide(color: Colors.white),
-                                ),
-                                focusedBorder: const OutlineInputBorder(
-                                  borderSide:
-                                      BorderSide(color: Colors.blueAccent),
-                                ),
-                              ),
-                              style: const TextStyle(color: Colors.white),
-                            ),
-                          ),
-                        ),
-                        ElevatedButton(
-                          onPressed: _addQuestion,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blueAccent,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 30,
-                              vertical: 15,
-                            ),
-                          ),
-                          child: const Text('Add Question'),
-                        ),
-                        const SizedBox(height: 30),
-                        if (_questions.isNotEmpty) ...[
-                          const Text(
-                            'Added Questions',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          ...List.generate(
-                            _questions.length,
-                            (index) => Card(
-                              color: Colors.blueAccent.withOpacity(0.2),
-                              child: ListTile(
-                                title: Text(
-                                  _questions[index]['question'],
-                                  style: const TextStyle(color: Colors.white),
-                                ),
-                                subtitle: Text(
-                                  'Correct Answer: ${_questions[index]['correct_answer']}',
-                                  style: TextStyle(
-                                    color: Colors.white.withOpacity(0.7),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                        const SizedBox(height: 30),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: _createStudySet,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 30,
-                                vertical: 15,
-                              ),
-                            ),
-                            child: const Text('Create Study Set'),
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
         ],
       ),
     );
   }
+
+  Widget _buildFormField(
+      TextEditingController controller, String label, String validationMessage,
+      {int maxLines = 1}) {
+    return TextFormField(
+      controller: controller,
+      style: const TextStyle(color: Colors.white),
+      maxLines: maxLines,
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(color: Colors.white70),
+        filled: true,
+        fillColor: Colors.white.withOpacity(0.1),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: Colors.white.withOpacity(0.2),
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(
+            color: Colors.blueAccent,
+          ),
+        ),
+      ),
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return validationMessage;
+        }
+        return null;
+      },
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.add_task, color: Colors.white38, size: 64),
+          const SizedBox(height: 16),
+          const Text(
+            'No questions yet',
+            style: TextStyle(
+                fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Click the button below to add your first question',
+            style:
+                TextStyle(fontSize: 16, color: Colors.white.withOpacity(0.7)),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuestionList() {
+    return ListView.builder(
+      padding: const EdgeInsets.all(24),
+      itemCount: _questions.length,
+      itemBuilder: (context, index) {
+        return Card(
+          color: Colors.white.withOpacity(0.1),
+          margin: const EdgeInsets.only(bottom: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: ListTile(
+            leading: CircleAvatar(
+              backgroundColor: Colors.blueAccent,
+              child: Text('${index + 1}',
+                  style: const TextStyle(color: Colors.white)),
+            ),
+            title: Text(
+              _questions[index]['question'],
+              style: const TextStyle(color: Colors.white),
+            ),
+            subtitle: Text(
+              'Correct: ${_questions[index]['correct_answer']}',
+              style: TextStyle(color: Colors.white.withOpacity(0.7)),
+            ),
+            trailing: IconButton(
+              icon: const Icon(Icons.delete, color: Colors.redAccent),
+              onPressed: () {
+                setState(() {
+                  _questions.removeAt(index);
+                });
+              },
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildAddQuestionButton() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+      child: TextButton.icon(
+        onPressed: _showAddQuestionDialog,
+        icon: const Icon(Icons.add, size: 20),
+        label: const Text('Add Question'),
+        style: TextButton.styleFrom(
+          foregroundColor: Colors.white,
+          backgroundColor: Colors.white.withOpacity(0.1),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          minimumSize: const Size(double.infinity, 50),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGradientButton(
+      String text, VoidCallback? onPressed, IconData icon, List<Color> colors) {
+    return Container(
+      height: 50,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors:
+              onPressed != null ? colors : [Colors.grey, Colors.grey.shade700],
+        ),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: onPressed != null
+            ? [
+                BoxShadow(
+                  color: colors.first.withOpacity(0.3),
+                  blurRadius: 10,
+                  offset: const Offset(0, 5),
+                ),
+              ]
+            : [],
+      ),
+      child: ElevatedButton.icon(
+        onPressed: onPressed,
+        icon: Icon(icon, color: Colors.white),
+        label: Text(
+          text,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.transparent,
+          shadowColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showAddQuestionDialog() {
+    final questionController = TextEditingController();
+    final correctAnswerController = TextEditingController();
+    final optionControllers = List.generate(4, (_) => TextEditingController());
+
+    showDialog(
+      context: this.context,
+      builder: (BuildContext context) => AlertDialog(
+        backgroundColor: const Color(0xFF1D1E33),
+        title: const Text('Add a New Question',
+            style: TextStyle(color: Colors.white)),
+        content: _QuestionInputCard(
+          questionController: questionController,
+          correctAnswerController: correctAnswerController,
+          optionControllers: optionControllers,
+          onQuestionAdded: (question) {
+            setState(() {
+              _questions.add(question);
+            });
+            Navigator.pop(context);
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _QuestionInputCard extends StatefulWidget {
+  final Function(Map<String, dynamic>) onQuestionAdded;
+  final TextEditingController questionController;
+  final TextEditingController correctAnswerController;
+  final List<TextEditingController> optionControllers;
+
+  const _QuestionInputCard({
+    required this.onQuestionAdded,
+    required this.questionController,
+    required this.correctAnswerController,
+    required this.optionControllers,
+  });
+
+  @override
+  _QuestionInputCardState createState() => _QuestionInputCardState();
+}
+
+class _QuestionInputCardState extends State<_QuestionInputCard> {
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      color: Colors.blueAccent.withOpacity(0.2),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Add Question',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: widget.questionController,
+              decoration: InputDecoration(
+                labelText: 'Question',
+                labelStyle: const TextStyle(color: Colors.white70),
+                filled: true,
+                fillColor: Colors.white.withOpacity(0.1),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+                prefixIcon:
+                    const Icon(Icons.help_outline, color: Colors.white70),
+              ),
+              style: const TextStyle(color: Colors.white),
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: widget.correctAnswerController,
+              decoration: InputDecoration(
+                labelText: 'Correct Answer',
+                labelStyle: const TextStyle(color: Colors.white70),
+                filled: true,
+                fillColor: Colors.white.withOpacity(0.1),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+                prefixIcon: const Icon(Icons.check_circle_outline,
+                    color: Colors.white70),
+              ),
+              style: const TextStyle(color: Colors.white),
+            ),
+            const SizedBox(height: 16),
+            ...List.generate(
+              4,
+              (index) => Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: TextFormField(
+                  controller: widget.optionControllers[index],
+                  decoration: InputDecoration(
+                    labelText: 'Option ${index + 1}',
+                    labelStyle: const TextStyle(color: Colors.white70),
+                    filled: true,
+                    fillColor: Colors.white.withOpacity(0.1),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                    prefixIcon: Icon(
+                      Icons.radio_button_unchecked,
+                      color: Colors.white70,
+                    ),
+                  ),
+                  style: const TextStyle(color: Colors.white),
+                ),
+              ),
+            ),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  widget.onQuestionAdded({
+                    'question': widget.questionController.text,
+                    'correct_answer': widget.correctAnswerController.text,
+                    'options':
+                        widget.optionControllers.map((c) => c.text).toList(),
+                  });
+                },
+                icon: const Icon(Icons.add),
+                label: const Text('Add Question'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blueAccent,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class CustomPageRoute<T> extends PageRouteBuilder<T> {
+  final Widget page;
+  final String routeName;
+
+  CustomPageRoute({required this.page, required this.routeName})
+      : super(
+          settings: RouteSettings(name: routeName),
+          pageBuilder: (BuildContext context, Animation<double> animation,
+                  Animation<double> secondaryAnimation) =>
+              page,
+          transitionsBuilder: (BuildContext context,
+              Animation<double> animation,
+              Animation<double> secondaryAnimation,
+              Widget child) {
+            const begin = Offset(1.0, 0.0);
+            const end = Offset.zero;
+            const curve = Curves.easeInOutCubic;
+
+            var tween = Tween(begin: begin, end: end).chain(
+              CurveTween(curve: curve),
+            );
+
+            return SlideTransition(
+              position: animation.drive(tween),
+              child: child,
+            );
+          },
+          transitionDuration: const Duration(milliseconds: 500),
+        );
 }

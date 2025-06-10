@@ -131,9 +131,7 @@ class _PremadeSetsScreenState extends State<PremadeSetsScreen> {
       );
 
       // Notify parent to update its state
-      if (widget.onSetImported != null) {
-        widget.onSetImported();
-      }
+      widget.onSetImported();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
