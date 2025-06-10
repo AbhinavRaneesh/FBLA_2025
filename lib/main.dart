@@ -21,6 +21,7 @@ import 'questions.dart' as quiz;
 import 'premade_sets_screen.dart';
 import 'premade_study_sets.dart' as premade;
 import 'package:student_learning_app/pages/home_page.dart';
+import 'pdf_processing.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -1578,9 +1579,10 @@ class _MainScreenState extends State<MainScreen> {
         ],
       ),
       floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 16.0),
-        child: Row(
+        padding: const EdgeInsets.only(bottom: 16.0, right: 16.0),
+        child: Column(
           mainAxisAlignment: MainAxisAlignment.end,
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             FloatingActionButton.extended(
               onPressed: () {
@@ -1597,7 +1599,7 @@ class _MainScreenState extends State<MainScreen> {
               icon: const Icon(Icons.auto_awesome),
               label: const Text('Generate Questions'),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(height: 16),
             FloatingActionButton.extended(
               onPressed: () {
                 Navigator.push(
@@ -1613,6 +1615,22 @@ class _MainScreenState extends State<MainScreen> {
               backgroundColor: Colors.blueAccent,
               icon: const Icon(Icons.add),
               label: const Text('Create Set'),
+            ),
+            const SizedBox(height: 16),
+            FloatingActionButton.extended(
+              onPressed: () {
+                Navigator.push(
+                  this.context,
+                  MaterialPageRoute(
+                    builder: (context) => PDFProcessingScreen(
+                      username: widget.username,
+                    ),
+                  ),
+                );
+              },
+              backgroundColor: Colors.orange,
+              icon: const Icon(Icons.picture_as_pdf),
+              label: const Text('Process PDF'),
             ),
           ],
         ),
@@ -1776,22 +1794,6 @@ class _LearnTabState extends State<LearnTab>
             ),
           ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          Navigator.push(
-            this.context,
-            MaterialPageRoute(
-              builder: (context) => StudySetCreationOptionsScreen(
-                username: widget.username,
-                onStudySetCreated: _loadStudySets,
-              ),
-            ),
-          );
-        },
-        backgroundColor: Colors.blueAccent,
-        icon: const Icon(Icons.add),
-        label: const Text('Create Set'),
       ),
     );
   }
