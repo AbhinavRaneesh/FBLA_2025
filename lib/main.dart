@@ -3038,8 +3038,8 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
                       Slider(
                         value: _questionCount.toDouble(),
                         min: 1,
-                        max: _questions.length.toDouble(),
-                        divisions: _questions.length - 1,
+                        max: _questions.isEmpty ? 1.0 : _questions.length.toDouble(),
+                        divisions: _questions.isEmpty ? 0 : _questions.length - 1,
                         label: _questionCount.toString(),
                         onChanged: (value) {
                           setState(() {
