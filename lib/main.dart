@@ -20,6 +20,7 @@ import 'database_helper.dart';
 import 'questions.dart' as quiz;
 import 'premade_sets_screen.dart';
 import 'premade_study_sets.dart' as premade;
+import 'package:student_learning_app/pages/home_page.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -1469,14 +1470,18 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
-  int _userPoints = 0;
   String _currentTheme = 'space';
+  int _userPoints = 0;
   final DatabaseHelper _dbHelper = DatabaseHelper();
+  List<Map<String, dynamic>> _studySets = [];
+  List<Map<String, dynamic>> _premadeStudySets = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
     _loadUserData();
+    _loadStudySets();
   }
 
   Future<void> _loadUserData() async {
@@ -1486,6 +1491,20 @@ class _MainScreenState extends State<MainScreen> {
       _userPoints = points;
       _currentTheme = theme ?? 'space';
     });
+  }
+
+  Future<void> _loadStudySets() async {
+    if (!mounted) return;
+    setState(() => _isLoading = true);
+    final userSets = await _dbHelper.getUserStudySets(widget.username);
+    final importedSets = await _dbHelper.getUserImportedSets(widget.username);
+    if (mounted) {
+      setState(() {
+        _studySets = userSets;
+        _premadeStudySets = importedSets;
+        _isLoading = false;
+      });
+    }
   }
 
   void _onTabTapped(int index) {
@@ -3310,6 +3329,7 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
   bool _showModeSelection = true;
   bool _showQuizArea = false;
   bool _showScoreSummary = false;
+  int _score = 0;
 
   @override
   void initState() {
@@ -3606,31 +3626,143 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
       ),
     );
   }
+
+  Widget _buildScoreSummary() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          Text(
+            'Score: $_score',
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Questions Remaining: ${widget.questions.length - _currentQuestionIndex}',
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.white.withOpacity(0.7),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuizArea(BuildContext context) {
+    if (_currentQuestionIndex >= widget.questions.length) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text(
+              'Quiz Completed!',
+              style: TextStyle(
+                fontSize: 32,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'Final Score: $_score',
+              style: const TextStyle(
+                fontSize: 24,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 40),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blueAccent,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 16,
+                ),
+              ),
+              child: const Text(
+                'Back to Study Sets',
+                style: TextStyle(
+                  fontSize: 18,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final question = widget.questions[_currentQuestionIndex];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          question.questionText,
+          style: const TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        const SizedBox(height: 32),
+        ...question.options.map((option) => Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: ElevatedButton(
+                onPressed: () => _checkAnswer(option),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white.withOpacity(0.1),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 16,
+                  ),
+                ),
+                child: Text(
+                  option,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            )),
+      ],
+    );
+  }
 }
 
-class CustomPageRoute<T> extends PageRouteBuilder<T> {
+class CustomPageRoute extends PageRouteBuilder {
   final Widget page;
   final String routeName;
 
-  CustomPageRoute({required this.page, required this.routeName})
-      : super(
+  CustomPageRoute({
+    required this.page,
+    required this.routeName,
+  }) : super(
           settings: RouteSettings(name: routeName),
           pageBuilder: (context, animation, secondaryAnimation) => page,
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             const begin = Offset(1.0, 0.0);
             const end = Offset.zero;
-            const curve = Curves.easeInOutCubic;
-
+            const curve = Curves.easeInOut;
             var tween = Tween(begin: begin, end: end).chain(
               CurveTween(curve: curve),
             );
-
+            var offsetAnimation = animation.drive(tween);
             return SlideTransition(
-              position: animation.drive(tween),
+              position: offsetAnimation,
               child: child,
             );
           },
-          transitionDuration: const Duration(milliseconds: 500),
         );
 }
 
@@ -5443,13 +5575,8 @@ class CustomPageRoute<T> extends PageRouteBuilder<T> {
   CustomPageRoute({required this.page, required this.routeName})
       : super(
           settings: RouteSettings(name: routeName),
-          pageBuilder: (BuildContext context, Animation<double> animation,
-                  Animation<double> secondaryAnimation) =>
-              page,
-          transitionsBuilder: (BuildContext context,
-              Animation<double> animation,
-              Animation<double> secondaryAnimation,
-              Widget child) {
+          pageBuilder: (context, animation, secondaryAnimation) => page,
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
             const begin = Offset(1.0, 0.0);
             const end = Offset.zero;
             const curve = Curves.easeInOutCubic;
