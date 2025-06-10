@@ -3608,7 +3608,7 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: _startPractice,
+                          onPressed: () => _startPractice(this.context),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.blueAccent,
                             padding: const EdgeInsets.symmetric(vertical: 15),
@@ -3646,7 +3646,7 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Questions Remaining: ${widget.questions.length - _currentQuestionIndex}',
+            'Questions Remaining: \\${_questions.length - _currentQuestionIndex}',
             style: TextStyle(
               fontSize: 16,
               color: Colors.white.withOpacity(0.7),
@@ -3658,7 +3658,7 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
   }
 
   Widget _buildQuizArea(BuildContext context) {
-    if (_currentQuestionIndex >= widget.questions.length) {
+    if (_currentQuestionIndex >= _questions.length) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -3702,12 +3702,12 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
       );
     }
 
-    final question = widget.questions[_currentQuestionIndex];
+    final question = _questions[_currentQuestionIndex];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          question.questionText,
+          question['questionText'],
           style: const TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
@@ -3715,7 +3715,7 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
           ),
         ),
         const SizedBox(height: 32),
-        ...question.options.map((option) => Padding(
+        ...(question['options'] as List<dynamic>).map((option) => Padding(
               padding: const EdgeInsets.only(bottom: 16),
               child: ElevatedButton(
                 onPressed: () => _checkAnswer(option),
@@ -5566,30 +5566,4 @@ class _QuestionInputCardState extends State<_QuestionInputCard> {
       ),
     );
   }
-}
-
-class CustomPageRoute<T> extends PageRouteBuilder<T> {
-  final Widget page;
-  final String routeName;
-
-  CustomPageRoute({required this.page, required this.routeName})
-      : super(
-          settings: RouteSettings(name: routeName),
-          pageBuilder: (context, animation, secondaryAnimation) => page,
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            const begin = Offset(1.0, 0.0);
-            const end = Offset.zero;
-            const curve = Curves.easeInOutCubic;
-
-            var tween = Tween(begin: begin, end: end).chain(
-              CurveTween(curve: curve),
-            );
-
-            return SlideTransition(
-              position: animation.drive(tween),
-              child: child,
-            );
-          },
-          transitionDuration: const Duration(milliseconds: 500),
-        );
 }
