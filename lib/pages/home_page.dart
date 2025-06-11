@@ -3,6 +3,7 @@ import 'package:student_learning_app/bloc/chat_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../models/chat_message_model.dart';
 import '../database_helper.dart';
+import '../frq_manager.dart';
 
 class HomePage extends StatefulWidget {
   final String username;
@@ -461,58 +462,101 @@ class _HomePageState extends State<HomePage> {
           heroTag: "chatFAB",
         ),
         appBar: AppBar(
-          title: Text("QuestAI Quiz App"),
-          backgroundColor: Colors.purple,
+          title: const Text('EduQuest'),
+          backgroundColor: const Color(0xFF1D1E33),
+          foregroundColor: Colors.white,
         ),
         body: Container(
-          decoration: BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage('assets/images/beach.jpg'),
-              fit: BoxFit.cover,
-              opacity: 0.5,
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFF1D1E33), Color(0xFF2A2B4A)],
             ),
           ),
-          child: BlocListener<ChatBloc, ChatState>(
-            listener: (context, state) {
-              if (state is ChatSuccessState &&
-                  isWaitingForQuestions &&
-                  state.messages.isNotEmpty) {
-                var lastMessage = state.messages.last;
-                if (lastMessage.role != "user") {
-                  _parseAndReplaceQuestions(lastMessage.parts.first.text);
-                }
-              }
-            },
-            child: BlocBuilder<ChatBloc, ChatState>(
-              builder: (context, state) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Column(
-                    children: [
-                      SizedBox(height: 60),
-                      Text(
-                        "QuestAI Quiz App",
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      SizedBox(height: 20),
-
-                      // Show different sections based on app state
-                      if (showScoreSummary) ...[
-                        _buildScoreSummary()
-                      ] else if (showQuizArea &&
-                          scienceQuestions.isNotEmpty) ...[
-                        _buildQuizArea()
-                      ] else ...[
-                        _buildHomeScreen()
-                      ],
-                    ],
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Welcome to EduQuest',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
                   ),
-                );
-              },
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const FRQManager(),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.purple,
+                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'AP FRQs',
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                BlocListener<ChatBloc, ChatState>(
+                  listener: (context, state) {
+                    if (state is ChatSuccessState &&
+                        isWaitingForQuestions &&
+                        state.messages.isNotEmpty) {
+                      var lastMessage = state.messages.last;
+                      if (lastMessage.role != "user") {
+                        _parseAndReplaceQuestions(lastMessage.parts.first.text);
+                      }
+                    }
+                  },
+                  child: BlocBuilder<ChatBloc, ChatState>(
+                    builder: (context, state) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: Column(
+                          children: [
+                            SizedBox(height: 60),
+                            Text(
+                              "QuestAI Quiz App",
+                              style: TextStyle(
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                            SizedBox(height: 20),
+
+                            // Show different sections based on app state
+                            if (showScoreSummary) ...[
+                              _buildScoreSummary()
+                            ] else if (showQuizArea &&
+                                scienceQuestions.isNotEmpty) ...[
+                              _buildQuizArea()
+                            ] else ...[
+                              _buildHomeScreen()
+                            ],
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
           ),
         ),

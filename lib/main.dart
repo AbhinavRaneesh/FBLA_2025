@@ -12,6 +12,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:student_learning_app/frq_manager.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -21,7 +22,7 @@ import 'questions.dart' as quiz;
 import 'premade_sets_screen.dart';
 import 'premade_study_sets.dart' as premade;
 import 'package:student_learning_app/pages/home_page.dart';
-import 'pdf_processing.dart';
+
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -1589,8 +1590,23 @@ class _MainScreenState extends State<MainScreen> {
                 Navigator.push(
                   this.context,
                   MaterialPageRoute(
+                    builder: (context) => const FRQManager(),
+                  ),
+                );
+              },
+              backgroundColor: Colors.purple,
+              icon: const Icon(Icons.menu_book),
+              label: const Text('AP FRQs'),
+            ),
+            const SizedBox(height: 16),
+            FloatingActionButton.extended(
+              onPressed: () {
+                Navigator.push(
+                  this.context,
+                  MaterialPageRoute(
                     builder: (context) => HomePage(
                       username: widget.username,
+                      currentTheme: _currentTheme,
                     ),
                   ),
                 );
@@ -1617,21 +1633,6 @@ class _MainScreenState extends State<MainScreen> {
               label: const Text('Create Set'),
             ),
             const SizedBox(height: 16),
-            FloatingActionButton.extended(
-              onPressed: () {
-                Navigator.push(
-                  this.context,
-                  MaterialPageRoute(
-                    builder: (context) => PDFProcessingScreen(
-                      username: widget.username,
-                    ),
-                  ),
-                );
-              },
-              backgroundColor: Colors.orange,
-              icon: const Icon(Icons.picture_as_pdf),
-              label: const Text('Process PDF'),
-            ),
           ],
         ),
       ),
@@ -5606,6 +5607,113 @@ class _QuestionInputCardState extends State<_QuestionInputCard> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class HomePage extends StatelessWidget {
+  final String username;
+  final String currentTheme;
+
+  const HomePage({
+    super.key,
+    required this.username,
+    required this.currentTheme,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('EduQuest'),
+        backgroundColor: const Color(0xFF1D1E33),
+        foregroundColor: Colors.white,
+      ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFF1D1E33), Color(0xFF2A2B4A)],
+          ),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text(
+                'Welcome to EduQuest',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const FRQManager(),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.purple,
+                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text(
+                  'AP FRQs',
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const QuestionGenerator(),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text(
+                  'Generate Questions',
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class QuestionGenerator extends StatelessWidget {
+  const QuestionGenerator({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Question Generator')),
+      body: const Center(child: Text('Question Generator Placeholder')),
     );
   }
 }
