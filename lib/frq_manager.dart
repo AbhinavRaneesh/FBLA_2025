@@ -7,6 +7,7 @@ import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:student_learning_app/bloc/chat_bloc.dart';
 import 'screens/frq_summary_screen.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class FRQManager extends StatelessWidget {
   const FRQManager({super.key});
@@ -309,10 +310,9 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
                           const SizedBox(height: 16),
                           ElevatedButton(
                             onPressed: () async {
-                              // Open QuestAI chat modal immediately
-                              Navigator.of(context).pop(); // Close the workbook modal
-                              await Future.delayed(Duration(milliseconds: 300));
-                              _showChatModalAndStartGrading(context);
+                              WidgetsBinding.instance.addPostFrameCallback((_) {
+                                _showChatModalAndStartGrading(context);
+                              });
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.green,
@@ -381,9 +381,6 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
                                 selectedSubpart = null;
                               });
                               FocusScope.of(context).unfocus();
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Answer saved!')),
-                              );
                             },
                             child: const Text('Back to Questions'),
                           ),
@@ -437,6 +434,16 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
                     label: const Text('Answer Workbook', style: TextStyle(fontSize: 14)),
                   ),
                 ),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 170.0, right: 8.0),
+                  child: FloatingActionButton(
+                    heroTag: 'chat_ai',
+                    backgroundColor: Colors.purple,
+                    onPressed: () => _showGeneralChatModal(context),
+                    child: const Icon(Icons.message, size: 28),
+                    tooltip: 'Chat with QuestAI',
+                  ),
+                ),
               ],
             )
           : null,
@@ -444,60 +451,189 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
   }
 
   void _showChatModalAndStartGrading(BuildContext context) async {
-    // Show the chat modal immediately (reuse chat modal logic)
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: Text('QuestAI Grading'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            CircularProgressIndicator(),
-            SizedBox(height: 16),
-            Text('Grading in progress...'),
-          ],
-        ),
-      ),
-    );
-
-    // 1. Read canonical answers and rubrics from the .txt file
+    // Use the general chat modal for grading
+    final chatBloc = ChatBloc();
+    final List<FrqGradingResult> gradingResults = [];
     final frqData = await rootBundle.loadString('lib/apcs_2024_frq_answers.txt');
     final Map<String, dynamic> canonical = _parseCanonicalAnswers(frqData);
     final Map<String, dynamic> rubrics = _parseRubrics(frqData);
 
-    // 2. For each subpart, send grading prompt to QuestAI and collect results
-    List<FrqGradingResult> gradingResults = [];
+    // Open the general chat modal
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            final TextEditingController messageController = TextEditingController();
+            final ScrollController scrollController = ScrollController();
+            void _scrollToBottom() {
+              if (scrollController.hasClients) {
+                scrollController.animateTo(
+                  scrollController.position.maxScrollExtent,
+                  duration: Duration(milliseconds: 300),
+                  curve: Curves.easeOut,
+                );
+              }
+            }
+            return Dialog(
+              backgroundColor: Colors.transparent,
+              insetPadding: EdgeInsets.zero,
+              child: Container(
+                height: MediaQuery.of(context).size.height * 0.8,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                ),
+                child: Column(
+                  children: [
+                    Container(
+                      padding: EdgeInsets.all(16),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            "Chat with QuestAI",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.purple,
+                            ),
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.close, color: Colors.red),
+                            onPressed: () {}, // Disabled during grading
+                          ),
+                        ],
+                      ),
+                    ),
+                    Divider(height: 1, color: Colors.grey[300]),
+                    Expanded(
+                      child: BlocBuilder<ChatBloc, ChatState>(
+                        bloc: chatBloc,
+                        builder: (context, state) {
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            _scrollToBottom();
+                          });
+                          if (state is ChatSuccessState) {
+                            return ListView.builder(
+                              controller: scrollController,
+                              itemCount: state.messages.length,
+                              itemBuilder: (context, index) {
+                                final message = state.messages[index];
+                                return Container(
+                                  margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                                  padding: EdgeInsets.all(12),
+                                  alignment: message.role == "user" ? Alignment.centerRight : Alignment.centerLeft,
+                                  child: Container(
+                                    constraints: BoxConstraints(
+                                      maxWidth: MediaQuery.of(context).size.width * 0.75,
+                                    ),
+                                    padding: EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: message.role == "user" ? Colors.blue : Colors.purple,
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Text(
+                                      message.parts.first.text,
+                                      style: TextStyle(color: Colors.white, fontSize: 16),
+                                    ),
+                                  ),
+                                );
+                              },
+                            );
+                          }
+                          return Center(child: CircularProgressIndicator());
+                        },
+                      ),
+                    ),
+                    Container(
+                      padding: EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 4,
+                            offset: Offset(0, -2),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: messageController,
+                              decoration: InputDecoration(
+                                hintText: "Ask QuestAI anything...",
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(25),
+                                  borderSide: BorderSide(color: Colors.purple),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(25),
+                                  borderSide: BorderSide(color: Colors.purple, width: 2),
+                                ),
+                                contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 8),
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Colors.purple,
+                              shape: BoxShape.circle,
+                            ),
+                            child: IconButton(
+                              onPressed: () {
+                                if (messageController.text.isNotEmpty) {
+                                  chatBloc.add(
+                                    ChatGenerationNewTextMessageEvent(
+                                      inputMessage: messageController.text,
+                                    ),
+                                  );
+                                  messageController.clear();
+                                }
+                              },
+                              icon: Icon(Icons.send, color: Colors.white),
+                              iconSize: 24,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    // Sequentially send grading prompts for each subpart
     for (final subpart in manualQuestions) {
       final userAnswer = answers[subpart] ?? '';
       final canonicalAnswer = canonical[subpart] ?? '';
       final rubric = rubrics[subpart] ?? '';
       final prompt = _buildGradingPrompt(subpart, userAnswer, canonicalAnswer, rubric);
 
-      // Use ChatBloc and ChatRepo to get grading result
-      final chatBloc = ChatBloc();
-      final completer = Completer<String>();
-      late StreamSubscription sub;
-      sub = chatBloc.stream.listen((state) {
+      // Send grading prompt as a user message
+      chatBloc.add(ChatGenerationNewTextMessageEvent(inputMessage: prompt));
+
+      // Wait for AI reply
+      String feedback = '';
+      bool gotReply = false;
+      await for (final state in chatBloc.stream) {
         if (state is ChatSuccessState && state.messages.isNotEmpty) {
           final last = state.messages.last;
           if (last.role == "model") {
-            completer.complete(last.parts.first.text);
-            sub.cancel();
+            feedback = last.parts.first.text;
+            gotReply = true;
+            break;
           }
-        } else if (state is ChatErrorState) {
-          completer.completeError(state.message);
-          sub.cancel();
         }
-      });
-      chatBloc.add(ChatGenerationNewTextMessageEvent(inputMessage: prompt));
-      String feedback = '';
-      try {
-        feedback = await completer.future.timeout(Duration(seconds: 60));
-      } catch (e) {
-        feedback = 'Error: $e';
       }
-      // Parse points awarded from feedback (simple regex or fallback)
       final points = _extractPoints(feedback, subpart, frqData);
       final maxPoints = _extractMaxPoints(subpart, frqData);
       gradingResults.add(FrqGradingResult(
@@ -508,15 +644,172 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
         maxPoints: maxPoints,
         feedback: feedback,
       ));
-      await Future.delayed(Duration(milliseconds: 500)); // Small delay between requests
+      await Future.delayed(Duration(milliseconds: 500));
     }
 
-    // 3. After all grading, close dialog and navigate to summary screen
-    Navigator.of(context, rootNavigator: true).pop();
+    // After all grading, close the chat modal and show the summary
+    Navigator.of(context).pop();
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => FrqSummaryScreen(results: gradingResults),
       ),
+    );
+  }
+
+  void _showGeneralChatModal(BuildContext context) {
+    final chatBloc = ChatBloc();
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            final TextEditingController messageController = TextEditingController();
+            final ScrollController scrollController = ScrollController();
+            void _scrollToBottom() {
+              if (scrollController.hasClients) {
+                scrollController.animateTo(
+                  scrollController.position.maxScrollExtent,
+                  duration: Duration(milliseconds: 300),
+                  curve: Curves.easeOut,
+                );
+              }
+            }
+            return Dialog(
+              backgroundColor: Colors.transparent,
+              insetPadding: EdgeInsets.zero,
+              child: Container(
+                height: MediaQuery.of(context).size.height * 0.8,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                ),
+                child: Column(
+                  children: [
+                    Container(
+                      padding: EdgeInsets.all(16),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            "Chat with QuestAI",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.purple,
+                            ),
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.close, color: Colors.red),
+                            onPressed: () {
+                              Navigator.pop(context);
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    Divider(height: 1, color: Colors.grey[300]),
+                    Expanded(
+                      child: BlocBuilder<ChatBloc, ChatState>(
+                        bloc: chatBloc,
+                        builder: (context, state) {
+                          if (state is ChatSuccessState) {
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              _scrollToBottom();
+                            });
+                            return ListView.builder(
+                              controller: scrollController,
+                              itemCount: state.messages.length,
+                              itemBuilder: (context, index) {
+                                final message = state.messages[index];
+                                return Container(
+                                  margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                                  padding: EdgeInsets.all(12),
+                                  alignment: message.role == "user" ? Alignment.centerRight : Alignment.centerLeft,
+                                  child: Container(
+                                    constraints: BoxConstraints(
+                                      maxWidth: MediaQuery.of(context).size.width * 0.75,
+                                    ),
+                                    padding: EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: message.role == "user" ? Colors.blue : Colors.purple,
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Text(
+                                      message.parts.first.text,
+                                      style: TextStyle(color: Colors.white, fontSize: 16),
+                                    ),
+                                  ),
+                                );
+                              },
+                            );
+                          }
+                          return Center(child: CircularProgressIndicator());
+                        },
+                      ),
+                    ),
+                    Container(
+                      padding: EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 4,
+                            offset: Offset(0, -2),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: messageController,
+                              decoration: InputDecoration(
+                                hintText: "Ask QuestAI anything...",
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(25),
+                                  borderSide: BorderSide(color: Colors.purple),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(25),
+                                  borderSide: BorderSide(color: Colors.purple, width: 2),
+                                ),
+                                contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 8),
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Colors.purple,
+                              shape: BoxShape.circle,
+                            ),
+                            child: IconButton(
+                              onPressed: () {
+                                if (messageController.text.isNotEmpty) {
+                                  chatBloc.add(
+                                    ChatGenerationNewTextMessageEvent(
+                                      inputMessage: messageController.text,
+                                    ),
+                                  );
+                                  messageController.clear();
+                                }
+                              },
+                              icon: Icon(Icons.send, color: Colors.white),
+                              iconSize: 24,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
