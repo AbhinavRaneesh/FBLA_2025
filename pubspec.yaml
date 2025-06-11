@@ -24,6 +24,13 @@ dependencies:
   excel: ^2.1.0
   google_sign_in: ^6.1.0
   file_picker: ^10.1.9
+  pdf: ^3.10.7
+  printing: ^5.11.1
+  url_launcher: ^6.2.4
+  syncfusion_flutter_pdfviewer: ^24.2.8
+  syncfusion_flutter_pdf: ^24.2.8
+  path_provider: ^2.1.2
+  pdfx: ^2.9.1
 
 dev_dependencies:
   flutter_test:
