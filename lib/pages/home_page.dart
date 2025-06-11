@@ -44,6 +44,8 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _chatBloc = ChatBloc(); // Initialize bloc once
+    showQuizArea = false; // Ensure quiz area is not shown initially
+    showScoreSummary = false;
   }
 
   @override
@@ -372,6 +374,7 @@ class _HomePageState extends State<HomePage> {
         // If parsing failed, show error with more details
         setState(() {
           isWaitingForQuestions = false;
+          showQuizArea = false; // Ensure we stay on configuration screen if parsing fails
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -489,7 +492,7 @@ class _HomePageState extends State<HomePage> {
       selectedAnswer = null;
       showAnswer = false;
       showScoreSummary = false;
-      showQuizArea = false;
+      showQuizArea = false; // Reset to show configuration screen
       scienceQuestions.clear();
       answeredCorrectly.clear();
     });
@@ -511,14 +514,12 @@ class _HomePageState extends State<HomePage> {
       child: Scaffold(
         extendBodyBehindAppBar: true,
         backgroundColor: Colors.transparent,
-        floatingActionButton: showQuizArea
-            ? FloatingActionButton(
-                onPressed: () => _showChatModal(),
-                backgroundColor: Colors.purple,
-                child: Icon(Icons.message, color: Colors.white),
-                heroTag: "chatFAB",
-              )
-            : null,
+        floatingActionButton: FloatingActionButton(
+          onPressed: () => _showChatModal(),
+          backgroundColor: Colors.purple,
+          child: Icon(Icons.message, color: Colors.white),
+          heroTag: "chatFAB",
+        ),
         appBar: AppBar(
           title: const Text('QuestAI Quiz'),
           backgroundColor: const Color(0xFF1D1E33),
@@ -543,6 +544,7 @@ class _HomePageState extends State<HomePage> {
             child: Column(
               children: [
                 if (!showQuizArea && !showScoreSummary) ...[
+                  SizedBox(height: 150), // Increased top padding
                   // Subject Selection Area
                   Text(
                     'Select a Subject',
@@ -576,59 +578,106 @@ class _HomePageState extends State<HomePage> {
                     },
                   ),
                   SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: isWaitingForQuestions ? null : _generateQuestions,
-                    style: ElevatedButton.styleFrom(
-                      padding: EdgeInsets.zero,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 6,
+                  // Number of Questions Selection
+                  Text(
+                    'Number of Questions',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
-                    child: Ink(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            Color(0xFFFFD600), // Bright yellow
-                            Color(0xFFFF9800), // Bright orange
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
+                  ),
+                  SizedBox(height: 20),
+                  DropdownButton<int>(
+                    value: numberOfQuestions,
+                    dropdownColor: Colors.grey.shade900,
+                    style: TextStyle(color: Colors.white),
+                    underline: Container(
+                      height: 2,
+                      color: Colors.purple,
+                    ),
+                    items: [5, 10, 15, 20].map((int number) {
+                      return DropdownMenuItem<int>(
+                        value: number,
+                        child: Text('$number Questions'),
+                      );
+                    }).toList(),
+                    onChanged: (int? newValue) {
+                      if (newValue != null) {
+                        setState(() {
+                          numberOfQuestions = newValue;
+                        });
+                      }
+                    },
+                  ),
+                  SizedBox(height: 20),
+                  BlocBuilder<ChatBloc, ChatState>(
+                    bloc: _chatBloc,
+                    builder: (context, state) {
+                      if (state is ChatSuccessState && state.messages.isNotEmpty) {
+                        // Get the last message from the AI
+                        final lastMessage = state.messages.last;
+                        if (lastMessage.role == "model") {
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            _parseAndReplaceQuestions(lastMessage.parts.first.text);
+                          });
+                        }
+                      }
+                      return ElevatedButton(
+                        onPressed: isWaitingForQuestions ? null : _generateQuestions,
+                        style: ElevatedButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 6,
                         ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Container(
-                        constraints: BoxConstraints(minWidth: 150, minHeight: 48),
-                        alignment: Alignment.center,
-                        child: isWaitingForQuestions
-                            ? Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
+                        child: Ink(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Color(0xFFFFD600), // Bright yellow
+                                Color(0xFFFF9800), // Bright orange
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Container(
+                            constraints: BoxConstraints(minWidth: 150, minHeight: 48),
+                            alignment: Alignment.center,
+                            child: isWaitingForQuestions
+                                ? Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                          color: Colors.white,
+                                          strokeWidth: 2,
+                                        ),
+                                      ),
+                                      SizedBox(width: 12),
+                                      Text("Generating...",
+                                          style: TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold)),
+                                    ],
+                                  )
+                                : Text(
+                                    "Generate Quiz",
+                                    style: TextStyle(
                                       color: Colors.white,
-                                      strokeWidth: 2,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 18,
                                     ),
                                   ),
-                                  SizedBox(width: 12),
-                                  Text("Generating...",
-                                      style: TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold)),
-                                ],
-                              )
-                            : Text(
-                                "Generate Quiz",
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 18,
-                                ),
-                              ),
-                      ),
-                    ),
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ],
                 if (showQuizArea) _buildQuizArea(),
@@ -650,6 +699,7 @@ class _HomePageState extends State<HomePage> {
 
     return Column(
       children: [
+        SizedBox(height: 100), // Shift quiz questions down
         Text(
           "Question ${currentQuestionIndex + 1}/${scienceQuestions.length}",
           style: TextStyle(
