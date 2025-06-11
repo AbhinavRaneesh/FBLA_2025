@@ -678,6 +678,7 @@ class _SignInPageState extends State<SignInPage>
   final _dbHelper = DatabaseHelper();
   bool _obscurePassword = true;
   bool _isFormValid = false;
+  bool _rememberAccount = false;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -689,6 +690,7 @@ class _SignInPageState extends State<SignInPage>
     super.initState();
     _usernameController.addListener(_updateFormState);
     _passwordController.addListener(_updateFormState);
+    _loadSavedCredentials();
 
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 1500),
@@ -713,6 +715,28 @@ class _SignInPageState extends State<SignInPage>
     );
 
     _animationController.forward();
+  }
+
+  Future<void> _loadSavedCredentials() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _usernameController.text = prefs.getString('saved_username') ?? '';
+      _passwordController.text = prefs.getString('saved_password') ?? '';
+      _rememberAccount = prefs.getBool('remember_account') ?? false;
+    });
+  }
+
+  Future<void> _saveCredentials() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (_rememberAccount) {
+      await prefs.setString('saved_username', _usernameController.text);
+      await prefs.setString('saved_password', _passwordController.text);
+      await prefs.setBool('remember_account', true);
+    } else {
+      await prefs.remove('saved_username');
+      await prefs.remove('saved_password');
+      await prefs.setBool('remember_account', false);
+    }
   }
 
   @override
@@ -753,6 +777,7 @@ class _SignInPageState extends State<SignInPage>
           await _dbHelper.authenticateUser(username, password);
 
       if (isAuthenticated) {
+        await _saveCredentials(); // Save credentials if remember is checked
         HapticFeedback.heavyImpact();
         if (!mounted) return;
         Navigator.pushReplacement(
@@ -978,6 +1003,29 @@ class _SignInPageState extends State<SignInPage>
                                   ),
                                 ),
                               ),
+                            ),
+                            const SizedBox(height: 32),
+
+                            // Remember Account Checkbox
+                            Row(
+                              children: [
+                                Checkbox(
+                                  value: _rememberAccount,
+                                  onChanged: (bool? value) {
+                                    setState(() {
+                                      _rememberAccount = value ?? false;
+                                    });
+                                  },
+                                  activeColor: Colors.blueAccent,
+                                ),
+                                const Text(
+                                  'Remember Account',
+                                  style: TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
                             ),
                             const SizedBox(height: 32),
 
@@ -1604,10 +1652,7 @@ class _MainScreenState extends State<MainScreen> {
                 Navigator.push(
                   this.context,
                   MaterialPageRoute(
-                    builder: (context) => HomePage(
-                      username: widget.username,
-                      currentTheme: _currentTheme,
-                    ),
+                    builder: (context) => const HomePage(),
                   ),
                 );
               },
@@ -5611,109 +5656,6 @@ class _QuestionInputCardState extends State<_QuestionInputCard> {
   }
 }
 
-class HomePage extends StatelessWidget {
-  final String username;
-  final String currentTheme;
 
-  const HomePage({
-    super.key,
-    required this.username,
-    required this.currentTheme,
-  });
+ 
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('EduQuest'),
-        backgroundColor: const Color(0xFF1D1E33),
-        foregroundColor: Colors.white,
-      ),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF1D1E33), Color(0xFF2A2B4A)],
-          ),
-        ),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text(
-                'Welcome to EduQuest',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const FRQManager(),
-                    ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.purple,
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: const Text(
-                  'AP FRQs',
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const QuestionGenerator(),
-                    ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: const Text(
-                  'Generate Questions',
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class QuestionGenerator extends StatelessWidget {
-  const QuestionGenerator({super.key});
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Question Generator')),
-      body: const Center(child: Text('Question Generator Placeholder')),
-    );
-  }
-}

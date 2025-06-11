@@ -51,6 +51,7 @@ flutter:
     - assets/images/beach.jpg
     - assets/images/bird.png
     - assets/images/eduquest_logo.png
+    - assets/images/Background.png
 
 # Windows platform configuration
 platforms:
