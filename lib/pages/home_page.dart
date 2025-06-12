@@ -444,7 +444,7 @@ class _HomePageState extends State<HomePage> {
         return {
           "question": parts[0],
           "options": [parts[1], parts[2], parts[3], parts[4]],
-          "answer": parts[5]
+          "correct_answer": parts[5]
         };
       } else {
         print('Expected 6 parts but got ${parts.length}');
@@ -503,7 +503,7 @@ class _HomePageState extends State<HomePage> {
       showAnswer = true;
       // Record whether the answer was correct
       answeredCorrectly[currentQuestionIndex] =
-          selectedAnswer == scienceQuestions[currentQuestionIndex]["answer"];
+          selectedAnswer == scienceQuestions[currentQuestionIndex]["correct_answer"];
     });
   }
 
@@ -667,7 +667,7 @@ class _HomePageState extends State<HomePage> {
                                     ],
                                   )
                                 : Text(
-                                    "Generate Quiz",
+                                    "Start Quiz",
                                     style: TextStyle(
                                       color: Colors.white,
                                       fontWeight: FontWeight.bold,
@@ -856,8 +856,8 @@ class _HomePageState extends State<HomePage> {
 
     return options.map((option) {
       bool isSelected = selectedAnswer == option;
-      bool isCorrectAnswer = showAnswer && option == scienceQuestions[currentQuestionIndex]["answer"];
-      bool isWrongSelected = showAnswer && isSelected && option != scienceQuestions[currentQuestionIndex]["answer"];
+      bool isCorrectAnswer = showAnswer && option == scienceQuestions[currentQuestionIndex]["correct_answer"];
+      bool isWrongSelected = showAnswer && isSelected && option != scienceQuestions[currentQuestionIndex]["correct_answer"];
 
       return Padding(
         padding: const EdgeInsets.only(bottom: 8.0),
