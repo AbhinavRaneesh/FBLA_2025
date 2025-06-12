@@ -52,6 +52,7 @@ flutter:
     - assets/images/bird.png
     - assets/images/eduquest_logo.png
     - assets/images/Background.png
+    - assets/apcs_2024_frq_answers.txt
 
 # Windows platform configuration
 platforms:

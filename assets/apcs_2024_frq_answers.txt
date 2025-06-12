@@ -1,0 +1,171 @@
+AP Computer Science A 2024 Scoring Guidelines
+
+GENERAL SCORING RULES:
+- Apply the question scoring criteria first.
+- No part of a question may have a negative point total.
+- A maximum of 3 penalty points may be assessed per question.
+
+1-Point Penalties (Only if a part earns credit):
+v) Array/collection access confusion
+w) Extraneous code with side-effect
+x) Local variables used but not declared
+y) Persistent data altered (e.g., parameter mutation)
+z) Void method returning a value
+
+No Penalty for:
+- Extraneous code with no side-effect
+- Case/spelling errors if unambiguous
+- Local variables not declared if others are
+- Missing `public` or use of keywords as identifiers
+- Use of alternative but valid syntax (e.g., `[]` vs `()`)
+- Formatting errors where intent is clear
+
+QUESTION 1: Methods and Control Structures (9 points total)
+(a) simulateOneDay (4 points)
+1. Random value generated using Math.random
+2. Condition for 5% chance correctly compared
+3. Random integer between [10, 50] generated
+4. Algorithm to scale by numBirds and adjust currentFood
+
+(b) simulateManyDays (5 points)
+5. simulateOneDay called with numBirds
+6. Loops and runs at most numDays
+7. Counts number of successful simulation days
+8. Correct comparison: currentFood to 0
+9. Returns appropriate int value
+
+QUESTION 2: Class (9 points total)
+1. Declares class Scoreboard
+2. Declares private String and int instance variables
+3. Constructor initializes both team names
+4. Declares methods: recordPlay(int), getScore()
+5. Checks if parameter is 0 in recordPlay
+6. Increments appropriate team's score
+7. Switches active team turn
+8. Adds correct points based on active team
+9. getScore returns correct formatted string
+
+QUESTION 3: Array / ArrayList (9 points total)
+(a) isWordChain (3 points)
+1. Accesses adjacent elements of wordList
+2. Checks if one string contains the previous
+3. Returns correct boolean result
+
+(b) createList (6 points)
+4. Declares and initializes ArrayList<String>
+5. Accesses all elements in wordList
+6. Checks if string starts with target
+7. Constructs substring after target
+8. Adds substring to result list
+9. Returns list of all valid substrings
+
+QUESTION 4: 2D Arrays (9 points total)
+(a) getNextLoc (3 points)
+1. Prevents out-of-bounds access
+2. Accesses grid[row+1][col] and grid[row][col+1]
+3. Returns correct Location object
+
+(b) sumPath (6 points)
+4. Initializes and updates sum variable
+5. Correctly loops to bottom-right of grid
+6. Calls getNextLoc in loop
+7. Uses getRow, getCol on returned Location
+8. Accesses grid element using Location
+9. Correctly computes total path sum
+
+This file can be parsed by AI or your script to grade answers accordingly.
+
+Q1a (4 points):
+public void simulateOneDay(int numBirds) {
+    double condition = Math.random();
+    if (condition < 0.05) {
+        currentFood = 0;
+    } else {
+        int eachBirdEats = (int) (Math.random() * 41) + 10;
+        int totalEaten = numBirds * eachBirdEats;
+        if (totalEaten > currentFood) {
+            currentFood = 0;
+        } else {
+            currentFood -= totalEaten;
+        }
+    }
+}
+
+Q1b (5 points):
+public int simulateManyDays(int numBirds, int numDays) {
+    for (int daysSoFar = 0; daysSoFar < numDays; daysSoFar++) {
+        if (currentFood == 0) {
+            return daysSoFar;
+        }
+        simulateOneDay(numBirds);
+    }
+    return numDays;
+}
+// Alternate canonical for part (b):
+// public int simulateManyDays(int numBirds, int numDays) {
+//     int daysSoFar = 0;
+//     while (currentFood > 0 && daysSoFar < numDays) {
+//         simulateOneDay(numBirds);
+//         daysSoFar++;
+//     }
+//     return daysSoFar;
+// }
+
+Q2 (6 points):
+public ArrayList<String> createList(String target) {
+    ArrayList<String> result = new ArrayList<String>();
+    for (String word : wordList) {
+        if (word.startsWith(target)) {
+            result.add(word.substring(target.length()));
+        }
+    }
+    return result;
+}
+
+Q3a (3 points):
+public boolean isWordChain() {
+    for (int i = 1; i < wordList.size(); i++) {
+        String prev = wordList.get(i - 1);
+        String curr = wordList.get(i);
+        if (!curr.startsWith(prev.substring(prev.length() - 1))) {
+            return false;
+        }
+    }
+    return true;
+}
+
+Q3b (6 points):
+public ArrayList<String> createList(String target) {
+    ArrayList<String> result = new ArrayList<String>();
+    for (String word : wordList) {
+        if (word.startsWith(target)) {
+            result.add(word.substring(target.length()));
+        }
+    }
+    return result;
+}
+
+Q4a (3 points):
+public Location getNextLoc(int row, int col) {
+    if (row == grid.length - 1) {
+        return new Location(row, col + 1);
+    } else if (col == grid[0].length - 1) {
+        return new Location(row + 1, col);
+    } else if (grid[row + 1][col] < grid[row][col + 1]) {
+        return new Location(row + 1, col);
+    } else {
+        return new Location(row, col + 1);
+    }
+}
+
+Q4b (6 points):
+public int sumPath(int row, int col) {
+    int sum = 0;
+    while (row < grid.length - 1 || col < grid[0].length - 1) {
+        sum += grid[row][col];
+        Location loc = getNextLoc(row, col);
+        row = loc.getRow();
+        col = loc.getCol();
+    }
+    return sum + grid[row][col];
+} 
