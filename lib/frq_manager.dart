@@ -1343,33 +1343,6 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 16.0, right: 8.0),
-                  child: FloatingActionButton.extended(
-                    onPressed: () {
-                      if (lastAIResponse != null) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ScoreSummaryScreen(
-                              aiResponse: lastAIResponse!,
-                            ),
-                          ),
-                        );
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Please submit your answers first to see the score summary'),
-                            backgroundColor: Colors.red,
-                          ),
-                        );
-                      }
-                    },
-                    backgroundColor: Colors.purple,
-                    icon: const Icon(Icons.assessment),
-                    label: const Text('Get Score Summary', style: TextStyle(fontSize: 14)),
-                  ),
-                ),
-                Padding(
                   padding: const EdgeInsets.only(bottom: 170.0, right: 8.0),
                   child: FloatingActionButton(
                     heroTag: 'chat_ai',
