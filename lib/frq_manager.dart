@@ -189,22 +189,20 @@ class _FRQManagerState extends State<FRQManager> {
       // Add instructions for the AI
       promptContent.writeln('You are an AP Computer Science A FRQ grader. Please grade the following student answers according to the official answers provided.');
       promptContent.writeln('\nPlease provide your response in the following format:');
-      promptContent.writeln('\n=== SCORE SUMMARY ===');
-      promptContent.writeln('Total Score: X/Y points');
-      promptContent.writeln('Percentage: XX%');
-      promptContent.writeln('Overall Feedback: [Brief summary of performance]');
-      promptContent.writeln('-------------------');
-      promptContent.writeln('\n=== DETAILED FEEDBACK ===');
-      promptContent.writeln('For each question, provide:');
-      promptContent.writeln('1. Question: [question number]');
-      promptContent.writeln('2. Score: X/Y points');
-      promptContent.writeln('3. Feedback: [detailed feedback]');
-      promptContent.writeln('4. -------------------');
-      promptContent.writeln('\n=== IMPROVEMENT SUGGESTIONS ===');
-      promptContent.writeln('1. [Specific area to improve]');
-      promptContent.writeln('2. [Specific area to improve]');
-      promptContent.writeln('3. [Specific area to improve]');
-      promptContent.writeln('-------------------');
+      promptContent.writeln('\nFor each question, provide:');
+      promptContent.writeln('[question number ||| score student got ||| feedback ||| actual answer]');
+      promptContent.writeln('Use the string ||| (three vertical bars) as the separator between fields. Do NOT use ||| inside the code or explanation.');
+      promptContent.writeln('\nFor the actual answer, you MUST provide:');
+      promptContent.writeln('1. The complete, correct code solution (the full method, not just the header; include all lines and braces)');
+      promptContent.writeln('2. A brief explanation of what the code does');
+      promptContent.writeln('Do NOT just give the method header. Give the full method body and a brief explanation.');
+      promptContent.writeln('\nExample format:');
+      promptContent.writeln('Q1a ||| 2/3 ||| Good understanding of the concept but missed edge case ||| public void processArray(int[] arr) {');
+      promptContent.writeln('    for (int i = 0; i < arr.length; i++) {');
+      promptContent.writeln('        if (arr[i] < 0) arr[i] = 0;');
+      promptContent.writeln('    }');
+      promptContent.writeln('}');
+      promptContent.writeln('// This method processes an array by replacing all negative numbers with 0.');
       promptContent.writeln('\nNow, please grade the following answers:\n');
       
       // Add user answers to the prompt
@@ -238,6 +236,19 @@ class _FRQManagerState extends State<FRQManager> {
               lastAIResponse = lastMessage.parts.first.text;
               print('AI Response stored: $lastAIResponse'); // Debug print
             });
+            // Debug print for raw AI response
+            print('RAW AI RESPONSE:');
+            print(lastMessage.parts.first.text);
+            // Automatically navigate to the score summary screen
+            Navigator.pop(context); // Close chat modal
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ScoreSummaryScreen(
+                  aiResponse: lastAIResponse!,
+                ),
+              ),
+            );
           }
         }
       });
@@ -682,22 +693,20 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
       // Add instructions for the AI
       promptContent.writeln('You are an AP Computer Science A FRQ grader. Please grade the following student answers according to the official answers provided.');
       promptContent.writeln('\nPlease provide your response in the following format:');
-      promptContent.writeln('\n=== SCORE SUMMARY ===');
-      promptContent.writeln('Total Score: X/Y points');
-      promptContent.writeln('Percentage: XX%');
-      promptContent.writeln('Overall Feedback: [Brief summary of performance]');
-      promptContent.writeln('-------------------');
-      promptContent.writeln('\n=== DETAILED FEEDBACK ===');
-      promptContent.writeln('For each question, provide:');
-      promptContent.writeln('1. Question: [question number]');
-      promptContent.writeln('2. Score: X/Y points');
-      promptContent.writeln('3. Feedback: [detailed feedback]');
-      promptContent.writeln('4. -------------------');
-      promptContent.writeln('\n=== IMPROVEMENT SUGGESTIONS ===');
-      promptContent.writeln('1. [Specific area to improve]');
-      promptContent.writeln('2. [Specific area to improve]');
-      promptContent.writeln('3. [Specific area to improve]');
-      promptContent.writeln('-------------------');
+      promptContent.writeln('\nFor each question, provide:');
+      promptContent.writeln('[question number ||| score student got ||| feedback ||| actual answer]');
+      promptContent.writeln('Use the string ||| (three vertical bars) as the separator between fields. Do NOT use ||| inside the code or explanation.');
+      promptContent.writeln('\nFor the actual answer, you MUST provide:');
+      promptContent.writeln('1. The complete, correct code solution (the full method, not just the header; include all lines and braces)');
+      promptContent.writeln('2. A brief explanation of what the code does');
+      promptContent.writeln('Do NOT just give the method header. Give the full method body and a brief explanation.');
+      promptContent.writeln('\nExample format:');
+      promptContent.writeln('Q1a ||| 2/3 ||| Good understanding of the concept but missed edge case ||| public void processArray(int[] arr) {');
+      promptContent.writeln('    for (int i = 0; i < arr.length; i++) {');
+      promptContent.writeln('        if (arr[i] < 0) arr[i] = 0;');
+      promptContent.writeln('    }');
+      promptContent.writeln('}');
+      promptContent.writeln('// This method processes an array by replacing all negative numbers with 0.');
       promptContent.writeln('\nNow, please grade the following answers:\n');
       
       // Add user answers to the prompt
@@ -731,6 +740,19 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
               lastAIResponse = lastMessage.parts.first.text;
               print('AI Response stored: $lastAIResponse'); // Debug print
             });
+            // Debug print for raw AI response
+            print('RAW AI RESPONSE:');
+            print(lastMessage.parts.first.text);
+            // Automatically navigate to the score summary screen
+            Navigator.pop(context); // Close chat modal
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ScoreSummaryScreen(
+                  aiResponse: lastAIResponse!,
+                ),
+              ),
+            );
           }
         }
       });
