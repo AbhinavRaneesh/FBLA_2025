@@ -123,18 +123,16 @@ class _ScoreSummaryScreenState extends State<ScoreSummaryScreen> {
                     const SizedBox(height: 4),
                     AnimatedCrossFade(
                       firstChild: Container(
-                        constraints: BoxConstraints(maxHeight: 24),
                         width: double.infinity,
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.all(8),
                         color: Colors.black26,
                         child: SelectableText(
-                          (item['answer'] ?? '').split('\n').first,
+                          item['answer'] ?? '',
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 16,
                             fontFamily: 'monospace',
                           ),
-                          maxLines: 1,
                           toolbarOptions: const ToolbarOptions(copy: true),
                         ),
                       ),
@@ -168,34 +166,30 @@ class _ScoreSummaryScreenState extends State<ScoreSummaryScreen> {
   List<Map<String, String>> _parseAIResponse(String response) {
     List<Map<String, String>> items = [];
     
-    // Split the response into lines
-    List<String> lines = response.split('\n');
+    // Split the response into items using the question number pattern
+    List<String> itemsText = response.split(RegExp(r'Q\d+[a-z]?')); // Matches Q1a, Q1b, Q2, etc.
     
-    for (String line in lines) {
-      // Skip empty lines
-      if (line.trim().isEmpty) continue;
+    for (String itemText in itemsText) {
+      if (itemText.trim().isEmpty) continue;
       
-      // Try to parse the line in the format [question, score, feedback, answer]
       try {
-        // Remove the square brackets and split by the new separator
-        String content = line.trim();
-        if (content.startsWith('[') && content.endsWith(']')) {
-          content = content.substring(1, content.length - 1);
-        }
+        // Extract the question number
+        String question = 'Q${itemText.trim().split('|||')[0].trim()}';
         
-        List<String> parts = content.split('|||');
+        // Split the rest by |||
+        List<String> parts = itemText.trim().split('|||');
         if (parts.length >= 4) {
-          // Join everything after the third separator for the answer
+          // The answer is everything after the third |||
           String answer = parts.sublist(3).join('|||').trim();
           items.add({
-            'question': parts[0].trim(),
+            'question': question,
             'score': parts[1].trim(),
             'feedback': parts[2].trim(),
             'answer': answer,
           });
         }
       } catch (e) {
-        print('Error parsing line: $line');
+        print('Error parsing item: $itemText');
         print('Error: $e');
       }
     }

@@ -22,6 +22,7 @@ class FRQManager extends StatefulWidget {
 class _FRQManagerState extends State<FRQManager> {
   String? lastAIResponse;
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -38,54 +39,42 @@ class _FRQManagerState extends State<FRQManager> {
             colors: [Color(0xFF1D1E33), Color(0xFF2A2B4A)],
           ),
         ),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
+        child: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
                 padding: const EdgeInsets.all(16.0),
-                child: ElevatedButton(
-                  onPressed: () {
-                    if (lastAIResponse != null) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ScoreSummaryScreen(
-                            aiResponse: lastAIResponse!,
-                          ),
-                        ),
-                      );
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Please submit your answers first to see the score summary'),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.purple,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  ),
-                  child: const Text(
-                    'Get Score Summary',
-                    style: TextStyle(fontSize: 16, color: Colors.white),
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildSubjectSection(
+                      context,
+                      'AP Computer Science',
+                      [
+                        {'year': '2025', 'title': 'AP Computer Science 2025', 'file': 'assets/apfrq/ap25-frq-computer-science-a.pdf'},
+                        {'year': '2024', 'title': 'AP Computer Science 2024', 'file': 'assets/apfrq/ap24-frq-comp-sci-a.pdf'},
+                        {'year': '2023', 'title': 'AP Computer Science 2023', 'file': 'assets/apfrq/ap23-frq-comp-sci-a.pdf'},
+                      ],
+                    ),
+                  ],
                 ),
               ),
-              _buildSubjectSection(
-                context,
-                'AP Computer Science',
-                [
-                  {'year': '2025', 'title': 'AP Computer Science 2025', 'file': 'assets/apfrq/ap25-frq-computer-science-a.pdf'},
-                  {'year': '2024', 'title': 'AP Computer Science 2024', 'file': 'assets/apfrq/ap24-frq-comp-sci-a.pdf'},
-                  {'year': '2023', 'title': 'AP Computer Science 2023', 'file': 'assets/apfrq/ap23-frq-comp-sci-a.pdf'},
-                ],
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: ElevatedButton(
+                onPressed: () => _showChatModalAndStartGrading(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.purple,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                ),
+                child: const Text(
+                  'Answer Workbook',
+                  style: TextStyle(fontSize: 16, color: Colors.white),
+                ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
