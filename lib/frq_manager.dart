@@ -59,7 +59,8 @@ class _FRQManagerState extends State<FRQManager> {
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('Please submit your answers first to see the score summary'),
+                          content: Text(
+                              'Please submit your answers first to see the score summary'),
                           backgroundColor: Colors.red,
                         ),
                       );
@@ -67,7 +68,8 @@ class _FRQManagerState extends State<FRQManager> {
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.purple,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 24, vertical: 12),
                   ),
                   child: const Text(
                     'Get Score Summary',
@@ -79,9 +81,21 @@ class _FRQManagerState extends State<FRQManager> {
                 context,
                 'AP Computer Science',
                 [
-                  {'year': '2025', 'title': 'AP Computer Science 2025', 'file': 'assets/apfrq/ap25-frq-computer-science-a.pdf'},
-                  {'year': '2024', 'title': 'AP Computer Science 2024', 'file': 'assets/apfrq/ap24-frq-comp-sci-a.pdf'},
-                  {'year': '2023', 'title': 'AP Computer Science 2023', 'file': 'assets/apfrq/ap23-frq-comp-sci-a.pdf'},
+                  {
+                    'year': '2025',
+                    'title': 'AP Computer Science 2025',
+                    'file': 'assets/apfrq/ap25-frq-computer-science-a.pdf'
+                  },
+                  {
+                    'year': '2024',
+                    'title': 'AP Computer Science 2024',
+                    'file': 'assets/apfrq/ap24-frq-comp-sci-a.pdf'
+                  },
+                  {
+                    'year': '2023',
+                    'title': 'AP Computer Science 2023',
+                    'file': 'assets/apfrq/ap23-frq-comp-sci-a.pdf'
+                  },
                 ],
               ),
             ],
@@ -91,7 +105,8 @@ class _FRQManagerState extends State<FRQManager> {
     );
   }
 
-  Widget _buildSubjectSection(BuildContext context, String subject, List<Map<String, String>> years) {
+  Widget _buildSubjectSection(
+      BuildContext context, String subject, List<Map<String, String>> years) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -106,13 +121,15 @@ class _FRQManagerState extends State<FRQManager> {
         const SizedBox(height: 12),
         ...years.map((year) => Padding(
               padding: const EdgeInsets.only(bottom: 8.0),
-              child: _buildYearButton(context, year['title']!, year['year']!, year['file']),
+              child: _buildYearButton(
+                  context, year['title']!, year['year']!, year['file']),
             )),
       ],
     );
   }
 
-  Widget _buildYearButton(BuildContext context, String title, String year, [String? file]) {
+  Widget _buildYearButton(BuildContext context, String title, String year,
+      [String? file]) {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -134,7 +151,8 @@ class _FRQManagerState extends State<FRQManager> {
           onTap: () => _openPDF(context, year, file),
           borderRadius: BorderRadius.circular(12),
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 20.0),
+            padding:
+                const EdgeInsets.symmetric(vertical: 16.0, horizontal: 20.0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -181,30 +199,38 @@ class _FRQManagerState extends State<FRQManager> {
 
   void _showChatModalAndStartGrading(BuildContext context) async {
     final chatBloc = ChatBloc();
-    
+
     try {
       // Build the prompt content
       StringBuffer promptContent = StringBuffer();
-      
+
       // Add instructions for the AI
-      promptContent.writeln('You are an AP Computer Science A FRQ grader. Please grade the following student answers according to the official answers provided.');
-      promptContent.writeln('\nPlease provide your response in the following format:');
+      promptContent.writeln(
+          'You are an AP Computer Science A FRQ grader. Please grade the following student answers according to the official answers provided.');
+      promptContent
+          .writeln('\nPlease provide your response in the following format:');
       promptContent.writeln('\nFor each question, provide:');
-      promptContent.writeln('[question number ||| score student got ||| feedback ||| actual answer]');
-      promptContent.writeln('Use the string ||| (three vertical bars) as the separator between fields. Do NOT use ||| inside the code or explanation.');
+      promptContent.writeln(
+          '[question number ||| score student got ||| feedback ||| actual answer]');
+      promptContent.writeln(
+          'Use the string ||| (three vertical bars) as the separator between fields. Do NOT use ||| inside the code or explanation.');
       promptContent.writeln('\nFor the actual answer, you MUST provide:');
-      promptContent.writeln('1. The complete, correct code solution (the full method, not just the header; include all lines and braces)');
+      promptContent.writeln(
+          '1. The complete, correct code solution (the full method, not just the header; include all lines and braces)');
       promptContent.writeln('2. A brief explanation of what the code does');
-      promptContent.writeln('Do NOT just give the method header. Give the full method body and a brief explanation.');
+      promptContent.writeln(
+          'Do NOT just give the method header. Give the full method body and a brief explanation.');
       promptContent.writeln('\nExample format:');
-      promptContent.writeln('Q1a ||| 2/3 ||| Good understanding of the concept but missed edge case ||| public void processArray(int[] arr) {');
+      promptContent.writeln(
+          'Q1a ||| 2/3 ||| Good understanding of the concept but missed edge case ||| public void processArray(int[] arr) {');
       promptContent.writeln('    for (int i = 0; i < arr.length; i++) {');
       promptContent.writeln('        if (arr[i] < 0) arr[i] = 0;');
       promptContent.writeln('    }');
       promptContent.writeln('}');
-      promptContent.writeln('// This method processes an array by replacing all negative numbers with 0.');
+      promptContent.writeln(
+          '// This method processes an array by replacing all negative numbers with 0.');
       promptContent.writeln('\nNow, please grade the following answers:\n');
-      
+
       // Add user answers to the prompt
       promptContent.writeln('=== User Answers ===');
       for (String question in manualQuestions) {
@@ -212,10 +238,11 @@ class _FRQManagerState extends State<FRQManager> {
         promptContent.writeln('Answer: ${answers[question] ?? "Not answered"}');
         promptContent.writeln('-------------------');
       }
-      
+
       // Load and add the entire answers file to the prompt
       promptContent.writeln('\n=== Official Answers and Rubrics ===');
-      final frqData = await rootBundle.loadString('assets/apcs_2024_frq_answers.txt');
+      final frqData =
+          await rootBundle.loadString('assets/apcs_2024_frq_answers.txt');
       promptContent.writeln(frqData);
       promptContent.writeln('=== End of Official Answers ===\n');
 
@@ -224,8 +251,7 @@ class _FRQManagerState extends State<FRQManager> {
 
       // Send the content to QuestAI
       chatBloc.add(ChatGenerationNewTextMessageEvent(
-        inputMessage: promptContent.toString()
-      ));
+          inputMessage: promptContent.toString()));
 
       // Listen for the AI response
       chatBloc.stream.listen((state) {
@@ -252,7 +278,6 @@ class _FRQManagerState extends State<FRQManager> {
           }
         }
       });
-
     } catch (e) {
       print('Error loading answers file: $e');
     }
@@ -266,7 +291,8 @@ class _FRQManagerState extends State<FRQManager> {
           onWillPop: () async => true,
           child: StatefulBuilder(
             builder: (context, setModalState) {
-              final TextEditingController messageController = TextEditingController();
+              final TextEditingController messageController =
+                  TextEditingController();
               final ScrollController scrollController = ScrollController();
               void _scrollToBottom() {
                 if (scrollController.hasClients) {
@@ -277,6 +303,7 @@ class _FRQManagerState extends State<FRQManager> {
                   );
                 }
               }
+
               return Dialog(
                 backgroundColor: Colors.transparent,
                 insetPadding: EdgeInsets.zero,
@@ -284,7 +311,8 @@ class _FRQManagerState extends State<FRQManager> {
                   height: MediaQuery.of(context).size.height * 0.8,
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                    borderRadius:
+                        BorderRadius.vertical(top: Radius.circular(20)),
                   ),
                   child: Column(
                     children: [
@@ -325,21 +353,29 @@ class _FRQManagerState extends State<FRQManager> {
                                 itemBuilder: (context, index) {
                                   final message = state.messages[index];
                                   return Container(
-                                    margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                                    margin: EdgeInsets.symmetric(
+                                        vertical: 8, horizontal: 16),
                                     padding: EdgeInsets.all(12),
-                                    alignment: message.role == "user" ? Alignment.centerRight : Alignment.centerLeft,
+                                    alignment: message.role == "user"
+                                        ? Alignment.centerRight
+                                        : Alignment.centerLeft,
                                     child: Container(
                                       constraints: BoxConstraints(
-                                        maxWidth: MediaQuery.of(context).size.width * 0.75,
+                                        maxWidth:
+                                            MediaQuery.of(context).size.width *
+                                                0.75,
                                       ),
                                       padding: EdgeInsets.all(12),
                                       decoration: BoxDecoration(
-                                        color: message.role == "user" ? Colors.blue : Colors.purple,
+                                        color: message.role == "user"
+                                            ? Colors.blue
+                                            : Colors.purple,
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: Text(
                                         message.parts.first.text,
-                                        style: TextStyle(color: Colors.white, fontSize: 16),
+                                        style: TextStyle(
+                                            color: Colors.white, fontSize: 16),
                                       ),
                                     ),
                                   );
@@ -370,16 +406,20 @@ class _FRQManagerState extends State<FRQManager> {
                                 style: TextStyle(color: Colors.purple),
                                 decoration: InputDecoration(
                                   hintText: "Ask QuestAI anything...",
-                                  hintStyle: TextStyle(color: Colors.purple.withOpacity(0.5)),
+                                  hintStyle: TextStyle(
+                                      color: Colors.purple.withOpacity(0.5)),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(25),
-                                    borderSide: BorderSide(color: Colors.purple),
+                                    borderSide:
+                                        BorderSide(color: Colors.purple),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(25),
-                                    borderSide: BorderSide(color: Colors.purple, width: 2),
+                                    borderSide: BorderSide(
+                                        color: Colors.purple, width: 2),
                                   ),
-                                  contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                  contentPadding: EdgeInsets.symmetric(
+                                      horizontal: 16, vertical: 12),
                                 ),
                               ),
                             ),
@@ -420,7 +460,13 @@ class _FRQManagerState extends State<FRQManager> {
 
   // Manual structure for AP Comp Sci 2024
   final List<String> manualQuestions = [
-    'Q1a', 'Q1b', 'Q2', 'Q3a', 'Q3b', 'Q4a', 'Q4b'
+    'Q1a',
+    'Q1b',
+    'Q2',
+    'Q3a',
+    'Q3b',
+    'Q4a',
+    'Q4b'
   ];
   String? selectedSubpart;
   Map<String, String> answers = {};
@@ -440,30 +486,30 @@ class _FRQManagerState extends State<FRQManager> {
 
   Map<String, String> _parseCanonicalAnswers(String txt) {
     final Map<String, String> map = {};
-    
+
     // First, let's add debug logging to see what we're working with
     print('\n=== RAW FILE CONTENT (first 500 chars) ===');
     print(txt.substring(0, math.min<int>(500, txt.length)));
     print('=== END RAW CONTENT ===\n');
-    
+
     // Split the text into lines for easier processing
     final lines = txt.split('\n');
     String? currentQuestion;
     List<String> currentAnswer = [];
     bool inAnswerSection = false;
-    
+
     print('\n=== Starting Answer Parsing ===');
-    
+
     for (int i = 0; i < lines.length; i++) {
       String line = lines[i].trim();
-      
+
       // Skip empty lines
       if (line.isEmpty) continue;
-      
+
       // Check if this line starts a new question
       // Look for patterns like "Q1a (4 points)" or "Q1a:" or "Q1a)"
       final questionMatch = RegExp(r'^(Q\d+[a-z]?)\s*[\(:)]').firstMatch(line);
-      
+
       if (questionMatch != null) {
         // Save previous question if exists
         if (currentQuestion != null && currentAnswer.isNotEmpty) {
@@ -472,20 +518,20 @@ class _FRQManagerState extends State<FRQManager> {
           print('\nSaved answer for $currentQuestion:');
           print(answer);
         }
-        
+
         // Start new question
         currentQuestion = questionMatch.group(1);
         currentAnswer = [];
         inAnswerSection = true;
-        
+
         // Add any content after the question identifier on the same line
         String restOfLine = line.substring(questionMatch.end).trim();
         if (restOfLine.isNotEmpty && !restOfLine.contains('points')) {
           currentAnswer.add(restOfLine);
         }
-        
+
         print('\nFound new question: $currentQuestion');
-      } 
+      }
       // Check if we're starting a new major section (like "QUESTION 2:")
       else if (line.startsWith('QUESTION ') && line.contains(':')) {
         // This indicates we're moving to rubric section, stop collecting answers
@@ -503,15 +549,15 @@ class _FRQManagerState extends State<FRQManager> {
       // Collect answer content
       else if (inAnswerSection && currentQuestion != null) {
         // Skip lines that look like section headers or rubric content
-        if (!line.startsWith('QUESTION ') && 
-            !line.startsWith('RUBRIC') && 
+        if (!line.startsWith('QUESTION ') &&
+            !line.startsWith('RUBRIC') &&
             !line.contains('points possible') &&
             !line.contains('Grading Guidelines')) {
           currentAnswer.add(line);
         }
       }
     }
-    
+
     // Don't forget the last question
     if (currentQuestion != null && currentAnswer.isNotEmpty) {
       String answer = currentAnswer.join('\n').trim();
@@ -519,7 +565,7 @@ class _FRQManagerState extends State<FRQManager> {
       print('\nSaved last answer for $currentQuestion:');
       print(answer);
     }
-    
+
     // Debug: print all found answers
     print('\n=== FINAL PARSED ANSWERS ===');
     map.forEach((key, value) {
@@ -528,39 +574,39 @@ class _FRQManagerState extends State<FRQManager> {
       print('---');
     });
     print('=== END PARSED ANSWERS ===\n');
-    
+
     return map;
   }
 
   Map<String, String> _parseRubrics(String txt) {
     final Map<String, String> map = {};
-    
+
     // Split into lines
     final lines = txt.split('\n');
     String? currentQuestion;
     List<String> currentRubric = [];
     bool inRubricSection = false;
-    
+
     for (int i = 0; i < lines.length; i++) {
       String line = lines[i].trim();
-      
+
       if (line.isEmpty) continue;
-      
+
       // Look for "QUESTION X:" patterns
       final questionMatch = RegExp(r'^QUESTION\s+(\d+)\s*:').firstMatch(line);
-      
+
       if (questionMatch != null) {
         // Save previous rubric if exists
         if (currentQuestion != null && currentRubric.isNotEmpty) {
           map[currentQuestion] = currentRubric.join('\n').trim();
         }
-        
+
         // Start new rubric section
         String questionNum = questionMatch.group(1)!;
         currentQuestion = 'Q$questionNum';
         currentRubric = [];
         inRubricSection = true;
-        
+
         // Add any content after the question header
         String restOfLine = line.substring(questionMatch.end).trim();
         if (restOfLine.isNotEmpty) {
@@ -568,31 +614,34 @@ class _FRQManagerState extends State<FRQManager> {
         }
       }
       // Check for subparts within a question
-      else if (inRubricSection && currentQuestion != null && RegExp(r'^\([a-z]\)').hasMatch(line)) {
+      else if (inRubricSection &&
+          currentQuestion != null &&
+          RegExp(r'^\([a-z]\)').hasMatch(line)) {
         // This is a subpart like "(a)" or "(b)"
         String subpart = line.substring(0, 3); // "(a)" or "(b)"
-        String questionWithSubpart = currentQuestion + subpart.substring(1, 2); // "Q1a" or "Q1b"
-        
+        String questionWithSubpart =
+            currentQuestion + subpart.substring(1, 2); // "Q1a" or "Q1b"
+
         // Save any accumulated content for the main question
         if (currentRubric.isNotEmpty && !map.containsKey(questionWithSubpart)) {
           // Start collecting for this subpart
           List<String> subpartRubric = [line];
-          
+
           // Look ahead for content belonging to this subpart
           for (int j = i + 1; j < lines.length; j++) {
             String nextLine = lines[j].trim();
             if (nextLine.isEmpty) continue;
-            
+
             // Stop if we hit another subpart or question
-            if (RegExp(r'^\([a-z]\)').hasMatch(nextLine) || 
+            if (RegExp(r'^\([a-z]\)').hasMatch(nextLine) ||
                 nextLine.startsWith('QUESTION ')) {
               break;
             }
-            
+
             subpartRubric.add(nextLine);
             i = j; // Skip these lines in the main loop
           }
-          
+
           map[questionWithSubpart] = subpartRubric.join('\n').trim();
         }
       }
@@ -603,12 +652,12 @@ class _FRQManagerState extends State<FRQManager> {
         }
       }
     }
-    
+
     // Save the last rubric
     if (currentQuestion != null && currentRubric.isNotEmpty) {
       map[currentQuestion] = currentRubric.join('\n').trim();
     }
-    
+
     return map;
   }
 
@@ -619,7 +668,7 @@ class _FRQManagerState extends State<FRQManager> {
     if (match != null) {
       return int.tryParse(match.group(1) ?? '') ?? 0;
     }
-    
+
     // Fallback based on known AP CS A structure
     final Map<String, int> defaultPoints = {
       'Q1a': 4,
@@ -630,7 +679,7 @@ class _FRQManagerState extends State<FRQManager> {
       'Q4a': 3,
       'Q4b': 6,
     };
-    
+
     return defaultPoints[subpart] ?? 5; // Default to 5 if not found
   }
 }
@@ -638,7 +687,8 @@ class _FRQManagerState extends State<FRQManager> {
 class PDFViewerScreen extends StatefulWidget {
   final String filePath;
   final String year;
-  const PDFViewerScreen({super.key, required this.filePath, required this.year});
+  const PDFViewerScreen(
+      {super.key, required this.filePath, required this.year});
 
   @override
   State<PDFViewerScreen> createState() => _PDFViewerScreenState();
@@ -655,7 +705,13 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
 
   // Manual structure for AP Comp Sci 2024
   final List<String> manualQuestions = [
-    'Q1a', 'Q1b', 'Q2', 'Q3a', 'Q3b', 'Q4a', 'Q4b'
+    'Q1a',
+    'Q1b',
+    'Q2',
+    'Q3a',
+    'Q3b',
+    'Q4a',
+    'Q4b'
   ];
   String? selectedSubpart;
   Map<String, String> answers = {};
@@ -685,30 +741,38 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
 
   void _showChatModalAndStartGrading(BuildContext context) async {
     final chatBloc = ChatBloc();
-    
+
     try {
       // Build the prompt content
       StringBuffer promptContent = StringBuffer();
-      
+
       // Add instructions for the AI
-      promptContent.writeln('You are an AP Computer Science A FRQ grader. Please grade the following student answers according to the official answers provided.');
-      promptContent.writeln('\nPlease provide your response in the following format:');
+      promptContent.writeln(
+          'You are an AP Computer Science A FRQ grader. Please grade the following student answers according to the official answers provided.');
+      promptContent
+          .writeln('\nPlease provide your response in the following format:');
       promptContent.writeln('\nFor each question, provide:');
-      promptContent.writeln('[question number ||| score student got ||| feedback ||| actual answer]');
-      promptContent.writeln('Use the string ||| (three vertical bars) as the separator between fields. Do NOT use ||| inside the code or explanation.');
+      promptContent.writeln(
+          '[question number ||| score student got ||| feedback ||| actual answer]');
+      promptContent.writeln(
+          'Use the string ||| (three vertical bars) as the separator between fields. Do NOT use ||| inside the code or explanation.');
       promptContent.writeln('\nFor the actual answer, you MUST provide:');
-      promptContent.writeln('1. The complete, correct code solution (the full method, not just the header; include all lines and braces)');
+      promptContent.writeln(
+          '1. The complete, correct code solution (the full method, not just the header; include all lines and braces)');
       promptContent.writeln('2. A brief explanation of what the code does');
-      promptContent.writeln('Do NOT just give the method header. Give the full method body and a brief explanation.');
+      promptContent.writeln(
+          'Do NOT just give the method header. Give the full method body and a brief explanation.');
       promptContent.writeln('\nExample format:');
-      promptContent.writeln('Q1a ||| 2/3 ||| Good understanding of the concept but missed edge case ||| public void processArray(int[] arr) {');
+      promptContent.writeln(
+          'Q1a ||| 2/3 ||| Good understanding of the concept but missed edge case ||| public void processArray(int[] arr) {');
       promptContent.writeln('    for (int i = 0; i < arr.length; i++) {');
       promptContent.writeln('        if (arr[i] < 0) arr[i] = 0;');
       promptContent.writeln('    }');
       promptContent.writeln('}');
-      promptContent.writeln('// This method processes an array by replacing all negative numbers with 0.');
+      promptContent.writeln(
+          '// This method processes an array by replacing all negative numbers with 0.');
       promptContent.writeln('\nNow, please grade the following answers:\n');
-      
+
       // Add user answers to the prompt
       promptContent.writeln('=== User Answers ===');
       for (String question in manualQuestions) {
@@ -716,10 +780,11 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
         promptContent.writeln('Answer: ${answers[question] ?? "Not answered"}');
         promptContent.writeln('-------------------');
       }
-      
+
       // Load and add the entire answers file to the prompt
       promptContent.writeln('\n=== Official Answers and Rubrics ===');
-      final frqData = await rootBundle.loadString('assets/apcs_2024_frq_answers.txt');
+      final frqData =
+          await rootBundle.loadString('assets/apcs_2024_frq_answers.txt');
       promptContent.writeln(frqData);
       promptContent.writeln('=== End of Official Answers ===\n');
 
@@ -728,8 +793,7 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
 
       // Send the content to QuestAI
       chatBloc.add(ChatGenerationNewTextMessageEvent(
-        inputMessage: promptContent.toString()
-      ));
+          inputMessage: promptContent.toString()));
 
       // Listen for the AI response
       chatBloc.stream.listen((state) {
@@ -756,7 +820,6 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
           }
         }
       });
-
     } catch (e) {
       print('Error loading answers file: $e');
     }
@@ -770,7 +833,8 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
           onWillPop: () async => true,
           child: StatefulBuilder(
             builder: (context, setModalState) {
-              final TextEditingController messageController = TextEditingController();
+              final TextEditingController messageController =
+                  TextEditingController();
               final ScrollController scrollController = ScrollController();
               void _scrollToBottom() {
                 if (scrollController.hasClients) {
@@ -781,6 +845,7 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
                   );
                 }
               }
+
               return Dialog(
                 backgroundColor: Colors.transparent,
                 insetPadding: EdgeInsets.zero,
@@ -788,7 +853,8 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
                   height: MediaQuery.of(context).size.height * 0.8,
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                    borderRadius:
+                        BorderRadius.vertical(top: Radius.circular(20)),
                   ),
                   child: Column(
                     children: [
@@ -829,21 +895,29 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
                                 itemBuilder: (context, index) {
                                   final message = state.messages[index];
                                   return Container(
-                                    margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                                    margin: EdgeInsets.symmetric(
+                                        vertical: 8, horizontal: 16),
                                     padding: EdgeInsets.all(12),
-                                    alignment: message.role == "user" ? Alignment.centerRight : Alignment.centerLeft,
+                                    alignment: message.role == "user"
+                                        ? Alignment.centerRight
+                                        : Alignment.centerLeft,
                                     child: Container(
                                       constraints: BoxConstraints(
-                                        maxWidth: MediaQuery.of(context).size.width * 0.75,
+                                        maxWidth:
+                                            MediaQuery.of(context).size.width *
+                                                0.75,
                                       ),
                                       padding: EdgeInsets.all(12),
                                       decoration: BoxDecoration(
-                                        color: message.role == "user" ? Colors.blue : Colors.purple,
+                                        color: message.role == "user"
+                                            ? Colors.blue
+                                            : Colors.purple,
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: Text(
                                         message.parts.first.text,
-                                        style: TextStyle(color: Colors.white, fontSize: 16),
+                                        style: TextStyle(
+                                            color: Colors.white, fontSize: 16),
                                       ),
                                     ),
                                   );
@@ -874,16 +948,20 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
                                 style: TextStyle(color: Colors.purple),
                                 decoration: InputDecoration(
                                   hintText: "Ask QuestAI anything...",
-                                  hintStyle: TextStyle(color: Colors.purple.withOpacity(0.5)),
+                                  hintStyle: TextStyle(
+                                      color: Colors.purple.withOpacity(0.5)),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(25),
-                                    borderSide: BorderSide(color: Colors.purple),
+                                    borderSide:
+                                        BorderSide(color: Colors.purple),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(25),
-                                    borderSide: BorderSide(color: Colors.purple, width: 2),
+                                    borderSide: BorderSide(
+                                        color: Colors.purple, width: 2),
                                   ),
-                                  contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                  contentPadding: EdgeInsets.symmetric(
+                                      horizontal: 16, vertical: 12),
                                 ),
                               ),
                             ),
@@ -932,7 +1010,8 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
           onWillPop: () async => true,
           child: StatefulBuilder(
             builder: (context, setModalState) {
-              final TextEditingController messageController = TextEditingController();
+              final TextEditingController messageController =
+                  TextEditingController();
               final ScrollController scrollController = ScrollController();
               void _scrollToBottom() {
                 if (scrollController.hasClients) {
@@ -943,6 +1022,7 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
                   );
                 }
               }
+
               return Dialog(
                 backgroundColor: Colors.transparent,
                 insetPadding: EdgeInsets.zero,
@@ -950,7 +1030,8 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
                   height: MediaQuery.of(context).size.height * 0.8,
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                    borderRadius:
+                        BorderRadius.vertical(top: Radius.circular(20)),
                   ),
                   child: Column(
                     children: [
@@ -991,21 +1072,29 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
                                 itemBuilder: (context, index) {
                                   final message = state.messages[index];
                                   return Container(
-                                    margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                                    margin: EdgeInsets.symmetric(
+                                        vertical: 8, horizontal: 16),
                                     padding: EdgeInsets.all(12),
-                                    alignment: message.role == "user" ? Alignment.centerRight : Alignment.centerLeft,
+                                    alignment: message.role == "user"
+                                        ? Alignment.centerRight
+                                        : Alignment.centerLeft,
                                     child: Container(
                                       constraints: BoxConstraints(
-                                        maxWidth: MediaQuery.of(context).size.width * 0.75,
+                                        maxWidth:
+                                            MediaQuery.of(context).size.width *
+                                                0.75,
                                       ),
                                       padding: EdgeInsets.all(12),
                                       decoration: BoxDecoration(
-                                        color: message.role == "user" ? Colors.blue : Colors.purple,
+                                        color: message.role == "user"
+                                            ? Colors.blue
+                                            : Colors.purple,
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: Text(
                                         message.parts.first.text,
-                                        style: TextStyle(color: Colors.white, fontSize: 16),
+                                        style: TextStyle(
+                                            color: Colors.white, fontSize: 16),
                                       ),
                                     ),
                                   );
@@ -1036,16 +1125,20 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
                                 style: TextStyle(color: Colors.purple),
                                 decoration: InputDecoration(
                                   hintText: "Ask QuestAI anything...",
-                                  hintStyle: TextStyle(color: Colors.purple.withOpacity(0.5)),
+                                  hintStyle: TextStyle(
+                                      color: Colors.purple.withOpacity(0.5)),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(25),
-                                    borderSide: BorderSide(color: Colors.purple),
+                                    borderSide:
+                                        BorderSide(color: Colors.purple),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(25),
-                                    borderSide: BorderSide(color: Colors.purple, width: 2),
+                                    borderSide: BorderSide(
+                                        color: Colors.purple, width: 2),
                                   ),
-                                  contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                  contentPadding: EdgeInsets.symmetric(
+                                      horizontal: 16, vertical: 12),
                                 ),
                               ),
                             ),
@@ -1117,8 +1210,7 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
               },
             ),
           ),
-          if (_loading)
-            const Center(child: CircularProgressIndicator()),
+          if (_loading) const Center(child: CircularProgressIndicator()),
           if (_error)
             Center(
               child: Column(
@@ -1169,7 +1261,8 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
                                 ),
                               ),
                               IconButton(
-                                icon: const Icon(Icons.close, color: Colors.red),
+                                icon:
+                                    const Icon(Icons.close, color: Colors.red),
                                 onPressed: () {
                                   setState(() {
                                     _showAnswerBox = false;
@@ -1191,7 +1284,8 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
                                     onPressed: () {
                                       setState(() {
                                         selectedSubpart = q;
-                                        _answerController.text = answers[q] ?? '';
+                                        _answerController.text =
+                                            answers[q] ?? '';
                                       });
                                     },
                                     style: ElevatedButton.styleFrom(
@@ -1200,7 +1294,9 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                     ),
-                                    child: Text(q, style: const TextStyle(color: Colors.white)),
+                                    child: Text(q,
+                                        style: const TextStyle(
+                                            color: Colors.white)),
                                   );
                                 }).toList(),
                               ),
@@ -1213,11 +1309,12 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
                               print('\n=== User Answers ===');
                               for (String question in manualQuestions) {
                                 print('Question: $question');
-                                print('Answer: ${answers[question] ?? "Not answered"}');
+                                print(
+                                    'Answer: ${answers[question] ?? "Not answered"}');
                                 print('-------------------');
                               }
                               print('===================\n');
-                              
+
                               WidgetsBinding.instance.addPostFrameCallback((_) {
                                 _showChatModalAndStartGrading(context);
                               });
@@ -1229,7 +1326,8 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
                               ),
                               padding: const EdgeInsets.symmetric(vertical: 14),
                             ),
-                            child: const Text('Submit Answers', style: TextStyle(fontSize: 16)),
+                            child: const Text('Submit Answers',
+                                style: TextStyle(fontSize: 16)),
                           ),
                         ],
                       )
@@ -1249,7 +1347,8 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
                                 ),
                               ),
                               IconButton(
-                                icon: const Icon(Icons.close, color: Colors.red),
+                                icon:
+                                    const Icon(Icons.close, color: Colors.red),
                                 onPressed: () {
                                   setState(() {
                                     _showAnswerBox = false;
@@ -1265,14 +1364,17 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
                               controller: _answerController,
                               maxLines: null,
                               expands: true,
-                              style: const TextStyle(color: Color(0xFFFFEB3B)), // Yellow text
+                              style: const TextStyle(
+                                  color: Color(0xFFFFEB3B)), // Yellow text
                               textAlign: TextAlign.left,
                               textAlignVertical: TextAlignVertical.top,
                               decoration: InputDecoration(
                                 filled: true,
                                 fillColor: Color(0xFF1976D2), // Blue background
                                 hintText: 'Type your answer here...',
-                                hintStyle: const TextStyle(color: Color(0xFFFFF9C4)), // Light yellow hint
+                                hintStyle: const TextStyle(
+                                    color:
+                                        Color(0xFFFFF9C4)), // Light yellow hint
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
                                   borderSide: BorderSide.none,
@@ -1285,7 +1387,8 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
                           TextButton(
                             onPressed: () {
                               setState(() {
-                                answers[selectedSubpart!] = _answerController.text;
+                                answers[selectedSubpart!] =
+                                    _answerController.text;
                                 selectedSubpart = null;
                               });
                               FocusScope.of(context).unfocus();
@@ -1339,7 +1442,8 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
                     },
                     backgroundColor: Colors.purple,
                     icon: const Icon(Icons.edit_note),
-                    label: const Text('Answer Workbook', style: TextStyle(fontSize: 14)),
+                    label: const Text('Answer Workbook',
+                        style: TextStyle(fontSize: 14)),
                   ),
                 ),
                 Padding(
@@ -1357,4 +1461,4 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
           : null,
     );
   }
-} 
+}

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:student_learning_app/bloc/chat_bloc.dart';
 import '../models/chat_message_model.dart';
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -21,11 +21,13 @@ class _HomePageState extends State<HomePage> {
   bool isWaitingForQuestions = false;
 
   List<Map<String, dynamic>> scienceQuestions = [];
-  List<bool> answeredCorrectly = []; // Track which questions were answered correctly
+  List<bool> answeredCorrectly =
+      []; // Track which questions were answered correctly
 
   bool showAnswer = false;
   bool showQuizArea = false;
-  bool showScoreSummary = false; // New variable to control score summary visibility
+  bool showScoreSummary =
+      false; // New variable to control score summary visibility
   String selectedSubject = "Chemistry";
   int numberOfQuestions = 10; // New variable for question count
 
@@ -88,7 +90,8 @@ class _HomePageState extends State<HomePage> {
   // Function to show half-screen chat modal
   void _showChatModal({String? initialMessage}) {
     if (initialMessage != null) {
-      _chatBloc.add(ChatGenerationNewTextMessageEvent(inputMessage: initialMessage));
+      _chatBloc
+          .add(ChatGenerationNewTextMessageEvent(inputMessage: initialMessage));
     }
 
     showModalBottomSheet(
@@ -152,11 +155,13 @@ class _HomePageState extends State<HomePage> {
                               decoration: BoxDecoration(
                                 color: Colors.red.withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(20),
-                                border: Border.all(color: Colors.red.withOpacity(0.3)),
+                                border: Border.all(
+                                    color: Colors.red.withOpacity(0.3)),
                               ),
                               child: IconButton(
                                 onPressed: () => Navigator.pop(context),
-                                icon: Icon(Icons.close, color: Colors.red[700], size: 20),
+                                icon: Icon(Icons.close,
+                                    color: Colors.red[700], size: 20),
                                 padding: EdgeInsets.all(4),
                                 constraints: BoxConstraints(
                                   minWidth: 32,
@@ -190,10 +195,14 @@ class _HomePageState extends State<HomePage> {
                               return Container(
                                 margin: EdgeInsets.symmetric(vertical: 8),
                                 padding: EdgeInsets.all(12),
-                                alignment: message.role == "user" ? Alignment.centerRight : Alignment.centerLeft,
+                                alignment: message.role == "user"
+                                    ? Alignment.centerRight
+                                    : Alignment.centerLeft,
                                 child: Container(
                                   constraints: BoxConstraints(
-                                    maxWidth: MediaQuery.of(context).size.width * 0.75,
+                                    maxWidth:
+                                        MediaQuery.of(context).size.width *
+                                            0.75,
                                   ),
                                   padding: EdgeInsets.all(12),
                                   decoration: BoxDecoration(
@@ -204,7 +213,8 @@ class _HomePageState extends State<HomePage> {
                                   ),
                                   child: Text(
                                     message.parts.first.text,
-                                    style: TextStyle(color: Colors.white, fontSize: 16),
+                                    style: TextStyle(
+                                        color: Colors.white, fontSize: 16),
                                   ),
                                 ),
                               );
@@ -249,9 +259,11 @@ class _HomePageState extends State<HomePage> {
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(25),
-                                borderSide: BorderSide(color: Colors.purple, width: 2),
+                                borderSide:
+                                    BorderSide(color: Colors.purple, width: 2),
                               ),
-                              contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                              contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 12),
                             ),
                           ),
                         ),
@@ -325,7 +337,8 @@ class _HomePageState extends State<HomePage> {
         // Try splitting by double newlines first
         List<String> potentialQuestions = aiResponse.split('\n\n');
         for (String block in potentialQuestions) {
-          Map<String, dynamic>? parsedQuestion = _parseBracketFormat(block.trim());
+          Map<String, dynamic>? parsedQuestion =
+              _parseBracketFormat(block.trim());
           if (parsedQuestion != null) {
             newQuestions.add(parsedQuestion);
           }
@@ -334,7 +347,8 @@ class _HomePageState extends State<HomePage> {
         // If still not enough, try splitting by single newlines
         if (newQuestions.length < numberOfQuestions) {
           for (String line in lines) {
-            Map<String, dynamic>? parsedQuestion = _parseBracketFormat(line.trim());
+            Map<String, dynamic>? parsedQuestion =
+                _parseBracketFormat(line.trim());
             if (parsedQuestion != null) {
               newQuestions.add(parsedQuestion);
             }
@@ -366,7 +380,8 @@ class _HomePageState extends State<HomePage> {
         // Show success message
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Successfully loaded ${newQuestions.length} new $selectedSubject questions!'),
+            content: Text(
+                'Successfully loaded ${newQuestions.length} new $selectedSubject questions!'),
             backgroundColor: Colors.green,
           ),
         );
@@ -374,7 +389,8 @@ class _HomePageState extends State<HomePage> {
         // If parsing failed, show error with more details
         setState(() {
           isWaitingForQuestions = false;
-          showQuizArea = false; // Ensure we stay on configuration screen if parsing fails
+          showQuizArea =
+              false; // Ensure we stay on configuration screen if parsing fails
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -402,7 +418,8 @@ class _HomePageState extends State<HomePage> {
   Map<String, dynamic>? _parseBracketFormat(String line) {
     try {
       // Remove trailing comma if present
-      String cleanLine = line.endsWith(',') ? line.substring(0, line.length - 1) : line;
+      String cleanLine =
+          line.endsWith(',') ? line.substring(0, line.length - 1) : line;
 
       // Remove [ and ] brackets
       if (!cleanLine.startsWith('[') || !cleanLine.endsWith(']')) {
@@ -468,7 +485,8 @@ class _HomePageState extends State<HomePage> {
     answeredCorrectly.clear();
 
     _chatBloc.add(ChatGenerationNewTextMessageEvent(
-        inputMessage: "Give me exactly $numberOfQuestions $selectedSubject questions in the following format: [question, option1, option2, option3, option4, answerchoice]. "
+        inputMessage:
+            "Give me exactly $numberOfQuestions $selectedSubject questions in the following format: [question, option1, option2, option3, option4, answerchoice]. "
             "Provide only the questions in this exact format, with no additional text or explanations. "
             "Ensure you provide exactly $numberOfQuestions questions."));
 
@@ -502,8 +520,8 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       showAnswer = true;
       // Record whether the answer was correct
-      answeredCorrectly[currentQuestionIndex] =
-          selectedAnswer == scienceQuestions[currentQuestionIndex]["correct_answer"];
+      answeredCorrectly[currentQuestionIndex] = selectedAnswer ==
+          scienceQuestions[currentQuestionIndex]["correct_answer"];
     });
   }
 
@@ -614,17 +632,20 @@ class _HomePageState extends State<HomePage> {
                   BlocBuilder<ChatBloc, ChatState>(
                     bloc: _chatBloc,
                     builder: (context, state) {
-                      if (state is ChatSuccessState && state.messages.isNotEmpty) {
+                      if (state is ChatSuccessState &&
+                          state.messages.isNotEmpty) {
                         // Get the last message from the AI
                         final lastMessage = state.messages.last;
                         if (lastMessage.role == "model") {
                           WidgetsBinding.instance.addPostFrameCallback((_) {
-                            _parseAndReplaceQuestions(lastMessage.parts.first.text);
+                            _parseAndReplaceQuestions(
+                                lastMessage.parts.first.text);
                           });
                         }
                       }
                       return ElevatedButton(
-                        onPressed: isWaitingForQuestions ? null : _generateQuestions,
+                        onPressed:
+                            isWaitingForQuestions ? null : _generateQuestions,
                         style: ElevatedButton.styleFrom(
                           padding: EdgeInsets.zero,
                           shape: RoundedRectangleBorder(
@@ -645,7 +666,8 @@ class _HomePageState extends State<HomePage> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Container(
-                            constraints: BoxConstraints(minWidth: 150, minHeight: 48),
+                            constraints:
+                                BoxConstraints(minWidth: 150, minHeight: 48),
                             alignment: Alignment.center,
                             child: isWaitingForQuestions
                                 ? Row(
@@ -697,71 +719,81 @@ class _HomePageState extends State<HomePage> {
       );
     }
 
-    return Column(
-      children: [
-        SizedBox(height: 100), // Shift quiz questions down
-        Text(
-          "Question ${currentQuestionIndex + 1}/${scienceQuestions.length}",
-          style: TextStyle(
-            fontSize: 18,
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        SizedBox(height: 20),
-        Container(
-          padding: EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.grey.shade800.withOpacity(0.9),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Text(
-            scienceQuestions[currentQuestionIndex]["question"],
-            style: TextStyle(
-              fontSize: 20,
-              color: Colors.white,
+    final q = scienceQuestions[currentQuestionIndex];
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+          // Back button in top left
+          Align(
+            alignment: Alignment.topLeft,
+            child: IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              onPressed: () => Navigator.pop(context),
             ),
           ),
-        ),
-        SizedBox(height: 20),
-        ...buildMultipleChoiceOptions(),
-        SizedBox(height: 20),
-        if (!showAnswer)
-          ElevatedButton(
-            onPressed: selectedAnswer != null ? _submitAnswer : null,
-            child: Text("Submit"),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.purple,
-              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            ),
-          )
-        else
-          Column(
-            children: [
-              ElevatedButton(
-                onPressed: () {
-                  String question = scienceQuestions[currentQuestionIndex]["question"];
-                  String prompt = "Please explain how to solve this question: '$question'. Provide a detailed step-by-step explanation with the fundamental concepts involved.";
-                  _showChatModal(initialMessage: prompt);
-                },
-                child: Text("Ask QuestAI for Help"),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                ),
-              ),
-              SizedBox(height: 12),
-              ElevatedButton(
-                onPressed: goToNextQuestion,
-                child: Text("Next Question"),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                ),
-              ),
-            ],
+          // Question counter in middle top
+          Text(
+            'Question ${currentQuestionIndex + 1}/${scienceQuestions.length}',
+            style: Theme.of(context).textTheme.bodyLarge,
+            textAlign: TextAlign.center,
           ),
-      ],
+          const SizedBox(height: 16),
+          // Progress bar below counter
+          LinearProgressIndicator(
+            value: (currentQuestionIndex + 1) / scienceQuestions.length,
+            backgroundColor: Colors.white24,
+            valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
+          ),
+          const SizedBox(height: 24),
+          // Question below progress bar
+          Text(
+            q['question'],
+            style: Theme.of(context).textTheme.displayMedium,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
+          // Options below question
+          ...List.generate(
+            q['options'].length,
+            (i) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: ElevatedButton(
+                onPressed: showAnswer ? null : () => _submitAnswer(),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: showAnswer
+                      ? q['options'][i] == q['correct_answer']
+                          ? Colors.green
+                          : q['options'][i] == selectedAnswer
+                              ? Colors.red
+                              : Colors.white.withOpacity(0.1)
+                      : Colors.white.withOpacity(0.1),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+                child: Text(q['options'][i],
+                    style: const TextStyle(color: Colors.white70)),
+              ),
+            ),
+          ),
+          if (showAnswer) ...[
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: goToNextQuestion,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+              ),
+              child: Text(currentQuestionIndex < scienceQuestions.length - 1
+                  ? 'Next'
+                  : 'Finish'),
+            ),
+          ],
+        ],
+      ),
     );
   }
 
@@ -808,7 +840,11 @@ class _HomePageState extends State<HomePage> {
             "Accuracy: ${accuracy.toStringAsFixed(1)}%",
             style: TextStyle(
               fontSize: 20,
-              color: accuracy > 70 ? Colors.green : accuracy > 40 ? Colors.orange : Colors.red,
+              color: accuracy > 70
+                  ? Colors.green
+                  : accuracy > 40
+                      ? Colors.orange
+                      : Colors.red,
             ),
           ),
           SizedBox(height: 30),
@@ -836,7 +872,8 @@ class _HomePageState extends State<HomePage> {
           SizedBox(height: 20),
           ElevatedButton(
             onPressed: () {
-              String prompt = "I scored $correctAnswers out of ${scienceQuestions.length} ($accuracy%) in my $selectedSubject quiz. "
+              String prompt =
+                  "I scored $correctAnswers out of ${scienceQuestions.length} ($accuracy%) in my $selectedSubject quiz. "
                   "Can you analyze my performance and suggest areas to improve?";
               _showChatModal(initialMessage: prompt);
             },
@@ -849,85 +886,5 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
     );
-  }
-
-  List<Widget> buildMultipleChoiceOptions() {
-    List<String> options = scienceQuestions[currentQuestionIndex]["options"];
-
-    return options.map((option) {
-      bool isSelected = selectedAnswer == option;
-      bool isCorrectAnswer = showAnswer && option == scienceQuestions[currentQuestionIndex]["correct_answer"];
-      bool isWrongSelected = showAnswer && isSelected && option != scienceQuestions[currentQuestionIndex]["correct_answer"];
-
-      return Padding(
-        padding: const EdgeInsets.only(bottom: 8.0),
-        child: InkWell(
-          onTap: showAnswer ? null : () {
-            setState(() {
-              selectedAnswer = option;
-            });
-          },
-          child: Container(
-            width: double.infinity,
-            padding: EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: isCorrectAnswer
-                  ? Colors.green.withOpacity(0.7)
-                  : isWrongSelected
-                  ? Colors.red.withOpacity(0.7)
-                  : isSelected
-                  ? Colors.blue.withOpacity(0.7)
-                  : Colors.grey.shade800.withOpacity(0.7),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: isCorrectAnswer
-                    ? Colors.green
-                    : isWrongSelected
-                    ? Colors.red
-                    : isSelected
-                    ? Colors.blue
-                    : Colors.grey,
-                width: isSelected ? 2 : 1,
-              ),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  height: 24,
-                  width: 24,
-                  decoration: BoxDecoration(
-                    color: isSelected ? (isWrongSelected ? Colors.red : Colors.blue) : Colors.white,
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: isCorrectAnswer
-                          ? Colors.green
-                          : isWrongSelected
-                          ? Colors.red
-                          : isSelected
-                          ? Colors.blue
-                          : Colors.grey,
-                    ),
-                  ),
-                  child: isSelected ? Icon(Icons.check, size: 16, color: Colors.white) : null,
-                ),
-                SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    option,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-                if (isCorrectAnswer && !isSelected)
-                  Icon(Icons.check_circle, color: Colors.green)
-              ],
-            ),
-          ),
-        ),
-      );
-    }).toList();
   }
 }
