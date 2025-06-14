@@ -1,28 +1,35 @@
 import 'package:flutter/material.dart';
 
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:student_learning_app/bloc/chat_bloc.dart';
 import '../models/chat_message_model.dart';
 
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
+
 
 class _HomePageState extends State<HomePage> {
   final TextEditingController followupController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   late final ChatBloc _chatBloc; // Create bloc instance here
 
+
   int currentQuestionIndex = 0;
   String? selectedAnswer;
   bool isWaitingForQuestions = false;
 
+
   List<Map<String, dynamic>> scienceQuestions = [];
   List<bool> answeredCorrectly =
       []; // Track which questions were answered correctly
+
 
   bool showAnswer = false;
   bool showQuizArea = false;
@@ -30,6 +37,7 @@ class _HomePageState extends State<HomePage> {
       false; // New variable to control score summary visibility
   String selectedSubject = "Chemistry";
   int numberOfQuestions = 10; // New variable for question count
+
 
   List<String> subjects = [
     "Chemistry",
@@ -42,6 +50,7 @@ class _HomePageState extends State<HomePage> {
     "Economics"
   ];
 
+
   @override
   void initState() {
     super.initState();
@@ -50,12 +59,14 @@ class _HomePageState extends State<HomePage> {
     showScoreSummary = false;
   }
 
+
   @override
   void dispose() {
     _scrollController.dispose();
     _chatBloc.close(); // Don't forget to close the bloc
     super.dispose();
   }
+
 
   void goToNextQuestion() {
     setState(() {
@@ -71,6 +82,7 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+
   void _scrollToBottom() {
     if (_scrollController.hasClients) {
       _scrollController.animateTo(
@@ -81,11 +93,13 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+
   // Function to clear chat history
   void _clearChatHistory() {
     _chatBloc.add(ChatClearHistoryEvent());
     print('Chat history cleared');
   }
+
 
   // Function to show half-screen chat modal
   void _showChatModal({String? initialMessage}) {
@@ -93,6 +107,7 @@ class _HomePageState extends State<HomePage> {
       _chatBloc
           .add(ChatGenerationNewTextMessageEvent(inputMessage: initialMessage));
     }
+
 
     showModalBottomSheet(
       context: context,
@@ -132,6 +147,7 @@ class _HomePageState extends State<HomePage> {
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
+
 
                   // Header
                   Container(
@@ -176,7 +192,9 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
 
+
                   Divider(height: 1, color: Colors.grey[300]),
+
 
                   // Chat messages area
                   Expanded(
@@ -235,6 +253,7 @@ class _HomePageState extends State<HomePage> {
                       },
                     ),
                   ),
+
 
                   // Input area
                   Container(
@@ -300,15 +319,18 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+
   // Function to parse AI response and extract questions
   void _parseAndReplaceQuestions(String aiResponse) {
     try {
       print('Full AI Response: $aiResponse');
       print('=== PARSING DEBUG ===');
 
+
       List<String> lines = aiResponse.split('\n');
       List<Map<String, dynamic>> newQuestions = [];
       List<String> questionLines = [];
+
 
       // First, collect all lines that look like questions
       for (String line in lines) {
@@ -317,6 +339,7 @@ class _HomePageState extends State<HomePage> {
           questionLines.add(trimmedLine);
         }
       }
+
 
       // Now parse the collected question lines
       for (String line in questionLines) {
@@ -327,12 +350,15 @@ class _HomePageState extends State<HomePage> {
         }
       }
 
+
       print('Total questions parsed: ${newQuestions.length}');
+
 
       // If we got fewer questions than requested, try to parse again with a different strategy
       if (newQuestions.length < numberOfQuestions) {
         print('Got fewer questions than requested, trying alternative parsing');
         newQuestions.clear(); // Clear the previous attempts
+
 
         // Try splitting by double newlines first
         List<String> potentialQuestions = aiResponse.split('\n\n');
@@ -343,6 +369,7 @@ class _HomePageState extends State<HomePage> {
             newQuestions.add(parsedQuestion);
           }
         }
+
 
         // If still not enough, try splitting by single newlines
         if (newQuestions.length < numberOfQuestions) {
@@ -356,12 +383,14 @@ class _HomePageState extends State<HomePage> {
         }
       }
 
+
       // If we successfully parsed questions, replace the current ones
       if (newQuestions.isNotEmpty) {
         // Ensure we don't exceed the requested number of questions
         if (newQuestions.length > numberOfQuestions) {
           newQuestions = newQuestions.sublist(0, numberOfQuestions);
         }
+
 
         setState(() {
           scienceQuestions = newQuestions;
@@ -374,8 +403,10 @@ class _HomePageState extends State<HomePage> {
           showScoreSummary = false;
         });
 
+
         // Clear chat history after successful question generation
         _clearChatHistory();
+
 
         // Show success message
         ScaffoldMessenger.of(context).showSnackBar(
@@ -392,6 +423,7 @@ class _HomePageState extends State<HomePage> {
           showQuizArea =
               false; // Ensure we stay on configuration screen if parsing fails
         });
+
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -415,26 +447,32 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+
   Map<String, dynamic>? _parseBracketFormat(String line) {
     try {
       // Remove trailing comma if present
       String cleanLine =
           line.endsWith(',') ? line.substring(0, line.length - 1) : line;
 
+
       // Remove [ and ] brackets
       if (!cleanLine.startsWith('[') || !cleanLine.endsWith(']')) {
         return null;
       }
 
+
       String content = cleanLine.substring(1, cleanLine.length - 1);
+
 
       // Split by comma, but be careful with quoted strings
       List<String> parts = [];
       StringBuffer currentPart = StringBuffer();
       bool inQuotes = false;
 
+
       for (int i = 0; i < content.length; i++) {
         String char = content[i];
+
 
         if (char == '"') {
           inQuotes = !inQuotes;
@@ -447,8 +485,10 @@ class _HomePageState extends State<HomePage> {
         }
       }
 
+
       // Add the last part
       parts.add(currentPart.toString().trim());
+
 
       // Clean each part (remove surrounding quotes if present)
       for (int i = 0; i < parts.length; i++) {
@@ -456,6 +496,7 @@ class _HomePageState extends State<HomePage> {
           parts[i] = parts[i].substring(1, parts[i].length - 1);
         }
       }
+
 
       if (parts.length == 6) {
         return {
@@ -473,16 +514,20 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+
   void _generateQuestions() {
     setState(() {
       isWaitingForQuestions = true;
     });
 
+
     print('Generating $numberOfQuestions questions for: $selectedSubject');
+
 
     // Clear any previous questions and answers
     scienceQuestions.clear();
     answeredCorrectly.clear();
+
 
     _chatBloc.add(ChatGenerationNewTextMessageEvent(
         inputMessage:
@@ -490,8 +535,10 @@ class _HomePageState extends State<HomePage> {
             "Provide only the questions in this exact format, with no additional text or explanations. "
             "Ensure you provide exactly $numberOfQuestions questions."));
 
+
     print('Event added to ChatBloc');
   }
+
 
   void _restartQuiz() {
     setState(() {
@@ -503,6 +550,7 @@ class _HomePageState extends State<HomePage> {
       answeredCorrectly = List.filled(scienceQuestions.length, false);
     });
   }
+
 
   void _returnToHome() {
     setState(() {
@@ -516,6 +564,7 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+
   void _submitAnswer() {
     setState(() {
       showAnswer = true;
@@ -524,6 +573,28 @@ class _HomePageState extends State<HomePage> {
           scienceQuestions[currentQuestionIndex]["correct_answer"];
     });
   }
+
+
+  void _askForExplanation(Map<String, dynamic> question) {
+    String userAnswer = selectedAnswer ?? 'No answer selected';
+    String correctAnswer = question['correct_answer'];
+    bool isCorrect = userAnswer == correctAnswer;
+   
+    String prompt = '''
+Question: ${question['question']}
+Options: ${question['options'].join(', ')}
+Correct Answer: $correctAnswer
+My Answer: $userAnswer
+Result: ${isCorrect ? 'Correct' : 'Incorrect'}
+
+
+Please explain why the correct answer is "$correctAnswer" and provide a detailed explanation of the concept. If I got it wrong, please help me understand where I went wrong.
+''';
+
+
+    _showChatModal(initialMessage: prompt);
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -712,12 +783,14 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+
   Widget _buildQuizArea() {
     if (scienceQuestions.isEmpty) {
       return Center(
         child: CircularProgressIndicator(),
       );
     }
+
 
     final q = scienceQuestions[currentQuestionIndex];
     return Container(
@@ -763,7 +836,11 @@ class _HomePageState extends State<HomePage> {
             (i) => Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: ElevatedButton(
-                onPressed: showAnswer ? null : () => _submitAnswer(),
+                onPressed: showAnswer ? null : () {
+                  setState(() {
+                    selectedAnswer = q['options'][i];
+                  });
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: showAnswer
                       ? q['options'][i] == q['correct_answer']
@@ -771,7 +848,9 @@ class _HomePageState extends State<HomePage> {
                           : q['options'][i] == selectedAnswer
                               ? Colors.red
                               : Colors.white.withOpacity(0.1)
-                      : Colors.white.withOpacity(0.1),
+                      : selectedAnswer == q['options'][i]
+                          ? Colors.blue.withOpacity(0.3)
+                          : Colors.white.withOpacity(0.1),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
                 child: Text(q['options'][i],
@@ -779,17 +858,110 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           ),
-          if (showAnswer) ...[
+          // Submit Answer button (only show when answer is selected and not yet submitted)
+          if (selectedAnswer != null && !showAnswer) ...[
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: goToNextQuestion,
+              onPressed: _submitAnswer,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-                padding: const EdgeInsets.symmetric(vertical: 16),
+                backgroundColor: Colors.green,
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 32),
               ),
-              child: Text(currentQuestionIndex < scienceQuestions.length - 1
-                  ? 'Next'
-                  : 'Finish'),
+              child: const Text(
+                'Submit Answer',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+          ],
+          // Feedback and next options (only show after answer is submitted)
+          if (showAnswer) ...[
+            const SizedBox(height: 16),
+            // Show feedback message
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: selectedAnswer == q['correct_answer']
+                    ? Colors.green.withOpacity(0.2)
+                    : Colors.red.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: selectedAnswer == q['correct_answer']
+                      ? Colors.green
+                      : Colors.red,
+                  width: 2,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    selectedAnswer == q['correct_answer']
+                        ? Icons.check_circle
+                        : Icons.cancel,
+                    color: selectedAnswer == q['correct_answer']
+                        ? Colors.green
+                        : Colors.red,
+                    size: 24,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      selectedAnswer == q['correct_answer']
+                          ? 'Correct! Well done!'
+                          : 'Incorrect. The correct answer is: ${q['correct_answer']}',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            // Next Question and Ask for Explanation buttons
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: goToNextQuestion,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    child: Text(
+                      currentQuestionIndex < scienceQuestions.length - 1
+                          ? 'Next Question'
+                          : 'Finish Quiz',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () => _askForExplanation(q),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.purple,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    child: const Text(
+                      'Ask for Explanation',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ],
@@ -797,9 +969,11 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+
   Widget _buildScoreSummary() {
     int correctAnswers = answeredCorrectly.where((correct) => correct).length;
     double accuracy = (correctAnswers / scienceQuestions.length) * 100;
+
 
     return Container(
       padding: EdgeInsets.all(20),
@@ -888,3 +1062,8 @@ class _HomePageState extends State<HomePage> {
     );
   }
 }
+
+
+
+
+
