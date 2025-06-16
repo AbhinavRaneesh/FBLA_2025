@@ -20,7 +20,16 @@ import 'package:printing/printing.dart';
 import 'package:student_learning_app/models/chat_message_model.dart';
 
 class FRQManager extends StatefulWidget {
-  const FRQManager({super.key});
+  final Map<String, dynamic> studySet;
+  final String username;
+  final String currentTheme;
+  final int frqCount;
+  const FRQManager(
+      {super.key,
+      required this.studySet,
+      required this.username,
+      required this.currentTheme,
+      required this.frqCount});
 
   @override
   State<FRQManager> createState() => _FRQManagerState();

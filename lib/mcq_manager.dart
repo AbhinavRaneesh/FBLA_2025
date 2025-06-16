@@ -7,10 +7,14 @@ import 'main.dart';
 class MCQManager extends StatefulWidget {
   final String username;
   final VoidCallback? onSetImported;
+  final Map<String, dynamic> studySet;
+  final String currentTheme;
 
   const MCQManager({
     super.key,
     required this.username,
+    required this.studySet,
+    required this.currentTheme,
     this.onSetImported,
   });
 
@@ -3175,7 +3179,8 @@ class _MCQManagerState extends State<MCQManager> {
                     style: const TextStyle(color: Colors.white),
                     decoration: InputDecoration(
                       hintText: 'Search sets...',
-                      hintStyle: TextStyle(color: Colors.white.withOpacity(0.6)),
+                      hintStyle:
+                          TextStyle(color: Colors.white.withOpacity(0.6)),
                       prefixIcon: Icon(Icons.search,
                           color: Colors.white.withOpacity(0.6)),
                       border: OutlineInputBorder(
@@ -3242,15 +3247,8 @@ class _MCQManagerState extends State<MCQManager> {
         color: Colors.transparent,
         child: InkWell(
           onTap: () async {
-            if (apClass['name'] == 'AP Computer Science A') {
-              // For AP CS A, show choice between MCQ and FRQ
-              setState(() {
-                showAPCSChoice = true;
-              });
-            } else {
-              // For other subjects, import the MCQ set
-              await _importMCQSet(apClass['name']);
-            }
+            // Always import the MCQ set, even for AP Computer Science A
+            await _importMCQSet(apClass['name']);
           },
           borderRadius: BorderRadius.circular(20),
           child: Container(
@@ -3412,22 +3410,76 @@ class _MCQManagerState extends State<MCQManager> {
                   ),
                   const SizedBox(height: 32),
 
-                  // Score
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.amber.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      'Score: $currentScore',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.amber,
+                  // Score and Points
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      // Score
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.amber.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          'Score: $currentScore',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.amber,
+                          ),
+                        ),
                       ),
-                    ),
+                      // Points
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Colors.amber, Colors.orange],
+                          ),
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.amber.withOpacity(0.3),
+                              blurRadius: 10,
+                              offset: const Offset(0, 5),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.star,
+                                color: Colors.white, size: 20),
+                            const SizedBox(width: 5),
+                            FutureBuilder<int>(
+                              future: _dbHelper.getUserPoints(widget.username),
+                              builder: (context, snapshot) {
+                                if (snapshot.hasData) {
+                                  return Text(
+                                    '${snapshot.data}',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                  );
+                                }
+                                return const Text(
+                                  '...',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 32),
 
@@ -3541,7 +3593,7 @@ class _MCQManagerState extends State<MCQManager> {
                       child: SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: () {
+                          onPressed: () async {
                             setState(() {
                               final answer = userAnswers[currentQuestionIndex];
                               if (answer != null) {
@@ -3551,6 +3603,16 @@ class _MCQManagerState extends State<MCQManager> {
                                 }
                               }
                             });
+                            // Award 10 points for a correct answer
+                            final answer = userAnswers[currentQuestionIndex];
+                            if (answer != null &&
+                                answer == currentQuestion['correct']) {
+                              int currentPoints = await _dbHelper
+                                  .getUserPoints(widget.username);
+                              await _dbHelper.updateUserPoints(
+                                  widget.username, currentPoints + 10);
+                              // Optionally, you can call setState to update points in the UI if needed
+                            }
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: selectedClass['color'][0],
@@ -3685,6 +3747,41 @@ class _MCQManagerState extends State<MCQManager> {
                   ),
                 ),
                 const SizedBox(height: 40),
+
+                // Points Earned
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Colors.amber, Colors.orange],
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.amber.withOpacity(0.3),
+                        blurRadius: 10,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.star, color: Colors.white, size: 24),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Earned ${currentScore * 10} points!',
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
 
                 // Performance Message
                 Text(
@@ -3855,7 +3952,11 @@ class _MCQManagerState extends State<MCQManager> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const FRQManager(),
+                          builder: (context) => FRQCountSelectionScreen(
+                            studySet: widget.studySet,
+                            username: widget.username,
+                            currentTheme: widget.currentTheme,
+                          ),
                         ),
                       );
                     },

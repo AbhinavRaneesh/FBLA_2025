@@ -25,6 +25,8 @@ import 'premade_study_sets.dart' as premade;
 import 'package:student_learning_app/pages/home_page.dart';
 import 'package:student_learning_app/bloc/chat_bloc.dart';
 import 'package:student_learning_app/models/chat_message_model.dart';
+import 'mcq_manager.dart';
+import 'frq_manager.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -1626,7 +1628,8 @@ class _MainScreenState extends State<MainScreen> {
           ),
         ],
       ),
-      floatingActionButton: (_currentIndex == 0 && _learnTabIndex == 0) // Show only on My Sets tab
+      floatingActionButton: (_currentIndex == 0 &&
+              _learnTabIndex == 0) // Show only on My Sets tab
           ? Padding(
               padding: const EdgeInsets.only(bottom: 16.0, right: 16.0),
               child: Column(
@@ -2042,6 +2045,8 @@ class _LearnTabState extends State<LearnTab>
     return MCQManager(
       username: widget.username,
       onSetImported: _loadStudySets,
+      studySet: {}, // Empty map for browse tab
+      currentTheme: 'default', // Default theme for browse tab
     );
   }
 
@@ -2711,42 +2716,16 @@ class _LearnTabState extends State<LearnTab>
   }
 
   void _startPractice(Map<String, dynamic> studySet) {
-    // Check if this is an MCQ set
-    if (studySet['name'].toString().contains('MCQ')) {
-      // For MCQ sets, navigate to MCQ Manager
-      Navigator.push(
-        this.context,
-        MaterialPageRoute(
-          builder: (context) => MCQManager(
-            username: widget.username,
-            onSetImported: _loadStudySets,
-          ),
+    Navigator.push(
+      this.context,
+      MaterialPageRoute(
+        builder: (context) => PracticeTypeChoiceScreen(
+          studySet: studySet,
+          username: widget.username,
+          currentTheme: widget.currentTheme,
         ),
-      );
-    } else if (studySet['name'].toString().contains('AP Computer Science A')) {
-      // For AP CS A sets, show choice between MCQ and FRQ
-      Navigator.push(
-        this.context,
-        MaterialPageRoute(
-          builder: (context) => MCQManager(
-            username: widget.username,
-            onSetImported: _loadStudySets,
-          ),
-        ),
-      );
-    } else {
-      // For regular sets, use the existing practice mode
-      Navigator.push(
-        this.context,
-        MaterialPageRoute(
-          builder: (context) => PracticeModeScreen(
-            studySet: studySet,
-            username: widget.username,
-            currentTheme: widget.currentTheme,
-          ),
-        ),
-      );
-    }
+      ),
+    );
   }
 
   void _deleteStudySet(int studySetId) {
@@ -3851,22 +3830,23 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
     final currentQuestion = _questions[_currentQuestionIndex];
     final questionText = currentQuestion['question_text'];
     final options = currentQuestion['options'].split('|');
-    
+
     // Create the prompt with question and options
     String prompt = "Question: $questionText\n\nOptions:\n";
     for (int i = 0; i < options.length; i++) {
       prompt += "${String.fromCharCode(65 + i)}. ${options[i]}\n";
     }
-    prompt += "\nPlease help me understand this question and explain the correct answer.";
-    
+    prompt +=
+        "\nPlease help me understand this question and explain the correct answer.";
+
     // Set the chat controller text
     _chatController.text = prompt;
-    
+
     // Show the chat interface
     setState(() {
       _showChat = true;
     });
-    
+
     // Send the message to the chat
     _chatBloc.add(ChatGenerationNewTextMessageEvent(inputMessage: prompt));
   }
@@ -4368,7 +4348,9 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
                                               Expanded(
                                                 flex: 1,
                                                 child: SingleChildScrollView(
-                                                  padding: const EdgeInsets.only(bottom: 16),
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                          bottom: 16),
                                                   child: _buildQuizContent(),
                                                 ),
                                               ),
@@ -4380,7 +4362,8 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
                                             ],
                                           )
                                         : SingleChildScrollView(
-                                            padding: const EdgeInsets.only(bottom: 24),
+                                            padding: const EdgeInsets.only(
+                                                bottom: 24),
                                             child: _buildQuizContent(),
                                           ),
                                   ),
@@ -4517,7 +4500,8 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
                 ],
               ),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
@@ -4552,11 +4536,16 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
           },
         ),
         const SizedBox(height: 24),
-        ..._questions[_currentQuestionIndex]['options'].split('|').asMap().entries.map((e) {
+        ..._questions[_currentQuestionIndex]['options']
+            .split('|')
+            .asMap()
+            .entries
+            .map((e) {
           final i = e.key;
           final opt = e.value;
           final sel = _selectedAnswer == opt;
-          final cor = _showAnswer && opt == _questions[_currentQuestionIndex]['correct_answer'];
+          final cor = _showAnswer &&
+              opt == _questions[_currentQuestionIndex]['correct_answer'];
           final wrg = _showAnswer && sel && !cor;
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -4565,12 +4554,16 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
               curve: Curves.easeInOut,
               decoration: BoxDecoration(
                 gradient: cor
-                    ? const LinearGradient(colors: [Color(0xFF43e97b), Color(0xFF38f9d7)])
+                    ? const LinearGradient(
+                        colors: [Color(0xFF43e97b), Color(0xFF38f9d7)])
                     : wrg
-                        ? const LinearGradient(colors: [Color(0xFFf5576c), Color(0xFFf093fb)])
+                        ? const LinearGradient(
+                            colors: [Color(0xFFf5576c), Color(0xFFf093fb)])
                         : sel
-                            ? const LinearGradient(colors: [Color(0xFF4facfe), Color(0xFF00f2fe)])
-                            : const LinearGradient(colors: [Color(0xFF23243a), Color(0xFF23243a)]),
+                            ? const LinearGradient(
+                                colors: [Color(0xFF4facfe), Color(0xFF00f2fe)])
+                            : const LinearGradient(
+                                colors: [Color(0xFF23243a), Color(0xFF23243a)]),
                 borderRadius: BorderRadius.circular(18),
                 boxShadow: sel
                     ? [
@@ -4596,7 +4589,8 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
                   borderRadius: BorderRadius.circular(18),
                   onTap: _showAnswer ? null : () => _checkAnswer(opt),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+                    padding:
+                        const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
                     child: Center(
                       child: Text(
                         opt,
@@ -4680,11 +4674,15 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
                     child: ElevatedButton.icon(
                       onPressed: _continueToNext,
                       icon: Icon(
-                        _currentQuestionIndex < _questionCount - 1 ? Icons.arrow_forward : Icons.check_circle,
+                        _currentQuestionIndex < _questionCount - 1
+                            ? Icons.arrow_forward
+                            : Icons.check_circle,
                         color: Colors.white,
                       ),
                       label: Text(
-                        _currentQuestionIndex < _questionCount - 1 ? 'Next Question' : 'Finish',
+                        _currentQuestionIndex < _questionCount - 1
+                            ? 'Next Question'
+                            : 'Finish',
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -4769,7 +4767,9 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 12),
                         child: Row(
-                          mainAxisAlignment: isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+                          mainAxisAlignment: isUser
+                              ? MainAxisAlignment.end
+                              : MainAxisAlignment.start,
                           children: [
                             if (!isUser) ...[
                               Container(
@@ -4778,7 +4778,8 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
                                   color: const Color(0xFF667eea),
                                   borderRadius: BorderRadius.circular(20),
                                 ),
-                                child: const Icon(Icons.psychology, color: Colors.white, size: 16),
+                                child: const Icon(Icons.psychology,
+                                    color: Colors.white, size: 16),
                               ),
                               const SizedBox(width: 8),
                             ],
@@ -4786,12 +4787,15 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
                               child: Container(
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: isUser ? const Color(0xFF4facfe) : Colors.white.withOpacity(0.1),
+                                  color: isUser
+                                      ? const Color(0xFF4facfe)
+                                      : Colors.white.withOpacity(0.1),
                                   borderRadius: BorderRadius.circular(16),
                                 ),
                                 child: Text(
                                   message.parts.first.text,
-                                  style: const TextStyle(color: Colors.white, fontSize: 14),
+                                  style: const TextStyle(
+                                      color: Colors.white, fontSize: 14),
                                 ),
                               ),
                             ),
@@ -4803,7 +4807,8 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
                                   color: const Color(0xFF4facfe),
                                   borderRadius: BorderRadius.circular(20),
                                 ),
-                                child: const Icon(Icons.person, color: Colors.white, size: 16),
+                                child: const Icon(Icons.person,
+                                    color: Colors.white, size: 16),
                               ),
                             ],
                           ],
@@ -4851,7 +4856,8 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
                 IconButton(
                   onPressed: () {
                     if (_chatController.text.trim().isNotEmpty) {
-                      _chatBloc.add(ChatGenerationNewTextMessageEvent(inputMessage: _chatController.text));
+                      _chatBloc.add(ChatGenerationNewTextMessageEvent(
+                          inputMessage: _chatController.text));
                       _chatController.clear();
                     }
                   },
@@ -6778,6 +6784,409 @@ class _QuestionInputCardState extends State<_QuestionInputCard> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class PracticeTypeChoiceScreen extends StatelessWidget {
+  final Map<String, dynamic> studySet;
+  final String username;
+  final String currentTheme;
+  const PracticeTypeChoiceScreen({
+    super.key,
+    required this.studySet,
+    required this.username,
+    required this.currentTheme,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Stack(
+        children: [
+          const SpaceBackground(),
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: IconButton(
+                          icon:
+                              const Icon(Icons.arrow_back, color: Colors.white),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Text(
+                          studySet['name'] ?? 'Practice',
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 40),
+                  const Text(
+                    'Choose Practice Type',
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'How would you like to practice this set?',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.white.withOpacity(0.7),
+                    ),
+                  ),
+                  const SizedBox(height: 40),
+                  // MCQ Button
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => PracticeModeScreen(
+                            studySet: studySet,
+                            username: username,
+                            currentTheme: currentTheme,
+                          ),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 32),
+                      margin: const EdgeInsets.only(bottom: 24),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF4facfe), Color(0xFF00f2fe)],
+                        ),
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF4facfe).withOpacity(0.18),
+                            blurRadius: 18,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: const [
+                          Icon(Icons.quiz, color: Colors.white, size: 32),
+                          SizedBox(width: 16),
+                          Text(
+                            'MCQ Practice',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  // FRQ Button
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => FRQCountSelectionScreen(
+                            studySet: studySet,
+                            username: username,
+                            currentTheme: currentTheme,
+                          ),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 32),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+                        ),
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF667eea).withOpacity(0.18),
+                            blurRadius: 18,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: const [
+                          Icon(Icons.edit_note, color: Colors.white, size: 32),
+                          SizedBox(width: 16),
+                          Text(
+                            'FRQ Practice',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// FRQCountSelectionScreen for choosing number of FRQ questions
+class FRQCountSelectionScreen extends StatefulWidget {
+  final Map<String, dynamic> studySet;
+  final String username;
+  final String currentTheme;
+  const FRQCountSelectionScreen({
+    super.key,
+    required this.studySet,
+    required this.username,
+    required this.currentTheme,
+  });
+
+  @override
+  State<FRQCountSelectionScreen> createState() =>
+      _FRQCountSelectionScreenState();
+}
+
+class _FRQCountSelectionScreenState extends State<FRQCountSelectionScreen> {
+  int _frqCount = 1;
+  int _maxFRQ = 5; // You can adjust this or fetch from studySet if available
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Stack(
+        children: [
+          const SpaceBackground(),
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: IconButton(
+                          icon:
+                              const Icon(Icons.arrow_back, color: Colors.white),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      const Expanded(
+                        child: Text(
+                          'FRQ Practice',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 40),
+                  const Text(
+                    'How many FRQ questions?',
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Select the number of FRQ questions you want to answer.',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.white.withOpacity(0.7),
+                    ),
+                  ),
+                  const SizedBox(height: 40),
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.2),
+                        width: 1,
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.amber.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Icon(
+                                Icons.edit_note,
+                                color: Colors.amber,
+                                size: 20,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            const Text(
+                              'FRQ Count',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        Center(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 12,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.blueAccent.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                            child: Text(
+                              '$_frqCount Questions',
+                              style: const TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        SliderTheme(
+                          data: SliderThemeData(
+                            activeTrackColor: Colors.blueAccent,
+                            inactiveTrackColor: Colors.white.withOpacity(0.3),
+                            thumbColor: Colors.white,
+                            thumbShape: const RoundSliderThumbShape(
+                              enabledThumbRadius: 12,
+                            ),
+                            overlayColor: Colors.blueAccent.withOpacity(0.2),
+                            valueIndicatorColor: Colors.blueAccent,
+                            valueIndicatorTextStyle: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          child: Slider(
+                            value: _frqCount.toDouble(),
+                            min: 1.0,
+                            max: _maxFRQ.toDouble(),
+                            divisions: _maxFRQ - 1,
+                            label: '$_frqCount',
+                            onChanged: (value) {
+                              setState(() {
+                                _frqCount = value.round();
+                              });
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 40),
+                  Container(
+                    width: double.infinity,
+                    height: 60,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+                      ),
+                      borderRadius: BorderRadius.circular(30),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF667eea).withOpacity(0.3),
+                          blurRadius: 20,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
+                    ),
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => FRQManager(
+                              studySet: widget.studySet,
+                              username: widget.username,
+                              currentTheme: widget.currentTheme,
+                              frqCount: _frqCount,
+                            ),
+                          ),
+                        );
+                      },
+                      icon: const Icon(
+                        Icons.play_arrow,
+                        size: 28,
+                        color: Colors.white,
+                      ),
+                      label: const Text(
+                        'Start FRQ Practice',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        shadowColor: Colors.transparent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
