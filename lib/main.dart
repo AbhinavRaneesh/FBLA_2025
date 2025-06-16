@@ -1833,9 +1833,8 @@ class _LearnTabState extends State<LearnTab>
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => PremadeSetsScreen(
-                                  username: widget.username,
-                                  onSetImported: _loadStudySets,
+                                builder: (context) => MCQManager(
+                                  
                                 ),
                               ),
                             );
