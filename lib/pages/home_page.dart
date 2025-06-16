@@ -658,238 +658,246 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildQuizArea() {
-    return Flexible(
-      flex: 10,
-      child: SingleChildScrollView(
-        child: Column(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header with progress
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // Back to Subject Selection Button
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                ElevatedButton.icon(
-                  onPressed: _returnToHome,
-                  icon: Icon(Icons.arrow_back, color: Colors.white),
-                  label: Text("Back to Home",
-                      style: TextStyle(color: Colors.white)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange,
-                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  ),
-                ),
-                // Question counter
-                Text(
-                  "Question ${currentQuestionIndex + 1}/${scienceQuestions.length}",
-                  style: TextStyle(fontSize: 16, color: Colors.grey.shade200),
-                ),
-              ],
+            IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              onPressed: _returnToHome,
             ),
-
-            SizedBox(height: 20),
-
-            // Display science question
             Container(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 8,
+              ),
               decoration: BoxDecoration(
-                color: Colors.grey.shade800.withOpacity(0.9),
-                borderRadius: BorderRadius.circular(12),
+                color: Colors.blueAccent.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(20),
               ),
-              child: Column(
-                children: [
-                  Text(
-                    scienceQuestions[currentQuestionIndex]["question"]!,
-                    style: TextStyle(fontSize: 22, color: Colors.white),
-                    textAlign: TextAlign.center,
-                  ),
-                  SizedBox(height: 16),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      String question =
-                          scienceQuestions[currentQuestionIndex]["question"]!;
-                      String prompt =
-                          "Please explain how to solve this question: '$question'. Provide a detailed step-by-step explanation with the fundamental concepts involved.";
-                      _showChatModal(initialMessage: prompt);
-                    },
-                    icon: Icon(Icons.help_outline, color: Colors.white),
-                    label: Text("Ask AI for Help"),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.purple,
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            SizedBox(height: 20),
-
-            // Multiple choice options
-            ...buildMultipleChoiceOptions(),
-
-            SizedBox(height: 16),
-
-            // Submit and Next Question buttons in a row
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                ElevatedButton(
-                  onPressed: selectedAnswer != null ? _submitAnswer : null,
-                  child: Text("Submit"),
+              child: Text(
+                'Question ${currentQuestionIndex + 1}/${scienceQuestions.length}',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
                 ),
-                if (showAnswer) // Only show Next Question button after submitting
-                  ElevatedButton(
-                    onPressed: goToNextQuestion,
-                    child: Text(
-                      currentQuestionIndex + 1 == scienceQuestions.length
-                          ? "Finish Quiz"
-                          : "Next Question",
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                    ),
-                  ),
-              ],
-            ),
-
-            if (showAnswer)
-              Column(
-                children: [
-                  SizedBox(height: 16),
-                  Text(
-                    "Correct Answer: ${scienceQuestions[currentQuestionIndex]["answer"]}",
-                    style: TextStyle(
-                        fontSize: 18,
-                        color: selectedAnswer ==
-                                scienceQuestions[currentQuestionIndex]["answer"]
-                            ? Colors.green
-                            : Colors.red),
-                  ),
-                  SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () {
-                      String question =
-                          scienceQuestions[currentQuestionIndex]["question"]!;
-                      String prompt =
-                          "Please explain how to solve this question: '$question'. Provide a brief explanation with the fundamental concepts involved.";
-                      _showChatModal(initialMessage: prompt);
-                    },
-                    child: Text("ASK QuestAI for explanation"),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.purple,
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                    ),
-                  ),
-                ],
               ),
+            ),
           ],
         ),
-      ),
-    );
-  }
+        const SizedBox(height: 24),
 
-  List<Widget> buildMultipleChoiceOptions() {
-    List<String> options = scienceQuestions[currentQuestionIndex]["options"];
+        // Progress bar
+        ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+          child: LinearProgressIndicator(
+            value: (currentQuestionIndex + 1) / scienceQuestions.length,
+            backgroundColor: Colors.white24,
+            valueColor: const AlwaysStoppedAnimation<Color>(Colors.blueAccent),
+            minHeight: 8,
+          ),
+        ),
+        const SizedBox(height: 32),
 
-    return options.map((option) {
-      bool isSelected = selectedAnswer == option;
-      bool isCorrectAnswer = showAnswer &&
-          option == scienceQuestions[currentQuestionIndex]["answer"];
-      bool isWrongSelected = showAnswer &&
-          isSelected &&
-          option != scienceQuestions[currentQuestionIndex]["answer"];
-
-      return Padding(
-        padding: const EdgeInsets.only(bottom: 8.0),
-        child: InkWell(
-          onTap: showAnswer
-              ? null
-              : () {
-                  setState(() {
-                    selectedAnswer = option;
-                  });
-                },
-          child: Container(
-            width: double.infinity,
-            padding: EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: isCorrectAnswer
-                  ? Colors.green.withOpacity(0.9)
-                  : isWrongSelected
-                      ? Colors.red.withOpacity(0.9)
-                      : isSelected
-                          ? Colors.blue.withOpacity(0.7)
-                          : Colors.grey.shade800.withOpacity(0.7),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: isCorrectAnswer
-                    ? Colors.green
-                    : isWrongSelected
-                        ? Colors.red
-                        : isSelected
-                            ? Colors.blue
-                            : Colors.grey,
-                width: isSelected || isWrongSelected || isCorrectAnswer ? 2 : 1,
-              ),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  height: 24,
-                  width: 24,
-                  decoration: BoxDecoration(
-                    color: isWrongSelected
-                        ? Colors.red
-                        : isCorrectAnswer
-                            ? Colors.green
-                            : isSelected
-                                ? Colors.blue
-                                : Colors.white,
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: isCorrectAnswer
-                          ? Colors.green
-                          : isWrongSelected
-                              ? Colors.red
-                              : isSelected
-                                  ? Colors.blue
-                                  : Colors.grey,
-                      width: 2,
-                    ),
-                  ),
-                  child: showAnswer
-                      ? (isCorrectAnswer
-                          ? Icon(Icons.check, size: 16, color: Colors.white)
-                          : isWrongSelected
-                              ? Icon(Icons.close, size: 16, color: Colors.white)
-                              : null)
-                      : (isSelected
-                          ? Icon(Icons.check, size: 16, color: Colors.white)
-                          : null),
-                ),
-                SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    option,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight:
-                          isSelected || isWrongSelected || isCorrectAnswer
-                              ? FontWeight.bold
-                              : FontWeight.normal,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-                if (isCorrectAnswer && !isSelected)
-                  Icon(Icons.check_circle, color: Colors.green)
-              ],
+        // Score
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.amber.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Text(
+            'Score: ${answeredCorrectly.where((correct) => correct).length}',
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.amber,
             ),
           ),
         ),
-      );
-    }).toList();
+        const SizedBox(height: 32),
+
+        // Question
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.05),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: Colors.white.withOpacity(0.1),
+              width: 1,
+            ),
+          ),
+          child: Column(
+            children: [
+              Text(
+                scienceQuestions[currentQuestionIndex]["question"]!,
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  height: 1.4,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: () {
+                  String question =
+                      scienceQuestions[currentQuestionIndex]["question"]!;
+                  String prompt =
+                      "Please explain how to solve this question: '$question'. Provide a detailed step-by-step explanation with the fundamental concepts involved.";
+                  _showChatModal(initialMessage: prompt);
+                },
+                icon: const Icon(Icons.help_outline, color: Colors.white),
+                label: const Text("Ask AI for Help"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.purple.withOpacity(0.2),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 32),
+
+        // Answer options
+        Expanded(
+          child: ListView.builder(
+            itemCount: scienceQuestions[currentQuestionIndex]["options"].length,
+            itemBuilder: (context, index) {
+              final option =
+                  scienceQuestions[currentQuestionIndex]["options"][index];
+              final isSelected = selectedAnswer == option;
+              final isCorrect = showAnswer &&
+                  option == scienceQuestions[currentQuestionIndex]["answer"];
+              final isWrong = showAnswer && isSelected && !isCorrect;
+
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  decoration: BoxDecoration(
+                    color: isCorrect
+                        ? Colors.green.withOpacity(0.2)
+                        : isWrong
+                            ? Colors.red.withOpacity(0.2)
+                            : isSelected
+                                ? Colors.blueAccent.withOpacity(0.2)
+                                : Colors.white.withOpacity(0.05),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isCorrect
+                          ? Colors.green
+                          : isWrong
+                              ? Colors.red
+                              : isSelected
+                                  ? Colors.blueAccent
+                                  : Colors.white.withOpacity(0.1),
+                      width: 2,
+                    ),
+                  ),
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 12,
+                    ),
+                    title: Text(
+                      option,
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.white,
+                        fontWeight:
+                            isSelected ? FontWeight.bold : FontWeight.normal,
+                      ),
+                    ),
+                    trailing: showAnswer
+                        ? Icon(
+                            isCorrect
+                                ? Icons.check_circle
+                                : isWrong
+                                    ? Icons.cancel
+                                    : null,
+                            color: isCorrect ? Colors.green : Colors.red,
+                          )
+                        : null,
+                    onTap: showAnswer
+                        ? null
+                        : () {
+                            setState(() {
+                              selectedAnswer = option;
+                            });
+                          },
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+
+        // Navigation Buttons
+        if (!showAnswer && selectedAnswer != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 24),
+            child: SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _submitAnswer,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blueAccent,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text(
+                  'Submit Answer',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          )
+        else if (showAnswer)
+          Padding(
+            padding: const EdgeInsets.only(top: 24),
+            child: SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: goToNextQuestion,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor:
+                      currentQuestionIndex + 1 == scienceQuestions.length
+                          ? Colors.green
+                          : Colors.blueAccent,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: Text(
+                  currentQuestionIndex + 1 == scienceQuestions.length
+                      ? 'Finish Quiz'
+                      : 'Next Question',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
   }
 
   Widget _buildScoreSummary() {
