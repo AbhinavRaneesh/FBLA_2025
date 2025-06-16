@@ -1,8 +1,17 @@
 import 'package:flutter/material.dart';
 import 'frq_manager.dart';
+import 'database_helper.dart';
+import 'premade_study_sets.dart';
 
 class MCQManager extends StatefulWidget {
-  const MCQManager({super.key});
+  final String username;
+  final VoidCallback? onSetImported;
+  
+  const MCQManager({
+    super.key,
+    required this.username,
+    this.onSetImported,
+  });
 
   @override
   State<MCQManager> createState() => _MCQManagerState();
@@ -18,6 +27,7 @@ class _MCQManagerState extends State<MCQManager> {
   TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   bool showAPCSChoice = false; // New state for AP CS A choice screen
+  final DatabaseHelper _dbHelper = DatabaseHelper();
 
   final List<Map<String, dynamic>> apClasses = [
     {
@@ -2071,6 +2081,33 @@ class _MCQManagerState extends State<MCQManager> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _syncWithPremadeStudySets();
+  }
+
+  void _syncWithPremadeStudySets() {
+    final premadeSets = PremadeStudySetsRepository.getPremadeSets();
+    for (final set in premadeSets) {
+      final alreadyExists = apClasses.any((cls) => cls['name'] == set.name);
+      if (!alreadyExists) {
+        apClasses.add({
+          'name': set.name,
+          'color': [Color(0xFF667eea), Color(0xFF764ba2)], // Default color
+          'icon': Icons.functions, // Default icon
+          'description': set.description,
+          'questions': set.questions.map((q) => {
+            'question': q.questionText,
+            'options': q.options,
+            'correct': q.options.indexOf(q.correctAnswer),
+            'explanation': '',
+          }).toList(),
+        });
+      }
+    }
+  }
+
+  @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
@@ -2197,19 +2234,16 @@ class _MCQManagerState extends State<MCQManager> {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () {
-            setState(() {
-              if (apClass['name'] == 'AP Computer Science A') {
+          onTap: () async {
+            if (apClass['name'] == 'AP Computer Science A') {
+              // For AP CS A, show choice between MCQ and FRQ
+              setState(() {
                 showAPCSChoice = true;
-              } else {
-                selectedSubject = apClass['name'];
-                currentQuestionIndex = 0;
-                currentScore = 0;
-                showResults = false;
-                userAnswers.clear();
-                submittedAnswers.clear();
-              }
-            });
+              });
+            } else {
+              // For other subjects, import the MCQ set
+              await _importMCQSet(apClass['name']);
+            }
           },
           borderRadius: BorderRadius.circular(20),
           child: Container(
@@ -2802,16 +2836,12 @@ class _MCQManagerState extends State<MCQManager> {
                   width: double.infinity,
                   margin: const EdgeInsets.only(bottom: 20),
                   child: ElevatedButton(
-                    onPressed: () {
+                    onPressed: () async {
                       setState(() {
                         showAPCSChoice = false;
-                        selectedSubject = 'AP Computer Science A';
-                        currentQuestionIndex = 0;
-                        currentScore = 0;
-                        showResults = false;
-                        userAnswers.clear();
-                        submittedAnswers.clear();
                       });
+                      // Import the AP CS A MCQ set
+                      await _importMCQSet('AP Computer Science A');
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue[600],
@@ -2883,5 +2913,54 @@ class _MCQManagerState extends State<MCQManager> {
         ),
       ),
     );
+  }
+
+  // Add import functionality for MCQ sets
+  Future<void> _importMCQSet(String subjectName) async {
+    try {
+      // The set name should match the one in PremadeStudySetsRepository
+      final setName = subjectName;
+      // Find the set in the database
+      final premadeSets = await _dbHelper.getPremadeStudySets();
+      final dbSet = premadeSets.firstWhere(
+        (set) => set['name'] == setName,
+        orElse: () => {},
+      );
+      if (dbSet.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Set not found in premade sets!'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        return;
+      }
+      final studySetId = dbSet['id'];
+      // Import the set for the user
+      await _dbHelper.importPremadeSet(widget.username, studySetId);
+      // Show success message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Set imported: $setName'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+      // Notify parent to refresh
+      widget.onSetImported?.call();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to import set: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 } 

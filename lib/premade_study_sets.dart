@@ -583,6 +583,84 @@ class PremadeStudySetsRepository {
       ],
     ),
 
+    // AP Computer Science Principles
+    PremadeStudySet(
+      name: 'AP Computer Science Principles',
+      description: 'Computational Thinking',
+      subject: 'Computer Science',
+      questions: [
+        Question(
+          questionText: 'What is the primary purpose of an algorithm?',
+          options: ['To solve problems', 'To create programs', 'To store data', 'To display graphics'],
+          correctAnswer: 'To solve problems',
+        ),
+        Question(
+          questionText: 'Which of the following is an example of abstraction?',
+          options: ['Using a car without knowing how the engine works', 'Writing code', 'Debugging', 'Testing'],
+          correctAnswer: 'Using a car without knowing how the engine works',
+        ),
+        Question(
+          questionText: 'What does HTTP stand for?',
+          options: ['HyperText Transfer Protocol', 'High Tech Transfer Process', 'Home Transfer Protocol', 'Hyper Transfer Process'],
+          correctAnswer: 'HyperText Transfer Protocol',
+        ),
+        Question(
+          questionText: 'Which programming paradigm focuses on objects?',
+          options: ['Procedural', 'Object-Oriented', 'Functional', 'Logical'],
+          correctAnswer: 'Object-Oriented',
+        ),
+        Question(
+          questionText: 'What is the purpose of a firewall?',
+          options: ['To speed up internet', 'To protect against unauthorized access', 'To store data', 'To create backups'],
+          correctAnswer: 'To protect against unauthorized access',
+        ),
+      ],
+    ),
+
+    // AP Environmental Science
+    PremadeStudySet(
+      name: 'AP Environmental Science',
+      description: 'Environmental Systems & Ecology',
+      subject: 'Science',
+      questions: [
+        Question(
+          questionText: 'What is biodiversity?',
+          options: ['Variety of life on Earth', 'Number of species', 'Genetic diversity', 'All of the above'],
+          correctAnswer: 'All of the above',
+        ),
+        Question(
+          questionText: 'What is the greenhouse effect?',
+          options: ['Trapping of heat by atmospheric gases', 'Cooling of the Earth', 'Ozone depletion', 'Acid rain'],
+          correctAnswer: 'Trapping of heat by atmospheric gases',
+        ),
+        Question(
+          questionText: 'What is sustainable development?',
+          options: [
+            'Development that meets present needs without compromising future generations',
+            'Economic growth only',
+            'Environmental protection only',
+            'Social equality only'
+          ],
+          correctAnswer: 'Development that meets present needs without compromising future generations',
+        ),
+        Question(
+          questionText: 'What is the primary cause of climate change?',
+          options: ['Human activities', 'Natural cycles', 'Solar radiation', 'Volcanic eruptions'],
+          correctAnswer: 'Human activities',
+        ),
+        Question(
+          questionText: 'What is an ecosystem?',
+          options: [
+            'Community of living organisms and their environment',
+            'Group of animals',
+            'Plant community',
+            'Water system'
+          ],
+          correctAnswer: 'Community of living organisms and their environment',
+        ),
+      ],
+    ),
+
     // IB Computer Science HL
     PremadeStudySet(
       name: 'IB Computer Science HL',
@@ -635,6 +713,210 @@ class PremadeStudySetsRepository {
             'Stack is faster than Queue'
           ],
           correctAnswer: 'Stack is LIFO, Queue is FIFO',
+        ),
+      ],
+    ),
+
+    // AP Biology
+    PremadeStudySet(
+      name: 'AP Biology',
+      description: 'Biological Systems',
+      subject: 'Science',
+      questions: [
+        Question(
+          questionText: 'What is the powerhouse of the cell?',
+          options: ['Nucleus', 'Mitochondria', 'Endoplasmic reticulum', 'Golgi apparatus'],
+          correctAnswer: 'Mitochondria',
+        ),
+        Question(
+          questionText: 'What is the process by which plants make their own food?',
+          options: ['Respiration', 'Photosynthesis', 'Digestion', 'Fermentation'],
+          correctAnswer: 'Photosynthesis',
+        ),
+        Question(
+          questionText: 'What are the building blocks of proteins?',
+          options: ['Nucleotides', 'Amino acids', 'Fatty acids', 'Monosaccharides'],
+          correctAnswer: 'Amino acids',
+        ),
+        Question(
+          questionText: 'What is the genetic material of most organisms?',
+          options: ['RNA', 'DNA', 'Protein', 'Lipid'],
+          correctAnswer: 'DNA',
+        ),
+        Question(
+          questionText: 'What is the process of cell division called?',
+          options: ['Mitosis', 'Meiosis', 'Both A and B', 'Neither A nor B'],
+          correctAnswer: 'Both A and B',
+        ),
+      ],
+    ),
+
+    // AP Physics C: Mechanics
+    PremadeStudySet(
+      name: 'AP Physics C: Mechanics',
+      description: 'Classical Mechanics & Motion',
+      subject: 'Science',
+      questions: [
+        Question(
+          questionText: 'What is the acceleration due to gravity on Earth?',
+          options: ['9.8 m/s²', '9.8 m/s', '9.8 N/kg', '9.8 kg/m³'],
+          correctAnswer: '9.8 m/s²',
+        ),
+        Question(
+          questionText: 'What is the formula for kinetic energy?',
+          options: ['KE = ½mv²', 'KE = mv', 'KE = mgh', 'KE = Fd'],
+          correctAnswer: 'KE = ½mv²',
+        ),
+        Question(
+          questionText: 'What is the unit of force in the SI system?',
+          options: ['Newton', 'Joule', 'Watt', 'Pascal'],
+          correctAnswer: 'Newton',
+        ),
+        Question(
+          questionText: 'What is the law of conservation of momentum?',
+          options: ['Total momentum remains constant', 'Momentum can be created', 'Momentum can be destroyed', 'Momentum always increases'],
+          correctAnswer: 'Total momentum remains constant',
+        ),
+        Question(
+          questionText: 'What is the formula for centripetal acceleration?',
+          options: ['a = v²/r', 'a = v/r', 'a = r/v²', 'a = v/r²'],
+          correctAnswer: 'a = v²/r',
+        ),
+      ],
+    ),
+
+    // AP English Literature
+    PremadeStudySet(
+      name: 'AP English Literature',
+      description: 'Literary Analysis & Composition',
+      subject: 'English',
+      questions: [
+        Question(
+          questionText: 'What is a metaphor?',
+          options: ['Direct comparison without like/as', 'Comparison using like/as', 'Repetition of sounds', 'Exaggeration for effect'],
+          correctAnswer: 'Direct comparison without like/as',
+        ),
+        Question(
+          questionText: 'What is dramatic irony?',
+          options: ['Audience knows something characters don\'t', 'Character says opposite of what they mean', 'Unexpected outcome', 'Repetition of words'],
+          correctAnswer: 'Audience knows something characters don\'t',
+        ),
+        Question(
+          questionText: 'What is a sonnet?',
+          options: ['14-line poem', '16-line poem', '12-line poem', '18-line poem'],
+          correctAnswer: '14-line poem',
+        ),
+        Question(
+          questionText: 'What is personification?',
+          options: ['Giving human qualities to non-human things', 'Comparing two things', 'Repetition of consonant sounds', 'Using words that sound like what they mean'],
+          correctAnswer: 'Giving human qualities to non-human things',
+        ),
+        Question(
+          questionText: 'What is a soliloquy?',
+          options: ['Character speaking alone on stage', 'Conversation between characters', 'Narrator\'s commentary', 'Stage directions'],
+          correctAnswer: 'Character speaking alone on stage',
+        ),
+      ],
+    ),
+
+    // AP US History
+    PremadeStudySet(
+      name: 'AP US History',
+      description: 'American History & Government',
+      subject: 'History',
+      questions: [
+        Question(
+          questionText: 'In what year did Columbus first reach the Americas?',
+          options: ['1492', '1493', '1491', '1494'],
+          correctAnswer: '1492',
+        ),
+        Question(
+          questionText: 'What was the first permanent English settlement in North America?',
+          options: ['Jamestown', 'Plymouth', 'Roanoke', 'St. Augustine'],
+          correctAnswer: 'Jamestown',
+        ),
+        Question(
+          questionText: 'In what year was the Declaration of Independence signed?',
+          options: ['1776', '1775', '1777', '1778'],
+          correctAnswer: '1776',
+        ),
+        Question(
+          questionText: 'Who was the first President of the United States?',
+          options: ['George Washington', 'John Adams', 'Thomas Jefferson', 'Benjamin Franklin'],
+          correctAnswer: 'George Washington',
+        ),
+        Question(
+          questionText: 'What was the Louisiana Purchase?',
+          options: ['Land purchase from France', 'Land purchase from Spain', 'Land purchase from Mexico', 'Land purchase from Britain'],
+          correctAnswer: 'Land purchase from France',
+        ),
+      ],
+    ),
+
+    // IB Biology HL
+    PremadeStudySet(
+      name: 'IB Biology HL',
+      description: 'Higher Level Biology',
+      subject: 'Science',
+      questions: [
+        Question(
+          questionText: 'What is the powerhouse of the cell?',
+          options: ['Mitochondria', 'Nucleus', 'Endoplasmic reticulum', 'Golgi apparatus'],
+          correctAnswer: 'Mitochondria',
+        ),
+        Question(
+          questionText: 'What is the process by which plants make their own food?',
+          options: ['Photosynthesis', 'Respiration', 'Digestion', 'Fermentation'],
+          correctAnswer: 'Photosynthesis',
+        ),
+        Question(
+          questionText: 'What are the building blocks of proteins?',
+          options: ['Amino acids', 'Nucleotides', 'Fatty acids', 'Monosaccharides'],
+          correctAnswer: 'Amino acids',
+        ),
+        Question(
+          questionText: 'What is the genetic material of most organisms?',
+          options: ['DNA', 'RNA', 'Protein', 'Lipid'],
+          correctAnswer: 'DNA',
+        ),
+        Question(
+          questionText: 'What is the process of cell division called?',
+          options: ['Mitosis', 'Meiosis', 'Both A and B', 'Neither A nor B'],
+          correctAnswer: 'Both A and B',
+        ),
+      ],
+    ),
+
+    // AP World History
+    PremadeStudySet(
+      name: 'AP World History',
+      description: 'Global History & Civilizations',
+      subject: 'History',
+      questions: [
+        Question(
+          questionText: 'What was the first civilization to develop writing?',
+          options: ['Sumerians', 'Egyptians', 'Chinese', 'Indus Valley'],
+          correctAnswer: 'Sumerians',
+        ),
+        Question(
+          questionText: 'What was the Silk Road?',
+          options: ['Trade route connecting East and West', 'Military road', 'Religious pilgrimage route', 'Migration path'],
+          correctAnswer: 'Trade route connecting East and West',
+        ),
+        Question(
+          questionText: 'What was the Renaissance?',
+          options: ['Cultural rebirth in Europe', 'Religious movement', 'Political revolution', 'Economic system'],
+          correctAnswer: 'Cultural rebirth in Europe',
+        ),
+        Question(
+          questionText: 'What was the Industrial Revolution?',
+          options: ['Transition to new manufacturing processes', 'Political revolution', 'Agricultural reform', 'Religious movement'],
+          correctAnswer: 'Transition to new manufacturing processes',
+        ),
+        Question(
+          questionText: 'What was the Cold War?',
+          options: ['Political tension between US and USSR', 'Military conflict', 'Economic competition', 'Cultural exchange'],
+          correctAnswer: 'Political tension between US and USSR',
         ),
       ],
     ),

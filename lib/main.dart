@@ -1636,34 +1636,6 @@ class _MainScreenState extends State<MainScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const MCQManager(),
-                        ),
-                      );
-                    },
-                    backgroundColor: Colors.orange,
-                    icon: const Icon(Icons.quiz),
-                    label: const Text('Extra'),
-                  ),
-                  const SizedBox(height: 16),
-                  FloatingActionButton.extended(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => HomePage(username: widget.username),
-                        ),
-                      );
-                    },
-                    backgroundColor: Colors.green,
-                    icon: const Icon(Icons.auto_awesome),
-                    label: const Text('Generate Questions'),
-                  ),
-                  const SizedBox(height: 16),
-                  FloatingActionButton.extended(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
                           builder: (context) => StudySetCreationOptionsScreen(
                             username: widget.username,
                             onStudySetCreated: _loadStudySets,
@@ -1675,7 +1647,6 @@ class _MainScreenState extends State<MainScreen> {
                     icon: const Icon(Icons.add),
                     label: const Text('Create Set'),
                   ),
-                  const SizedBox(height: 16),
                 ],
               ),
             )
@@ -1834,7 +1805,8 @@ class _LearnTabState extends State<LearnTab>
                               context,
                               MaterialPageRoute(
                                 builder: (context) => MCQManager(
-                                  
+                                  username: widget.username,
+                                  onSetImported: _loadStudySets,
                                 ),
                               ),
                             );
@@ -2980,16 +2952,42 @@ class _LearnTabState extends State<LearnTab>
   }
 
   void _startPractice(Map<String, dynamic> studySet) {
-    Navigator.push(
-      this.context,
-      MaterialPageRoute(
-        builder: (context) => PracticeModeScreen(
-          studySet: studySet,
-          username: widget.username,
-          currentTheme: widget.currentTheme,
+    // Check if this is an MCQ set
+    if (studySet['name'].toString().contains('MCQ')) {
+      // For MCQ sets, navigate to MCQ Manager
+      Navigator.push(
+        this.context,
+        MaterialPageRoute(
+          builder: (context) => MCQManager(
+            username: widget.username,
+            onSetImported: _loadStudySets,
+          ),
         ),
-      ),
-    );
+      );
+    } else if (studySet['name'].toString().contains('AP Computer Science A')) {
+      // For AP CS A sets, show choice between MCQ and FRQ
+      Navigator.push(
+        this.context,
+        MaterialPageRoute(
+          builder: (context) => MCQManager(
+            username: widget.username,
+            onSetImported: _loadStudySets,
+          ),
+        ),
+      );
+    } else {
+      // For regular sets, use the existing practice mode
+      Navigator.push(
+        this.context,
+        MaterialPageRoute(
+          builder: (context) => PracticeModeScreen(
+            studySet: studySet,
+            username: widget.username,
+            currentTheme: widget.currentTheme,
+          ),
+        ),
+      );
+    }
   }
 
   void _deleteStudySet(int studySetId) {
