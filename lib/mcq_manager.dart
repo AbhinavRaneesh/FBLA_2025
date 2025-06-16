@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'frq_manager.dart';
+import 'frq_manager.dart' as frq;
 import 'database_helper.dart';
 import 'premade_study_sets.dart';
-import 'main.dart';
+import 'main.dart' as main;
 
 class MCQManager extends StatefulWidget {
   final String username;
@@ -3161,7 +3161,7 @@ class _MCQManagerState extends State<MCQManager> {
       ),
       body: Stack(
         children: [
-          const SpaceBackground(),
+          const frq.SpaceBackground(),
           SafeArea(
             child: Column(
               children: [
@@ -3247,8 +3247,13 @@ class _MCQManagerState extends State<MCQManager> {
         color: Colors.transparent,
         child: InkWell(
           onTap: () async {
-            // Always import the MCQ set, even for AP Computer Science A
-            await _importMCQSet(apClass['name']);
+            if (apClass['name'] == 'AP Computer Science A') {
+              setState(() {
+                showAPCSChoice = true;
+              });
+            } else {
+              await _importMCQSet(apClass['name']);
+            }
           },
           borderRadius: BorderRadius.circular(20),
           child: Container(
@@ -3952,10 +3957,11 @@ class _MCQManagerState extends State<MCQManager> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => FRQCountSelectionScreen(
+                          builder: (context) => frq.FRQManager(
                             studySet: widget.studySet,
                             username: widget.username,
                             currentTheme: widget.currentTheme,
+                            frqCount: 4,
                           ),
                         ),
                       );

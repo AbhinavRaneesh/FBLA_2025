@@ -6980,7 +6980,7 @@ class FRQCountSelectionScreen extends StatefulWidget {
 
 class _FRQCountSelectionScreenState extends State<FRQCountSelectionScreen> {
   int _frqCount = 1;
-  int _maxFRQ = 5; // You can adjust this or fetch from studySet if available
+  int _maxFRQ = 4; // Changed from 5 to 4
 
   @override
   Widget build(BuildContext context) {

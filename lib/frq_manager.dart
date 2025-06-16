@@ -19,6 +19,57 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:student_learning_app/models/chat_message_model.dart';
 
+// Manual structure for AP Comp Sci 2024
+const List<String> manualQuestions = [
+  'Q1a',
+  'Q1b',
+  'Q2',
+  'Q3a',
+  'Q3b',
+  'Q4a',
+  'Q4b'
+];
+
+// SpaceBackground widget for the space theme
+class SpaceBackground extends StatelessWidget {
+  const SpaceBackground({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF0A0E21), Color(0xFF1D1E33)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Stack(
+        children: [
+          // Twinkling stars
+          for (int i = 0; i < 50; i++)
+            Positioned(
+              left: math.Random().nextDouble() * MediaQuery.of(context).size.width,
+              top: math.Random().nextDouble() * MediaQuery.of(context).size.height,
+              child: AnimatedContainer(
+                duration: Duration(seconds: math.Random().nextInt(3) + 1),
+                width: 2,
+                height: 2,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                ),
+                onEnd: () {
+                  // Restart animation
+                },
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
 class FRQManager extends StatefulWidget {
   final Map<String, dynamic> studySet;
   final String username;
@@ -41,436 +92,25 @@ class _FRQManagerState extends State<FRQManager> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: const Text('AP CS A FRQ Practice'),
-        backgroundColor: Colors.purple,
+        backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
+        elevation: 0,
       ),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF1D1E33), Color(0xFF2A2B4A)],
-          ),
-        ),
-        child: Column(
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildSubjectSection(
-                      context,
-                      'AP Computer Science',
-                      [
-                        {
-                          'year': '2025',
-                          'title': 'AP Computer Science 2025',
-                          'file': 'assets/apfrq/ap25-frq-computer-science-a.pdf'
-                        },
-                        {
-                          'year': '2024',
-                          'title': 'AP Computer Science 2024',
-                          'file': 'assets/apfrq/ap24-frq-comp-sci-a.pdf'
-                        },
-                        {
-                          'year': '2023',
-                          'title': 'AP Computer Science 2023',
-                          'file': 'assets/apfrq/ap23-frq-comp-sci-a.pdf'
-                        },
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: ElevatedButton(
-                onPressed: () => _showChatModalAndStartGrading(context),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.purple,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                ),
-                child: const Text(
-                  'Answer Workbook',
-                  style: TextStyle(fontSize: 16, color: Colors.white),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSubjectSection(
-      BuildContext context, String subject, List<Map<String, String>> years) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          subject,
-          style: const TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        const SizedBox(height: 12),
-        ...years.map((year) => Padding(
-              padding: const EdgeInsets.only(bottom: 8.0),
-              child: _buildYearButton(
-                  context, year['title']!, year['year']!, year['file']),
-            )),
-      ],
-    );
-  }
-
-  Widget _buildYearButton(BuildContext context, String title, String year,
-      [String? file]) {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Colors.blueAccent, Colors.blue],
-        ),
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.blue.withOpacity(0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
+      body: Stack(
+        children: [
+          const SpaceBackground(),
+          SafeArea(
+            child: FRQTextDisplayScreen(year: '2024', frqCount: widget.frqCount),
           ),
         ],
       ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => _openPDF(context, year, file),
-          borderRadius: BorderRadius.circular(12),
-          child: Padding(
-            padding:
-                const EdgeInsets.symmetric(vertical: 16.0, horizontal: 20.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const Icon(
-                  Icons.arrow_forward_ios,
-                  color: Colors.white,
-                  size: 16,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
     );
   }
 
-  void _openPDF(BuildContext context, String year, [String? file]) async {
-    if (file == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('PDF file not available for this year'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      print('No file provided for year $year');
-      return;
-    }
-    print('Attempting to open PDF: $file');
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => PDFViewerScreen(filePath: file, year: year),
-      ),
-    );
-  }
-
-  void _showChatModalAndStartGrading(BuildContext context) async {
-    final chatBloc = ChatBloc();
-
-    try {
-      // Build the prompt content
-      StringBuffer promptContent = StringBuffer();
-
-      // Add instructions for the AI
-      promptContent.writeln(
-          'You are an AP Computer Science A FRQ grader. Please grade the following student answers according to the official answers provided.');
-      promptContent
-          .writeln('\nPlease provide your response in the following format:');
-      promptContent.writeln('\nFor each question, provide:');
-      promptContent.writeln(
-          '[question number ||| score student got ||| feedback ||| actual answer]');
-      promptContent.writeln(
-          'Use the string ||| (three vertical bars) as the separator between fields. Do NOT use ||| inside the code or explanation.');
-      promptContent.writeln('\nFor the actual answer, you MUST provide:');
-      promptContent.writeln(
-          '1. The complete, correct code solution (the full method, not just the header; include all lines and braces)');
-      promptContent.writeln('2. A brief explanation of what the code does');
-      promptContent.writeln(
-          'Do NOT just give the method header. Give the full method body and a brief explanation.');
-      promptContent.writeln('\nExample format:');
-      promptContent.writeln(
-          'Q1a ||| 2/3 ||| Good understanding of the concept but missed edge case ||| public void processArray(int[] arr) {');
-      promptContent.writeln('    for (int i = 0; i < arr.length; i++) {');
-      promptContent.writeln('        if (arr[i] < 0) arr[i] = 0;');
-      promptContent.writeln('    }');
-      promptContent.writeln('}');
-      promptContent.writeln(
-          '// This method processes an array by replacing all negative numbers with 0.');
-      promptContent.writeln('\nNow, please grade the following answers:\n');
-
-      // Add user answers to the prompt
-      promptContent.writeln('=== User Answers ===');
-      for (String question in manualQuestions) {
-        promptContent.writeln('\nQuestion: $question');
-        promptContent.writeln('Answer: ${answers[question] ?? "Not answered"}');
-        promptContent.writeln('-------------------');
-      }
-
-      // Load and add the entire answers file to the prompt
-      promptContent.writeln('\n=== Official Answers and Rubrics ===');
-      final frqData =
-          await rootBundle.loadString('assets/apcs_2024_frq_answers.txt');
-      promptContent.writeln(frqData);
-      promptContent.writeln('=== End of Official Answers ===\n');
-
-      // Print the content to console
-      print(promptContent.toString());
-
-      // Send the content to QuestAI
-      chatBloc.add(ChatGenerationNewTextMessageEvent(
-          inputMessage: promptContent.toString()));
-
-      // Listen for the AI response
-      chatBloc.stream.listen((state) {
-        if (state is ChatSuccessState && state.messages.isNotEmpty) {
-          final lastMessage = state.messages.last;
-          if (lastMessage.role == "model") {
-            setState(() {
-              lastAIResponse = lastMessage.parts.first.text;
-              print('AI Response stored: $lastAIResponse'); // Debug print
-            });
-            // Debug print for raw AI response
-            print('RAW AI RESPONSE:');
-            print(lastMessage.parts.first.text);
-            // Automatically navigate to the score summary screen
-            Navigator.pop(context); // Close chat modal
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => ScoreSummaryScreen(
-                  aiResponse: lastAIResponse!,
-                ),
-              ),
-            );
-          }
-        }
-      });
-    } catch (e) {
-      print('Error loading answers file: $e');
-    }
-
-    // Show the chat modal
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: (BuildContext context) {
-        return WillPopScope(
-          onWillPop: () async => true,
-          child: StatefulBuilder(
-            builder: (context, setModalState) {
-              final TextEditingController messageController =
-                  TextEditingController();
-              final ScrollController scrollController = ScrollController();
-              void _scrollToBottom() {
-                if (scrollController.hasClients) {
-                  scrollController.animateTo(
-                    scrollController.position.maxScrollExtent,
-                    duration: Duration(milliseconds: 300),
-                    curve: Curves.easeOut,
-                  );
-                }
-              }
-
-              return Dialog(
-                backgroundColor: Colors.transparent,
-                insetPadding: EdgeInsets.zero,
-                child: Container(
-                  height: MediaQuery.of(context).size.height * 0.8,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius:
-                        BorderRadius.vertical(top: Radius.circular(20)),
-                  ),
-                  child: Column(
-                    children: [
-                      Container(
-                        padding: EdgeInsets.all(16),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              "Chat with QuestAI",
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.purple,
-                              ),
-                            ),
-                            IconButton(
-                              icon: Icon(Icons.close, color: Colors.red),
-                              onPressed: () {
-                                Navigator.pop(context);
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                      Divider(height: 1, color: Colors.grey[300]),
-                      Expanded(
-                        child: BlocBuilder<ChatBloc, ChatState>(
-                          bloc: chatBloc,
-                          builder: (context, state) {
-                            if (state is ChatSuccessState) {
-                              WidgetsBinding.instance.addPostFrameCallback((_) {
-                                _scrollToBottom();
-                              });
-                              return ListView.builder(
-                                controller: scrollController,
-                                itemCount: state.messages.length,
-                                itemBuilder: (context, index) {
-                                  final message = state.messages[index];
-                                  return Container(
-                                    margin: EdgeInsets.symmetric(
-                                        vertical: 8, horizontal: 16),
-                                    padding: EdgeInsets.all(12),
-                                    alignment: message.role == "user"
-                                        ? Alignment.centerRight
-                                        : Alignment.centerLeft,
-                                    child: Container(
-                                      constraints: BoxConstraints(
-                                        maxWidth:
-                                            MediaQuery.of(context).size.width *
-                                                0.75,
-                                      ),
-                                      padding: EdgeInsets.all(12),
-                                      decoration: BoxDecoration(
-                                        color: message.role == "user"
-                                            ? Colors.blue
-                                            : Colors.purple,
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Text(
-                                        message.parts.first.text,
-                                        style: TextStyle(
-                                            color: Colors.white, fontSize: 16),
-                                      ),
-                                    ),
-                                  );
-                                },
-                              );
-                            }
-                            return Center(child: CircularProgressIndicator());
-                          },
-                        ),
-                      ),
-                      Container(
-                        padding: EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black12,
-                              blurRadius: 4,
-                              offset: Offset(0, -2),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: TextField(
-                                controller: messageController,
-                                style: TextStyle(color: Colors.purple),
-                                decoration: InputDecoration(
-                                  hintText: "Ask QuestAI anything...",
-                                  hintStyle: TextStyle(
-                                      color: Colors.purple.withOpacity(0.5)),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(25),
-                                    borderSide:
-                                        BorderSide(color: Colors.purple),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(25),
-                                    borderSide: BorderSide(
-                                        color: Colors.purple, width: 2),
-                                  ),
-                                  contentPadding: EdgeInsets.symmetric(
-                                      horizontal: 16, vertical: 12),
-                                ),
-                              ),
-                            ),
-                            SizedBox(width: 8),
-                            Container(
-                              decoration: BoxDecoration(
-                                color: Colors.purple,
-                                shape: BoxShape.circle,
-                              ),
-                              child: IconButton(
-                                onPressed: () {
-                                  if (messageController.text.isNotEmpty) {
-                                    chatBloc.add(
-                                      ChatGenerationNewTextMessageEvent(
-                                        inputMessage: messageController.text,
-                                      ),
-                                    );
-                                    messageController.clear();
-                                  }
-                                },
-                                icon: Icon(Icons.send, color: Colors.white),
-                                iconSize: 24,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-        );
-      },
-    );
-  }
-
-  // Manual structure for AP Comp Sci 2024
-  final List<String> manualQuestions = [
-    'Q1a',
-    'Q1b',
-    'Q2',
-    'Q3a',
-    'Q3b',
-    'Q4a',
-    'Q4b'
-  ];
   String? selectedSubpart;
   Map<String, String> answers = {};
 
@@ -690,8 +330,9 @@ class _FRQManagerState extends State<FRQManager> {
 class PDFViewerScreen extends StatefulWidget {
   final String filePath;
   final String year;
+  final int frqCount;
   const PDFViewerScreen(
-      {super.key, required this.filePath, required this.year});
+      {super.key, required this.filePath, required this.year, required this.frqCount});
 
   @override
   State<PDFViewerScreen> createState() => _PDFViewerScreenState();
@@ -706,16 +347,6 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
   double _currentZoom = 1.0;
   String? lastAIResponse;
 
-  // Manual structure for AP Comp Sci 2024
-  final List<String> manualQuestions = [
-    'Q1a',
-    'Q1b',
-    'Q2',
-    'Q3a',
-    'Q3b',
-    'Q4a',
-    'Q4b'
-  ];
   String? selectedSubpart;
   Map<String, String> answers = {};
 
@@ -778,7 +409,8 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
 
       // Add user answers to the prompt
       promptContent.writeln('=== User Answers ===');
-      for (String question in manualQuestions) {
+      final List<String> limitedQuestions = manualQuestions.take(widget.frqCount).toList();
+      for (String question in limitedQuestions) {
         promptContent.writeln('\nQuestion: $question');
         promptContent.writeln('Answer: ${answers[question] ?? "Not answered"}');
         promptContent.writeln('-------------------');
@@ -863,22 +495,31 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
                     children: [
                       Container(
                         padding: EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.purple,
+                          borderRadius:
+                              BorderRadius.vertical(top: Radius.circular(20)),
+                        ),
                         child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
+                            Icon(
+                              Icons.psychology,
+                              color: Colors.white,
+                              size: 24,
+                            ),
+                            SizedBox(width: 8),
                             Text(
-                              "Chat with QuestAI",
+                              'QuestAI Model Chat',
                               style: TextStyle(
+                                color: Colors.white,
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.purple,
                               ),
                             ),
+                            Spacer(),
                             IconButton(
-                              icon: Icon(Icons.close, color: Colors.red),
-                              onPressed: () {
-                                Navigator.pop(context);
-                              },
+                              icon: Icon(Icons.close, color: Colors.white),
+                              onPressed: () => Navigator.pop(context),
                             ),
                           ],
                         ),
@@ -948,11 +589,9 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
                             Expanded(
                               child: TextField(
                                 controller: messageController,
-                                style: TextStyle(color: Colors.purple),
                                 decoration: InputDecoration(
-                                  hintText: "Ask QuestAI anything...",
-                                  hintStyle: TextStyle(
-                                      color: Colors.purple.withOpacity(0.5)),
+                                  hintText: 'Type your message...',
+                                  hintStyle: TextStyle(color: Colors.grey),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(25),
                                     borderSide:
@@ -1040,22 +679,31 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
                     children: [
                       Container(
                         padding: EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.purple,
+                          borderRadius:
+                              BorderRadius.vertical(top: Radius.circular(20)),
+                        ),
                         child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
+                            Icon(
+                              Icons.psychology,
+                              color: Colors.white,
+                              size: 24,
+                            ),
+                            SizedBox(width: 8),
                             Text(
-                              "Chat with QuestAI",
+                              'QuestAI Model Chat',
                               style: TextStyle(
+                                color: Colors.white,
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.purple,
                               ),
                             ),
+                            Spacer(),
                             IconButton(
-                              icon: Icon(Icons.close, color: Colors.red),
-                              onPressed: () {
-                                Navigator.pop(context);
-                              },
+                              icon: Icon(Icons.close, color: Colors.white),
+                              onPressed: () => Navigator.pop(context),
                             ),
                           ],
                         ),
@@ -1125,11 +773,9 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
                             Expanded(
                               child: TextField(
                                 controller: messageController,
-                                style: TextStyle(color: Colors.purple),
                                 decoration: InputDecoration(
-                                  hintText: "Ask QuestAI anything...",
-                                  hintStyle: TextStyle(
-                                      color: Colors.purple.withOpacity(0.5)),
+                                  hintText: 'Type your message...',
+                                  hintStyle: TextStyle(color: Colors.grey),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(25),
                                     borderSide:
@@ -1282,7 +928,7 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
                               child: Wrap(
                                 spacing: 8,
                                 runSpacing: 8,
-                                children: manualQuestions.map((q) {
+                                children: manualQuestions.take(widget.frqCount).map((q) {
                                   return ElevatedButton(
                                     onPressed: () {
                                       setState(() {
@@ -1310,7 +956,7 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
                             onPressed: () async {
                               // Print all user answers to console
                               print('\n=== User Answers ===');
-                              for (String question in manualQuestions) {
+                              for (String question in manualQuestions.take(widget.frqCount)) {
                                 print('Question: $question');
                                 print(
                                     'Answer: ${answers[question] ?? "Not answered"}');
@@ -1462,6 +1108,854 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
               ],
             )
           : null,
+    );
+  }
+}
+
+class FRQTextDisplayScreen extends StatefulWidget {
+  final String year;
+  final int frqCount;
+  
+  const FRQTextDisplayScreen({super.key, required this.year, required this.frqCount});
+
+  @override
+  State<FRQTextDisplayScreen> createState() => _FRQTextDisplayScreenState();
+}
+
+class _FRQTextDisplayScreenState extends State<FRQTextDisplayScreen> {
+  List<String> questions = [];
+  int currentQuestionIndex = 0;
+  bool isLoading = true;
+  String? error;
+  String? lastAIResponse;
+  
+  // Answer storage
+  Map<String, String> answers = {};
+  
+  // Text input modal state
+  bool showTextInput = false;
+  String currentAnswerKey = '';
+  final TextEditingController _answerController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadQuestions();
+  }
+
+  @override
+  void dispose() {
+    _answerController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadQuestions() async {
+    try {
+      final String content = await rootBundle.loadString('assets/apfrq/APCompSciA2024.txt');
+      final List<String> questionList = content.split('-----------------------------------------------------------------------------');
+      
+      // Filter out empty questions and trim whitespace
+      questions = questionList
+          .where((question) => question.trim().isNotEmpty)
+          .map((question) => question.trim())
+          .toList();
+      
+      setState(() {
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        error = 'Failed to load questions: $e';
+        isLoading = false;
+      });
+    }
+  }
+
+  void _nextQuestion() {
+    if (currentQuestionIndex < questions.length - 1) {
+      setState(() {
+        currentQuestionIndex++;
+      });
+    }
+  }
+
+  void _previousQuestion() {
+    if (currentQuestionIndex > 0) {
+      setState(() {
+        currentQuestionIndex--;
+      });
+    }
+  }
+
+  // Function to open text input modal for a specific question part
+  void _openTextInput(String answerKey) {
+    setState(() {
+      currentAnswerKey = answerKey;
+      _answerController.text = answers[answerKey] ?? '';
+      showTextInput = true;
+    });
+  }
+
+  // Function to save answer and close text input
+  void _saveAnswer() {
+    setState(() {
+      answers[currentAnswerKey] = _answerController.text;
+      showTextInput = false;
+    });
+  }
+
+  // Function to close text input without saving
+  void _closeTextInput() {
+    setState(() {
+      showTextInput = false;
+    });
+  }
+
+  // Function to submit all answers and start grading
+  void _submitAnswers() {
+    _showChatModalAndStartGrading(context);
+  }
+
+  // Get the appropriate buttons for the current question
+  List<Widget> _getQuestionButtons() {
+    switch (currentQuestionIndex + 1) {
+      case 1:
+        return [
+          ElevatedButton(
+            onPressed: () => _openTextInput('Q1a'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue[600],
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text(
+              'Question 1a',
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+          ),
+          const SizedBox(width: 16),
+          ElevatedButton(
+            onPressed: () => _openTextInput('Q1b'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue[600],
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text(
+              'Question 1b',
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ];
+      case 2:
+        return [
+          ElevatedButton(
+            onPressed: () => _openTextInput('Q2'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green[600],
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text(
+              'Question 2',
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ];
+      case 3:
+        return [
+          ElevatedButton(
+            onPressed: () => _openTextInput('Q3a'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange[600],
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text(
+              'Question 3a',
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+          ),
+          const SizedBox(width: 16),
+          ElevatedButton(
+            onPressed: () => _openTextInput('Q3b'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange[600],
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text(
+              'Question 3b',
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ];
+      case 4:
+        return [
+          ElevatedButton(
+            onPressed: () => _openTextInput('Q4a'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.purple[600],
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text(
+              'Question 4a',
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+          ),
+          const SizedBox(width: 16),
+          ElevatedButton(
+            onPressed: () => _openTextInput('Q4b'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.purple[600],
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text(
+              'Question 4b',
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ];
+      default:
+        return [];
+    }
+  }
+
+  // Get the submit button (only for question 4)
+  Widget? _getSubmitButton() {
+    if (currentQuestionIndex + 1 == 4) {
+      return Container(
+        margin: const EdgeInsets.only(top: 16),
+        child: ElevatedButton.icon(
+          onPressed: _submitAnswers,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.red[600],
+            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            elevation: 8,
+          ),
+          icon: const Icon(Icons.send, color: Colors.white, size: 24),
+          label: const Text(
+            'Submit Answers',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+        ),
+      );
+    }
+    return null;
+  }
+
+  void _showChatModalAndStartGrading(BuildContext context) async {
+    final chatBloc = ChatBloc();
+
+    try {
+      // Build the prompt content
+      StringBuffer promptContent = StringBuffer();
+
+      // Add instructions for the AI
+      promptContent.writeln(
+          'You are an AP Computer Science A FRQ grader. Please grade the following student answers according to the official answers provided.');
+      promptContent
+          .writeln('\nPlease provide your response in the following format:');
+      promptContent.writeln('\nFor each question, provide:');
+      promptContent.writeln(
+          '[question number ||| score student got ||| feedback ||| actual answer]');
+      promptContent.writeln(
+          'Use the string ||| (three vertical bars) as the separator between fields. Do NOT use ||| inside the code or explanation.');
+      promptContent.writeln('\nFor the actual answer, you MUST provide:');
+      promptContent.writeln(
+          '1. The complete, correct code solution (the full method, not just the header; include all lines and braces)');
+      promptContent.writeln('2. A brief explanation of what the code does');
+      promptContent.writeln(
+          'Do NOT just give the method header. Give the full method body and a brief explanation.');
+      promptContent.writeln('\nExample format:');
+      promptContent.writeln(
+          'Q1a ||| 2/3 ||| Good understanding of the concept but missed edge case ||| public void processArray(int[] arr) {');
+      promptContent.writeln('    for (int i = 0; i < arr.length; i++) {');
+      promptContent.writeln('        if (arr[i] < 0) arr[i] = 0;');
+      promptContent.writeln('    }');
+      promptContent.writeln('}');
+      promptContent.writeln(
+          '// This method processes an array by replacing all negative numbers with 0.');
+      promptContent.writeln('\nNow, please grade the following answers:\n');
+
+      // Add user answers to the prompt
+      promptContent.writeln('=== User Answers ===');
+      final List<String> limitedQuestions = manualQuestions.take(widget.frqCount).toList();
+      for (String question in limitedQuestions) {
+        promptContent.writeln('\nQuestion: $question');
+        promptContent.writeln('Answer: ${answers[question] ?? "Not answered"}');
+        promptContent.writeln('-------------------');
+      }
+
+      // Load and add the entire answers file to the prompt
+      promptContent.writeln('\n=== Official Answers and Rubrics ===');
+      final frqData =
+          await rootBundle.loadString('assets/apcs_2024_frq_answers.txt');
+      promptContent.writeln(frqData);
+      promptContent.writeln('=== End of Official Answers ===\n');
+
+      // Print the content to console
+      print(promptContent.toString());
+
+      // Send the content to QuestAI
+      chatBloc.add(ChatGenerationNewTextMessageEvent(
+          inputMessage: promptContent.toString()));
+
+      // Listen for the AI response
+      chatBloc.stream.listen((state) {
+        if (state is ChatSuccessState && state.messages.isNotEmpty) {
+          final lastMessage = state.messages.last;
+          if (lastMessage.role == "model") {
+            setState(() {
+              lastAIResponse = lastMessage.parts.first.text;
+              print('AI Response stored: $lastAIResponse'); // Debug print
+            });
+            // Debug print for raw AI response
+            print('RAW AI RESPONSE:');
+            print(lastMessage.parts.first.text);
+            // Automatically navigate to the score summary screen
+            Navigator.pop(context); // Close chat modal
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ScoreSummaryScreen(
+                  aiResponse: lastAIResponse!,
+                ),
+              ),
+            );
+          }
+        }
+      });
+    } catch (e) {
+      print('Error loading answers file: $e');
+    }
+
+    // Show the chat modal
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return WillPopScope(
+          onWillPop: () async => true,
+          child: StatefulBuilder(
+            builder: (context, setModalState) {
+              final TextEditingController messageController =
+                  TextEditingController();
+              final ScrollController scrollController = ScrollController();
+              void _scrollToBottom() {
+                if (scrollController.hasClients) {
+                  scrollController.animateTo(
+                    scrollController.position.maxScrollExtent,
+                    duration: Duration(milliseconds: 300),
+                    curve: Curves.easeOut,
+                  );
+                }
+              }
+
+              return Dialog(
+                backgroundColor: Colors.transparent,
+                insetPadding: EdgeInsets.zero,
+                child: Container(
+                  height: MediaQuery.of(context).size.height * 0.8,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius:
+                        BorderRadius.vertical(top: Radius.circular(20)),
+                  ),
+                  child: Column(
+                    children: [
+                      Container(
+                        padding: EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.purple,
+                          borderRadius:
+                              BorderRadius.vertical(top: Radius.circular(20)),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.psychology,
+                              color: Colors.white,
+                              size: 24,
+                            ),
+                            SizedBox(width: 8),
+                            Text(
+                              'QuestAI Model Chat',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Spacer(),
+                            IconButton(
+                              icon: Icon(Icons.close, color: Colors.white),
+                              onPressed: () => Navigator.pop(context),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Divider(height: 1, color: Colors.grey[300]),
+                      Expanded(
+                        child: BlocBuilder<ChatBloc, ChatState>(
+                          bloc: chatBloc,
+                          builder: (context, state) {
+                            if (state is ChatSuccessState) {
+                              WidgetsBinding.instance.addPostFrameCallback((_) {
+                                _scrollToBottom();
+                              });
+                              return ListView.builder(
+                                controller: scrollController,
+                                itemCount: state.messages.length,
+                                itemBuilder: (context, index) {
+                                  final message = state.messages[index];
+                                  return Container(
+                                    margin: EdgeInsets.symmetric(
+                                        vertical: 8, horizontal: 16),
+                                    padding: EdgeInsets.all(12),
+                                    alignment: message.role == "user"
+                                        ? Alignment.centerRight
+                                        : Alignment.centerLeft,
+                                    child: Container(
+                                      constraints: BoxConstraints(
+                                        maxWidth:
+                                            MediaQuery.of(context).size.width *
+                                                0.75,
+                                      ),
+                                      padding: EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: message.role == "user"
+                                            ? Colors.blue
+                                            : Colors.purple,
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Text(
+                                        message.parts.first.text,
+                                        style: TextStyle(
+                                            color: Colors.white, fontSize: 16),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              );
+                            }
+                            return Center(child: CircularProgressIndicator());
+                          },
+                        ),
+                      ),
+                      Container(
+                        padding: EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black12,
+                              blurRadius: 4,
+                              offset: Offset(0, -2),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: messageController,
+                                decoration: InputDecoration(
+                                  hintText: 'Type your message...',
+                                  hintStyle: TextStyle(color: Colors.grey),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(25),
+                                    borderSide:
+                                        BorderSide(color: Colors.purple),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(25),
+                                    borderSide: BorderSide(
+                                        color: Colors.purple, width: 2),
+                                  ),
+                                  contentPadding: EdgeInsets.symmetric(
+                                      horizontal: 16, vertical: 12),
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: 8),
+                            Container(
+                              decoration: BoxDecoration(
+                                color: Colors.purple,
+                                shape: BoxShape.circle,
+                              ),
+                              child: IconButton(
+                                onPressed: () {
+                                  if (messageController.text.isNotEmpty) {
+                                    chatBloc.add(
+                                      ChatGenerationNewTextMessageEvent(
+                                        inputMessage: messageController.text,
+                                      ),
+                                    );
+                                    messageController.clear();
+                                  }
+                                },
+                                icon: Icon(Icons.send, color: Colors.white),
+                                iconSize: 24,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFF1D1E33), Color(0xFF2A2B4A)],
+            ),
+          ),
+          child: Column(
+            children: [
+              // Question navigation header
+              Container(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    IconButton(
+                      onPressed: currentQuestionIndex > 0 ? _previousQuestion : null,
+                      icon: Icon(
+                        Icons.arrow_back_ios,
+                        color: currentQuestionIndex > 0 ? Colors.white : Colors.grey,
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        'Question ${currentQuestionIndex + 1} of ${questions.length}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: currentQuestionIndex < questions.length - 1 ? _nextQuestion : null,
+                      icon: Icon(
+                        Icons.arrow_forward_ios,
+                        color: currentQuestionIndex < questions.length - 1 ? Colors.white : Colors.grey,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              
+              // Question content
+              Expanded(
+                child: isLoading
+                    ? const Center(
+                        child: CircularProgressIndicator(color: Colors.white),
+                      )
+                    : error != null
+                        ? Center(
+                            child: Text(
+                              error!,
+                              style: const TextStyle(color: Colors.red),
+                              textAlign: TextAlign.center,
+                            ),
+                          )
+                        : Container(
+                            margin: const EdgeInsets.all(16),
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.05),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: Colors.white.withOpacity(0.1),
+                                width: 1,
+                              ),
+                            ),
+                            child: SingleChildScrollView(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Question number header
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                    decoration: BoxDecoration(
+                                      gradient: const LinearGradient(
+                                        colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+                                      ),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      'Question ${currentQuestionIndex + 1}',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 20),
+                                  
+                                  // Question text
+                                  Text(
+                                    questions[currentQuestionIndex],
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      height: 1.6,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+              ),
+              
+              // Question part buttons at bottom middle
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    // Question part buttons
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: _getQuestionButtons(),
+                    ),
+                    // Submit button (only for question 4)
+                    if (_getSubmitButton() != null) _getSubmitButton()!,
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        
+        // Text input modal overlay
+        if (showTextInput)
+          Container(
+            color: Colors.black.withOpacity(0.5),
+            child: Column(
+              children: [
+                // Top half - Question content (reduced size)
+                Expanded(
+                  flex: 1,
+                  child: Container(
+                    margin: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.05),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.1),
+                        width: 1,
+                      ),
+                    ),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Question number header
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+                              ),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              'Question ${currentQuestionIndex + 1}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          
+                          // Question text
+                          Text(
+                            questions[currentQuestionIndex],
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              height: 1.6,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                
+                // Bottom half - Text input area
+                Container(
+                  height: MediaQuery.of(context).size.height * 0.5,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2A2B4A),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(20),
+                      topRight: Radius.circular(20),
+                    ),
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.2),
+                      width: 1,
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      // Header with drag handle
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.1),
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(20),
+                            topRight: Radius.circular(20),
+                          ),
+                        ),
+                        child: Column(
+                          children: [
+                            // Drag handle
+                            Container(
+                              width: 40,
+                              height: 4,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.3),
+                                borderRadius: BorderRadius.circular(2),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            // Header content
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  currentAnswerKey,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                IconButton(
+                                  onPressed: _closeTextInput,
+                                  icon: const Icon(Icons.close, color: Colors.white),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      
+                      // Text input area
+                      Expanded(
+                        child: Container(
+                          margin: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: Colors.white.withOpacity(0.2),
+                            ),
+                          ),
+                          child: TextField(
+                            controller: _answerController,
+                            maxLines: null,
+                            expands: true,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                            ),
+                            decoration: const InputDecoration(
+                              hintText: 'Type your answer here...',
+                              hintStyle: TextStyle(color: Colors.white70),
+                              border: InputBorder.none,
+                              contentPadding: EdgeInsets.all(16),
+                            ),
+                          ),
+                        ),
+                      ),
+                      
+                      // Action buttons
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            TextButton(
+                              onPressed: _closeTextInput,
+                              child: const Text(
+                                'Cancel',
+                                style: TextStyle(color: Colors.white70),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            ElevatedButton(
+                              onPressed: _saveAnswer,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green[600],
+                                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                              ),
+                              child: const Text(
+                                'Save Answer',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
     );
   }
 }
