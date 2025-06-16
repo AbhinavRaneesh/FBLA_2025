@@ -81,19 +81,23 @@ class _FrqResultCardState extends State<_FrqResultCard> {
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: widget.result.pointsAwarded == widget.result.maxPoints
-                        ? Colors.green
-                        : Colors.orange,
+                    color:
+                        widget.result.pointsAwarded == widget.result.maxPoints
+                            ? Colors.green
+                            : Colors.orange,
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 8),
             Text('Your Answer:', style: const TextStyle(color: Colors.white70)),
-            Text(widget.result.userAnswer, style: const TextStyle(color: Colors.white)),
+            Text(widget.result.userAnswer,
+                style: const TextStyle(color: Colors.white)),
             const SizedBox(height: 8),
-            Text('Canonical Answer:', style: const TextStyle(color: Colors.white70)),
-            Text(widget.result.canonicalAnswer, style: const TextStyle(color: Colors.white)),
+            Text('Canonical Answer:',
+                style: const TextStyle(color: Colors.white70)),
+            Text(widget.result.canonicalAnswer,
+                style: const TextStyle(color: Colors.white)),
             const SizedBox(height: 8),
             TextButton(
               onPressed: () {
@@ -112,11 +116,12 @@ class _FrqResultCardState extends State<_FrqResultCard> {
                   color: Colors.black.withOpacity(0.7),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Text(widget.result.feedback, style: const TextStyle(color: Colors.white)),
+                child: Text(widget.result.feedback,
+                    style: const TextStyle(color: Colors.white)),
               ),
           ],
         ),
       ),
     );
   }
-} 
+}
