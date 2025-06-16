@@ -1642,7 +1642,7 @@ class _MainScreenState extends State<MainScreen> {
                     },
                     backgroundColor: Colors.orange,
                     icon: const Icon(Icons.quiz),
-                    label: const Text('MCQ'),
+                    label: const Text('Extra'),
                   ),
                   const SizedBox(height: 16),
                   FloatingActionButton.extended(
@@ -1650,7 +1650,7 @@ class _MainScreenState extends State<MainScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const HomePage(),
+                          builder: (context) => HomePage(username: widget.username),
                         ),
                       );
                     },
@@ -1819,6 +1819,113 @@ class _LearnTabState extends State<LearnTab>
                     ],
                   ),
                 ),
+                // Add vertical space
+                const SizedBox(height: 32),
+                // Add the two large buttons in a row
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => PremadeSetsScreen(
+                                  username: widget.username,
+                                  onSetImported: _loadStudySets,
+                                ),
+                              ),
+                            );
+                          },
+                          child: Container(
+                            height: 70,
+                            margin: const EdgeInsets.only(right: 10),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFF36D1DC), Color(0xFF5B86E5)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(18),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.blueAccent.withOpacity(0.3),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 6),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: const [
+                                Icon(Icons.download, color: Colors.white, size: 32),
+                                SizedBox(width: 12),
+                                Text(
+                                  'Browse',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => HomePage(username: widget.username),
+                              ),
+                            );
+                          },
+                          child: Container(
+                            height: 70,
+                            margin: const EdgeInsets.only(left: 10),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFF43E97B), Color(0xFF38F9D7)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(18),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.greenAccent.withOpacity(0.3),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 6),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: const [
+                                Icon(Icons.auto_awesome, color: Colors.white, size: 32),
+                                SizedBox(width: 12),
+                                Text(
+                                  'Quick Play',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 32),
                 // Study Sets Content
                 Expanded(
                   child: _isLoading
@@ -1832,8 +1939,6 @@ class _LearnTabState extends State<LearnTab>
                               indicatorColor: Colors.blueAccent,
                               tabs: const [
                                 Tab(text: 'My Sets'),
-                                Tab(text: 'Browse'),
-                                Tab(text: 'Quick Play'),
                               ],
                             ),
                             Expanded(
@@ -1841,8 +1946,6 @@ class _LearnTabState extends State<LearnTab>
                                 controller: _tabController,
                                 children: [
                                   _buildMyStudySets(),
-                                  _buildBrowseStudySets(),
-                                  _buildQuickPlay(),
                                 ],
                               ),
                             ),
