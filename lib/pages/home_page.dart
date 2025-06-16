@@ -1,28 +1,35 @@
 import 'package:flutter/material.dart';
 
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:student_learning_app/bloc/chat_bloc.dart';
 import '../models/chat_message_model.dart';
 
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
+
 
 class _HomePageState extends State<HomePage> {
   final TextEditingController followupController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   late final ChatBloc _chatBloc; // Create bloc instance here
 
+
   int currentQuestionIndex = 0;
   String? selectedAnswer;
   bool isWaitingForQuestions = false;
 
+
   List<Map<String, dynamic>> scienceQuestions = [];
   List<bool> answeredCorrectly =
       []; // Track which questions were answered correctly
+
 
   bool showAnswer = false;
   bool showQuizArea = false;
@@ -30,6 +37,7 @@ class _HomePageState extends State<HomePage> {
       false; // New variable to control score summary visibility
   String selectedSubject = "Chemistry";
   int numberOfQuestions = 10; // New variable for question count
+
 
   List<String> subjects = [
     "Chemistry",
@@ -42,6 +50,7 @@ class _HomePageState extends State<HomePage> {
     "Economics"
   ];
 
+
   @override
   void initState() {
     super.initState();
@@ -50,12 +59,14 @@ class _HomePageState extends State<HomePage> {
     showScoreSummary = false;
   }
 
+
   @override
   void dispose() {
     _scrollController.dispose();
     _chatBloc.close(); // Don't forget to close the bloc
     super.dispose();
   }
+
 
   void goToNextQuestion() {
     setState(() {
@@ -71,6 +82,7 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+
   void _scrollToBottom() {
     if (_scrollController.hasClients) {
       _scrollController.animateTo(
@@ -81,11 +93,13 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+
   // Function to clear chat history
   void _clearChatHistory() {
     _chatBloc.add(ChatClearHistoryEvent());
     print('Chat history cleared');
   }
+
 
   // Function to show half-screen chat modal
   void _showChatModal({String? initialMessage}) {
@@ -93,6 +107,7 @@ class _HomePageState extends State<HomePage> {
       _chatBloc
           .add(ChatGenerationNewTextMessageEvent(inputMessage: initialMessage));
     }
+
 
     showModalBottomSheet(
       context: context,
@@ -132,6 +147,7 @@ class _HomePageState extends State<HomePage> {
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
+
 
                   // Header
                   Container(
@@ -176,7 +192,9 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
 
+
                   Divider(height: 1, color: Colors.grey[300]),
+
 
                   // Chat messages area
                   Expanded(
@@ -235,6 +253,7 @@ class _HomePageState extends State<HomePage> {
                       },
                     ),
                   ),
+
 
                   // Input area
                   Container(
@@ -300,6 +319,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+
   // Function to parse AI response and extract questions
   void _parseAndReplaceQuestions(String aiResponse) {
     try {
@@ -317,6 +337,8 @@ class _HomePageState extends State<HomePage> {
           questionLines.add(trimmedLine);
         }
       }
+
+      print('Found ${questionLines.length} potential question lines');
 
       // Now parse the collected question lines
       for (String line in questionLines) {
@@ -363,6 +385,9 @@ class _HomePageState extends State<HomePage> {
           newQuestions = newQuestions.sublist(0, numberOfQuestions);
         }
 
+        print('Setting state with ${newQuestions.length} questions');
+        print('First question: ${newQuestions.first}');
+
         setState(() {
           scienceQuestions = newQuestions;
           answeredCorrectly = List.filled(newQuestions.length, false);
@@ -373,6 +398,8 @@ class _HomePageState extends State<HomePage> {
           showQuizArea = true; // Show quiz area after questions are generated
           showScoreSummary = false;
         });
+
+        print('State updated - showQuizArea: $showQuizArea, scienceQuestions.length: ${scienceQuestions.length}');
 
         // Clear chat history after successful question generation
         _clearChatHistory();
@@ -387,6 +414,7 @@ class _HomePageState extends State<HomePage> {
         );
       } else {
         // If parsing failed, show error with more details
+        print('No questions were parsed successfully');
         setState(() {
           isWaitingForQuestions = false;
           showQuizArea =
@@ -402,10 +430,11 @@ class _HomePageState extends State<HomePage> {
         );
       }
     } catch (e) {
+      print('Exception in parsing: $e');
       setState(() {
         isWaitingForQuestions = false;
+        showQuizArea = false;
       });
-      print('Exception in parsing: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error parsing questions: $e'),
@@ -415,26 +444,32 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+
   Map<String, dynamic>? _parseBracketFormat(String line) {
     try {
       // Remove trailing comma if present
       String cleanLine =
           line.endsWith(',') ? line.substring(0, line.length - 1) : line;
 
+
       // Remove [ and ] brackets
       if (!cleanLine.startsWith('[') || !cleanLine.endsWith(']')) {
         return null;
       }
 
+
       String content = cleanLine.substring(1, cleanLine.length - 1);
+
 
       // Split by comma, but be careful with quoted strings
       List<String> parts = [];
       StringBuffer currentPart = StringBuffer();
       bool inQuotes = false;
 
+
       for (int i = 0; i < content.length; i++) {
         String char = content[i];
+
 
         if (char == '"') {
           inQuotes = !inQuotes;
@@ -447,8 +482,10 @@ class _HomePageState extends State<HomePage> {
         }
       }
 
+
       // Add the last part
       parts.add(currentPart.toString().trim());
+
 
       // Clean each part (remove surrounding quotes if present)
       for (int i = 0; i < parts.length; i++) {
@@ -456,6 +493,7 @@ class _HomePageState extends State<HomePage> {
           parts[i] = parts[i].substring(1, parts[i].length - 1);
         }
       }
+
 
       if (parts.length == 6) {
         return {
@@ -472,6 +510,7 @@ class _HomePageState extends State<HomePage> {
       return null;
     }
   }
+
 
   void _generateQuestions() {
     setState(() {
@@ -491,7 +530,57 @@ class _HomePageState extends State<HomePage> {
             "Ensure you provide exactly $numberOfQuestions questions."));
 
     print('Event added to ChatBloc');
+    
+    // Add a timeout fallback in case AI doesn't respond
+    Future.delayed(Duration(seconds: 30), () {
+      if (isWaitingForQuestions && scienceQuestions.isEmpty) {
+        print('AI response timeout, using fallback questions');
+        _generateFallbackQuestions();
+      }
+    });
   }
+
+  void _generateFallbackQuestions() {
+    print('Generating fallback questions');
+    
+    List<Map<String, dynamic>> fallbackQuestions = [];
+    
+    // Generate sample questions based on selected subject
+    for (int i = 0; i < numberOfQuestions; i++) {
+      fallbackQuestions.add({
+        "question": "Sample $selectedSubject question ${i + 1}?",
+        "options": [
+          "Option A for question ${i + 1}",
+          "Option B for question ${i + 1}",
+          "Option C for question ${i + 1}",
+          "Option D for question ${i + 1}"
+        ],
+        "correct_answer": "Option A for question ${i + 1}"
+      });
+    }
+    
+    setState(() {
+      scienceQuestions = fallbackQuestions;
+      answeredCorrectly = List.filled(fallbackQuestions.length, false);
+      currentQuestionIndex = 0;
+      showAnswer = false;
+      selectedAnswer = null;
+      isWaitingForQuestions = false;
+      showQuizArea = true;
+      showScoreSummary = false;
+    });
+    
+    print('Fallback questions generated: ${fallbackQuestions.length}');
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Using sample questions for testing. AI response may be delayed.'),
+        backgroundColor: Colors.orange,
+        duration: Duration(seconds: 3),
+      ),
+    );
+  }
+
 
   void _restartQuiz() {
     setState(() {
@@ -503,6 +592,7 @@ class _HomePageState extends State<HomePage> {
       answeredCorrectly = List.filled(scienceQuestions.length, false);
     });
   }
+
 
   void _returnToHome() {
     setState(() {
@@ -516,6 +606,7 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+
   void _submitAnswer() {
     setState(() {
       showAnswer = true;
@@ -525,11 +616,12 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+
   void _askForExplanation(Map<String, dynamic> question) {
     String userAnswer = selectedAnswer ?? 'No answer selected';
     String correctAnswer = question['correct_answer'];
     bool isCorrect = userAnswer == correctAnswer;
-
+   
     String prompt = '''
 Question: ${question['question']}
 Options: ${question['options'].join(', ')}
@@ -541,8 +633,10 @@ Result: ${isCorrect ? 'Correct' : 'Incorrect'}
 Please explain why the correct answer is "$correctAnswer" and provide a detailed explanation of the concept. If I got it wrong, please help me understand where I went wrong.
 ''';
 
+
     _showChatModal(initialMessage: prompt);
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -656,67 +750,96 @@ Please explain why the correct answer is "$correctAnswer" and provide a detailed
                         // Get the last message from the AI
                         final lastMessage = state.messages.last;
                         if (lastMessage.role == "model") {
+                          // Use a more reliable way to trigger parsing
                           WidgetsBinding.instance.addPostFrameCallback((_) {
+                            print('Parsing AI response: ${lastMessage.parts.first.text}');
                             _parseAndReplaceQuestions(
                                 lastMessage.parts.first.text);
                           });
                         }
                       }
-                      return ElevatedButton(
-                        onPressed:
-                            isWaitingForQuestions ? null : _generateQuestions,
-                        style: ElevatedButton.styleFrom(
-                          padding: EdgeInsets.zero,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          elevation: 6,
-                        ),
-                        child: Ink(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                Color(0xFFFFD600), // Bright yellow
-                                Color(0xFFFF9800), // Bright orange
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
+                      
+                      // Add debug information
+                      print('Current state: showQuizArea=$showQuizArea, scienceQuestions.length=${scienceQuestions.length}');
+                      
+                      return Column(
+                        children: [
+                          ElevatedButton(
+                            onPressed:
+                                isWaitingForQuestions ? null : _generateQuestions,
+                            style: ElevatedButton.styleFrom(
+                              padding: EdgeInsets.zero,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 6,
                             ),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Container(
-                            constraints:
-                                BoxConstraints(minWidth: 150, minHeight: 48),
-                            alignment: Alignment.center,
-                            child: isWaitingForQuestions
-                                ? Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      SizedBox(
-                                        width: 20,
-                                        height: 20,
-                                        child: CircularProgressIndicator(
+                            child: Ink(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Color(0xFFFFD600), // Bright yellow
+                                    Color(0xFFFF9800), // Bright orange
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Container(
+                                constraints:
+                                    BoxConstraints(minWidth: 150, minHeight: 48),
+                                alignment: Alignment.center,
+                                child: isWaitingForQuestions
+                                    ? Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          SizedBox(
+                                            width: 20,
+                                            height: 20,
+                                            child: CircularProgressIndicator(
+                                              color: Colors.white,
+                                              strokeWidth: 2,
+                                            ),
+                                          ),
+                                          SizedBox(width: 12),
+                                          Text("Generating...",
+                                              style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.bold)),
+                                        ],
+                                      )
+                                    : Text(
+                                        "Start Quiz",
+                                        style: TextStyle(
                                           color: Colors.white,
-                                          strokeWidth: 2,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 18,
                                         ),
                                       ),
-                                      SizedBox(width: 12),
-                                      Text("Generating...",
-                                          style: TextStyle(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.bold)),
-                                    ],
-                                  )
-                                : Text(
-                                    "Start Quiz",
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 18,
-                                    ),
-                                  ),
+                              ),
+                            ),
                           ),
-                        ),
+                          SizedBox(height: 12),
+                          // Debug button for testing
+                          ElevatedButton(
+                            onPressed: isWaitingForQuestions ? null : _generateFallbackQuestions,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.grey.withOpacity(0.3),
+                              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            child: Text(
+                              "Test with Sample Questions",
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        ],
                       );
                     },
                   ),
@@ -731,248 +854,481 @@ Please explain why the correct answer is "$correctAnswer" and provide a detailed
     );
   }
 
-  Widget _buildQuizArea() {
-    if (!showQuizArea) return const SizedBox.shrink();
 
+  Widget _buildQuizArea() {
+    print('_buildQuizArea called - scienceQuestions.length: ${scienceQuestions.length}');
+    print('currentQuestionIndex: $currentQuestionIndex');
+    
+    if (scienceQuestions.isEmpty) {
+      print('No questions available, showing loading indicator');
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 20),
+            Text(
+              'Loading questions...',
+              style: TextStyle(color: Colors.white, fontSize: 16),
+            ),
+            SizedBox(height: 10),
+            Text(
+              'If this takes too long, please try again',
+              style: TextStyle(color: Colors.white70, fontSize: 14),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (currentQuestionIndex >= scienceQuestions.length) {
+      print('currentQuestionIndex out of bounds, resetting to 0');
+      setState(() {
+        currentQuestionIndex = 0;
+      });
+    }
+
+    final q = scienceQuestions[currentQuestionIndex];
+    print('Displaying question: ${q['question']}');
+    
     return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFFf5f7fa), Color(0xFFc3cfe2)],
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.2),
+          width: 1,
         ),
       ),
-      padding: const EdgeInsets.all(16),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Header with question counter and progress
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Question ${currentQuestionIndex + 1}/$numberOfQuestions',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.amber,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        'Score: ${answeredCorrectly.where((correct) => correct).length}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                LinearProgressIndicator(
-                  value: (currentQuestionIndex + 1) / numberOfQuestions,
-                  backgroundColor: Colors.grey[200],
-                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.amber),
-                  minHeight: 8,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ],
+          // Back button in top left
+          Align(
+            alignment: Alignment.topLeft,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.white),
+                onPressed: () => Navigator.pop(context),
+              ),
             ),
           ),
           const SizedBox(height: 20),
-
-          // Question Card
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
+          // Question counter with improved styling
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.blue.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Colors.blue.withOpacity(0.3)),
+            ),
+            child: Text(
+              'Question ${currentQuestionIndex + 1} of ${scienceQuestions.length}',
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          // Enhanced progress bar
+          Container(
+            height: 8,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: LinearProgressIndicator(
+              value: (currentQuestionIndex + 1) / scienceQuestions.length,
+              backgroundColor: Colors.transparent,
+              valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
+              borderRadius: BorderRadius.circular(4),
+            ),
+          ),
+          const SizedBox(height: 30),
+          // Enhanced question display
+          Container(
+            width: double.infinity,
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Colors.white.withOpacity(0.05),
               borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
+              border: Border.all(
+                color: Colors.white.withOpacity(0.1),
+                width: 1,
+              ),
             ),
+            child: Text(
+              q['question'] ?? 'Question not available',
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+                height: 1.4,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          const SizedBox(height: 30),
+          // Enhanced options with better visual feedback
+          Expanded(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  scienceQuestions[currentQuestionIndex]['question'],
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
-                ),
-                const SizedBox(height: 20),
                 ...List.generate(
-                  (scienceQuestions[currentQuestionIndex]['options'] as List)
-                      .length,
-                  (index) {
-                    final option = (scienceQuestions[currentQuestionIndex]
-                        ['options'] as List)[index];
-                    final isSelected = selectedAnswer == option;
-                    final isCorrect = showAnswer &&
-                        option ==
-                            scienceQuestions[currentQuestionIndex]
-                                ['correct_answer'];
-                    final isWrong = showAnswer && isSelected && !isCorrect;
-
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: InkWell(
-                        onTap: showAnswer
-                            ? null
-                            : () {
-                                setState(() {
-                                  selectedAnswer = option;
-                                  showAnswer = true;
-                                  answeredCorrectly.add(option ==
-                                      scienceQuestions[currentQuestionIndex]
-                                          ['correct_answer']);
-                                });
-                              },
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: isCorrect
-                                ? Colors.green.withOpacity(0.1)
-                                : isWrong
-                                    ? Colors.red.withOpacity(0.1)
-                                    : isSelected
-                                        ? Colors.amber.withOpacity(0.1)
-                                        : Colors.grey[100],
+                  (q['options'] as List<dynamic>?)?.length ?? 0,
+                  (i) => Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: Container(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: showAnswer ? null : () {
+                          setState(() {
+                            selectedAnswer = q['options'][i];
+                          });
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _getOptionColor(
+                            q['options'][i],
+                            q['correct_answer'],
+                            selectedAnswer,
+                            showAnswer,
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+                          shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: isCorrect
-                                  ? Colors.green
-                                  : isWrong
-                                      ? Colors.red
-                                      : isSelected
-                                          ? Colors.amber
-                                          : Colors.grey[300]!,
+                            side: BorderSide(
+                              color: _getOptionBorderColor(
+                                q['options'][i],
+                                q['correct_answer'],
+                                selectedAnswer,
+                                showAnswer,
+                              ),
                               width: 2,
                             ),
                           ),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 24,
-                                height: 24,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: isCorrect
-                                      ? Colors.green
-                                      : isWrong
-                                          ? Colors.red
-                                          : isSelected
-                                              ? Colors.amber
-                                              : Colors.grey[300],
+                          elevation: showAnswer ? 4 : 2,
+                        ),
+                        child: Row(
+                          children: [
+                            // Option letter (A, B, C, D)
+                            Container(
+                              width: 32,
+                              height: 32,
+                              decoration: BoxDecoration(
+                                color: _getOptionLetterColor(
+                                  q['options'][i],
+                                  q['correct_answer'],
+                                  selectedAnswer,
+                                  showAnswer,
                                 ),
-                                child: Center(
-                                  child: isCorrect
-                                      ? const Icon(Icons.check,
-                                          color: Colors.white, size: 16)
-                                      : isWrong
-                                          ? const Icon(Icons.close,
-                                              color: Colors.white, size: 16)
-                                          : Text(
-                                              String.fromCharCode(65 + index),
-                                              style: TextStyle(
-                                                color: isSelected
-                                                    ? Colors.white
-                                                    : Colors.black87,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Center(
+                                child: Text(
+                                  String.fromCharCode(65 + i), // A, B, C, D
+                                  style: TextStyle(
+                                    color: _getOptionLetterTextColor(
+                                      q['options'][i],
+                                      q['correct_answer'],
+                                      selectedAnswer,
+                                      showAnswer,
+                                    ),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
                                 ),
                               ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  option,
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: isCorrect || isWrong
-                                        ? Colors.black87
-                                        : Colors.black54,
-                                    fontWeight: isSelected
-                                        ? FontWeight.w600
-                                        : FontWeight.normal,
+                            ),
+                            const SizedBox(width: 16),
+                            // Option text
+                            Expanded(
+                              child: Text(
+                                q['options'][i] ?? 'Option not available',
+                                style: TextStyle(
+                                  color: _getOptionTextColor(
+                                    q['options'][i],
+                                    q['correct_answer'],
+                                    selectedAnswer,
+                                    showAnswer,
                                   ),
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                            // Icon for correct/incorrect feedback
+                            if (showAnswer) ...[
+                              Icon(
+                                q['options'][i] == q['correct_answer']
+                                    ? Icons.check_circle
+                                    : q['options'][i] == selectedAnswer
+                                        ? Icons.cancel
+                                        : null,
+                                color: q['options'][i] == q['correct_answer']
+                                    ? Colors.white
+                                    : q['options'][i] == selectedAnswer
+                                        ? Colors.white
+                                        : Colors.transparent,
+                                size: 24,
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const Spacer(),
+                // Enhanced Submit Answer button
+                if (selectedAnswer != null && !showAnswer) ...[
+                  Container(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _submitAnswer,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 32),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 4,
+                      ),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.check, color: Colors.white, size: 20),
+                          SizedBox(width: 8),
+                          Text(
+                            'Submit Answer',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+                // Enhanced feedback and next options
+                if (showAnswer) ...[
+                  const SizedBox(height: 20),
+                  // Enhanced feedback message
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: selectedAnswer == q['correct_answer']
+                          ? Colors.green.withOpacity(0.15)
+                          : Colors.red.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: selectedAnswer == q['correct_answer']
+                            ? Colors.green.withOpacity(0.5)
+                            : Colors.red.withOpacity(0.5),
+                        width: 2,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: selectedAnswer == q['correct_answer']
+                                ? Colors.green.withOpacity(0.2)
+                                : Colors.red.withOpacity(0.2),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            selectedAnswer == q['correct_answer']
+                                ? Icons.check_circle
+                                : Icons.cancel,
+                            color: selectedAnswer == q['correct_answer']
+                                ? Colors.green
+                                : Colors.red,
+                            size: 24,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                selectedAnswer == q['correct_answer']
+                                    ? 'Correct!'
+                                    : 'Incorrect',
+                                style: TextStyle(
+                                  color: selectedAnswer == q['correct_answer']
+                                      ? Colors.green
+                                      : Colors.red,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                selectedAnswer == q['correct_answer']
+                                    ? 'Well done! You got it right!'
+                                    : 'The correct answer is: ${q['correct_answer']}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
                                 ),
                               ),
                             ],
                           ),
                         ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  // Enhanced action buttons
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: goToNextQuestion,
+                          icon: Icon(
+                            currentQuestionIndex < scienceQuestions.length - 1
+                                ? Icons.arrow_forward
+                                : Icons.check_circle,
+                            color: Colors.white,
+                          ),
+                          label: Text(
+                            currentQuestionIndex < scienceQuestions.length - 1
+                                ? 'Next Question'
+                                : 'Finish Quiz',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
                       ),
-                    );
-                  },
-                ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () => _askForExplanation(q),
+                          icon: const Icon(Icons.lightbulb, color: Colors.white),
+                          label: const Text(
+                            'Explanation',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.purple,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),
-          const SizedBox(height: 20),
-
-          // Next Button
-          if (showAnswer)
-            AnimatedOpacity(
-              opacity: showAnswer ? 1.0 : 0.0,
-              duration: const Duration(milliseconds: 300),
-              child: ElevatedButton(
-                onPressed: goToNextQuestion,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.amber,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 2,
-                ),
-                child: const Text(
-                  'Next Question',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
         ],
       ),
     );
   }
 
+  // Helper methods for option styling
+  Color _getOptionColor(String option, String correctAnswer, String? selectedAnswer, bool showAnswer) {
+    if (!showAnswer) {
+      return selectedAnswer == option
+          ? Colors.blue.withOpacity(0.3)
+          : Colors.white.withOpacity(0.1);
+    }
+    
+    if (option == correctAnswer) {
+      return Colors.green.withOpacity(0.3);
+    } else if (option == selectedAnswer) {
+      return Colors.red.withOpacity(0.3);
+    } else {
+      return Colors.white.withOpacity(0.05);
+    }
+  }
+
+  Color _getOptionBorderColor(String option, String correctAnswer, String? selectedAnswer, bool showAnswer) {
+    if (!showAnswer) {
+      return selectedAnswer == option
+          ? Colors.blue.withOpacity(0.5)
+          : Colors.white.withOpacity(0.2);
+    }
+    
+    if (option == correctAnswer) {
+      return Colors.green;
+    } else if (option == selectedAnswer) {
+      return Colors.red;
+    } else {
+      return Colors.white.withOpacity(0.1);
+    }
+  }
+
+  Color _getOptionLetterColor(String option, String correctAnswer, String? selectedAnswer, bool showAnswer) {
+    if (!showAnswer) {
+      return selectedAnswer == option
+          ? Colors.blue
+          : Colors.white.withOpacity(0.2);
+    }
+    
+    if (option == correctAnswer) {
+      return Colors.green;
+    } else if (option == selectedAnswer) {
+      return Colors.red;
+    } else {
+      return Colors.white.withOpacity(0.1);
+    }
+  }
+
+  Color _getOptionLetterTextColor(String option, String correctAnswer, String? selectedAnswer, bool showAnswer) {
+    if (!showAnswer) {
+      return selectedAnswer == option
+          ? Colors.white
+          : Colors.white.withOpacity(0.7);
+    }
+    
+    return Colors.white;
+  }
+
+  Color _getOptionTextColor(String option, String correctAnswer, String? selectedAnswer, bool showAnswer) {
+    if (!showAnswer) {
+      return selectedAnswer == option
+          ? Colors.white
+          : Colors.white.withOpacity(0.8);
+    }
+    
+    if (option == correctAnswer) {
+      return Colors.white;
+    } else if (option == selectedAnswer) {
+      return Colors.white;
+    } else {
+      return Colors.white.withOpacity(0.6);
+    }
+  }
+
   Widget _buildScoreSummary() {
     int correctAnswers = answeredCorrectly.where((correct) => correct).length;
     double accuracy = (correctAnswers / scienceQuestions.length) * 100;
+
 
     return Container(
       padding: EdgeInsets.all(20),

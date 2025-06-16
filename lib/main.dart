@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -1657,7 +1656,7 @@ class _MainScreenState extends State<MainScreen> {
                     },
                     backgroundColor: Colors.green,
                     icon: const Icon(Icons.auto_awesome),
-                    label: const Text('Quick Play'),
+                    label: const Text('Generate Questions'),
                   ),
                   const SizedBox(height: 16),
                   FloatingActionButton.extended(
@@ -4359,40 +4358,12 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
                                         ),
                                         Expanded(
                                           child: Center(
-                                            child: Container(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                      horizontal: 20,
-                                                      vertical: 10),
-                                              decoration: BoxDecoration(
-                                                gradient: const LinearGradient(
-                                                  colors: [
-                                                    Color(0xFF667eea),
-                                                    Color(0xFF764ba2)
-                                                  ],
-                                                  begin: Alignment.topLeft,
-                                                  end: Alignment.bottomRight,
-                                                ),
-                                                borderRadius:
-                                                    BorderRadius.circular(24),
-                                                boxShadow: [
-                                                  BoxShadow(
-                                                    color:
-                                                        const Color(0xFF667eea)
-                                                            .withOpacity(0.25),
-                                                    blurRadius: 12,
-                                                    offset: const Offset(0, 4),
-                                                  ),
-                                                ],
-                                              ),
-                                              child: Text(
-                                                '${_currentQuestionIndex + 1} of $_questionCount',
-                                                style: const TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 18,
-                                                  fontWeight: FontWeight.bold,
-                                                  letterSpacing: 0.5,
-                                                ),
+                                            child: Text(
+                                              '${_currentQuestionIndex + 1} of $_questionCount',
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.bold,
                                               ),
                                             ),
                                           ),
@@ -4524,82 +4495,32 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
                                           horizontal: 32,
                                           vertical:
                                               6), // Added horizontal padding and reduced vertical
-                                      child: AnimatedContainer(
-                                        duration:
-                                            const Duration(milliseconds: 200),
-                                        curve: Curves.easeInOut,
-                                        decoration: BoxDecoration(
-                                          gradient: cor
-                                              ? const LinearGradient(colors: [
-                                                  Color(0xFF43e97b),
-                                                  Color(0xFF38f9d7)
-                                                ])
-                                              : wrg
-                                                  ? const LinearGradient(
-                                                      colors: [
-                                                          Color(0xFFf5576c),
-                                                          Color(0xFFf093fb)
-                                                        ])
-                                                  : sel
-                                                      ? const LinearGradient(
-                                                          colors: [
-                                                              Color(0xFF4facfe),
-                                                              Color(0xFF00f2fe)
-                                                            ])
-                                                      : const LinearGradient(
-                                                          colors: [
-                                                              Color(0xFF23243a),
-                                                              Color(0xFF23243a)
-                                                            ]),
-                                          borderRadius:
-                                              BorderRadius.circular(16),
-                                          boxShadow: sel
-                                              ? [
-                                                  BoxShadow(
-                                                    color:
-                                                        const Color(0xFF4facfe)
-                                                            .withOpacity(0.2),
-                                                    blurRadius: 12,
-                                                    offset: const Offset(0, 6),
-                                                  ),
-                                                ]
-                                              : [],
-                                          border: Border.all(
+                                      child: GestureDetector(
+                                        onTap: _showAnswer
+                                            ? null
+                                            : () => _checkAnswer(opt),
+                                        child: Container(
+                                          padding: const EdgeInsets.all(16),
+                                          decoration: BoxDecoration(
                                             color: cor
-                                                ? Colors.greenAccent
-                                                    .withOpacity(0.7)
+                                                ? Colors.green
                                                 : wrg
-                                                    ? Colors.redAccent
-                                                        .withOpacity(0.7)
-                                                    : Colors.white
-                                                        .withOpacity(0.08),
-                                            width: 2,
-                                          ),
-                                        ),
-                                        child: Material(
-                                          color: Colors.transparent,
-                                          child: InkWell(
+                                                    ? Colors.red
+                                                    : sel
+                                                        ? Colors.blue
+                                                            .withOpacity(0.3)
+                                                        : Colors.white
+                                                            .withOpacity(0.08),
                                             borderRadius:
-                                                BorderRadius.circular(16),
-                                            onTap: _showAnswer
-                                                ? null
-                                                : () => _checkAnswer(opt),
-                                            child: Padding(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                      vertical: 18,
-                                                      horizontal: 8),
-                                              child: Center(
-                                                child: Text(
-                                                  opt,
-                                                  style: TextStyle(
-                                                    color: Colors.white,
-                                                    fontSize: 16,
-                                                    fontWeight: FontWeight.w600,
-                                                    letterSpacing: 0.2,
-                                                  ),
-                                                ),
-                                              ),
+                                                BorderRadius.circular(12),
+                                          ),
+                                          child: Text(
+                                            opt,
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize:
+                                                  16, // Reduced from default to 16
+                                              fontWeight: FontWeight.w500,
                                             ),
                                           ),
                                         ),
@@ -4607,137 +4528,181 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
                                     );
                                   }).toList(),
                                   if (_showAnswer) ...[
-                                    const SizedBox(height: 32),
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 32, vertical: 8),
-                                      child: Row(
-                                        children: [
-                                          // Ask AI Button
-                                          Expanded(
-                                            child: Container(
-                                              height: 56,
-                                              decoration: BoxDecoration(
-                                                gradient: const LinearGradient(
-                                                  colors: [
-                                                    Color(0xFF667eea),
-                                                    Color(0xFF764ba2)
-                                                  ],
-                                                ),
-                                                borderRadius:
-                                                    BorderRadius.circular(30),
-                                                boxShadow: [
-                                                  BoxShadow(
-                                                    color: const Color(
-                                                                0xFF667eea)
-                                                        .withOpacity(0.2),
-                                                    blurRadius: 12,
-                                                    offset:
-                                                        const Offset(0, 6),
-                                                  ),
+                                    const SizedBox(height: 24),
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: Container(
+                                            height: 68,
+                                            decoration: BoxDecoration(
+                                              gradient: const LinearGradient(
+                                                begin: Alignment.topLeft,
+                                                end: Alignment.bottomRight,
+                                                colors: [
+                                                  Color(0xFF667eea),
+                                                  Color(0xFF764ba2),
                                                 ],
                                               ),
-                                              child: ElevatedButton.icon(
-                                                onPressed: _answerWithAI,
-                                                icon: const Icon(
-                                                    Icons.psychology,
-                                                    color: Colors.white),
-                                                label: const Text(
-                                                  'Ask AI',
-                                                  style: TextStyle(
-                                                    fontSize: 16,
-                                                    fontWeight:
-                                                        FontWeight.bold,
-                                                    color: Colors.white,
+                                              borderRadius:
+                                                  BorderRadius.circular(22),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: const Color(0xFF667eea)
+                                                      .withOpacity(0.5),
+                                                  blurRadius: 20,
+                                                  offset: const Offset(0, 10),
+                                                ),
+                                              ],
+                                            ),
+                                            child: Material(
+                                              color: Colors.transparent,
+                                              child: InkWell(
+                                                onTap: _answerWithAI,
+                                                borderRadius:
+                                                    BorderRadius.circular(22),
+                                                child: Container(
+                                                  padding: const EdgeInsets
+                                                      .symmetric(
+                                                      horizontal: 20),
+                                                  child: Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .center,
+                                                    children: [
+                                                      Container(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .all(10),
+                                                        decoration:
+                                                            BoxDecoration(
+                                                          color: Colors.white
+                                                              .withOpacity(
+                                                                  0.25),
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(14),
+                                                        ),
+                                                        child: const Icon(
+                                                          Icons.psychology,
+                                                          color: Colors.white,
+                                                          size: 22,
+                                                        ),
+                                                      ),
+                                                      const SizedBox(width: 12),
+                                                      const Expanded(
+                                                        child: Text(
+                                                          'Answer with AI',
+                                                          style: TextStyle(
+                                                            color: Colors.white,
+                                                            fontSize: 16,
+                                                            fontWeight:
+                                                                FontWeight.w700,
+                                                            letterSpacing: 0.3,
+                                                          ),
+                                                          textAlign:
+                                                              TextAlign.center,
+                                                        ),
+                                                      ),
+                                                    ],
                                                   ),
                                                 ),
-                                                style: ElevatedButton
-                                                    .styleFrom(
-                                                  backgroundColor:
-                                                      Colors.transparent,
-                                                  shadowColor:
-                                                      Colors.transparent,
-                                                  shape:
-                                                      RoundedRectangleBorder(
-                                                    borderRadius:
-                                                        BorderRadius
-                                                            .circular(30),
-                                                ),
-                                                padding: const EdgeInsets
-                                                    .symmetric(
-                                                    vertical: 16),
                                               ),
                                             ),
                                           ),
-                                          const SizedBox(width: 16),
-                                          // Next Question Button
-                                          Expanded(
-                                            child: Container(
-                                              height: 56,
-                                              decoration: BoxDecoration(
-                                                gradient: const LinearGradient(
-                                                  colors: [
-                                                    Color(0xFF4facfe),
-                                                    Color(0xFF00f2fe)
-                                                  ],
-                                                ),
-                                                borderRadius:
-                                                    BorderRadius.circular(
-                                                            30),
-                                                boxShadow: [
-                                                  BoxShadow(
-                                                    color: const Color(
-                                                                0xFF4facfe)
-                                                        .withOpacity(0.2),
-                                                    blurRadius: 12,
-                                                    offset:
-                                                        const Offset(0, 6),
-                                                  ),
+                                        ),
+                                        const SizedBox(width: 16),
+                                        Expanded(
+                                          child: Container(
+                                            height: 68,
+                                            decoration: BoxDecoration(
+                                              gradient: const LinearGradient(
+                                                begin: Alignment.topLeft,
+                                                end: Alignment.bottomRight,
+                                                colors: [
+                                                  Color(0xFF4facfe),
+                                                  Color(0xFF00f2fe),
                                                 ],
                                               ),
-                                              child: ElevatedButton.icon(
-                                                onPressed: _continueToNext,
-                                                icon: Icon(
-                                                  _currentQuestionIndex <
-                                                          _questionCount - 1
-                                                      ? Icons.arrow_forward
-                                                      : Icons.check_circle,
-                                                  color: Colors.white,
+                                              borderRadius:
+                                                  BorderRadius.circular(22),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: const Color(0xFF4facfe)
+                                                      .withOpacity(0.5),
+                                                  blurRadius: 20,
+                                                  offset: const Offset(0, 10),
                                                 ),
-                                                label: Text(
-                                                  _currentQuestionIndex <
-                                                          _questionCount - 1
-                                                      ? 'Next Question'
-                                                      : 'Finish',
-                                                  style: const TextStyle(
-                                                    fontSize: 16,
-                                                    fontWeight:
-                                                        FontWeight.bold,
-                                                    color: Colors.white,
+                                              ],
+                                            ),
+                                            child: Material(
+                                              color: Colors.transparent,
+                                              child: InkWell(
+                                                onTap: _continueToNext,
+                                                borderRadius:
+                                                    BorderRadius.circular(22),
+                                                child: Container(
+                                                  padding: const EdgeInsets
+                                                      .symmetric(
+                                                      horizontal: 20),
+                                                  child: Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .center,
+                                                    children: [
+                                                      Container(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .all(10),
+                                                        decoration:
+                                                            BoxDecoration(
+                                                          color: Colors.white
+                                                              .withOpacity(
+                                                                  0.25),
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(14),
+                                                        ),
+                                                        child: Icon(
+                                                          _currentQuestionIndex <
+                                                                  _questionCount -
+                                                                      1
+                                                              ? Icons
+                                                                  .arrow_forward
+                                                              : Icons
+                                                                  .check_circle,
+                                                          color: Colors.white,
+                                                          size: 22,
+                                                        ),
+                                                      ),
+                                                      const SizedBox(width: 12),
+                                                      Expanded(
+                                                        child: Text(
+                                                          _currentQuestionIndex <
+                                                                  _questionCount -
+                                                                      1
+                                                              ? 'Continue'
+                                                              : 'Finish',
+                                                          style:
+                                                              const TextStyle(
+                                                            color: Colors.white,
+                                                            fontSize: 16,
+                                                            fontWeight:
+                                                                FontWeight.w700,
+                                                            letterSpacing: 0.3,
+                                                          ),
+                                                          textAlign:
+                                                              TextAlign.center,
+                                                        ),
+                                                      ),
+                                                    ],
                                                   ),
                                                 ),
-                                                style: ElevatedButton
-                                                    .styleFrom(
-                                                  backgroundColor:
-                                                      Colors.transparent,
-                                                  shadowColor:
-                                                      Colors.transparent,
-                                                  shape:
-                                                      RoundedRectangleBorder(
-                                                    borderRadius:
-                                                        BorderRadius
-                                                            .circular(30),
-                                                ),
-                                                padding: const EdgeInsets
-                                                    .symmetric(
-                                                    vertical: 16),
                                               ),
                                             ),
                                           ),
-                                        ],
-                                      ),
+                                        ),
+                                      ],
                                     ),
-                                    const SizedBox(height: 36),
                                   ],
                                 ],
                               ),
@@ -4900,7 +4865,7 @@ class _QuizScreenState extends State<QuizScreen> {
   bool isAnswered = false;
   String? selectedAnswer;
   Timer? timer;
-  double timeLeft = 10.0;
+  double timeLeft = 10.0; // Changed to double
   double timerProgress = 1.0;
   bool showAnswer = false;
   List<bool> answeredCorrectly = [];
@@ -4922,7 +4887,7 @@ class _QuizScreenState extends State<QuizScreen> {
   }
 
   void startTimer() {
-    timeLeft = 45.0;
+    timeLeft = 45.0; // Reset to 45 seconds
     timerProgress = 1.0;
     timer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
       if (timeLeft > 0) {
@@ -4973,204 +4938,174 @@ class _QuizScreenState extends State<QuizScreen> {
   }
 
   void showResults() {
-    setState(() {
-      showScoreSummary = true;
-      showQuizArea = false;
-    });
+    timer?.cancel();
+
+    showDialog(
+      context: this.context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text('Quiz Complete!'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Your Score: $score/${widget.questionCount}'),
+            const SizedBox(height: 10),
+            Text(
+                'Percentage: ${((score / widget.questionCount) * 100).toStringAsFixed(1)}%'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context); // Close dialog
+              Navigator.pop(context); // Go back to previous screen
+            },
+            child: const Text('Done'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final question = widget.questions[currentQuestionIndex];
+
     return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.subject),
+        backgroundColor: const Color(0xFF1D1E33),
+        foregroundColor: Colors.white,
+        actions: [
+          if (widget.gameMode == 'timed')
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      value: timerProgress,
+                      strokeWidth: 2,
+                      backgroundColor: Colors.grey[300],
+                      valueColor: const AlwaysStoppedAnimation<Color>(
+                          Colors.blueAccent),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    '${timeLeft.toStringAsFixed(1)}s',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
       body: Stack(
         children: [
           const SpaceBackground(),
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Header with progress
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.arrow_back, color: Colors.white),
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.blueAccent.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          'Question ${currentQuestionIndex + 1}/${widget.questionCount}',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
+                  // Progress indicator
+                  LinearProgressIndicator(
+                    value: (currentQuestionIndex + 1) / widget.questionCount,
+                    backgroundColor: Colors.grey[300],
+                    valueColor:
+                        const AlwaysStoppedAnimation<Color>(Colors.blueAccent),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
 
-                  // Progress bar
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: LinearProgressIndicator(
-                      value: (currentQuestionIndex + 1) / widget.questionCount,
-                      backgroundColor: Colors.white24,
-                      valueColor: const AlwaysStoppedAnimation<Color>(
-                          Colors.blueAccent),
-                      minHeight: 8,
+                  // Question counter
+                  Text(
+                    'Question ${currentQuestionIndex + 1} of ${widget.questionCount}',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: Colors.white70,
                     ),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 10),
 
                   // Score
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.amber.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      'Score: $score',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.amber,
-                      ),
+                  Text(
+                    'Score: $score',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.amber,
                     ),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 30),
 
                   // Question
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.05),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: Colors.white.withOpacity(0.1),
-                        width: 1,
+                  Card(
+                    elevation: 4,
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Text(
+                        question.questionText,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
-                    ),
-                    child: Text(
-                      widget.questions[currentQuestionIndex].questionText,
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        height: 1.4,
-                      ),
-                      textAlign: TextAlign.center,
                     ),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 30),
 
                   // Answer options
                   Expanded(
                     child: ListView.builder(
-                      itemCount:
-                          widget.questions[currentQuestionIndex].options.length,
+                      itemCount: question.options.length,
                       itemBuilder: (context, index) {
-                        final option = widget
-                            .questions[currentQuestionIndex].options[index];
-                        final isSelected = selectedAnswer == option;
-                        final isCorrect = isAnswered &&
-                            option ==
-                                widget.questions[currentQuestionIndex]
-                                    .correctAnswer;
-                        final isWrong = isAnswered && isSelected && !isCorrect;
+                        final option = question.options[index];
+                        Color cardColor = Colors.white;
+
+                        if (isAnswered) {
+                          if (option == question.correctAnswer) {
+                            cardColor = Colors.green;
+                          } else if (option == selectedAnswer) {
+                            cardColor = Colors.red;
+                          }
+                        }
 
                         return Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            decoration: BoxDecoration(
-                              color: isCorrect
-                                  ? Colors.green.withOpacity(0.2)
-                                  : isWrong
-                                      ? Colors.red.withOpacity(0.2)
-                                      : isSelected
-                                          ? Colors.blueAccent.withOpacity(0.2)
-                                          : Colors.white.withOpacity(0.05),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: isCorrect
-                                    ? Colors.green
-                                    : isWrong
-                                        ? Colors.red
-                                        : isSelected
-                                            ? Colors.blueAccent
-                                            : Colors.white.withOpacity(0.1),
-                                width: 2,
-                              ),
+                          padding: const EdgeInsets.only(bottom: 15),
+                          child: Card(
+                            elevation: 2,
+                            color: cardColor,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              side: BorderSide(color: Colors.grey.shade300),
                             ),
                             child: ListTile(
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                                vertical: 12,
-                              ),
                               title: Text(
                                 option,
                                 style: TextStyle(
-                                  fontSize: 18,
-                                  color: Colors.white,
-                                  fontWeight: isSelected
-                                      ? FontWeight.bold
-                                      : FontWeight.normal,
+                                  fontSize: 16,
+                                  color:
+                                      isAnswered ? Colors.white : Colors.black,
                                 ),
                               ),
-                              trailing: isAnswered
-                                  ? Icon(
-                                      isCorrect
-                                          ? Icons.check_circle
-                                          : isWrong
-                                              ? Icons.cancel
-                                              : null,
-                                      color:
-                                          isCorrect ? Colors.green : Colors.red,
-                                    )
+                              onTap: () => selectAnswer(option),
+                              trailing: isAnswered &&
+                                      option == question.correctAnswer
+                                  ? const Icon(Icons.check, color: Colors.white)
                                   : null,
-                              onTap: isAnswered
-                                  ? null
-                                  : () => selectAnswer(option),
                             ),
                           ),
                         );
                       },
                     ),
                   ),
-
-                  // Timer (if in timed mode)
-                  if (widget.gameMode == 'timed') ...[
-                    const SizedBox(height: 24),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: LinearProgressIndicator(
-                        value: timerProgress,
-                        backgroundColor: Colors.white24,
-                        valueColor:
-                            const AlwaysStoppedAnimation<Color>(Colors.amber),
-                        minHeight: 8,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Time Left: ${timeLeft.toStringAsFixed(1)}s',
-                      style: const TextStyle(
-                        color: Colors.amber,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
                 ],
               ),
             ),
