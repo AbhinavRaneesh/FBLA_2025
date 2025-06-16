@@ -3,6 +3,7 @@ import 'package:student_learning_app/bloc/chat_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../models/chat_message_model.dart';
 import '../database_helper.dart';
+import 'dart:math';
 
 class HomePage extends StatefulWidget {
   final String username;
@@ -241,15 +242,20 @@ class _HomePageState extends State<HomePage> {
         String trimmedLine = line.trim();
         if (trimmedLine.startsWith('[') && trimmedLine.endsWith(']')) {
           questionLines.add(trimmedLine);
+          print('Found question line: $trimmedLine');
         }
       }
+
+      print('Total question lines found: ${questionLines.length}');
 
       // Now parse the collected question lines
       for (String line in questionLines) {
         Map<String, dynamic>? parsedQuestion = _parseBracketFormat(line);
         if (parsedQuestion != null) {
           newQuestions.add(parsedQuestion);
-          print('Successfully added question ${newQuestions.length}');
+          print('Successfully added question ${newQuestions.length}: ${parsedQuestion['question']}');
+        } else {
+          print('Failed to parse question line: $line');
         }
       }
 
@@ -267,6 +273,7 @@ class _HomePageState extends State<HomePage> {
               _parseBracketFormat(block.trim());
           if (parsedQuestion != null) {
             newQuestions.add(parsedQuestion);
+            print('Alternative parsing added question: ${parsedQuestion['question']}');
           }
         }
 
@@ -277,6 +284,7 @@ class _HomePageState extends State<HomePage> {
                 _parseBracketFormat(line.trim());
             if (parsedQuestion != null) {
               newQuestions.add(parsedQuestion);
+              print('Single line parsing added question: ${parsedQuestion['question']}');
             }
           }
         }
@@ -289,6 +297,8 @@ class _HomePageState extends State<HomePage> {
           newQuestions = newQuestions.sublist(0, numberOfQuestions);
         }
 
+        print('Setting state with ${newQuestions.length} questions');
+        print('Before setState - showQuizArea: $showQuizArea, scienceQuestions.length: ${scienceQuestions.length}');
         setState(() {
           scienceQuestions = newQuestions;
           answeredCorrectly = List.filled(newQuestions.length, false);
@@ -299,6 +309,9 @@ class _HomePageState extends State<HomePage> {
           showQuizArea = true; // Show quiz area after questions are generated
           showScoreSummary = false;
         });
+
+        print('After setState - showQuizArea: $showQuizArea, scienceQuestions.length: ${scienceQuestions.length}');
+        print('First question: ${scienceQuestions.isNotEmpty ? scienceQuestions[0]['question'] : 'No questions'}');
 
         // Clear chat history after successful question generation
         _clearChatHistory();
@@ -313,6 +326,7 @@ class _HomePageState extends State<HomePage> {
         );
       } else {
         // If parsing failed, show error with more details
+        print('No questions were parsed successfully');
         setState(() {
           isWaitingForQuestions = false;
         });
@@ -398,8 +412,10 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _generateQuestions() {
+    print('_generateQuestions called');
     setState(() {
       isWaitingForQuestions = true;
+      showQuizArea = false; // Reset quiz area visibility
     });
 
     print('Generating $numberOfQuestions questions for: $selectedSubject');
@@ -408,11 +424,18 @@ class _HomePageState extends State<HomePage> {
     scienceQuestions.clear();
     answeredCorrectly.clear();
 
-    _chatBloc.add(ChatGenerationNewTextMessageEvent(
-        inputMessage:
-            "Give me exactly $numberOfQuestions $selectedSubject questions in the following format: [question, option1, option2, option3, option4, answerchoice]. "
-            "Provide only the questions in this exact format, with no additional text or explanations. "
-            "Ensure you provide exactly $numberOfQuestions questions."));
+    String prompt = """
+Generate exactly $numberOfQuestions multiple choice questions for $selectedSubject.
+Format each question exactly like this: [question text, option A, option B, option C, option D, correct answer]
+Do not include any explanations or additional text, just the questions in this exact format.
+Example format:
+[What is the chemical symbol for water?, H2O, CO2, NaCl, O2, H2O]
+[What is the capital of France?, London, Berlin, Paris, Madrid, Paris]
+
+Generate exactly $numberOfQuestions questions for $selectedSubject:
+""";
+
+    _chatBloc.add(ChatGenerationNewTextMessageEvent(inputMessage: prompt));
 
     print('Event added to ChatBloc');
   }
@@ -449,9 +472,11 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    print('HomePage build method called - showQuizArea: $showQuizArea, scienceQuestions.length: ${scienceQuestions.length}');
     return BlocProvider.value(
       value: _chatBloc,
       child: Scaffold(
+        key: ValueKey('home_page_${showQuizArea}_${scienceQuestions.length}'),
         extendBodyBehindAppBar: true,
         backgroundColor: Colors.transparent,
         floatingActionButton: FloatingActionButton(
@@ -464,57 +489,64 @@ class _HomePageState extends State<HomePage> {
           title: Text("QuestAI Quiz App"),
           backgroundColor: Colors.purple,
         ),
-        body: Container(
-          decoration: BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage('assets/images/beach.jpg'),
-              fit: BoxFit.cover,
-              opacity: 0.5,
-            ),
-          ),
-          child: BlocListener<ChatBloc, ChatState>(
-            listener: (context, state) {
-              if (state is ChatSuccessState &&
-                  isWaitingForQuestions &&
-                  state.messages.isNotEmpty) {
-                var lastMessage = state.messages.last;
-                if (lastMessage.role != "user") {
-                  _parseAndReplaceQuestions(lastMessage.parts.first.text);
-                }
-              }
-            },
-            child: BlocBuilder<ChatBloc, ChatState>(
-              builder: (context, state) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Column(
-                    children: [
-                      SizedBox(height: 60),
-                      Text(
-                        "QuestAI Quiz App",
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
+        body: Stack(
+          children: [
+            const SpaceBackground(),
+            SafeArea(
+              child: BlocListener<ChatBloc, ChatState>(
+                listener: (context, state) {
+                  print('BlocListener triggered with state: ${state.runtimeType}');
+                  print('isWaitingForQuestions: $isWaitingForQuestions');
+                  if (state is ChatSuccessState) {
+                    print('ChatSuccessState received with ${state.messages.length} messages');
+                    if (isWaitingForQuestions && state.messages.isNotEmpty) {
+                      var lastMessage = state.messages.last;
+                      print('Last message role: ${lastMessage.role}');
+                      if (lastMessage.role != "user") {
+                        print('Parsing AI response...');
+                        _parseAndReplaceQuestions(lastMessage.parts.first.text);
+                      }
+                    }
+                  }
+                },
+                child: BlocBuilder<ChatBloc, ChatState>(
+                  builder: (context, state) {
+                    print('BlocBuilder rebuilding. showQuizArea: $showQuizArea, scienceQuestions.length: ${scienceQuestions.length}, showScoreSummary: $showScoreSummary');
+                    
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Column(
+                        children: [
+                          SizedBox(height: 20),
+                          Expanded(
+                            child: showScoreSummary
+                                ? _buildScoreSummary()
+                                : showQuizArea && scienceQuestions.isNotEmpty
+                                    ? _buildQuizArea()
+                                    : _buildHomeScreen(),
+                          ),
+                          // Debug info
+                          if (showQuizArea && scienceQuestions.isNotEmpty)
+                            Container(
+                              padding: EdgeInsets.all(8),
+                              margin: EdgeInsets.only(bottom: 8),
+                              decoration: BoxDecoration(
+                                color: Colors.red.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                'DEBUG: Quiz Area Active - ${scienceQuestions.length} questions, Index: $currentQuestionIndex',
+                                style: TextStyle(color: Colors.white, fontSize: 12),
+                              ),
+                            ),
+                        ],
                       ),
-                      SizedBox(height: 20),
-
-                      // Show different sections based on app state
-                      if (showScoreSummary) ...[
-                        _buildScoreSummary()
-                      ] else if (showQuizArea &&
-                          scienceQuestions.isNotEmpty) ...[
-                        _buildQuizArea()
-                      ] else ...[
-                        _buildHomeScreen()
-                      ],
-                    ],
-                  ),
-                );
-              },
+                    );
+                  },
+                ),
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );
@@ -653,11 +685,111 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
         SizedBox(height: 20),
+        
+        // Loading indicator when generating questions
+        if (isWaitingForQuestions)
+          Container(
+            padding: EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.blue.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.blue.withOpacity(0.3)),
+            ),
+            child: Column(
+              children: [
+                CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  "Generating $numberOfQuestions $selectedSubject questions...",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 8),
+                Text(
+                  "This may take a few moments",
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 14,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+          
+        // Debug button to test quiz area
+        if (!isWaitingForQuestions && !showQuizArea)
+          Container(
+            margin: EdgeInsets.only(top: 16),
+            child: ElevatedButton(
+              onPressed: () {
+                print('Manual test button pressed');
+                setState(() {
+                  // Create test questions
+                  scienceQuestions = [
+                    {
+                      "question": "What is the chemical symbol for water?",
+                      "options": ["H2O", "CO2", "NaCl", "O2"],
+                      "answer": "H2O"
+                    },
+                    {
+                      "question": "What is the capital of France?",
+                      "options": ["London", "Berlin", "Paris", "Madrid"],
+                      "answer": "Paris"
+                    }
+                  ];
+                  answeredCorrectly = List.filled(scienceQuestions.length, false);
+                  currentQuestionIndex = 0;
+                  showAnswer = false;
+                  selectedAnswer = null;
+                  showQuizArea = true;
+                  showScoreSummary = false;
+                });
+                print('Test questions set - showQuizArea: $showQuizArea, scienceQuestions.length: ${scienceQuestions.length}');
+              },
+              child: Text("Test Quiz Area (Debug)"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange,
+                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
+            ),
+          ),
       ],
     );
   }
 
   Widget _buildQuizArea() {
+    print('_buildQuizArea called with ${scienceQuestions.length} questions, current index: $currentQuestionIndex');
+    if (scienceQuestions.isEmpty) {
+      print('No questions available!');
+      return Center(
+        child: Text(
+          'No questions available',
+          style: TextStyle(color: Colors.white, fontSize: 18),
+        ),
+      );
+    }
+    
+    if (currentQuestionIndex >= scienceQuestions.length) {
+      print('Current index out of bounds!');
+      return Center(
+        child: Text(
+          'Question index out of bounds',
+          style: TextStyle(color: Colors.white, fontSize: 18),
+        ),
+      );
+    }
+    
+    final currentQuestion = scienceQuestions[currentQuestionIndex];
+    print('Current question: ${currentQuestion['question']}');
+    print('Current options: ${currentQuestion['options']}');
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -734,7 +866,7 @@ class _HomePageState extends State<HomePage> {
           child: Column(
             children: [
               Text(
-                scienceQuestions[currentQuestionIndex]["question"]!,
+                currentQuestion["question"]!,
                 style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -746,8 +878,7 @@ class _HomePageState extends State<HomePage> {
               const SizedBox(height: 16),
               ElevatedButton.icon(
                 onPressed: () {
-                  String question =
-                      scienceQuestions[currentQuestionIndex]["question"]!;
+                  String question = currentQuestion["question"]!;
                   String prompt =
                       "Please explain how to solve this question: '$question'. Provide a detailed step-by-step explanation with the fundamental concepts involved.";
                   _showChatModal(initialMessage: prompt);
@@ -769,30 +900,29 @@ class _HomePageState extends State<HomePage> {
         const SizedBox(height: 32),
 
         // Answer options
-        Expanded(
+        Flexible(
           child: ListView.builder(
-            itemCount: scienceQuestions[currentQuestionIndex]["options"].length,
+            itemCount: currentQuestion["options"].length,
             itemBuilder: (context, index) {
-              final option =
-                  scienceQuestions[currentQuestionIndex]["options"][index];
+              final option = currentQuestion["options"][index];
               final isSelected = selectedAnswer == option;
-              final isCorrect = showAnswer &&
-                  option == scienceQuestions[currentQuestionIndex]["answer"];
+              final isCorrect = showAnswer && option == currentQuestion["answer"];
               final isWrong = showAnswer && isSelected && !isCorrect;
 
               return Padding(
-                padding: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.only(bottom: 8),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
+                  height: 48,
                   decoration: BoxDecoration(
                     color: isCorrect
                         ? Colors.green.withOpacity(0.2)
                         : isWrong
                             ? Colors.red.withOpacity(0.2)
                             : isSelected
-                                ? Colors.blueAccent.withOpacity(0.2)
-                                : Colors.white.withOpacity(0.05),
-                    borderRadius: BorderRadius.circular(12),
+                                ? Colors.blueAccent.withOpacity(0.15)
+                                : Colors.white.withOpacity(0.04),
+                    borderRadius: BorderRadius.circular(10),
                     border: Border.all(
                       color: isCorrect
                           ? Colors.green
@@ -800,23 +930,27 @@ class _HomePageState extends State<HomePage> {
                               ? Colors.red
                               : isSelected
                                   ? Colors.blueAccent
-                                  : Colors.white.withOpacity(0.1),
+                                  : Colors.white.withOpacity(0.08),
                       width: 2,
                     ),
                   ),
                   child: ListTile(
+                    dense: true,
+                    minVerticalPadding: 0,
                     contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 12,
+                      horizontal: 12,
+                      vertical: 0,
                     ),
                     title: Text(
                       option,
                       style: TextStyle(
-                        fontSize: 18,
+                        fontSize: 15,
                         color: Colors.white,
                         fontWeight:
                             isSelected ? FontWeight.bold : FontWeight.normal,
                       ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     trailing: showAnswer
                         ? Icon(
@@ -825,7 +959,7 @@ class _HomePageState extends State<HomePage> {
                                 : isWrong
                                     ? Icons.cancel
                                     : null,
-                            color: isCorrect ? Colors.green : Colors.red,
+                            color: isCorrect ? Colors.green : isWrong ? Colors.red : null,
                           )
                         : null,
                     onTap: showAnswer
@@ -1073,6 +1207,45 @@ class _HomePageState extends State<HomePage> {
         Navigator.of(context).pop();
       },
       child: Text(subject),
+    );
+  }
+}
+
+class SpaceBackground extends StatelessWidget {
+  const SpaceBackground({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF0A0E21), Color(0xFF1D1E33)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Stack(
+        children: [
+          // Twinkling stars
+          for (int i = 0; i < 50; i++)
+            Positioned(
+              left: Random().nextDouble() * MediaQuery.of(context).size.width,
+              top: Random().nextDouble() * MediaQuery.of(context).size.height,
+              child: AnimatedContainer(
+                duration: Duration(seconds: Random().nextInt(3) + 1),
+                width: 2,
+                height: 2,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                ),
+                onEnd: () {
+                  // Restart animation
+                },
+              ),
+            ),
+        ],
+      ),
     );
   }
 }
