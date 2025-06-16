@@ -461,7 +461,7 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
     final isCorrect =
         selectedAnswer == scienceQuestions[currentQuestionIndex]["answer"];
     setState(() {
-      selectedAnswer = null;
+      // Don't clear selectedAnswer - keep it to show wrong answer highlighting
       showAnswer = true;
       if (isCorrect) {
         answeredCorrectly[currentQuestionIndex] = true;
@@ -476,7 +476,6 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
     return BlocProvider.value(
       value: _chatBloc,
       child: Scaffold(
-        key: ValueKey('home_page_${showQuizArea}_${scienceQuestions.length}'),
         extendBodyBehindAppBar: true,
         backgroundColor: Colors.transparent,
         floatingActionButton: FloatingActionButton(
@@ -484,10 +483,6 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
           backgroundColor: Colors.purple,
           child: Icon(Icons.message, color: Colors.white),
           heroTag: "chatFAB",
-        ),
-        appBar: AppBar(
-          title: Text("QuestAI Quiz App"),
-          backgroundColor: Colors.purple,
         ),
         body: Stack(
           children: [
@@ -525,20 +520,6 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
                                     ? _buildQuizArea()
                                     : _buildHomeScreen(),
                           ),
-                          // Debug info
-                          if (showQuizArea && scienceQuestions.isNotEmpty)
-                            Container(
-                              padding: EdgeInsets.all(8),
-                              margin: EdgeInsets.only(bottom: 8),
-                              decoration: BoxDecoration(
-                                color: Colors.red.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                'DEBUG: Quiz Area Active - ${scienceQuestions.length} questions, Index: $currentQuestionIndex',
-                                style: TextStyle(color: Colors.white, fontSize: 12),
-                              ),
-                            ),
                         ],
                       ),
                     );
@@ -553,214 +534,335 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
   }
 
   Widget _buildHomeScreen() {
-    return Column(
-      children: [
-        Container(
-          padding: EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.grey.shade800.withOpacity(0.9),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Column(
-            children: [
-              Text(
-                "Quiz Configuration:",
-                style: TextStyle(
-                  fontSize: 18,
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
+    return Center(
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Quiz Configuration Card
+            Container(
+              width: MediaQuery.of(context).size.width * 0.9,
+              padding: EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.transparent,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.3),
+                  width: 2,
                 ),
-              ),
-              SizedBox(height: 12),
-
-              // Subject Selection
-              Row(
-                children: [
-                  Text(
-                    "Subject: ",
-                    style: TextStyle(color: Colors.white, fontSize: 16),
-                  ),
-                  Expanded(
-                    child: DropdownButton<String>(
-                      value: selectedSubject,
-                      dropdownColor: Colors.grey.shade800,
-                      style: TextStyle(color: Colors.white, fontSize: 16),
-                      isExpanded: true,
-                      items: subjects.map((String subject) {
-                        return DropdownMenuItem<String>(
-                          value: subject,
-                          child: Text(subject),
-                        );
-                      }).toList(),
-                      onChanged: (String? newValue) {
-                        setState(() {
-                          selectedSubject = newValue!;
-                        });
-                      },
-                    ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.white.withOpacity(0.1),
+                    blurRadius: 10,
+                    offset: Offset(0, 5),
                   ),
                 ],
               ),
-
-              SizedBox(height: 16),
-
-              // Number of Questions Selection
-              Row(
+              child: Column(
                 children: [
-                  Text(
-                    "Questions: ",
-                    style: TextStyle(color: Colors.white, fontSize: 16),
+                  // Header with icon
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.quiz,
+                        color: Colors.white,
+                        size: 32,
+                      ),
+                      SizedBox(width: 12),
+                      Text(
+                        "Quiz Configuration",
+                        style: TextStyle(
+                          fontSize: 24,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
                   ),
-                  Expanded(
-                    child: DropdownButton<int>(
-                      value: numberOfQuestions,
-                      dropdownColor: Colors.grey.shade800,
-                      style: TextStyle(color: Colors.white, fontSize: 16),
-                      isExpanded: true,
-                      items: List.generate(20, (index) => index + 1)
-                          .map((int value) {
-                        return DropdownMenuItem<int>(
-                          value: value,
-                          child: Text(value.toString()),
-                        );
-                      }).toList(),
-                      onChanged: (int? newValue) {
-                        setState(() {
-                          numberOfQuestions = newValue!;
-                        });
-                      },
+                  SizedBox(height: 24),
+
+                  // Subject Selection
+                  Container(
+                    padding: EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.school, color: Colors.white, size: 20),
+                            SizedBox(width: 8),
+                            Text(
+                              "Subject",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 8),
+                        DropdownButton<String>(
+                          value: selectedSubject,
+                          dropdownColor: Colors.purple.shade800,
+                          style: TextStyle(color: Colors.white, fontSize: 16),
+                          isExpanded: true,
+                          underline: Container(),
+                          items: subjects.map((String subject) {
+                            return DropdownMenuItem<String>(
+                              value: subject,
+                              child: Text(subject),
+                            );
+                          }).toList(),
+                          onChanged: (String? newValue) {
+                            setState(() {
+                              selectedSubject = newValue!;
+                            });
+                          },
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
 
-              SizedBox(height: 20),
+                  SizedBox(height: 16),
 
-              // Generate Button and Chat Button
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed:
-                          isWaitingForQuestions ? null : _generateQuestions,
-                      child: isWaitingForQuestions
-                          ? Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 2,
-                                  ),
-                                ),
-                                SizedBox(width: 12),
-                                Text("Generating..."),
+                  // Number of Questions Selection
+                  Container(
+                    padding: EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.format_list_numbered, color: Colors.white, size: 20),
+                            SizedBox(width: 8),
+                            Text(
+                              "Number of Questions",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 8),
+                        DropdownButton<int>(
+                          value: numberOfQuestions,
+                          dropdownColor: Colors.purple.shade800,
+                          style: TextStyle(color: Colors.white, fontSize: 16),
+                          isExpanded: true,
+                          underline: Container(),
+                          items: List.generate(20, (index) => index + 1)
+                              .map((int value) {
+                            return DropdownMenuItem<int>(
+                              value: value,
+                              child: Text(value.toString()),
+                            );
+                          }).toList(),
+                          onChanged: (int? newValue) {
+                            setState(() {
+                              numberOfQuestions = newValue!;
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  SizedBox(height: 24),
+
+                  // Action Buttons
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          height: 50,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.green.withOpacity(0.8),
+                                Colors.greenAccent.withOpacity(0.8),
                               ],
-                            )
-                          : Text("Generate Quiz"),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.purple,
-                        padding:
-                            EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.green.withOpacity(0.3),
+                                blurRadius: 10,
+                                offset: Offset(0, 5),
+                              ),
+                            ],
+                          ),
+                          child: ElevatedButton(
+                            onPressed: isWaitingForQuestions ? null : _generateQuestions,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              shadowColor: Colors.transparent,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: isWaitingForQuestions
+                                ? Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                          color: Colors.white,
+                                          strokeWidth: 2,
+                                        ),
+                                      ),
+                                      SizedBox(width: 12),
+                                      Text(
+                                        "Starting...",
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                                : Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(Icons.play_arrow, color: Colors.white),
+                                      SizedBox(width: 8),
+                                      Text(
+                                        "Start Quiz",
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                  SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () => _showChatModal(),
-                      child: Text("Chat with QuestAI"),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
-                        padding:
-                            EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      SizedBox(width: 12),
+                      Container(
+                        height: 50,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.orange.withOpacity(0.8),
+                              Colors.deepOrange.withOpacity(0.8),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.orange.withOpacity(0.3),
+                              blurRadius: 10,
+                              offset: Offset(0, 5),
+                            ),
+                          ],
+                        ),
+                        child: ElevatedButton(
+                          onPressed: () => _showChatModal(),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            shadowColor: Colors.transparent,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.chat, color: Colors.white),
+                              SizedBox(width: 8),
+                              Text(
+                                "Chat with AI",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-                    ),
+                    ],
                   ),
                 ],
               ),
-            ],
-          ),
-        ),
-        SizedBox(height: 20),
-        
-        // Loading indicator when generating questions
-        if (isWaitingForQuestions)
-          Container(
-            padding: EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.blue.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.blue.withOpacity(0.3)),
             ),
-            child: Column(
-              children: [
-                CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
-                ),
-                SizedBox(height: 16),
-                Text(
-                  "Generating $numberOfQuestions $selectedSubject questions...",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+            
+            SizedBox(height: 20),
+            
+            // Loading indicator when generating questions
+            if (isWaitingForQuestions)
+              Container(
+                width: MediaQuery.of(context).size.width * 0.9,
+                padding: EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.blue.withOpacity(0.2),
+                      Colors.purple.withOpacity(0.2),
+                    ],
                   ),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 8),
-                Text(
-                  "This may take a few moments",
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 14,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: Colors.blue.withOpacity(0.3),
+                    width: 1,
                   ),
-                  textAlign: TextAlign.center,
                 ),
-              ],
-            ),
-          ),
-          
-        // Debug button to test quiz area
-        if (!isWaitingForQuestions && !showQuizArea)
-          Container(
-            margin: EdgeInsets.only(top: 16),
-            child: ElevatedButton(
-              onPressed: () {
-                print('Manual test button pressed');
-                setState(() {
-                  // Create test questions
-                  scienceQuestions = [
-                    {
-                      "question": "What is the chemical symbol for water?",
-                      "options": ["H2O", "CO2", "NaCl", "O2"],
-                      "answer": "H2O"
-                    },
-                    {
-                      "question": "What is the capital of France?",
-                      "options": ["London", "Berlin", "Paris", "Madrid"],
-                      "answer": "Paris"
-                    }
-                  ];
-                  answeredCorrectly = List.filled(scienceQuestions.length, false);
-                  currentQuestionIndex = 0;
-                  showAnswer = false;
-                  selectedAnswer = null;
-                  showQuizArea = true;
-                  showScoreSummary = false;
-                });
-                print('Test questions set - showQuizArea: $showQuizArea, scienceQuestions.length: ${scienceQuestions.length}');
-              },
-              child: Text("Test Quiz Area (Debug)"),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange,
-                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                child: Column(
+                  children: [
+                    CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+                      strokeWidth: 3,
+                    ),
+                    SizedBox(height: 16),
+                    Text(
+                      "Generating $numberOfQuestions $selectedSubject questions...",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      "This may take a few moments",
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 14,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ),
-      ],
+          ],
+        ),
+      ),
     );
   }
 
@@ -820,7 +922,7 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
             ),
           ],
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 16),
 
         // Progress bar
         ClipRRect(
@@ -832,25 +934,7 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
             minHeight: 8,
           ),
         ),
-        const SizedBox(height: 32),
-
-        // Score
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color: Colors.amber.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Text(
-            'Score: ${answeredCorrectly.where((correct) => correct).length}',
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.amber,
-            ),
-          ),
-        ),
-        const SizedBox(height: 32),
+        const SizedBox(height: 16),
 
         // Question
         Container(
@@ -897,7 +981,7 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
             ],
           ),
         ),
-        const SizedBox(height: 32),
+        const SizedBox(height: 16),
 
         // Answer options
         Flexible(

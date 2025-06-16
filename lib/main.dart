@@ -1626,8 +1626,7 @@ class _MainScreenState extends State<MainScreen> {
           ),
         ],
       ),
-      floatingActionButton: (_currentIndex ==
-              0) // Show on all Learn tab sub-tabs
+      floatingActionButton: (_currentIndex == 0 && _learnTabIndex == 0) // Show only on My Sets tab
           ? Padding(
               padding: const EdgeInsets.only(bottom: 16.0, right: 16.0),
               child: Column(
@@ -1795,134 +1794,33 @@ class _LearnTabState extends State<LearnTab>
                 ),
                 // Add vertical space
                 const SizedBox(height: 32),
-                // Add the two large buttons in a row
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => MCQManager(
-                                  username: widget.username,
-                                  onSetImported: _loadStudySets,
-                                ),
-                              ),
-                            );
-                          },
-                          child: Container(
-                            height: 70,
-                            margin: const EdgeInsets.only(right: 10),
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFF36D1DC), Color(0xFF5B86E5)],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              borderRadius: BorderRadius.circular(18),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.blueAccent.withOpacity(0.3),
-                                  blurRadius: 12,
-                                  offset: const Offset(0, 6),
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: const [
-                                Icon(Icons.download,
-                                    color: Colors.white, size: 32),
-                                SizedBox(width: 12),
-                                Text(
-                                  'Browse',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    HomePage(username: widget.username),
-                              ),
-                            );
-                          },
-                          child: Container(
-                            height: 70,
-                            margin: const EdgeInsets.only(left: 10),
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFF43E97B), Color(0xFF38F9D7)],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              borderRadius: BorderRadius.circular(18),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.greenAccent.withOpacity(0.3),
-                                  blurRadius: 12,
-                                  offset: const Offset(0, 6),
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: const [
-                                Icon(Icons.auto_awesome,
-                                    color: Colors.white, size: 32),
-                                SizedBox(width: 12),
-                                Text(
-                                  'Quick Play',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 32),
                 // Study Sets Content
                 Expanded(
                   child: _isLoading
                       ? const Center(child: CircularProgressIndicator())
                       : Column(
                           children: [
-                            TabBar(
-                              controller: _tabController,
-                              labelColor: Colors.white,
-                              unselectedLabelColor: Colors.white70,
-                              indicatorColor: Colors.blueAccent,
-                              tabs: const [
-                                Tab(text: 'My Sets'),
-                              ],
+                            Container(
+                              margin: EdgeInsets.only(top: 0),
+                              child: TabBar(
+                                controller: _tabController,
+                                labelColor: Colors.white,
+                                unselectedLabelColor: Colors.white70,
+                                indicatorColor: Colors.blueAccent,
+                                tabs: const [
+                                  Tab(text: 'My Sets'),
+                                  Tab(text: 'Browse'),
+                                  Tab(text: 'Quick Play'),
+                                ],
+                              ),
                             ),
                             Expanded(
                               child: TabBarView(
                                 controller: _tabController,
                                 children: [
                                   _buildMyStudySets(),
+                                  _buildBrowseTab(),
+                                  _buildQuickPlayTab(),
                                 ],
                               ),
                             ),
@@ -2140,204 +2038,15 @@ class _LearnTabState extends State<LearnTab>
     );
   }
 
-  Widget _buildBrowseStudySets() {
-    return FutureBuilder<List<Map<String, dynamic>>>(
-      future: _dbHelper.getPremadeStudySets(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        if (snapshot.hasError) {
-          return Center(
-            child: Text(
-              'Error loading study sets: ${snapshot.error}',
-              style: const TextStyle(color: Colors.red),
-            ),
-          );
-        }
-
-        final premadeSets = snapshot.data ?? [];
-        if (premadeSets.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.school_outlined,
-                  size: 80,
-                  color: Colors.white.withOpacity(0.5),
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  'No premade sets available',
-                  style: TextStyle(
-                    fontSize: 20,
-                    color: Colors.white.withOpacity(0.7),
-                  ),
-                ),
-              ],
-            ),
-          );
-        }
-
-        return ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: premadeSets.length,
-          itemBuilder: (context, index) {
-            final set = premadeSets[index];
-            final isImported =
-                _premadeStudySets.any((s) => s['id'] == set['id']);
-
-            return Card(
-              margin: const EdgeInsets.only(bottom: 20),
-              elevation: 10,
-              shadowColor: Colors.black.withOpacity(0.4),
-              clipBehavior: Clip.antiAlias,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      const Color(0xFF2A2D3E).withOpacity(0.9),
-                      const Color(0xFF1D1E33),
-                    ],
-                  ),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.blueAccent.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: Icon(
-                              _getSubjectIcon(set['name']),
-                              color: Colors.blueAccent,
-                              size: 32,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  set['name'],
-                                  style: const TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  set['description'] ?? '',
-                                  style: TextStyle(
-                                    color: Colors.white.withOpacity(0.7),
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          if (isImported)
-                            ElevatedButton.icon(
-                              onPressed: () async {
-                                await _dbHelper.removeImportedSet(
-                                    widget.username, set['id']);
-                                setState(() {
-                                  _premadeStudySets = List.from(
-                                      _premadeStudySets)
-                                    ..removeWhere((s) => s['id'] == set['id']);
-                                });
-                                if (mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Set removed successfully'),
-                                      backgroundColor: Colors.green,
-                                    ),
-                                  );
-                                }
-                              },
-                              icon: const Icon(Icons.check, size: 18),
-                              label: const Text('Imported'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.green.withOpacity(0.8),
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 20,
-                                  vertical: 10,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                            )
-                          else
-                            ElevatedButton.icon(
-                              onPressed: () async {
-                                await _dbHelper.importPremadeSet(
-                                  widget.username,
-                                  set['id'],
-                                );
-                                setState(() {
-                                  _premadeStudySets =
-                                      List.from(_premadeStudySets)..add(set);
-                                });
-                                if (mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content:
-                                          Text('Set imported successfully'),
-                                      backgroundColor: Colors.green,
-                                    ),
-                                  );
-                                }
-                              },
-                              icon: const Icon(Icons.add, size: 18),
-                              label: const Text('Import'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor:
-                                    Colors.blueAccent.withOpacity(0.8),
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 20,
-                                  vertical: 10,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
-        );
-      },
+  Widget _buildBrowseTab() {
+    return MCQManager(
+      username: widget.username,
+      onSetImported: _loadStudySets,
     );
+  }
+
+  Widget _buildQuickPlayTab() {
+    return HomePage(username: widget.username);
   }
 
   IconData _getSubjectIcon(String setName) {

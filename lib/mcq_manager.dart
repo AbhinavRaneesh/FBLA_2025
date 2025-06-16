@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'frq_manager.dart';
 import 'database_helper.dart';
 import 'premade_study_sets.dart';
+import 'main.dart';
 
 class MCQManager extends StatefulWidget {
   final String username;
@@ -3150,88 +3151,77 @@ class _MCQManagerState extends State<MCQManager> {
   Widget _buildSubjectSelectionScreen() {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Browse Sets',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 24,
-          ),
-        ),
-        backgroundColor: Colors.orange,
-        foregroundColor: Colors.white,
+        backgroundColor: Colors.transparent,
         elevation: 0,
+        toolbarHeight: 0,
       ),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF1D1E33), Color(0xFF2A2B4A)],
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              // Search Bar
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                child: TextField(
-                  controller: _searchController,
-                  onChanged: (value) {
-                    setState(() {
-                      _searchQuery = value;
-                    });
-                  },
-                  style: const TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    hintText: 'Search sets...',
-                    hintStyle: TextStyle(color: Colors.white.withOpacity(0.6)),
-                    prefixIcon: Icon(Icons.search,
-                        color: Colors.white.withOpacity(0.6)),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(25),
-                      borderSide:
-                          BorderSide(color: Colors.white.withOpacity(0.3)),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(25),
-                      borderSide:
-                          BorderSide(color: Colors.white.withOpacity(0.3)),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(25),
-                      borderSide: const BorderSide(color: Colors.orange),
-                    ),
-                    filled: true,
-                    fillColor: Colors.white.withOpacity(0.1),
-                  ),
-                ),
-              ),
-              // AP Classes Grid
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: GridView.builder(
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
-                      childAspectRatio: 0.85,
-                    ),
-                    itemCount: filteredAPClasses.length,
-                    itemBuilder: (context, index) {
-                      final apClass = filteredAPClasses[index];
-                      return _buildAPClassCard(apClass);
+      body: Stack(
+        children: [
+          const SpaceBackground(),
+          SafeArea(
+            child: Column(
+              children: [
+                // Search Bar
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: (value) {
+                      setState(() {
+                        _searchQuery = value;
+                      });
                     },
+                    style: const TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      hintText: 'Search sets...',
+                      hintStyle: TextStyle(color: Colors.white.withOpacity(0.6)),
+                      prefixIcon: Icon(Icons.search,
+                          color: Colors.white.withOpacity(0.6)),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(25),
+                        borderSide:
+                            BorderSide(color: Colors.white.withOpacity(0.3)),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(25),
+                        borderSide:
+                            BorderSide(color: Colors.white.withOpacity(0.3)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(25),
+                        borderSide: const BorderSide(color: Colors.orange),
+                      ),
+                      filled: true,
+                      fillColor: Colors.white.withOpacity(0.1),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 20),
-            ],
+                // AP Classes Grid
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: GridView.builder(
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 16,
+                        mainAxisSpacing: 16,
+                        childAspectRatio: 0.85,
+                      ),
+                      itemCount: filteredAPClasses.length,
+                      itemBuilder: (context, index) {
+                        final apClass = filteredAPClasses[index];
+                        return _buildAPClassCard(apClass);
+                      },
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+              ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
