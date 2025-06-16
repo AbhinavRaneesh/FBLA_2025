@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -13,6 +14,7 @@ import 'package:path/path.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:student_learning_app/frq_manager.dart';
+import 'package:student_learning_app/mcq_manager.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -1623,8 +1625,7 @@ class _MainScreenState extends State<MainScreen> {
           ),
         ],
       ),
-      floatingActionButton: (_currentIndex == 0 &&
-              _learnTabIndex == 0) // Modified condition
+      floatingActionButton: (_currentIndex == 0) // Show on all Learn tab sub-tabs
           ? Padding(
               padding: const EdgeInsets.only(bottom: 16.0, right: 16.0),
               child: Column(
@@ -1636,13 +1637,13 @@ class _MainScreenState extends State<MainScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const FRQManager(),
+                          builder: (context) => const MCQManager(),
                         ),
                       );
                     },
-                    backgroundColor: Colors.purple,
-                    icon: const Icon(Icons.menu_book),
-                    label: const Text('AP FRQs'),
+                    backgroundColor: Colors.orange,
+                    icon: const Icon(Icons.quiz),
+                    label: const Text('MCQ'),
                   ),
                   const SizedBox(height: 16),
                   FloatingActionButton.extended(
@@ -1656,7 +1657,7 @@ class _MainScreenState extends State<MainScreen> {
                     },
                     backgroundColor: Colors.green,
                     icon: const Icon(Icons.auto_awesome),
-                    label: const Text('Generate Questions'),
+                    label: const Text('Quick Play'),
                   ),
                   const SizedBox(height: 16),
                   FloatingActionButton.extended(
@@ -2275,90 +2276,503 @@ class _LearnTabState extends State<LearnTab>
   }
 
   Widget _buildQuickPlay() {
-    final subjects = ['Math', 'Science', 'History', 'English'];
+    // State variables for quick play configuration
+    String selectedSubject = "Chemistry";
+    int numberOfQuestions = 10;
+    bool isWaitingForQuestions = false;
+    bool showQuizArea = false;
+    bool showScoreSummary = false;
+    int currentQuestionIndex = 0;
+    String? selectedAnswer;
+    bool showAnswer = false;
+    List<Map<String, dynamic>> scienceQuestions = [];
+    List<bool> answeredCorrectly = [];
+
+    final List<String> subjects = [
+      "Chemistry",
+      "Physics", 
+      "Biology",
+      "Mathematics",
+      "History",
+      "Geography",
+      "Computer Science",
+      "Economics"
+    ];
+
+    // Function to generate questions using AI
+    void _generateQuestions() {
+      setState(() {
+        isWaitingForQuestions = true;
+      });
+
+      // For now, we'll use the existing questions from the repository
+      // In a real implementation, you would integrate with the AI chat functionality
+      final questions = quiz.QuestionsRepository.getQuestionsForSubject(selectedSubject);
+      
+      // Convert to the format expected by the quiz
+      List<Map<String, dynamic>> convertedQuestions = [];
+      for (var question in questions.take(numberOfQuestions)) {
+        convertedQuestions.add({
+          "question": question.questionText,
+          "options": question.options,
+          "correct_answer": question.correctAnswer
+        });
+      }
+
+      setState(() {
+        scienceQuestions = convertedQuestions;
+        answeredCorrectly = List.filled(convertedQuestions.length, false);
+        currentQuestionIndex = 0;
+        showAnswer = false;
+        selectedAnswer = null;
+        isWaitingForQuestions = false;
+        showQuizArea = true;
+        showScoreSummary = false;
+      });
+    }
+
+    // Function to submit answer
+    void _submitAnswer() {
+      setState(() {
+        showAnswer = true;
+        answeredCorrectly[currentQuestionIndex] = selectedAnswer == scienceQuestions[currentQuestionIndex]["correct_answer"];
+      });
+    }
+
+    // Function to go to next question
+    void _goToNextQuestion() {
+      setState(() {
+        if (currentQuestionIndex + 1 >= scienceQuestions.length) {
+          showScoreSummary = true;
+          showQuizArea = false;
+        } else {
+          currentQuestionIndex = currentQuestionIndex + 1;
+          showAnswer = false;
+          selectedAnswer = null;
+        }
+      });
+    }
+
+    // Function to restart quiz
+    void _restartQuiz() {
+      setState(() {
+        currentQuestionIndex = 0;
+        selectedAnswer = null;
+        showAnswer = false;
+        showScoreSummary = false;
+        showQuizArea = true;
+        answeredCorrectly = List.filled(scienceQuestions.length, false);
+      });
+    }
+
+    // Function to return to configuration
+    void _returnToConfig() {
+      setState(() {
+        currentQuestionIndex = 0;
+        selectedAnswer = null;
+        showAnswer = false;
+        showScoreSummary = false;
+        showQuizArea = false;
+        scienceQuestions.clear();
+        answeredCorrectly.clear();
+      });
+    }
 
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Quick Practice',
-            style: TextStyle(
-              fontSize: 24,
+          if (!showQuizArea && !showScoreSummary) ...[
+            const Text(
+              'Quick Practice',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'Configure your practice session',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.white.withOpacity(0.7),
+              ),
+            ),
+            const SizedBox(height: 30),
+            // Subject Selection
+            const Text(
+              'Select a Subject',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 15),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.purple),
+              ),
+              child: DropdownButton<String>(
+                value: selectedSubject,
+                dropdownColor: Colors.grey.shade900,
+                style: const TextStyle(color: Colors.white),
+                underline: Container(),
+                isExpanded: true,
+                items: subjects.map((String subject) {
+                  return DropdownMenuItem<String>(
+                    value: subject,
+                    child: Text(subject),
+                  );
+                }).toList(),
+                onChanged: (String? newValue) {
+                  if (newValue != null) {
+                    setState(() {
+                      selectedSubject = newValue;
+                    });
+                  }
+                },
+              ),
+            ),
+            const SizedBox(height: 25),
+            // Number of Questions Selection
+            const Text(
+              'Number of Questions',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 15),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.purple),
+              ),
+              child: DropdownButton<int>(
+                value: numberOfQuestions,
+                dropdownColor: Colors.grey.shade900,
+                style: const TextStyle(color: Colors.white),
+                underline: Container(),
+                isExpanded: true,
+                items: [5, 10, 15, 20].map((int number) {
+                  return DropdownMenuItem<int>(
+                    value: number,
+                    child: Text('$number Questions'),
+                  );
+                }).toList(),
+                onChanged: (int? newValue) {
+                  if (newValue != null) {
+                    setState(() {
+                      numberOfQuestions = newValue;
+                    });
+                  }
+                },
+              ),
+            ),
+            const SizedBox(height: 30),
+            // Generate Questions Button
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: isWaitingForQuestions ? null : _generateQuestions,
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  backgroundColor: Colors.transparent,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 6,
+                ),
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [
+                        Color(0xFFFFD600),
+                        Color(0xFFFF9800),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: isWaitingForQuestions
+                      ? const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              ),
+                            ),
+                            SizedBox(width: 12),
+                            Text(
+                              'Generating Questions...',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        )
+                      : const Text(
+                          'Start Practice',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                ),
+              ),
+            ),
+          ] else if (showQuizArea) ...[
+            // Quiz Area
+            Expanded(
+              child: _buildQuizArea(
+                scienceQuestions[currentQuestionIndex],
+                currentQuestionIndex,
+                scienceQuestions.length,
+                selectedAnswer,
+                showAnswer,
+                _submitAnswer,
+                _goToNextQuestion,
+                () {
+                  setState(() {
+                    selectedAnswer = scienceQuestions[currentQuestionIndex]['options'][0];
+                  });
+                },
+                () {
+                  setState(() {
+                    selectedAnswer = scienceQuestions[currentQuestionIndex]['options'][1];
+                  });
+                },
+                () {
+                  setState(() {
+                    selectedAnswer = scienceQuestions[currentQuestionIndex]['options'][2];
+                  });
+                },
+                () {
+                  setState(() {
+                    selectedAnswer = scienceQuestions[currentQuestionIndex]['options'][3];
+                  });
+                },
+              ),
+            ),
+          ] else if (showScoreSummary) ...[
+            // Score Summary
+            Expanded(
+              child: _buildScoreSummary(
+                answeredCorrectly,
+                scienceQuestions.length,
+                selectedSubject,
+                _restartQuiz,
+                _returnToConfig,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuizArea(
+    Map<String, dynamic> question,
+    int currentIndex,
+    int totalQuestions,
+    String? selectedAnswer,
+    bool showAnswer,
+    VoidCallback submitAnswer,
+    VoidCallback nextQuestion,
+    VoidCallback selectOption1,
+    VoidCallback selectOption2,
+    VoidCallback selectOption3,
+    VoidCallback selectOption4,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade800.withOpacity(0.9),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+          // Question counter
+          Text(
+            'Question ${currentIndex + 1}/$totalQuestions',
+            style: const TextStyle(
+              fontSize: 18,
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
           ),
-          const SizedBox(height: 10),
-          Text(
-            'Jump into a quick practice session',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.white.withOpacity(0.7),
-            ),
+          const SizedBox(height: 16),
+          // Progress bar
+          LinearProgressIndicator(
+            value: (currentIndex + 1) / totalQuestions,
+            backgroundColor: Colors.white24,
+            valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
+          // Question
+          Text(
+            question['question'],
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
+          // Options
           Expanded(
-            child: GridView.builder(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                childAspectRatio: 1.1,
-              ),
-              itemCount: subjects.length,
-              itemBuilder: (BuildContext context, int index) {
-                final subject = subjects[index];
-                return GestureDetector(
-                  onTap: () => _startQuickPlay(subject),
-                  child: Card(
-                    elevation: 6,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20),
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            _getSubjectColor(subject).withOpacity(0.9),
-                            _getSubjectColor(subject).withOpacity(0.7),
-                          ],
+            child: Column(
+              children: [
+                ...List.generate(
+                  question['options'].length,
+                  (i) => Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: showAnswer ? null : () {
+                          switch (i) {
+                            case 0:
+                              selectOption1();
+                              break;
+                            case 1:
+                              selectOption2();
+                              break;
+                            case 2:
+                              selectOption3();
+                              break;
+                            case 3:
+                              selectOption4();
+                              break;
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: showAnswer
+                              ? question['options'][i] == question['correct_answer']
+                                  ? Colors.green
+                                  : question['options'][i] == selectedAnswer
+                                      ? Colors.red
+                                      : Colors.white.withOpacity(0.1)
+                              : selectedAnswer == question['options'][i]
+                                  ? Colors.blue.withOpacity(0.3)
+                                  : Colors.white.withOpacity(0.1),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
                         ),
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              _getSubjectIcon(subject),
-                              size: 32,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            subject,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
+                        child: Text(
+                          question['options'][i],
+                          style: const TextStyle(color: Colors.white70),
+                        ),
                       ),
                     ),
                   ),
-                );
-              },
+                ),
+                const Spacer(),
+                // Submit Answer button
+                if (selectedAnswer != null && !showAnswer) ...[
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: submitAnswer,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                      child: const Text(
+                        'Submit Answer',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+                // Feedback and next options
+                if (showAnswer) ...[
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: selectedAnswer == question['correct_answer']
+                          ? Colors.green.withOpacity(0.2)
+                          : Colors.red.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: selectedAnswer == question['correct_answer']
+                            ? Colors.green
+                            : Colors.red,
+                        width: 2,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          selectedAnswer == question['correct_answer']
+                              ? Icons.check_circle
+                              : Icons.cancel,
+                          color: selectedAnswer == question['correct_answer']
+                              ? Colors.green
+                              : Colors.red,
+                          size: 24,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            selectedAnswer == question['correct_answer']
+                                ? 'Correct! Well done!'
+                                : 'Incorrect. The correct answer is: ${question['correct_answer']}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: nextQuestion,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                      child: Text(
+                        currentIndex < totalQuestions - 1
+                            ? 'Next Question'
+                            : 'Finish Quiz',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
         ],
@@ -2366,19 +2780,97 @@ class _LearnTabState extends State<LearnTab>
     );
   }
 
-  Color _getSubjectColor(String subject) {
-    switch (subject) {
-      case 'Math':
-        return Colors.blue;
-      case 'Science':
-        return Colors.green;
-      case 'History':
-        return Colors.orange;
-      case 'English':
-        return Colors.purple;
-      default:
-        return Colors.grey;
-    }
+  Widget _buildScoreSummary(
+    List<bool> answeredCorrectly,
+    int totalQuestions,
+    String subject,
+    VoidCallback restartQuiz,
+    VoidCallback returnToConfig,
+  ) {
+    int correctAnswers = answeredCorrectly.where((correct) => correct).length;
+    double accuracy = (correctAnswers / totalQuestions) * 100;
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade800.withOpacity(0.9),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Text(
+            "Quiz Completed!",
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 20),
+          const Text(
+            "Your Score:",
+            style: TextStyle(
+              fontSize: 20,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            "$correctAnswers / $totalQuestions",
+            style: const TextStyle(
+              fontSize: 36,
+              fontWeight: FontWeight.bold,
+              color: Colors.purple,
+            ),
+          ),
+          const SizedBox(height: 20),
+          Text(
+            "Accuracy: ${accuracy.toStringAsFixed(1)}%",
+            style: TextStyle(
+              fontSize: 20,
+              color: accuracy > 70
+                  ? Colors.green
+                  : accuracy > 40
+                      ? Colors.orange
+                      : Colors.red,
+            ),
+          ),
+          const SizedBox(height: 30),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: restartQuiz,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  child: const Text(
+                    "Retry Quiz",
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: returnToConfig,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.purple,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  child: const Text(
+                    "New Quiz",
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 
   String _formatDate(String dateString) {
@@ -2394,23 +2886,6 @@ class _LearnTabState extends State<LearnTab>
           studySet: studySet,
           username: widget.username,
           currentTheme: widget.currentTheme,
-        ),
-      ),
-    );
-  }
-
-  void _startQuickPlay(String subject) {
-    final questions = quiz.QuestionsRepository.getQuestionsForSubject(subject);
-    Navigator.push(
-      this.context,
-      MaterialPageRoute(
-        builder: (context) => QuizScreen(
-          subject: subject,
-          username: widget.username,
-          questions: questions,
-          currentTheme: widget.currentTheme,
-          gameMode: 'classic',
-          questionCount: 10,
         ),
       ),
     );
