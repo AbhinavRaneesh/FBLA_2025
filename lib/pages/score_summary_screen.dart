@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 class ScoreSummaryScreen extends StatefulWidget {
   final String aiResponse;
 
-  const ScoreSummaryScreen({Key? key, required this.aiResponse}) : super(key: key);
+  const ScoreSummaryScreen({Key? key, required this.aiResponse})
+      : super(key: key);
 
   @override
   State<ScoreSummaryScreen> createState() => _ScoreSummaryScreenState();
@@ -16,7 +17,8 @@ class _ScoreSummaryScreenState extends State<ScoreSummaryScreen> {
   @override
   Widget build(BuildContext context) {
     // Parse the AI response into a list of feedback items
-    List<Map<String, String>> feedbackItems = _parseAIResponse(widget.aiResponse);
+    List<Map<String, String>> feedbackItems =
+        _parseAIResponse(widget.aiResponse);
 
     return Scaffold(
       appBar: AppBar(
@@ -59,7 +61,8 @@ class _ScoreSummaryScreenState extends State<ScoreSummaryScreen> {
                           ),
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
                             color: Colors.purple,
                             borderRadius: BorderRadius.circular(20),
@@ -114,7 +117,9 @@ class _ScoreSummaryScreenState extends State<ScoreSummaryScreen> {
                             ),
                           ),
                           Icon(
-                            isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                            isExpanded
+                                ? Icons.keyboard_arrow_up
+                                : Icons.keyboard_arrow_down,
                             color: Colors.white,
                           ),
                         ],
@@ -150,7 +155,9 @@ class _ScoreSummaryScreenState extends State<ScoreSummaryScreen> {
                           toolbarOptions: const ToolbarOptions(copy: true),
                         ),
                       ),
-                      crossFadeState: isExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+                      crossFadeState: isExpanded
+                          ? CrossFadeState.showSecond
+                          : CrossFadeState.showFirst,
                       duration: const Duration(milliseconds: 300),
                     ),
                   ],
@@ -165,17 +172,18 @@ class _ScoreSummaryScreenState extends State<ScoreSummaryScreen> {
 
   List<Map<String, String>> _parseAIResponse(String response) {
     List<Map<String, String>> items = [];
-    
+
     // Split the response into items using the question number pattern
-    List<String> itemsText = response.split(RegExp(r'Q\d+[a-z]?')); // Matches Q1a, Q1b, Q2, etc.
-    
+    List<String> itemsText =
+        response.split(RegExp(r'Q\d+[a-z]?')); // Matches Q1a, Q1b, Q2, etc.
+
     for (String itemText in itemsText) {
       if (itemText.trim().isEmpty) continue;
-      
+
       try {
         // Extract the question number
         String question = 'Q${itemText.trim().split('|||')[0].trim()}';
-        
+
         // Split the rest by |||
         List<String> parts = itemText.trim().split('|||');
         if (parts.length >= 4) {
@@ -193,7 +201,7 @@ class _ScoreSummaryScreenState extends State<ScoreSummaryScreen> {
         print('Error: $e');
       }
     }
-    
+
     return items;
   }
-} 
+}

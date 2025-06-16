@@ -8,9 +8,16 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:student_learning_app/bloc/chat_bloc.dart';
-import 'screens/frq_summary_screen.dart';
+import 'package:student_learning_app/pages/frq_summary_screen.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:student_learning_app/pages/score_summary_screen.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:path/path.dart' as path;
+import 'package:path_provider/path_provider.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
+import 'package:student_learning_app/models/chat_message_model.dart';
 
 class FRQManager extends StatefulWidget {
   const FRQManager({super.key});
