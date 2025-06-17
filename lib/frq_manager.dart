@@ -437,7 +437,7 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
       chatBloc.stream.listen((state) {
         if (state is ChatSuccessState && state.messages.isNotEmpty) {
           final lastMessage = state.messages.last;
-          if (lastMessage.role == "model") {
+          if (lastMessage.role == "model" && lastMessage.parts.isNotEmpty) {
             lastAIResponse = lastMessage.parts.first.text;
             // Parse the AI response and create results
             List<FrqGradingResult> results = [];
@@ -622,7 +622,7 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: Text(
-                                        message.parts.first.text,
+                                        message.parts.isNotEmpty ? message.parts.first.text : 'No message content',
                                         style: TextStyle(
                                             color: Colors.white, fontSize: 16),
                                       ),
@@ -1535,7 +1535,7 @@ class _FRQTextDisplayScreenState extends State<FRQTextDisplayScreen> {
       chatBloc.stream.listen((state) {
         if (state is ChatSuccessState && state.messages.isNotEmpty) {
           final lastMessage = state.messages.last;
-          if (lastMessage.role == "model") {
+          if (lastMessage.role == "model" && lastMessage.parts.isNotEmpty) {
             lastAIResponse = lastMessage.parts.first.text;
             // Parse the AI response and create results
             List<FrqGradingResult> results = [];

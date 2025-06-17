@@ -1631,26 +1631,54 @@ class _MainScreenState extends State<MainScreen> {
       floatingActionButton: (_currentIndex == 0 &&
               _learnTabIndex == 0) // Show only on My Sets tab
           ? Padding(
-              padding: const EdgeInsets.only(bottom: 16.0, right: 16.0),
+              padding: const EdgeInsets.only(bottom: 16.0, left: 16.0),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.end,
-                crossAxisAlignment: CrossAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  FloatingActionButton.extended(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => StudySetCreationOptionsScreen(
-                            username: widget.username,
-                            onStudySetCreated: _loadStudySets,
-                          ),
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [
+                          Color(0xFF667eea),
+                          Color(0xFF764ba2)
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(30),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF667eea).withOpacity(0.3),
+                          blurRadius: 20,
+                          offset: const Offset(0, 10),
                         ),
-                      );
-                    },
-                    backgroundColor: Colors.blueAccent,
-                    icon: const Icon(Icons.add),
-                    label: const Text('Create Set'),
+                      ],
+                    ),
+                    child: FloatingActionButton.extended(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => StudySetCreationOptionsScreen(
+                              username: widget.username,
+                              onStudySetCreated: _loadStudySets,
+                            ),
+                          ),
+                        );
+                      },
+                      backgroundColor: Colors.transparent,
+                      elevation: 0,
+                      icon: const Icon(Icons.add, color: Colors.white),
+                      label: const Text(
+                        'Create Set',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -1695,7 +1723,7 @@ class _LearnTabState extends State<LearnTab>
   void initState() {
     super.initState();
     _loadStudySets();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 3, vsync: this, initialIndex: 0); // Set initial tab to My Sets
     _tabController.addListener(() {
       if (!_tabController.indexIsChanging) {
         widget.onTabChanged(_tabController.index);
@@ -2055,182 +2083,8 @@ class _LearnTabState extends State<LearnTab>
   }
 
   Widget _buildQuickPlay() {
-    // State variables for quick play configuration
-    String selectedSubject = "Chemistry";
-    int numberOfQuestions = 10;
-    bool isWaitingForQuestions = false;
-    bool showQuizArea = false;
-    bool showScoreSummary = false;
-    int currentQuestionIndex = 0;
-    String? selectedAnswer;
-    bool showAnswer = false;
-    List<Map<String, dynamic>> scienceQuestions = [];
-    List<bool> answeredCorrectly = [];
-
-    final List<String> subjects = [
-      "Chemistry",
-      "Physics",
-      "Biology",
-      "Mathematics",
-      "History",
-      "Geography",
-      "Computer Science",
-      "Economics"
-    ];
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Quick Play'),
-        backgroundColor: const Color(0xFF1D1E33),
-        foregroundColor: Colors.white,
-        elevation: 0,
-      ),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF1D1E33), Color(0xFF2A2B4A)],
-          ),
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const Text(
-                  'Choose Your Subject',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 20),
-                DropdownButtonFormField<String>(
-                  value: selectedSubject,
-                  decoration: InputDecoration(
-                    filled: true,
-                    fillColor: Colors.white.withOpacity(0.1),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                  ),
-                  dropdownColor: const Color(0xFF2A2B4A),
-                  style: const TextStyle(color: Colors.white),
-                  items: subjects.map((String subject) {
-                    return DropdownMenuItem<String>(
-                      value: subject,
-                      child: Text(subject),
-                    );
-                  }).toList(),
-                  onChanged: (String? newValue) {
-                    if (newValue != null) {
-                      setState(() {
-                        selectedSubject = newValue;
-                      });
-                    }
-                  },
-                ),
-                const SizedBox(height: 20),
-                const Text(
-                  'Number of Questions',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    IconButton(
-                      onPressed: () {
-                        if (numberOfQuestions > 5) {
-                          setState(() {
-                            numberOfQuestions -= 5;
-                          });
-                        }
-                      },
-                      icon:
-                          const Icon(Icons.remove_circle, color: Colors.white),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 10,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        '$numberOfQuestions',
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: () {
-                        if (numberOfQuestions < 30) {
-                          setState(() {
-                            numberOfQuestions += 5;
-                          });
-                        }
-                      },
-                      icon: const Icon(Icons.add_circle, color: Colors.white),
-                    ),
-                  ],
-                ),
-                const Spacer(),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      this.context,
-                      MaterialPageRoute(
-                        builder: (context) => MCQManager(
-                          username: widget.username,
-                          studySet: {},
-                          currentTheme: 'default',
-                          selectedSubject: selectedSubject,
-                          questionCount: numberOfQuestions,
-                        ),
-                      ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue[600],
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: const Text(
-                    'Start Learning',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
+    // This method has been removed - quiz configuration moved to home_page.dart
+    return Container();
   }
 
   IconData _getSubjectIcon(String setName) {
@@ -3951,50 +3805,7 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
                                   ),
                                 ),
                                 const SizedBox(height: 40),
-                                Container(
-                                  width: double.infinity,
-                                  height: 60,
-                                  decoration: BoxDecoration(
-                                    gradient: const LinearGradient(
-                                      colors: [
-                                        Color(0xFF4facfe),
-                                        Color(0xFF00f2fe)
-                                      ],
-                                    ),
-                                    borderRadius: BorderRadius.circular(30),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: const Color(0xFF4facfe)
-                                            .withOpacity(0.3),
-                                        blurRadius: 20,
-                                        offset: const Offset(0, 10),
-                                      ),
-                                    ],
-                                  ),
-                                  child: ElevatedButton.icon(
-                                    onPressed: () => _startPractice(context),
-                                    icon: const Icon(
-                                      Icons.play_arrow,
-                                      size: 28,
-                                      color: Colors.white,
-                                    ),
-                                    label: const Text(
-                                      'Start Learning',
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.transparent,
-                                      shadowColor: Colors.transparent,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(30),
-                                      ),
-                                    ),
-                                  ),
-                                ),
+                                // Start Learning button removed - no longer needed
                               ],
                             ),
                           )
@@ -4651,7 +4462,7 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
                                   borderRadius: BorderRadius.circular(16),
                                 ),
                                 child: Text(
-                                  message.parts.first.text,
+                                  message.parts.isNotEmpty ? message.parts.first.text : 'No message content',
                                   style: const TextStyle(
                                       color: Colors.white, fontSize: 14),
                                 ),
@@ -7083,188 +6894,6 @@ class PracticeTypeChoiceScreen extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class HomePage extends StatefulWidget {
-  final String username;
-
-  const HomePage({Key? key, required this.username}) : super(key: key);
-
-  @override
-  State<HomePage> createState() => _HomePageState();
-}
-
-class _HomePageState extends State<HomePage> {
-  String selectedSubject = "Chemistry";
-  int numberOfQuestions = 10;
-
-  final List<String> subjects = [
-    "Chemistry",
-    "Physics",
-    "Biology",
-    "Mathematics",
-    "History",
-    "Geography",
-    "Computer Science",
-    "Economics"
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Quick Play'),
-        backgroundColor: const Color(0xFF1D1E33),
-        foregroundColor: Colors.white,
-        elevation: 0,
-      ),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF1D1E33), Color(0xFF2A2B4A)],
-          ),
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const Text(
-                  'Choose Your Subject',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 20),
-                DropdownButtonFormField<String>(
-                  value: selectedSubject,
-                  decoration: InputDecoration(
-                    filled: true,
-                    fillColor: Colors.white.withOpacity(0.1),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                  ),
-                  dropdownColor: const Color(0xFF2A2B4A),
-                  style: const TextStyle(color: Colors.white),
-                  items: subjects.map((String subject) {
-                    return DropdownMenuItem<String>(
-                      value: subject,
-                      child: Text(subject),
-                    );
-                  }).toList(),
-                  onChanged: (String? newValue) {
-                    if (newValue != null) {
-                      setState(() {
-                        selectedSubject = newValue;
-                      });
-                    }
-                  },
-                ),
-                const SizedBox(height: 20),
-                const Text(
-                  'Number of Questions',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    IconButton(
-                      onPressed: () {
-                        if (numberOfQuestions > 5) {
-                          setState(() {
-                            numberOfQuestions -= 5;
-                          });
-                        }
-                      },
-                      icon:
-                          const Icon(Icons.remove_circle, color: Colors.white),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 10,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        '$numberOfQuestions',
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: () {
-                        if (numberOfQuestions < 30) {
-                          setState(() {
-                            numberOfQuestions += 5;
-                          });
-                        }
-                      },
-                      icon: const Icon(Icons.add_circle, color: Colors.white),
-                    ),
-                  ],
-                ),
-                const Spacer(),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => MCQManager(
-                          username: widget.username,
-                          studySet: {},
-                          currentTheme: 'default',
-                          selectedSubject: selectedSubject,
-                          questionCount: numberOfQuestions,
-                        ),
-                      ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue[600],
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: const Text(
-                    'Start Learning',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
       ),
     );
   }
