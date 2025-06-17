@@ -25,6 +25,7 @@ class MCQManager extends StatefulWidget {
 class _MCQManagerState extends State<MCQManager> {
   int currentQuestionIndex = 0;
   int currentScore = 0;
+  int currentPoints = 0; // Add state variable for points
   bool showResults = false;
   Map<int, int> userAnswers = {};
   Map<int, int> submittedAnswers = {};
@@ -3099,6 +3100,14 @@ class _MCQManagerState extends State<MCQManager> {
   void initState() {
     super.initState();
     _syncWithPremadeStudySets();
+    _loadUserPoints(); // Load initial points
+  }
+
+  Future<void> _loadUserPoints() async {
+    final points = await _dbHelper.getUserPoints(widget.username);
+    setState(() {
+      currentPoints = points;
+    });
   }
 
   void _syncWithPremadeStudySets() {
@@ -3393,6 +3402,39 @@ class _MCQManagerState extends State<MCQManager> {
                           ),
                         ),
                       ),
+                      // Points display in header
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Colors.amber, Colors.orange],
+                          ),
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.amber.withOpacity(0.3),
+                              blurRadius: 10,
+                              offset: const Offset(0, 5),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.star,
+                                color: Colors.white, size: 20),
+                            const SizedBox(width: 5),
+                            Text(
+                              '$currentPoints',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 24),
@@ -3453,28 +3495,13 @@ class _MCQManagerState extends State<MCQManager> {
                             const Icon(Icons.star,
                                 color: Colors.white, size: 20),
                             const SizedBox(width: 5),
-                            FutureBuilder<int>(
-                              future: _dbHelper.getUserPoints(widget.username),
-                              builder: (context, snapshot) {
-                                if (snapshot.hasData) {
-                                  return Text(
-                                    '${snapshot.data}',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                    ),
-                                  );
-                                }
-                                return const Text(
-                                  '...',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                  ),
-                                );
-                              },
+                            Text(
+                              '$currentPoints',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
                             ),
                           ],
                         ),
@@ -3600,6 +3627,8 @@ class _MCQManagerState extends State<MCQManager> {
                                 submittedAnswers[currentQuestionIndex] = answer;
                                 if (answer == currentQuestion['correct']) {
                                   currentScore++;
+                                  currentPoints +=
+                                      10; // Update points immediately
                                 }
                               }
                             });
@@ -3607,11 +3636,8 @@ class _MCQManagerState extends State<MCQManager> {
                             final answer = userAnswers[currentQuestionIndex];
                             if (answer != null &&
                                 answer == currentQuestion['correct']) {
-                              int currentPoints = await _dbHelper
-                                  .getUserPoints(widget.username);
                               await _dbHelper.updateUserPoints(
-                                  widget.username, currentPoints + 10);
-                              // Optionally, you can call setState to update points in the UI if needed
+                                  widget.username, currentPoints);
                             }
                           },
                           style: ElevatedButton.styleFrom(
