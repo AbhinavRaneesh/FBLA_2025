@@ -3181,7 +3181,39 @@ class _MCQManagerState extends State<MCQManager> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        toolbarHeight: 0,
+        toolbarHeight: 60,
+        title: const Text(
+          'Browse Sets',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh, color: Colors.white),
+            onPressed: () async {
+              try {
+                await _dbHelper.refreshPremadeSets();
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Study sets refreshed successfully'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Error refreshing sets: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
+            },
+            tooltip: 'Refresh Study Sets',
+          ),
+        ],
       ),
       body: Stack(
         children: [
@@ -3358,7 +3390,19 @@ class _MCQManagerState extends State<MCQManager> {
   Widget _buildQuizScreen() {
     final selectedClass =
         apClasses.firstWhere((cls) => cls['name'] == selectedSubject);
-    final questions = selectedClass['questions'] as List;
+    // Use up to 20 questions, but not more than available
+    final questions = (selectedClass['questions'] as List).take(20).toList();
+    final totalQuestions = questions.length;
+
+    // Prevent RangeError by checking bounds
+    if (currentQuestionIndex >= totalQuestions) {
+      return Center(
+        child: Text(
+          'You have completed all questions!',
+          style: TextStyle(fontSize: 24, color: Colors.white),
+        ),
+      );
+    }
 
     if (showResults) {
       return _buildResultsScreen(selectedClass, questions);
@@ -3415,7 +3459,7 @@ class _MCQManagerState extends State<MCQManager> {
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
-                          'Question ${currentQuestionIndex + 1}/${questions.length}',
+                          'Question ${currentQuestionIndex + 1}/${totalQuestions}',
                           style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
@@ -3463,7 +3507,7 @@ class _MCQManagerState extends State<MCQManager> {
                   ClipRRect(
                     borderRadius: BorderRadius.circular(10),
                     child: LinearProgressIndicator(
-                      value: (currentQuestionIndex + 1) / questions.length,
+                      value: (currentQuestionIndex + 1) / totalQuestions,
                       backgroundColor: Colors.white24,
                       valueColor: AlwaysStoppedAnimation<Color>(
                           selectedClass['color'][0]),
@@ -3685,7 +3729,7 @@ class _MCQManagerState extends State<MCQManager> {
                         child: ElevatedButton(
                           onPressed: () {
                             setState(() {
-                              if (currentQuestionIndex < questions.length - 1) {
+                              if (currentQuestionIndex < totalQuestions - 1) {
                                 currentQuestionIndex++;
                               } else {
                                 showResults = true;
@@ -3694,7 +3738,7 @@ class _MCQManagerState extends State<MCQManager> {
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor:
-                                currentQuestionIndex < questions.length - 1
+                                currentQuestionIndex < totalQuestions - 1
                                     ? selectedClass['color'][0]
                                     : Colors.green,
                             padding: const EdgeInsets.symmetric(vertical: 16),
@@ -3703,7 +3747,7 @@ class _MCQManagerState extends State<MCQManager> {
                             ),
                           ),
                           child: Text(
-                            currentQuestionIndex < questions.length - 1
+                            currentQuestionIndex < totalQuestions - 1
                                 ? 'Next Question'
                                 : 'Finish Quiz',
                             style: const TextStyle(
@@ -4029,26 +4073,59 @@ class _MCQManagerState extends State<MCQManager> {
     try {
       // The set name should match the one in PremadeStudySetsRepository
       final setName = subjectName;
+      
       // Find the set in the database
       final premadeSets = await _dbHelper.getPremadeStudySets();
+      
+      // Debug: Print all available premade sets
+      debugPrint('Available premade sets in database:');
+      for (var set in premadeSets) {
+        debugPrint('- ${set['name']}');
+      }
+      debugPrint('Looking for: $setName');
+      
       final dbSet = premadeSets.firstWhere(
         (set) => set['name'] == setName,
         orElse: () => {},
       );
+      
       if (dbSet.isEmpty) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Set not found in premade sets!'),
-              backgroundColor: Colors.red,
-            ),
-          );
+        // Try refreshing premade sets first
+        debugPrint('Set not found, attempting to refresh premade sets...');
+        await _dbHelper.refreshPremadeSets();
+        
+        // Try again after refresh
+        final refreshedSets = await _dbHelper.getPremadeStudySets();
+        debugPrint('After refresh, available sets:');
+        for (var set in refreshedSets) {
+          debugPrint('- ${set['name']}');
         }
-        return;
+        
+        final refreshedDbSet = refreshedSets.firstWhere(
+          (set) => set['name'] == setName,
+          orElse: () => {},
+        );
+        
+        if (refreshedDbSet.isEmpty) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Set "$setName" not found in premade sets!'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+          return;
+        }
+        
+        // Use the refreshed set
+        final studySetId = refreshedDbSet['id'];
+        await _dbHelper.importPremadeSet(widget.username, studySetId);
+      } else {
+        final studySetId = dbSet['id'];
+        await _dbHelper.importPremadeSet(widget.username, studySetId);
       }
-      final studySetId = dbSet['id'];
-      // Import the set for the user
-      await _dbHelper.importPremadeSet(widget.username, studySetId);
+      
       // Show success message
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -4062,6 +4139,7 @@ class _MCQManagerState extends State<MCQManager> {
       // Notify parent to refresh
       widget.onSetImported?.call();
     } catch (e) {
+      debugPrint('Error importing set: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

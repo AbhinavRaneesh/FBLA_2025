@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -3466,7 +3467,7 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
   bool _hasError = false;
   String _errorMessage = '';
   List<Map<String, dynamic>> _questions = [];
-  int _questionCount = 5;
+  int _questionCount = 20;
   String _selectedMode = 'classic';
   bool _showModeSelection = true;
   bool _showQuizArea = false;
@@ -3545,7 +3546,8 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
   }
 
   void _continueToNext() {
-    if (_currentQuestionIndex < _questionCount - 1) {
+    final int totalQuestions = _questions.length < _questionCount ? _questions.length : _questionCount;
+    if (_currentQuestionIndex < totalQuestions - 1) {
       setState(() {
         _currentQuestionIndex++;
         _selectedAnswer = null;
@@ -3813,8 +3815,8 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
                                         child: Slider(
                                           value: _questionCount.toDouble(),
                                           min: 1.0,
-                                          max: _questions.length.toDouble(),
-                                          divisions: _questions.length - 1,
+                                          max: 20.0,
+                                          divisions: 19,
                                           label: '$_questionCount',
                                           onChanged: (value) {
                                             setState(() {
@@ -4221,6 +4223,7 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
   }
 
   Widget _buildQuizContent() {
+    final int totalQuestions = _questions.length < _questionCount ? _questions.length : _questionCount;
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -4421,15 +4424,11 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
                     child: ElevatedButton.icon(
                       onPressed: _continueToNext,
                       icon: Icon(
-                        _currentQuestionIndex < _questionCount - 1
-                            ? Icons.arrow_forward
-                            : Icons.check_circle,
+                        _currentQuestionIndex < totalQuestions - 1 ? Icons.arrow_forward : Icons.check_circle,
                         color: Colors.white,
                       ),
                       label: Text(
-                        _currentQuestionIndex < _questionCount - 1
-                            ? 'Next Question'
-                            : 'Finish',
+                        _currentQuestionIndex < totalQuestions - 1 ? 'Next Question' : 'Finish',
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
