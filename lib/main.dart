@@ -1628,6 +1628,7 @@ class _MainScreenState extends State<MainScreen> {
           ),
         ],
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
       floatingActionButton: (_currentIndex == 0 &&
               _learnTabIndex == 0) // Show only on My Sets tab
           ? Padding(
@@ -2428,16 +2429,37 @@ class _LearnTabState extends State<LearnTab>
   }
 
   void _startPractice(Map<String, dynamic> studySet) {
-    Navigator.push(
-      this.context,
-      MaterialPageRoute(
-        builder: (context) => PracticeTypeChoiceScreen(
-          studySet: studySet,
-          username: widget.username,
-          currentTheme: widget.currentTheme,
+    // Check if this is AP Computer Science A
+    String studySetName = studySet['name']?.toString().toLowerCase() ?? '';
+    bool isAPCompSciA = studySetName.contains('ap computer science a') || 
+                       studySetName.contains('ap comp sci a') ||
+                       studySetName.contains('apcsa');
+    
+    if (isAPCompSciA) {
+      // Show practice mode selection for AP Computer Science A
+      Navigator.push(
+        this.context,
+        MaterialPageRoute(
+          builder: (context) => PracticeTypeChoiceScreen(
+            studySet: studySet,
+            username: widget.username,
+            currentTheme: widget.currentTheme,
+          ),
         ),
-      ),
-    );
+      );
+    } else {
+      // Go directly to MCQ practice for all other courses
+      Navigator.push(
+        this.context,
+        MaterialPageRoute(
+          builder: (context) => PracticeModeScreen(
+            studySet: studySet,
+            username: widget.username,
+            currentTheme: widget.currentTheme,
+          ),
+        ),
+      );
+    }
   }
 
   void _deleteStudySet(int studySetId) {
@@ -3805,7 +3827,63 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
                                   ),
                                 ),
                                 const SizedBox(height: 40),
-                                // Start Learning button removed - no longer needed
+                                // Start Practice button
+                                Container(
+                                  width: double.infinity,
+                                  height: 60,
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [
+                                        Color(0xFF4facfe),
+                                        Color(0xFF00f2fe)
+                                      ],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                    borderRadius: BorderRadius.circular(16),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: const Color(0xFF4facfe).withOpacity(0.4),
+                                        blurRadius: 20,
+                                        offset: const Offset(0, 10),
+                                      ),
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.3),
+                                        blurRadius: 15,
+                                        offset: const Offset(0, 5),
+                                      ),
+                                    ],
+                                  ),
+                                  child: ElevatedButton(
+                                    onPressed: () => _startPractice(context),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.transparent,
+                                      shadowColor: Colors.transparent,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(16),
+                                      ),
+                                    ),
+                                    child: const Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.play_arrow,
+                                          color: Colors.white,
+                                          size: 28,
+                                        ),
+                                        SizedBox(width: 12),
+                                        Text(
+                                          'Start Practice',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
                               ],
                             ),
                           )
