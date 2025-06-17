@@ -9,6 +9,8 @@ class MCQManager extends StatefulWidget {
   final VoidCallback? onSetImported;
   final Map<String, dynamic> studySet;
   final String currentTheme;
+  final String? selectedSubject;
+  final int? questionCount;
 
   const MCQManager({
     super.key,
@@ -16,6 +18,8 @@ class MCQManager extends StatefulWidget {
     required this.studySet,
     required this.currentTheme,
     this.onSetImported,
+    this.selectedSubject,
+    this.questionCount,
   });
 
   @override
@@ -25,14 +29,14 @@ class MCQManager extends StatefulWidget {
 class _MCQManagerState extends State<MCQManager> {
   int currentQuestionIndex = 0;
   int currentScore = 0;
-  int currentPoints = 0; // Add state variable for points
+  int currentPoints = 0;
   bool showResults = false;
   Map<int, int> userAnswers = {};
   Map<int, int> submittedAnswers = {};
   String? selectedSubject;
   TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
-  bool showAPCSChoice = false; // New state for AP CS A choice screen
+  bool showAPCSChoice = false;
   final DatabaseHelper _dbHelper = DatabaseHelper();
 
   final List<Map<String, dynamic>> apClasses = [
@@ -3100,7 +3104,12 @@ class _MCQManagerState extends State<MCQManager> {
   void initState() {
     super.initState();
     _syncWithPremadeStudySets();
-    _loadUserPoints(); // Load initial points
+    _loadUserPoints();
+
+    // Initialize selectedSubject from widget if provided
+    if (widget.selectedSubject != null) {
+      selectedSubject = widget.selectedSubject;
+    }
   }
 
   Future<void> _loadUserPoints() async {
@@ -3152,6 +3161,12 @@ class _MCQManagerState extends State<MCQManager> {
 
   @override
   Widget build(BuildContext context) {
+    // If selectedSubject is provided in constructor, go directly to quiz
+    if (widget.selectedSubject != null) {
+      return _buildQuizScreen();
+    }
+
+    // Otherwise show subject selection
     if (showAPCSChoice) {
       return _buildAPCSChoiceScreen();
     }
@@ -3886,24 +3901,10 @@ class _MCQManagerState extends State<MCQManager> {
   Widget _buildAPCSChoiceScreen() {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'AP Computer Science A',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 24,
-          ),
-        ),
-        backgroundColor: Colors.blue[600],
+        title: const Text('AP Computer Science A'),
+        backgroundColor: const Color(0xFF1D1E33),
         foregroundColor: Colors.white,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            setState(() {
-              showAPCSChoice = false;
-            });
-          },
-        ),
       ),
       body: Container(
         decoration: const BoxDecoration(
@@ -3941,12 +3942,11 @@ class _MCQManagerState extends State<MCQManager> {
                   width: double.infinity,
                   margin: const EdgeInsets.only(bottom: 20),
                   child: ElevatedButton(
-                    onPressed: () async {
+                    onPressed: () {
                       setState(() {
                         showAPCSChoice = false;
+                        selectedSubject = 'AP Computer Science A';
                       });
-                      // Import the AP CS A MCQ set
-                      await _importMCQSet('AP Computer Science A');
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue[600],
@@ -3979,7 +3979,6 @@ class _MCQManagerState extends State<MCQManager> {
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () {
-                      // Navigate to FRQ Manager
                       Navigator.push(
                         context,
                         MaterialPageRoute(

@@ -49,8 +49,10 @@ class SpaceBackground extends StatelessWidget {
           // Twinkling stars
           for (int i = 0; i < 50; i++)
             Positioned(
-              left: math.Random().nextDouble() * MediaQuery.of(context).size.width,
-              top: math.Random().nextDouble() * MediaQuery.of(context).size.height,
+              left: math.Random().nextDouble() *
+                  MediaQuery.of(context).size.width,
+              top: math.Random().nextDouble() *
+                  MediaQuery.of(context).size.height,
               child: AnimatedContainer(
                 duration: Duration(seconds: math.Random().nextInt(3) + 1),
                 width: 2,
@@ -91,23 +93,29 @@ class _FRQManagerState extends State<FRQManager> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      extendBodyBehindAppBar: true,
-      backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        title: const Text('AP CS A FRQ Practice'),
-        backgroundColor: Colors.transparent,
-        foregroundColor: Colors.white,
-        elevation: 0,
-      ),
-      body: Stack(
-        children: [
-          const SpaceBackground(),
-          SafeArea(
-            child: FRQTextDisplayScreen(year: '2024', frqCount: widget.frqCount),
+    return Stack(
+      children: [
+        const SpaceBackground(),
+        Scaffold(
+          extendBodyBehindAppBar: true,
+          backgroundColor: Colors.transparent,
+          appBar: AppBar(
+            title: const Text('AP CS A FRQ Practice'),
+            backgroundColor: Colors.transparent,
+            foregroundColor: Colors.white,
+            elevation: 0,
           ),
-        ],
-      ),
+          body: Stack(
+            children: [
+              const SpaceBackground(),
+              SafeArea(
+                child: FRQTextDisplayScreen(
+                    year: '2024', frqCount: widget.frqCount),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -332,7 +340,10 @@ class PDFViewerScreen extends StatefulWidget {
   final String year;
   final int frqCount;
   const PDFViewerScreen(
-      {super.key, required this.filePath, required this.year, required this.frqCount});
+      {super.key,
+      required this.filePath,
+      required this.year,
+      required this.frqCount});
 
   @override
   State<PDFViewerScreen> createState() => _PDFViewerScreenState();
@@ -375,80 +386,130 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
 
   void _showChatModalAndStartGrading(BuildContext context) async {
     final chatBloc = ChatBloc();
-
     try {
       // Build the prompt content
       StringBuffer promptContent = StringBuffer();
 
       // Add instructions for the AI
       promptContent.writeln(
-          'You are an AP Computer Science A FRQ grader. Please grade the following student answers according to the official answers provided.');
-      promptContent
-          .writeln('\nPlease provide your response in the following format:');
-      promptContent.writeln('\nFor each question, provide:');
+          'You are an AP Computer Science A FRQ grader. Please grade the following student answers according to the official rubric.');
       promptContent.writeln(
-          '[question number ||| score student got ||| feedback ||| actual answer]');
+          '\nFor each question, provide your response in the following format:');
       promptContent.writeln(
-          'Use the string ||| (three vertical bars) as the separator between fields. Do NOT use ||| inside the code or explanation.');
-      promptContent.writeln('\nFor the actual answer, you MUST provide:');
+          '[question number ||| points awarded ||| detailed feedback ||| correct solution]');
       promptContent.writeln(
-          '1. The complete, correct code solution (the full method, not just the header; include all lines and braces)');
-      promptContent.writeln('2. A brief explanation of what the code does');
+          '\nPoints should be awarded according to the official rubric:');
+      promptContent.writeln('Q1a: 3 points - Array manipulation and logic');
+      promptContent.writeln('Q1b: 3 points - Array traversal and conditionals');
+      promptContent.writeln('Q2: 4 points - Class implementation and methods');
+      promptContent.writeln('Q3a: 3 points - Method implementation');
+      promptContent.writeln('Q3b: 3 points - Method implementation');
+      promptContent.writeln('Q4a: 3 points - Class design and implementation');
+      promptContent.writeln('Q4b: 3 points - Method implementation');
+      promptContent.writeln('\nFor each answer, provide:');
+      promptContent.writeln('1. Points awarded (0 to max points)');
       promptContent.writeln(
-          'Do NOT just give the method header. Give the full method body and a brief explanation.');
-      promptContent.writeln('\nExample format:');
-      promptContent.writeln(
-          'Q1a ||| 2/3 ||| Good understanding of the concept but missed edge case ||| public void processArray(int[] arr) {');
-      promptContent.writeln('    for (int i = 0; i < arr.length; i++) {');
-      promptContent.writeln('        if (arr[i] < 0) arr[i] = 0;');
-      promptContent.writeln('    }');
-      promptContent.writeln('}');
-      promptContent.writeln(
-          '// This method processes an array by replacing all negative numbers with 0.');
+          '2. Detailed feedback explaining what was done correctly and what needs improvement');
+      promptContent.writeln('3. The complete, correct solution with comments');
       promptContent.writeln('\nNow, please grade the following answers:\n');
 
       // Add user answers to the prompt
       promptContent.writeln('=== User Answers ===');
-      final List<String> limitedQuestions = manualQuestions.take(widget.frqCount).toList();
-      for (String question in limitedQuestions) {
+      for (String question in manualQuestions.take(widget.frqCount)) {
         promptContent.writeln('\nQuestion: $question');
         promptContent.writeln('Answer: ${answers[question] ?? "Not answered"}');
         promptContent.writeln('-------------------');
       }
 
-      // Load and add the entire answers file to the prompt
+      // Load and add the official answers and rubric
       promptContent.writeln('\n=== Official Answers and Rubrics ===');
       final frqData =
           await rootBundle.loadString('assets/apcs_2024_frq_answers.txt');
       promptContent.writeln(frqData);
       promptContent.writeln('=== End of Official Answers ===\n');
 
-      // Print the content to console
-      print(promptContent.toString());
-
       // Send the content to QuestAI
       chatBloc.add(ChatGenerationNewTextMessageEvent(
-          inputMessage: promptContent.toString()));
+        inputMessage: promptContent.toString(),
+      ));
 
       // Listen for the AI response
       chatBloc.stream.listen((state) {
         if (state is ChatSuccessState && state.messages.isNotEmpty) {
           final lastMessage = state.messages.last;
           if (lastMessage.role == "model") {
-            setState(() {
-              lastAIResponse = lastMessage.parts.first.text;
-              print('AI Response stored: $lastAIResponse'); // Debug print
-            });
-            // Debug print for raw AI response
-            print('RAW AI RESPONSE:');
-            print(lastMessage.parts.first.text);
-            // Automatically navigate to the score summary screen
-            Navigator.pop(context); // Close chat modal
+            lastAIResponse = lastMessage.parts.first.text;
+            // Parse the AI response and create results
+            List<FrqGradingResult> results = [];
+            List<String> lines = lastAIResponse!.split('\n');
+            RegExp questionStart = RegExp(r'^\[Q\d+[a-zA-Z]?\s*\|\|\|');
+            for (int i = 0; i < lines.length; i++) {
+              String line = lines[i].trim();
+              if (questionStart.hasMatch(line)) {
+                try {
+                  // Remove leading '[' and trailing ']' if present
+                  String entry = line;
+                  if (entry.startsWith('[')) entry = entry.substring(1);
+                  if (entry.endsWith(']'))
+                    entry = entry.substring(0, entry.length - 1);
+                  // If the canonical answer is multi-line, keep reading until we hit a line ending with ']'
+                  while (!line.endsWith(']') && i + 1 < lines.length) {
+                    i++;
+                    entry += '\n' + lines[i].trim();
+                    line = lines[i].trim();
+                  }
+                  // Now split by '|||'
+                  List<String> parts = entry.split('|||');
+                  if (parts.length >= 4) {
+                    String questionNumber = parts[0].trim();
+                    String pointsStr = parts[1].trim();
+                    String feedback = parts[2].trim();
+                    String canonicalAnswer =
+                        parts.sublist(3).join('|||').trim();
+                    // Remove trailing ']' if present
+                    if (canonicalAnswer.endsWith(']')) {
+                      canonicalAnswer = canonicalAnswer
+                          .substring(0, canonicalAnswer.length - 1)
+                          .trim();
+                    }
+                    // Parse points (e.g., '0 points' -> 0)
+                    int pointsAwarded = 0;
+                    RegExp pointsReg = RegExp(r'(\d+)');
+                    var match = pointsReg.firstMatch(pointsStr);
+                    if (match != null) {
+                      pointsAwarded = int.parse(match.group(1)!);
+                    }
+                    // Get max points based on question
+                    int maxPoints = 3; // Default
+                    if (questionNumber == 'Q2') maxPoints = 4;
+                    results.add(FrqGradingResult(
+                      subpart: questionNumber,
+                      userAnswer: answers[questionNumber] ?? '',
+                      canonicalAnswer: canonicalAnswer,
+                      pointsAwarded: pointsAwarded,
+                      maxPoints: maxPoints,
+                      feedback: feedback,
+                    ));
+                  }
+                } catch (e) {
+                  print('Error parsing line: $line');
+                  print('Error: $e');
+                }
+              }
+            }
+
+            // After parsing, print the results for debugging
+            print('FRQ AI Grading Results:');
+            for (var r in results) {
+              print(
+                  'Question: \'${r.subpart}\', Points: ${r.pointsAwarded}/${r.maxPoints}, Feedback: ${r.feedback.substring(0, r.feedback.length > 50 ? 50 : r.feedback.length)}...');
+            }
+            // Navigate to the FrqSummaryScreen with the results
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => ScoreSummaryScreen(
-                  aiResponse: lastAIResponse!,
+                builder: (context) => FrqSummaryScreen(
+                  results: results,
                 ),
               ),
             );
@@ -456,190 +517,8 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
         }
       });
     } catch (e) {
-      print('Error loading answers file: $e');
+      print('Error in grading process: $e');
     }
-
-    // Show the chat modal
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: (BuildContext context) {
-        return WillPopScope(
-          onWillPop: () async => true,
-          child: StatefulBuilder(
-            builder: (context, setModalState) {
-              final TextEditingController messageController =
-                  TextEditingController();
-              final ScrollController scrollController = ScrollController();
-              void _scrollToBottom() {
-                if (scrollController.hasClients) {
-                  scrollController.animateTo(
-                    scrollController.position.maxScrollExtent,
-                    duration: Duration(milliseconds: 300),
-                    curve: Curves.easeOut,
-                  );
-                }
-              }
-
-              return Dialog(
-                backgroundColor: Colors.transparent,
-                insetPadding: EdgeInsets.zero,
-                child: Container(
-                  height: MediaQuery.of(context).size.height * 0.8,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius:
-                        BorderRadius.vertical(top: Radius.circular(20)),
-                  ),
-                  child: Column(
-                    children: [
-                      Container(
-                        padding: EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.purple,
-                          borderRadius:
-                              BorderRadius.vertical(top: Radius.circular(20)),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.psychology,
-                              color: Colors.white,
-                              size: 24,
-                            ),
-                            SizedBox(width: 8),
-                            Text(
-                              'QuestAI Model Chat',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Spacer(),
-                            IconButton(
-                              icon: Icon(Icons.close, color: Colors.white),
-                              onPressed: () => Navigator.pop(context),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Divider(height: 1, color: Colors.grey[300]),
-                      Expanded(
-                        child: BlocBuilder<ChatBloc, ChatState>(
-                          bloc: chatBloc,
-                          builder: (context, state) {
-                            if (state is ChatSuccessState) {
-                              WidgetsBinding.instance.addPostFrameCallback((_) {
-                                _scrollToBottom();
-                              });
-                              return ListView.builder(
-                                controller: scrollController,
-                                itemCount: state.messages.length,
-                                itemBuilder: (context, index) {
-                                  final message = state.messages[index];
-                                  return Container(
-                                    margin: EdgeInsets.symmetric(
-                                        vertical: 8, horizontal: 16),
-                                    padding: EdgeInsets.all(12),
-                                    alignment: message.role == "user"
-                                        ? Alignment.centerRight
-                                        : Alignment.centerLeft,
-                                    child: Container(
-                                      constraints: BoxConstraints(
-                                        maxWidth:
-                                            MediaQuery.of(context).size.width *
-                                                0.75,
-                                      ),
-                                      padding: EdgeInsets.all(12),
-                                      decoration: BoxDecoration(
-                                        color: message.role == "user"
-                                            ? Colors.blue
-                                            : Colors.purple,
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Text(
-                                        message.parts.first.text,
-                                        style: TextStyle(
-                                            color: Colors.white, fontSize: 16),
-                                      ),
-                                    ),
-                                  );
-                                },
-                              );
-                            }
-                            return Center(child: CircularProgressIndicator());
-                          },
-                        ),
-                      ),
-                      Container(
-                        padding: EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black12,
-                              blurRadius: 4,
-                              offset: Offset(0, -2),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: TextField(
-                                controller: messageController,
-                                decoration: InputDecoration(
-                                  hintText: 'Type your message...',
-                                  hintStyle: TextStyle(color: Colors.grey),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(25),
-                                    borderSide:
-                                        BorderSide(color: Colors.purple),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(25),
-                                    borderSide: BorderSide(
-                                        color: Colors.purple, width: 2),
-                                  ),
-                                  contentPadding: EdgeInsets.symmetric(
-                                      horizontal: 16, vertical: 12),
-                                ),
-                              ),
-                            ),
-                            SizedBox(width: 8),
-                            Container(
-                              decoration: BoxDecoration(
-                                color: Colors.purple,
-                                shape: BoxShape.circle,
-                              ),
-                              child: IconButton(
-                                onPressed: () {
-                                  if (messageController.text.isNotEmpty) {
-                                    chatBloc.add(
-                                      ChatGenerationNewTextMessageEvent(
-                                        inputMessage: messageController.text,
-                                      ),
-                                    );
-                                    messageController.clear();
-                                  }
-                                },
-                                icon: Icon(Icons.send, color: Colors.white),
-                                iconSize: 24,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-        );
-      },
-    );
   }
 
   void _showGeneralChatModal(BuildContext context) {
@@ -928,7 +807,9 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
                               child: Wrap(
                                 spacing: 8,
                                 runSpacing: 8,
-                                children: manualQuestions.take(widget.frqCount).map((q) {
+                                children: manualQuestions
+                                    .take(widget.frqCount)
+                                    .map((q) {
                                   return ElevatedButton(
                                     onPressed: () {
                                       setState(() {
@@ -956,7 +837,8 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
                             onPressed: () async {
                               // Print all user answers to console
                               print('\n=== User Answers ===');
-                              for (String question in manualQuestions.take(widget.frqCount)) {
+                              for (String question
+                                  in manualQuestions.take(widget.frqCount)) {
                                 print('Question: $question');
                                 print(
                                     'Answer: ${answers[question] ?? "Not answered"}');
@@ -1115,8 +997,9 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
 class FRQTextDisplayScreen extends StatefulWidget {
   final String year;
   final int frqCount;
-  
-  const FRQTextDisplayScreen({super.key, required this.year, required this.frqCount});
+
+  const FRQTextDisplayScreen(
+      {super.key, required this.year, required this.frqCount});
 
   @override
   State<FRQTextDisplayScreen> createState() => _FRQTextDisplayScreenState();
@@ -1126,12 +1009,13 @@ class _FRQTextDisplayScreenState extends State<FRQTextDisplayScreen> {
   List<String> questions = [];
   int currentQuestionIndex = 0;
   bool isLoading = true;
+  bool isSubmitting = false;
   String? error;
   String? lastAIResponse;
-  
+
   // Answer storage
   Map<String, String> answers = {};
-  
+
   // Text input modal state
   bool showTextInput = false;
   String currentAnswerKey = '';
@@ -1151,15 +1035,17 @@ class _FRQTextDisplayScreenState extends State<FRQTextDisplayScreen> {
 
   Future<void> _loadQuestions() async {
     try {
-      final String content = await rootBundle.loadString('assets/apfrq/APCompSciA2024.txt');
-      final List<String> questionList = content.split('-----------------------------------------------------------------------------');
-      
+      final String content =
+          await rootBundle.loadString('assets/apfrq/APCompSciA2024.txt');
+      final List<String> questionList = content.split(
+          '-----------------------------------------------------------------------------');
+
       // Filter out empty questions and trim whitespace
       questions = questionList
           .where((question) => question.trim().isNotEmpty)
           .map((question) => question.trim())
           .toList();
-      
+
       setState(() {
         isLoading = false;
       });
@@ -1211,124 +1097,315 @@ class _FRQTextDisplayScreenState extends State<FRQTextDisplayScreen> {
     });
   }
 
-  // Function to submit all answers and start grading
-  void _submitAnswers() {
-    _showChatModalAndStartGrading(context);
-  }
-
   // Get the appropriate buttons for the current question
   List<Widget> _getQuestionButtons() {
     switch (currentQuestionIndex + 1) {
       case 1:
         return [
-          ElevatedButton(
-            onPressed: () => _openTextInput('Q1a'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue[600],
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+          Container(
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF4facfe), Color(0xFF00f2fe)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF4facfe).withOpacity(0.3),
+                  blurRadius: 12,
+                  offset: const Offset(0, 6),
+                ),
+              ],
             ),
-            child: const Text(
-              'Question 1a',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            child: ElevatedButton.icon(
+              onPressed: () => _openTextInput('Q1a'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                shadowColor: Colors.transparent,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              icon: const Icon(
+                Icons.edit_outlined,
+                color: Colors.white,
+                size: 20,
+              ),
+              label: const Text(
+                'Question 1a',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                ),
+              ),
             ),
           ),
           const SizedBox(width: 16),
-          ElevatedButton(
-            onPressed: () => _openTextInput('Q1b'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue[600],
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+          Container(
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF667eea).withOpacity(0.3),
+                  blurRadius: 12,
+                  offset: const Offset(0, 6),
+                ),
+              ],
             ),
-            child: const Text(
-              'Question 1b',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            child: ElevatedButton.icon(
+              onPressed: () => _openTextInput('Q1b'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                shadowColor: Colors.transparent,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              icon: const Icon(
+                Icons.edit_outlined,
+                color: Colors.white,
+                size: 20,
+              ),
+              label: const Text(
+                'Question 1b',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                ),
+              ),
             ),
           ),
         ];
       case 2:
         return [
-          ElevatedButton(
-            onPressed: () => _openTextInput('Q2'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green[600],
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+          Container(
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF11998e), Color(0xFF38ef7d)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF11998e).withOpacity(0.3),
+                  blurRadius: 12,
+                  offset: const Offset(0, 6),
+                ),
+              ],
             ),
-            child: const Text(
-              'Question 2',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            child: ElevatedButton.icon(
+              onPressed: () => _openTextInput('Q2'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                shadowColor: Colors.transparent,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              icon: const Icon(
+                Icons.edit_outlined,
+                color: Colors.white,
+                size: 20,
+              ),
+              label: const Text(
+                'Question 2',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                ),
+              ),
             ),
           ),
         ];
       case 3:
         return [
-          ElevatedButton(
-            onPressed: () => _openTextInput('Q3a'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange[600],
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+          Container(
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFFf093fb), Color(0xFFf5576c)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFf093fb).withOpacity(0.3),
+                  blurRadius: 12,
+                  offset: const Offset(0, 6),
+                ),
+              ],
             ),
-            child: const Text(
-              'Question 3a',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            child: ElevatedButton.icon(
+              onPressed: () => _openTextInput('Q3a'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                shadowColor: Colors.transparent,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              icon: const Icon(
+                Icons.edit_outlined,
+                color: Colors.white,
+                size: 20,
+              ),
+              label: const Text(
+                'Question 3a',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                ),
+              ),
             ),
           ),
           const SizedBox(width: 16),
-          ElevatedButton(
-            onPressed: () => _openTextInput('Q3b'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange[600],
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+          Container(
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF4facfe), Color(0xFF00f2fe)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF4facfe).withOpacity(0.3),
+                  blurRadius: 12,
+                  offset: const Offset(0, 6),
+                ),
+              ],
             ),
-            child: const Text(
-              'Question 3b',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            child: ElevatedButton.icon(
+              onPressed: () => _openTextInput('Q3b'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                shadowColor: Colors.transparent,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              icon: const Icon(
+                Icons.edit_outlined,
+                color: Colors.white,
+                size: 20,
+              ),
+              label: const Text(
+                'Question 3b',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                ),
+              ),
             ),
           ),
         ];
       case 4:
         return [
-          ElevatedButton(
-            onPressed: () => _openTextInput('Q4a'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.purple[600],
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+          Container(
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF667eea).withOpacity(0.3),
+                  blurRadius: 12,
+                  offset: const Offset(0, 6),
+                ),
+              ],
             ),
-            child: const Text(
-              'Question 4a',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            child: ElevatedButton.icon(
+              onPressed: () => _openTextInput('Q4a'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                shadowColor: Colors.transparent,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              icon: const Icon(
+                Icons.edit_outlined,
+                color: Colors.white,
+                size: 20,
+              ),
+              label: const Text(
+                'Question 4a',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                ),
+              ),
             ),
           ),
           const SizedBox(width: 16),
-          ElevatedButton(
-            onPressed: () => _openTextInput('Q4b'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.purple[600],
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+          Container(
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFFf093fb), Color(0xFFf5576c)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFf093fb).withOpacity(0.3),
+                  blurRadius: 12,
+                  offset: const Offset(0, 6),
+                ),
+              ],
             ),
-            child: const Text(
-              'Question 4b',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            child: ElevatedButton.icon(
+              onPressed: () => _openTextInput('Q4b'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                shadowColor: Colors.transparent,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              icon: const Icon(
+                Icons.edit_outlined,
+                color: Colors.white,
+                size: 20,
+              ),
+              label: const Text(
+                'Question 4b',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                ),
+              ),
             ),
           ),
         ];
@@ -1339,23 +1416,61 @@ class _FRQTextDisplayScreenState extends State<FRQTextDisplayScreen> {
 
   // Get the submit button (only for question 4)
   Widget? _getSubmitButton() {
-    if (currentQuestionIndex + 1 == 4) {
+    if (currentQuestionIndex == 3) {
+      // Question 4 (index 3) - show submit button
       return Container(
-        margin: const EdgeInsets.only(top: 16),
-        child: ElevatedButton.icon(
-          onPressed: _submitAnswers,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.red[600],
-            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            elevation: 8,
+        margin: const EdgeInsets.only(top: 24),
+        width: double.infinity,
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF4CAF50), Color(0xFF45A049)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-          icon: const Icon(Icons.send, color: Colors.white, size: 24),
-          label: const Text(
-            'Submit Answers',
-            style: TextStyle(
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF4CAF50).withOpacity(0.4),
+              blurRadius: 16,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: ElevatedButton.icon(
+          onPressed: isSubmitting
+              ? null
+              : () {
+                  setState(() {
+                    isSubmitting = true;
+                  });
+                  _showChatModalAndStartGrading(context);
+                },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.transparent,
+            shadowColor: Colors.transparent,
+            padding: const EdgeInsets.symmetric(vertical: 20),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            elevation: 0,
+          ),
+          icon: isSubmitting
+              ? const SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2,
+                  ),
+                )
+              : const Icon(
+                  Icons.send_rounded,
+                  color: Colors.white,
+                  size: 24,
+                ),
+          label: Text(
+            isSubmitting ? 'Grading Answers...' : 'Submit Answers',
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
               color: Colors.white,
@@ -1369,80 +1484,124 @@ class _FRQTextDisplayScreenState extends State<FRQTextDisplayScreen> {
 
   void _showChatModalAndStartGrading(BuildContext context) async {
     final chatBloc = ChatBloc();
-
     try {
       // Build the prompt content
       StringBuffer promptContent = StringBuffer();
 
       // Add instructions for the AI
       promptContent.writeln(
-          'You are an AP Computer Science A FRQ grader. Please grade the following student answers according to the official answers provided.');
-      promptContent
-          .writeln('\nPlease provide your response in the following format:');
-      promptContent.writeln('\nFor each question, provide:');
+          'You are an AP Computer Science A FRQ grader. Please grade the following student answers according to the official rubric.');
       promptContent.writeln(
-          '[question number ||| score student got ||| feedback ||| actual answer]');
+          '\nFor each question, provide your response in the following format:');
       promptContent.writeln(
-          'Use the string ||| (three vertical bars) as the separator between fields. Do NOT use ||| inside the code or explanation.');
-      promptContent.writeln('\nFor the actual answer, you MUST provide:');
+          '[question number ||| points awarded ||| detailed feedback ||| correct solution]');
       promptContent.writeln(
-          '1. The complete, correct code solution (the full method, not just the header; include all lines and braces)');
-      promptContent.writeln('2. A brief explanation of what the code does');
+          '\nPoints should be awarded according to the official rubric:');
+      promptContent.writeln('Q1a: 3 points - Array manipulation and logic');
+      promptContent.writeln('Q1b: 3 points - Array traversal and conditionals');
+      promptContent.writeln('Q2: 4 points - Class implementation and methods');
+      promptContent.writeln('Q3a: 3 points - Method implementation');
+      promptContent.writeln('Q3b: 3 points - Method implementation');
+      promptContent.writeln('Q4a: 3 points - Class design and implementation');
+      promptContent.writeln('Q4b: 3 points - Method implementation');
+      promptContent.writeln('\nFor each answer, provide:');
+      promptContent.writeln('1. Points awarded (0 to max points)');
       promptContent.writeln(
-          'Do NOT just give the method header. Give the full method body and a brief explanation.');
-      promptContent.writeln('\nExample format:');
-      promptContent.writeln(
-          'Q1a ||| 2/3 ||| Good understanding of the concept but missed edge case ||| public void processArray(int[] arr) {');
-      promptContent.writeln('    for (int i = 0; i < arr.length; i++) {');
-      promptContent.writeln('        if (arr[i] < 0) arr[i] = 0;');
-      promptContent.writeln('    }');
-      promptContent.writeln('}');
-      promptContent.writeln(
-          '// This method processes an array by replacing all negative numbers with 0.');
+          '2. Detailed feedback explaining what was done correctly and what needs improvement');
+      promptContent.writeln('3. The complete, correct solution with comments');
       promptContent.writeln('\nNow, please grade the following answers:\n');
 
       // Add user answers to the prompt
       promptContent.writeln('=== User Answers ===');
-      final List<String> limitedQuestions = manualQuestions.take(widget.frqCount).toList();
-      for (String question in limitedQuestions) {
+      for (String question in manualQuestions.take(widget.frqCount)) {
         promptContent.writeln('\nQuestion: $question');
         promptContent.writeln('Answer: ${answers[question] ?? "Not answered"}');
         promptContent.writeln('-------------------');
       }
 
-      // Load and add the entire answers file to the prompt
+      // Load and add the official answers and rubric
       promptContent.writeln('\n=== Official Answers and Rubrics ===');
       final frqData =
           await rootBundle.loadString('assets/apcs_2024_frq_answers.txt');
       promptContent.writeln(frqData);
       promptContent.writeln('=== End of Official Answers ===\n');
 
-      // Print the content to console
-      print(promptContent.toString());
-
       // Send the content to QuestAI
       chatBloc.add(ChatGenerationNewTextMessageEvent(
-          inputMessage: promptContent.toString()));
+        inputMessage: promptContent.toString(),
+      ));
 
       // Listen for the AI response
       chatBloc.stream.listen((state) {
         if (state is ChatSuccessState && state.messages.isNotEmpty) {
           final lastMessage = state.messages.last;
           if (lastMessage.role == "model") {
-            setState(() {
-              lastAIResponse = lastMessage.parts.first.text;
-              print('AI Response stored: $lastAIResponse'); // Debug print
-            });
-            // Debug print for raw AI response
-            print('RAW AI RESPONSE:');
-            print(lastMessage.parts.first.text);
-            // Automatically navigate to the score summary screen
-            Navigator.pop(context); // Close chat modal
+            lastAIResponse = lastMessage.parts.first.text;
+            // Parse the AI response and create results
+            List<FrqGradingResult> results = [];
+            List<String> lines = lastAIResponse!.split('\n');
+            RegExp questionStart = RegExp(r'^\[Q\d+[a-zA-Z]?\s*\|\|\|');
+            for (int i = 0; i < lines.length; i++) {
+              String line = lines[i].trim();
+              if (questionStart.hasMatch(line)) {
+                try {
+                  // Remove leading '[' and trailing ']' if present
+                  String entry = line;
+                  if (entry.startsWith('[')) entry = entry.substring(1);
+                  if (entry.endsWith(']'))
+                    entry = entry.substring(0, entry.length - 1);
+                  // If the canonical answer is multi-line, keep reading until we hit a line ending with ']'
+                  while (!line.endsWith(']') && i + 1 < lines.length) {
+                    i++;
+                    entry += '\n' + lines[i].trim();
+                    line = lines[i].trim();
+                  }
+                  // Now split by '|||'
+                  List<String> parts = entry.split('|||');
+                  if (parts.length >= 4) {
+                    String questionNumber = parts[0].trim();
+                    String pointsStr = parts[1].trim();
+                    String feedback = parts[2].trim();
+                    String canonicalAnswer =
+                        parts.sublist(3).join('|||').trim();
+                    // Remove trailing ']' if present
+                    if (canonicalAnswer.endsWith(']')) {
+                      canonicalAnswer = canonicalAnswer
+                          .substring(0, canonicalAnswer.length - 1)
+                          .trim();
+                    }
+                    // Parse points (e.g., '0 points' -> 0)
+                    int pointsAwarded = 0;
+                    RegExp pointsReg = RegExp(r'(\d+)');
+                    var match = pointsReg.firstMatch(pointsStr);
+                    if (match != null) {
+                      pointsAwarded = int.parse(match.group(1)!);
+                    }
+                    // Get max points based on question
+                    int maxPoints = 3; // Default
+                    if (questionNumber == 'Q2') maxPoints = 4;
+                    results.add(FrqGradingResult(
+                      subpart: questionNumber,
+                      userAnswer: answers[questionNumber] ?? '',
+                      canonicalAnswer: canonicalAnswer,
+                      pointsAwarded: pointsAwarded,
+                      maxPoints: maxPoints,
+                      feedback: feedback,
+                    ));
+                  }
+                } catch (e) {
+                  print('Error parsing line: $line');
+                  print('Error: $e');
+                }
+              }
+            }
+
+            // Navigate to the FrqSummaryScreen with the results
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => ScoreSummaryScreen(
-                  aiResponse: lastAIResponse!,
+                builder: (context) => FrqSummaryScreen(
+                  results: results,
                 ),
               ),
             );
@@ -1450,265 +1609,191 @@ class _FRQTextDisplayScreenState extends State<FRQTextDisplayScreen> {
         }
       });
     } catch (e) {
-      print('Error loading answers file: $e');
+      print('Error in grading process: $e');
     }
-
-    // Show the chat modal
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: (BuildContext context) {
-        return WillPopScope(
-          onWillPop: () async => true,
-          child: StatefulBuilder(
-            builder: (context, setModalState) {
-              final TextEditingController messageController =
-                  TextEditingController();
-              final ScrollController scrollController = ScrollController();
-              void _scrollToBottom() {
-                if (scrollController.hasClients) {
-                  scrollController.animateTo(
-                    scrollController.position.maxScrollExtent,
-                    duration: Duration(milliseconds: 300),
-                    curve: Curves.easeOut,
-                  );
-                }
-              }
-
-              return Dialog(
-                backgroundColor: Colors.transparent,
-                insetPadding: EdgeInsets.zero,
-                child: Container(
-                  height: MediaQuery.of(context).size.height * 0.8,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius:
-                        BorderRadius.vertical(top: Radius.circular(20)),
-                  ),
-                  child: Column(
-                    children: [
-                      Container(
-                        padding: EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.purple,
-                          borderRadius:
-                              BorderRadius.vertical(top: Radius.circular(20)),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.psychology,
-                              color: Colors.white,
-                              size: 24,
-                            ),
-                            SizedBox(width: 8),
-                            Text(
-                              'QuestAI Model Chat',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Spacer(),
-                            IconButton(
-                              icon: Icon(Icons.close, color: Colors.white),
-                              onPressed: () => Navigator.pop(context),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Divider(height: 1, color: Colors.grey[300]),
-                      Expanded(
-                        child: BlocBuilder<ChatBloc, ChatState>(
-                          bloc: chatBloc,
-                          builder: (context, state) {
-                            if (state is ChatSuccessState) {
-                              WidgetsBinding.instance.addPostFrameCallback((_) {
-                                _scrollToBottom();
-                              });
-                              return ListView.builder(
-                                controller: scrollController,
-                                itemCount: state.messages.length,
-                                itemBuilder: (context, index) {
-                                  final message = state.messages[index];
-                                  return Container(
-                                    margin: EdgeInsets.symmetric(
-                                        vertical: 8, horizontal: 16),
-                                    padding: EdgeInsets.all(12),
-                                    alignment: message.role == "user"
-                                        ? Alignment.centerRight
-                                        : Alignment.centerLeft,
-                                    child: Container(
-                                      constraints: BoxConstraints(
-                                        maxWidth:
-                                            MediaQuery.of(context).size.width *
-                                                0.75,
-                                      ),
-                                      padding: EdgeInsets.all(12),
-                                      decoration: BoxDecoration(
-                                        color: message.role == "user"
-                                            ? Colors.blue
-                                            : Colors.purple,
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Text(
-                                        message.parts.first.text,
-                                        style: TextStyle(
-                                            color: Colors.white, fontSize: 16),
-                                      ),
-                                    ),
-                                  );
-                                },
-                              );
-                            }
-                            return Center(child: CircularProgressIndicator());
-                          },
-                        ),
-                      ),
-                      Container(
-                        padding: EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black12,
-                              blurRadius: 4,
-                              offset: Offset(0, -2),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: TextField(
-                                controller: messageController,
-                                decoration: InputDecoration(
-                                  hintText: 'Type your message...',
-                                  hintStyle: TextStyle(color: Colors.grey),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(25),
-                                    borderSide:
-                                        BorderSide(color: Colors.purple),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(25),
-                                    borderSide: BorderSide(
-                                        color: Colors.purple, width: 2),
-                                  ),
-                                  contentPadding: EdgeInsets.symmetric(
-                                      horizontal: 16, vertical: 12),
-                                ),
-                              ),
-                            ),
-                            SizedBox(width: 8),
-                            Container(
-                              decoration: BoxDecoration(
-                                color: Colors.purple,
-                                shape: BoxShape.circle,
-                              ),
-                              child: IconButton(
-                                onPressed: () {
-                                  if (messageController.text.isNotEmpty) {
-                                    chatBloc.add(
-                                      ChatGenerationNewTextMessageEvent(
-                                        inputMessage: messageController.text,
-                                      ),
-                                    );
-                                    messageController.clear();
-                                  }
-                                },
-                                icon: Icon(Icons.send, color: Colors.white),
-                                iconSize: 24,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-        );
-      },
-    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Color(0xFF1D1E33), Color(0xFF2A2B4A)],
-            ),
-          ),
-          child: Column(
+        const SpaceBackground(),
+        Scaffold(
+          backgroundColor: Colors.transparent,
+          body: Column(
             children: [
-              // Question navigation header
+              // Enhanced question navigation header
               Container(
-                padding: const EdgeInsets.all(16),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.3),
+                  border: Border(
+                    bottom: BorderSide(
+                      color: Colors.white.withOpacity(0.1),
+                      width: 1,
+                    ),
+                  ),
+                ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    IconButton(
-                      onPressed: currentQuestionIndex > 0 ? _previousQuestion : null,
-                      icon: Icon(
-                        Icons.arrow_back_ios,
-                        color: currentQuestionIndex > 0 ? Colors.white : Colors.grey,
-                      ),
-                    ),
+                    // Enhanced back button
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(20),
+                        color: currentQuestionIndex > 0
+                            ? Colors.white.withOpacity(0.15)
+                            : Colors.grey.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.2),
+                          width: 1,
+                        ),
                       ),
-                      child: Text(
-                        'Question ${currentQuestionIndex + 1} of ${questions.length}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                      child: IconButton(
+                        onPressed:
+                            currentQuestionIndex > 0 ? _previousQuestion : null,
+                        icon: Icon(
+                          Icons.arrow_back_ios_rounded,
+                          color: currentQuestionIndex > 0
+                              ? Colors.white
+                              : Colors.grey,
+                          size: 20,
                         ),
                       ),
                     ),
-                    IconButton(
-                      onPressed: currentQuestionIndex < questions.length - 1 ? _nextQuestion : null,
-                      icon: Icon(
-                        Icons.arrow_forward_ios,
-                        color: currentQuestionIndex < questions.length - 1 ? Colors.white : Colors.grey,
+
+                    // Enhanced progress indicator
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 12),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(25),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF667eea).withOpacity(0.3),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.quiz_outlined,
+                            color: Colors.white,
+                            size: 18,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Question ${currentQuestionIndex + 1} of ${questions.length}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Enhanced forward button
+                    Container(
+                      decoration: BoxDecoration(
+                        color: currentQuestionIndex < questions.length - 1
+                            ? Colors.white.withOpacity(0.15)
+                            : Colors.grey.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.2),
+                          width: 1,
+                        ),
+                      ),
+                      child: IconButton(
+                        onPressed: currentQuestionIndex < questions.length - 1
+                            ? _nextQuestion
+                            : null,
+                        icon: Icon(
+                          Icons.arrow_forward_ios_rounded,
+                          color: currentQuestionIndex < questions.length - 1
+                              ? Colors.white
+                              : Colors.grey,
+                          size: 20,
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
-              
-              // Question content
+
+              // Enhanced question content
               Expanded(
                 child: isLoading
-                    ? const Center(
-                        child: CircularProgressIndicator(color: Colors.white),
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 3,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Loading questions...',
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.7),
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
                       )
                     : error != null
                         ? Center(
-                            child: Text(
-                              error!,
-                              style: const TextStyle(color: Colors.red),
-                              textAlign: TextAlign.center,
+                            child: Container(
+                              margin: const EdgeInsets.all(24),
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                color: Colors.red.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: Colors.red.withOpacity(0.3),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.error_outline,
+                                    color: Colors.red[300],
+                                    size: 48,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    error!,
+                                    style: TextStyle(
+                                      color: Colors.red[300],
+                                      fontSize: 16,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ],
+                              ),
                             ),
                           )
                         : Container(
-                            margin: const EdgeInsets.all(16),
-                            padding: const EdgeInsets.all(20),
+                            margin: const EdgeInsets.all(20),
+                            padding: const EdgeInsets.all(24),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.05),
-                              borderRadius: BorderRadius.circular(16),
+                              color: Colors.black.withOpacity(0.3),
+                              borderRadius: BorderRadius.circular(20),
                               border: Border.all(
                                 color: Colors.white.withOpacity(0.1),
                                 width: 1,
@@ -1718,33 +1803,44 @@ class _FRQTextDisplayScreenState extends State<FRQTextDisplayScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  // Question number header
+                                  // Question header
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 16, vertical: 12),
                                     decoration: BoxDecoration(
-                                      gradient: const LinearGradient(
-                                        colors: [Color(0xFF667eea), Color(0xFF764ba2)],
-                                      ),
-                                      borderRadius: BorderRadius.circular(8),
+                                      color: Colors.white.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(12),
                                     ),
-                                    child: Text(
-                                      'Question ${currentQuestionIndex + 1}',
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          Icons.assignment_outlined,
+                                          color: Colors.white,
+                                          size: 20,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          'Question ${currentQuestionIndex + 1}',
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                  const SizedBox(height: 20),
-                                  
-                                  // Question text
+                                  const SizedBox(height: 24),
+
+                                  // Enhanced question text
                                   Text(
                                     questions[currentQuestionIndex],
                                     style: const TextStyle(
                                       color: Colors.white,
                                       fontSize: 16,
-                                      height: 1.6,
+                                      height: 1.8,
+                                      letterSpacing: 0.3,
                                     ),
                                   ),
                                 ],
@@ -1752,19 +1848,33 @@ class _FRQTextDisplayScreenState extends State<FRQTextDisplayScreen> {
                             ),
                           ),
               ),
-              
-              // Question part buttons at bottom middle
+
+              // Enhanced question part buttons section
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(16),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.white.withOpacity(0.05),
+                      Colors.transparent,
+                    ],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  ),
+                ),
                 child: Column(
                   children: [
-                    // Question part buttons
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    // Enhanced question part buttons
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 12,
+                      alignment: WrapAlignment.center,
                       children: _getQuestionButtons(),
                     ),
-                    // Submit button (only for question 4)
+                    const SizedBox(height: 16),
+                    // Enhanced submit button (only for question 4)
                     if (_getSubmitButton() != null) _getSubmitButton()!,
                   ],
                 ),
@@ -1772,58 +1882,95 @@ class _FRQTextDisplayScreenState extends State<FRQTextDisplayScreen> {
             ],
           ),
         ),
-        
-        // Text input modal overlay
+
+        // Enhanced text input modal overlay
         if (showTextInput)
           Container(
-            color: Colors.black.withOpacity(0.5),
+            color: Colors.black.withOpacity(0.6),
             child: Column(
               children: [
-                // Top half - Question content (reduced size)
+                // Enhanced top half - Question content
                 Expanded(
                   flex: 1,
                   child: Container(
-                    margin: const EdgeInsets.all(16),
-                    padding: const EdgeInsets.all(20),
+                    margin: const EdgeInsets.all(20),
+                    padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.05),
-                      borderRadius: BorderRadius.circular(16),
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.white.withOpacity(0.08),
+                          Colors.white.withOpacity(0.03),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: Colors.white.withOpacity(0.1),
+                        color: Colors.white.withOpacity(0.15),
                         width: 1,
                       ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.3),
+                          blurRadius: 24,
+                          offset: const Offset(0, 12),
+                        ),
+                      ],
                     ),
                     child: SingleChildScrollView(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Question number header
+                          // Enhanced question number header
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 12),
                             decoration: BoxDecoration(
                               gradient: const LinearGradient(
-                                colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+                                colors: [Color(0xFF4facfe), Color(0xFF00f2fe)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
                               ),
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color:
+                                      const Color(0xFF4facfe).withOpacity(0.3),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
                             ),
-                            child: Text(
-                              'Question ${currentQuestionIndex + 1}',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.assignment_outlined,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Question ${currentQuestionIndex + 1}',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          const SizedBox(height: 20),
-                          
-                          // Question text
+                          const SizedBox(height: 24),
+
+                          // Enhanced question text
                           Text(
                             questions[currentQuestionIndex],
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 16,
-                              height: 1.6,
+                              height: 1.8,
+                              letterSpacing: 0.3,
                             ),
                           ),
                         ],
@@ -1831,77 +1978,137 @@ class _FRQTextDisplayScreenState extends State<FRQTextDisplayScreen> {
                     ),
                   ),
                 ),
-                
-                // Bottom half - Text input area
+
+                // Enhanced bottom half - Text input area
                 Container(
                   height: MediaQuery.of(context).size.height * 0.5,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF2A2B4A),
+                    gradient: LinearGradient(
+                      colors: [
+                        const Color(0xFF2A2B4A),
+                        const Color(0xFF1F1F3A),
+                      ],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ),
                     borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(20),
-                      topRight: Radius.circular(20),
+                      topLeft: Radius.circular(24),
+                      topRight: Radius.circular(24),
                     ),
                     border: Border.all(
                       color: Colors.white.withOpacity(0.2),
                       width: 1,
                     ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.3),
+                        blurRadius: 20,
+                        offset: const Offset(0, -8),
+                      ),
+                    ],
                   ),
                   child: Column(
                     children: [
-                      // Header with drag handle
+                      // Enhanced header with drag handle
                       Container(
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.white.withOpacity(0.12),
+                              Colors.white.withOpacity(0.06),
+                            ],
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                          ),
                           borderRadius: const BorderRadius.only(
-                            topLeft: Radius.circular(20),
-                            topRight: Radius.circular(20),
+                            topLeft: Radius.circular(24),
+                            topRight: Radius.circular(24),
                           ),
                         ),
                         child: Column(
                           children: [
-                            // Drag handle
+                            // Enhanced drag handle
                             Container(
-                              width: 40,
+                              width: 48,
                               height: 4,
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.3),
+                                color: Colors.white.withOpacity(0.4),
                                 borderRadius: BorderRadius.circular(2),
                               ),
                             ),
-                            const SizedBox(height: 8),
-                            // Header content
+                            const SizedBox(height: 16),
+                            // Enhanced header content
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text(
-                                  currentAnswerKey,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF667eea)
+                                            .withOpacity(0.2),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Icon(
+                                        Icons.edit_note,
+                                        color: const Color(0xFF667eea),
+                                        size: 20,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      currentAnswerKey,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                IconButton(
-                                  onPressed: _closeTextInput,
-                                  icon: const Icon(Icons.close, color: Colors.white),
+                                Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.red.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: IconButton(
+                                    onPressed: _closeTextInput,
+                                    icon: const Icon(Icons.close,
+                                        color: Colors.white),
+                                  ),
                                 ),
                               ],
                             ),
                           ],
                         ),
                       ),
-                      
-                      // Text input area
+
+                      // Enhanced text input area
                       Expanded(
                         child: Container(
-                          margin: const EdgeInsets.all(16),
+                          margin: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.white.withOpacity(0.08),
+                                Colors.white.withOpacity(0.03),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(12),
                             border: Border.all(
                               color: Colors.white.withOpacity(0.2),
                             ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 8,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
                           ),
                           child: TextField(
                             controller: _answerController,
@@ -1910,40 +2117,98 @@ class _FRQTextDisplayScreenState extends State<FRQTextDisplayScreen> {
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 16,
+                              height: 1.5,
+                              fontFamily:
+                                  'Fira Code', // Use a monospace font for code
                             ),
-                            decoration: const InputDecoration(
-                              hintText: 'Type your answer here...',
-                              hintStyle: TextStyle(color: Colors.white70),
+                            decoration: InputDecoration(
+                              hintText:
+                                  'Type your answer here...\n\nTip: For code, use proper Java syntax and comments to explain your solution.',
+                              hintStyle: TextStyle(
+                                color: Colors.white.withOpacity(0.5),
+                                fontSize: 16,
+                                fontFamily: 'Fira Code',
+                              ),
                               border: InputBorder.none,
-                              contentPadding: EdgeInsets.all(16),
+                              contentPadding: const EdgeInsets.all(20),
                             ),
                           ),
                         ),
                       ),
-                      
-                      // Action buttons
+
+                      // Enhanced action buttons
                       Container(
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.all(20),
                         child: Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            TextButton(
-                              onPressed: _closeTextInput,
-                              child: const Text(
-                                'Cancel',
-                                style: TextStyle(color: Colors.white70),
+                            // Cancel button
+                            Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: Colors.white.withOpacity(0.2),
+                                  width: 1,
+                                ),
+                              ),
+                              child: TextButton.icon(
+                                onPressed: _closeTextInput,
+                                icon: Icon(
+                                  Icons.cancel_outlined,
+                                  color: Colors.white.withOpacity(0.8),
+                                  size: 18,
+                                ),
+                                label: Text(
+                                  'Cancel',
+                                  style: TextStyle(
+                                    color: Colors.white.withOpacity(0.8),
+                                    fontSize: 16,
+                                  ),
+                                ),
                               ),
                             ),
-                            const SizedBox(width: 16),
-                            ElevatedButton(
-                              onPressed: _saveAnswer,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.green[600],
-                                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+
+                            // Save button
+                            Container(
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [
+                                    Color(0xFF4CAF50),
+                                    Color(0xFF45A049)
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFF4CAF50)
+                                        .withOpacity(0.3),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
                               ),
-                              child: const Text(
-                                'Save Answer',
-                                style: TextStyle(color: Colors.white),
+                              child: ElevatedButton.icon(
+                                onPressed: _saveAnswer,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.transparent,
+                                  shadowColor: Colors.transparent,
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 24, vertical: 12),
+                                ),
+                                icon: const Icon(
+                                  Icons.save_outlined,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
+                                label: const Text(
+                                  'Save Answer',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
                               ),
                             ),
                           ],
