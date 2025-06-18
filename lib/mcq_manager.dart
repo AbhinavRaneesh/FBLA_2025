@@ -3,6 +3,7 @@ import 'frq_manager.dart' as frq;
 import 'database_helper.dart';
 import 'premade_study_sets.dart';
 import 'main.dart' as main;
+import 'package:flutter/services.dart';
 
 class MCQManager extends StatefulWidget {
   final String username;
@@ -3303,13 +3304,12 @@ class _MCQManagerState extends State<MCQManager> {
         color: Colors.transparent,
         child: InkWell(
           onTap: () async {
-            if (apClass['name'] == 'AP Computer Science A') {
-              setState(() {
-                showAPCSChoice = true;
-              });
-            } else {
-              await _importMCQSet(apClass['name']);
-            }
+            // Add haptic feedback
+            HapticFeedback.lightImpact();
+            
+            // Import the course for all courses without showing choice screen
+            await _importMCQSet(apClass['name']);
+            // The choice screen will only appear when practicing from MySets
           },
           borderRadius: BorderRadius.circular(20),
           child: Container(
@@ -3363,15 +3363,16 @@ class _MCQManagerState extends State<MCQManager> {
                   ),
                   const SizedBox(height: 8),
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Text(
-                      '30 Questions',
-                      style: TextStyle(
+                    child: Text(
+                      apClass['name'] == 'AP Computer Science A' 
+                          ? '20 MCQs + 4 FRQs'
+                          : '20 Questions',
+                      style: const TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
@@ -3943,125 +3944,325 @@ class _MCQManagerState extends State<MCQManager> {
   }
 
   Widget _buildAPCSChoiceScreen() {
+    final courseName = selectedSubject ?? 'Course';
+    final courseData = apClasses.firstWhere(
+      (cls) => cls['name'] == courseName,
+      orElse: () => {
+        'name': courseName,
+        'color': [Color(0xFF4facfe), Color(0xFF00f2fe)],
+        'icon': Icons.school,
+      },
+    );
+    
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('AP Computer Science A'),
-        backgroundColor: const Color(0xFF1D1E33),
-        foregroundColor: Colors.white,
-        elevation: 0,
-      ),
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF1D1E33), Color(0xFF2A2B4A)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              courseData['color'][0].withOpacity(0.8),
+              courseData['color'][1].withOpacity(0.8),
+              Color(0xFF1D1E33),
+              Color(0xFF2A2B4A),
+            ],
+            stops: [0.0, 0.3, 0.7, 1.0],
           ),
         ),
         child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(
-                  Icons.computer,
-                  size: 80,
-                  color: Colors.blue,
-                ),
-                const SizedBox(height: 30),
-                const Text(
-                  'Choose Practice Type',
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 40),
-
-                // MCQ Button
-                Container(
-                  width: double.infinity,
-                  margin: const EdgeInsets.only(bottom: 20),
-                  child: ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        showAPCSChoice = false;
-                        selectedSubject = 'AP Computer Science A';
-                      });
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue[600],
-                      padding: const EdgeInsets.symmetric(vertical: 20),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      elevation: 8,
+          child: Column(
+            children: [
+              // Animated Header
+              Container(
+                padding: const EdgeInsets.all(20),
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back, color: Colors.white, size: 28),
+                      onPressed: () {
+                        setState(() {
+                          showAPCSChoice = false;
+                          selectedSubject = null;
+                        });
+                      },
                     ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.quiz, color: Colors.white, size: 24),
-                        SizedBox(width: 12),
-                        Text(
-                          'Multiple Choice Questions',
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        courseName,
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              
+              // Main Content
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Animated Icon
+                      Container(
+                        width: 120,
+                        height: 120,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.white.withOpacity(0.3),
+                              Colors.white.withOpacity(0.1),
+                            ],
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: courseData['color'][0].withOpacity(0.4),
+                              blurRadius: 30,
+                              spreadRadius: 5,
+                            ),
+                          ],
+                        ),
+                        child: Icon(
+                          courseData['icon'],
+                          size: 60,
+                          color: Colors.white,
+                        ),
+                      ),
+                      
+                      const SizedBox(height: 40),
+                      
+                      // Title with animation
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(25),
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.white.withOpacity(0.2),
+                              Colors.white.withOpacity(0.1),
+                            ],
+                          ),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.3),
+                            width: 1,
+                          ),
+                        ),
+                        child: const Text(
+                          'Choose Your Practice Mode',
                           style: TextStyle(
-                            fontSize: 18,
+                            fontSize: 22,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
+                            letterSpacing: 1.2,
                           ),
+                          textAlign: TextAlign.center,
                         ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                // FRQ Button
-                Container(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => frq.FRQManager(
-                            studySet: widget.studySet,
-                            username: widget.username,
-                            currentTheme: widget.currentTheme,
-                            frqCount: 4,
-                          ),
-                        ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green[600],
-                      padding: const EdgeInsets.symmetric(vertical: 20),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
                       ),
-                      elevation: 8,
-                    ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.edit, color: Colors.white, size: 24),
-                        SizedBox(width: 12),
-                        Text(
-                          'Free Response Questions',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                      
+                      const SizedBox(height: 50),
+                      
+                      // MCQ Button with enhanced design
+                      Container(
+                        width: double.infinity,
+                        height: 80,
+                        margin: const EdgeInsets.only(bottom: 25),
+                        child: ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              showAPCSChoice = false;
+                            });
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            shadowColor: Colors.transparent,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                          ),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(20),
+                              gradient: LinearGradient(
+                                colors: [
+                                  Colors.blue[600]!,
+                                  Colors.blue[400]!,
+                                ],
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.blue.withOpacity(0.4),
+                                  blurRadius: 15,
+                                  offset: const Offset(0, 8),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.2),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.quiz,
+                                    color: Colors.white,
+                                    size: 28,
+                                  ),
+                                ),
+                                const SizedBox(width: 15),
+                                const Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Multiple Choice',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Test your knowledge',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.white70,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const Spacer(),
+                                const Icon(
+                                  Icons.arrow_forward_ios,
+                                  color: Colors.white70,
+                                  size: 20,
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+
+                      // FRQ Button with enhanced design
+                      Container(
+                        width: double.infinity,
+                        height: 80,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => frq.FRQManager(
+                                  studySet: widget.studySet,
+                                  username: widget.username,
+                                  currentTheme: widget.currentTheme,
+                                  frqCount: 4,
+                                ),
+                              ),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            shadowColor: Colors.transparent,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                          ),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(20),
+                              gradient: LinearGradient(
+                                colors: [
+                                  Colors.green[600]!,
+                                  Colors.green[400]!,
+                                ],
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.green.withOpacity(0.4),
+                                  blurRadius: 15,
+                                  offset: const Offset(0, 8),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.2),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.edit,
+                                    color: Colors.white,
+                                    size: 28,
+                                  ),
+                                ),
+                                const SizedBox(width: 15),
+                                const Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Free Response',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Practice writing answers',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.white70,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const Spacer(),
+                                const Icon(
+                                  Icons.arrow_forward_ios,
+                                  color: Colors.white70,
+                                  size: 20,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      
+                      const SizedBox(height: 40),
+                      
+                      // Decorative element
+                      Container(
+                        width: 60,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(2),
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.white.withOpacity(0.6),
+                              Colors.white.withOpacity(0.3),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -4071,6 +4272,30 @@ class _MCQManagerState extends State<MCQManager> {
   // Add import functionality for MCQ sets
   Future<void> _importMCQSet(String subjectName) async {
     try {
+      // Show loading state
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Text('Importing $subjectName...'),
+              ],
+            ),
+            backgroundColor: Colors.blue,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+
       // The set name should match the one in PremadeStudySetsRepository
       final setName = subjectName;
       
@@ -4126,16 +4351,60 @@ class _MCQManagerState extends State<MCQManager> {
         await _dbHelper.importPremadeSet(widget.username, studySetId);
       }
       
-      // Show success message
+      // Show success message with animation
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Set imported: $setName'),
+            content: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.check,
+                    color: Colors.green,
+                    size: 16,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text(
+                        'Successfully Imported!',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      Text(
+                        subjectName,
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
             backgroundColor: Colors.green,
-            duration: const Duration(seconds: 2),
+            duration: const Duration(seconds: 3),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            margin: const EdgeInsets.all(16),
           ),
         );
       }
+      
       // Notify parent to refresh
       widget.onSetImported?.call();
     } catch (e) {
@@ -4143,8 +4412,21 @@ class _MCQManagerState extends State<MCQManager> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to import set: ${e.toString()}'),
+            content: Row(
+              children: [
+                const Icon(Icons.error_outline, color: Colors.white),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Text('Failed to import set: ${e.toString()}'),
+                ),
+              ],
+            ),
             backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            margin: const EdgeInsets.all(16),
           ),
         );
       }

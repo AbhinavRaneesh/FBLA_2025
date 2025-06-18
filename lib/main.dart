@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -1629,29 +1628,58 @@ class _MainScreenState extends State<MainScreen> {
           ),
         ],
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
       floatingActionButton: (_currentIndex == 0 &&
               _learnTabIndex == 0) // Show only on My Sets tab
           ? Padding(
-              padding: const EdgeInsets.only(bottom: 16.0, right: 16.0),
+              padding: const EdgeInsets.only(bottom: 16.0, left: 16.0),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.end,
-                crossAxisAlignment: CrossAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  FloatingActionButton.extended(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => StudySetCreationOptionsScreen(
-                            username: widget.username,
-                            onStudySetCreated: _loadStudySets,
-                          ),
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [
+                          Color(0xFF667eea),
+                          Color(0xFF764ba2)
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(30),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF667eea).withOpacity(0.3),
+                          blurRadius: 20,
+                          offset: const Offset(0, 10),
                         ),
-                      );
-                    },
-                    backgroundColor: Colors.blueAccent,
-                    icon: const Icon(Icons.add),
-                    label: const Text('Create Set'),
+                      ],
+                    ),
+                    child: FloatingActionButton.extended(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => StudySetCreationOptionsScreen(
+                              username: widget.username,
+                              onStudySetCreated: _loadStudySets,
+                            ),
+                          ),
+                        );
+                      },
+                      backgroundColor: Colors.transparent,
+                      elevation: 0,
+                      icon: const Icon(Icons.add, color: Colors.white),
+                      label: const Text(
+                        'Create Set',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -1696,7 +1724,7 @@ class _LearnTabState extends State<LearnTab>
   void initState() {
     super.initState();
     _loadStudySets();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 3, vsync: this, initialIndex: 0); // Set initial tab to My Sets
     _tabController.addListener(() {
       if (!_tabController.indexIsChanging) {
         widget.onTabChanged(_tabController.index);
@@ -1870,15 +1898,8 @@ class _LearnTabState extends State<LearnTab>
             const SizedBox(height: 20),
             ElevatedButton.icon(
               onPressed: () {
-                Navigator.push(
-                  this.context,
-                  MaterialPageRoute(
-                    builder: (context) => PremadeSetsScreen(
-                      username: widget.username,
-                      onSetImported: _loadStudySets,
-                    ),
-                  ),
-                );
+                // Switch to Browse tab instead of navigating to PremadeSetsScreen
+                _tabController.animateTo(1); // Browse tab is at index 1
               },
               icon: const Icon(Icons.download),
               label: const Text('Browse Premade Sets'),
@@ -2056,182 +2077,8 @@ class _LearnTabState extends State<LearnTab>
   }
 
   Widget _buildQuickPlay() {
-    // State variables for quick play configuration
-    String selectedSubject = "Chemistry";
-    int numberOfQuestions = 10;
-    bool isWaitingForQuestions = false;
-    bool showQuizArea = false;
-    bool showScoreSummary = false;
-    int currentQuestionIndex = 0;
-    String? selectedAnswer;
-    bool showAnswer = false;
-    List<Map<String, dynamic>> scienceQuestions = [];
-    List<bool> answeredCorrectly = [];
-
-    final List<String> subjects = [
-      "Chemistry",
-      "Physics",
-      "Biology",
-      "Mathematics",
-      "History",
-      "Geography",
-      "Computer Science",
-      "Economics"
-    ];
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Quick Play'),
-        backgroundColor: const Color(0xFF1D1E33),
-        foregroundColor: Colors.white,
-        elevation: 0,
-      ),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF1D1E33), Color(0xFF2A2B4A)],
-          ),
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const Text(
-                  'Choose Your Subject',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 20),
-                DropdownButtonFormField<String>(
-                  value: selectedSubject,
-                  decoration: InputDecoration(
-                    filled: true,
-                    fillColor: Colors.white.withOpacity(0.1),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                  ),
-                  dropdownColor: const Color(0xFF2A2B4A),
-                  style: const TextStyle(color: Colors.white),
-                  items: subjects.map((String subject) {
-                    return DropdownMenuItem<String>(
-                      value: subject,
-                      child: Text(subject),
-                    );
-                  }).toList(),
-                  onChanged: (String? newValue) {
-                    if (newValue != null) {
-                      setState(() {
-                        selectedSubject = newValue;
-                      });
-                    }
-                  },
-                ),
-                const SizedBox(height: 20),
-                const Text(
-                  'Number of Questions',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    IconButton(
-                      onPressed: () {
-                        if (numberOfQuestions > 5) {
-                          setState(() {
-                            numberOfQuestions -= 5;
-                          });
-                        }
-                      },
-                      icon:
-                          const Icon(Icons.remove_circle, color: Colors.white),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 10,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        '$numberOfQuestions',
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: () {
-                        if (numberOfQuestions < 30) {
-                          setState(() {
-                            numberOfQuestions += 5;
-                          });
-                        }
-                      },
-                      icon: const Icon(Icons.add_circle, color: Colors.white),
-                    ),
-                  ],
-                ),
-                const Spacer(),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      this.context,
-                      MaterialPageRoute(
-                        builder: (context) => MCQManager(
-                          username: widget.username,
-                          studySet: {},
-                          currentTheme: 'default',
-                          selectedSubject: selectedSubject,
-                          questionCount: numberOfQuestions,
-                        ),
-                      ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue[600],
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: const Text(
-                    'Start Learning',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
+    // This method has been removed - quiz configuration moved to home_page.dart
+    return Container();
   }
 
   IconData _getSubjectIcon(String setName) {
@@ -2533,32 +2380,57 @@ class _LearnTabState extends State<LearnTab>
             ),
           ),
           const SizedBox(height: 30),
-          Row(
+          Column(
             children: [
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: restartQuiz,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: restartQuiz,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      child: const Text(
+                        "Retry Quiz",
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
                   ),
-                  child: const Text(
-                    "Retry Quiz",
-                    style: TextStyle(color: Colors.white),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: returnToConfig,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.purple,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      child: const Text(
+                        "New Quiz",
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
-              const SizedBox(width: 16),
-              Expanded(
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: returnToConfig,
+                  onPressed: () {
+                    Navigator.pop(this.context);
+                  },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.purple,
+                    backgroundColor: Colors.green,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
                   child: const Text(
-                    "New Quiz",
-                    style: TextStyle(color: Colors.white),
+                    "Return Home",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),
@@ -2575,16 +2447,35 @@ class _LearnTabState extends State<LearnTab>
   }
 
   void _startPractice(Map<String, dynamic> studySet) {
-    Navigator.push(
-      this.context,
-      MaterialPageRoute(
-        builder: (context) => PracticeTypeChoiceScreen(
-          studySet: studySet,
-          username: widget.username,
-          currentTheme: widget.currentTheme,
+    // Check if this is exactly AP Computer Science A
+    String studySetName = studySet['name']?.toString() ?? '';
+    bool isAPCompSciA = studySetName == 'AP Computer Science A';
+    
+    if (isAPCompSciA) {
+      // Show practice mode selection for AP Computer Science A
+      Navigator.push(
+        this.context,
+        MaterialPageRoute(
+          builder: (context) => PracticeTypeChoiceScreen(
+            studySet: studySet,
+            username: widget.username,
+            currentTheme: widget.currentTheme,
+          ),
         ),
-      ),
-    );
+      );
+    } else {
+      // Go directly to MCQ practice for all other courses
+      Navigator.push(
+        this.context,
+        MaterialPageRoute(
+          builder: (context) => PracticeModeScreen(
+            studySet: studySet,
+            username: widget.username,
+            currentTheme: widget.currentTheme,
+          ),
+        ),
+      );
+    }
   }
 
   void _deleteStudySet(int studySetId) {
@@ -3603,6 +3494,7 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
   bool _showChat = false;
   late ChatBloc _chatBloc;
   final TextEditingController _chatController = TextEditingController();
+  final ScrollController _chatScrollController = ScrollController();
   double _chatHeightRatio = 0.5; // Default 50% of available area
   bool _isResizing = false;
 
@@ -3616,6 +3508,7 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
   @override
   void dispose() {
     _chatController.dispose();
+    _chatScrollController.dispose();
     _chatBloc.close();
     super.dispose();
   }
@@ -3699,9 +3592,6 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
     prompt +=
         "\nPlease help me understand this question and explain the correct answer.";
 
-    // Set the chat controller text
-    _chatController.text = prompt;
-
     // Show the chat interface
     setState(() {
       _showChat = true;
@@ -3709,6 +3599,17 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
 
     // Send the message to the chat
     _chatBloc.add(ChatGenerationNewTextMessageEvent(inputMessage: prompt));
+    
+    // Auto-scroll to bottom after a short delay to ensure the chat interface is rendered
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (_chatScrollController.hasClients) {
+        _chatScrollController.animateTo(
+          _chatScrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
   }
 
   @override
@@ -3953,6 +3854,7 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
                                   ),
                                 ),
                                 const SizedBox(height: 40),
+                                // Start Practice button
                                 Container(
                                   width: double.infinity,
                                   height: 60,
@@ -3962,38 +3864,50 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
                                         Color(0xFF4facfe),
                                         Color(0xFF00f2fe)
                                       ],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
                                     ),
-                                    borderRadius: BorderRadius.circular(30),
+                                    borderRadius: BorderRadius.circular(16),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: const Color(0xFF4facfe)
-                                            .withOpacity(0.3),
+                                        color: const Color(0xFF4facfe).withOpacity(0.4),
                                         blurRadius: 20,
                                         offset: const Offset(0, 10),
                                       ),
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.3),
+                                        blurRadius: 15,
+                                        offset: const Offset(0, 5),
+                                      ),
                                     ],
                                   ),
-                                  child: ElevatedButton.icon(
+                                  child: ElevatedButton(
                                     onPressed: () => _startPractice(context),
-                                    icon: const Icon(
-                                      Icons.play_arrow,
-                                      size: 28,
-                                      color: Colors.white,
-                                    ),
-                                    label: const Text(
-                                      'Start Learning',
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
-                                    ),
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: Colors.transparent,
                                       shadowColor: Colors.transparent,
                                       shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(30),
+                                        borderRadius: BorderRadius.circular(16),
                                       ),
+                                    ),
+                                    child: const Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.play_arrow,
+                                          color: Colors.white,
+                                          size: 28,
+                                        ),
+                                        SizedBox(width: 12),
+                                        Text(
+                                          'Start Practice',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ),
@@ -4050,25 +3964,50 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
                                         ),
                                       ),
                                       const SizedBox(height: 32),
-                                      ElevatedButton.icon(
-                                        onPressed: () {
-                                          setState(() {
-                                            _showModeSelection = true;
-                                            _showQuizArea = false;
-                                            _showScoreSummary = false;
-                                          });
-                                        },
-                                        icon: const Icon(Icons.refresh),
-                                        label: const Text('Try Again'),
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.blueAccent,
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 32,
-                                            vertical: 16,
+                                      SizedBox(
+                                        width: double.infinity,
+                                        child: ElevatedButton.icon(
+                                          onPressed: () {
+                                            setState(() {
+                                              _showModeSelection = true;
+                                              _showQuizArea = false;
+                                              _showScoreSummary = false;
+                                            });
+                                          },
+                                          icon: const Icon(Icons.refresh),
+                                          label: const Text('Try Again'),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.blueAccent,
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 32,
+                                              vertical: 16,
+                                            ),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(16),
+                                            ),
                                           ),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(16),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 16),
+                                      SizedBox(
+                                        width: double.infinity,
+                                        child: ElevatedButton.icon(
+                                          onPressed: () {
+                                            Navigator.pop(context);
+                                          },
+                                          icon: const Icon(Icons.home),
+                                          label: const Text('Return Home'),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.green,
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 32,
+                                              vertical: 16,
+                                            ),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(16),
+                                            ),
                                           ),
                                         ),
                                       ),
@@ -4615,7 +4554,19 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
               bloc: _chatBloc,
               builder: (context, state) {
                 if (state is ChatSuccessState) {
+                  // Auto-scroll to bottom when new messages arrive
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (_chatScrollController.hasClients) {
+                      _chatScrollController.animateTo(
+                        _chatScrollController.position.maxScrollExtent,
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeOut,
+                      );
+                    }
+                  });
+                  
                   return ListView.builder(
+                    controller: _chatScrollController,
                     padding: const EdgeInsets.all(16),
                     itemCount: state.messages.length,
                     itemBuilder: (context, index) {
@@ -4650,7 +4601,7 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
                                   borderRadius: BorderRadius.circular(16),
                                 ),
                                 child: Text(
-                                  message.parts.first.text,
+                                  message.parts.isNotEmpty ? message.parts.first.text : 'No message content',
                                   style: const TextStyle(
                                       color: Colors.white, fontSize: 14),
                                 ),
@@ -4716,6 +4667,17 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
                       _chatBloc.add(ChatGenerationNewTextMessageEvent(
                           inputMessage: _chatController.text));
                       _chatController.clear();
+                      
+                      // Auto-scroll to bottom when user sends a message
+                      Future.delayed(const Duration(milliseconds: 100), () {
+                        if (_chatScrollController.hasClients) {
+                          _chatScrollController.animateTo(
+                            _chatScrollController.position.maxScrollExtent,
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeOut,
+                          );
+                        }
+                      });
                     }
                   },
                   icon: const Icon(Icons.send, color: Colors.white),
@@ -6852,179 +6814,155 @@ class PracticeTypeChoiceScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 40),
-                  TweenAnimationBuilder(
-                    duration: const Duration(milliseconds: 800),
-                    tween: Tween<double>(begin: 0, end: 1),
-                    builder: (context, value, child) {
-                      return Transform.translate(
-                        offset: Offset(0, (1 - value) * 50),
-                        child: Opacity(
-                          opacity: value,
-                          child: GestureDetector(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => PracticeModeScreen(
-                                    studySet: studySet,
-                                    username: username,
-                                    currentTheme: currentTheme,
-                                  ),
-                                ),
-                              );
-                            },
-                            child: Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.all(28),
-                              margin: const EdgeInsets.only(bottom: 24),
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  colors: [
-                                    Color(0xFF4facfe),
-                                    Color(0xFF00f2fe)
-                                  ],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
-                                borderRadius: BorderRadius.circular(24),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: const Color(0xFF4facfe)
-                                        .withOpacity(0.4),
-                                    blurRadius: 20,
-                                    offset: const Offset(0, 10),
-                                  ),
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.3),
-                                    blurRadius: 15,
-                                    offset: const Offset(0, 5),
-                                  ),
-                                ],
-                                border: Border.all(
-                                  color: Colors.white.withOpacity(0.2),
-                                  width: 1,
-                                ),
-                              ),
-                              child: Column(
-                                children: const [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(Icons.quiz_outlined,
-                                          color: Colors.white, size: 32),
-                                      SizedBox(width: 16),
-                                      Text(
-                                        'Multiple Choice Practice',
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 22,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  SizedBox(height: 4),
-                                  Text(
-                                    'Timed multiple choice questions with instant feedback.',
-                                    style: TextStyle(
-                                      color: Colors.white70,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => PracticeModeScreen(
+                            studySet: studySet,
+                            username: username,
+                            currentTheme: currentTheme,
                           ),
                         ),
                       );
                     },
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(28),
+                      margin: const EdgeInsets.only(bottom: 24),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [
+                            Color(0xFF4facfe),
+                            Color(0xFF00f2fe)
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF4facfe)
+                                .withOpacity(0.4),
+                            blurRadius: 20,
+                            offset: const Offset(0, 10),
+                          ),
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.3),
+                            blurRadius: 15,
+                            offset: const Offset(0, 5),
+                          ),
+                        ],
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.2),
+                          width: 1,
+                        ),
+                      ),
+                      child: Column(
+                        children: const [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.quiz_outlined,
+                                  color: Colors.white, size: 32),
+                              SizedBox(width: 16),
+                              Text(
+                                'Multiple Choice Practice',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            'Timed multiple choice questions with instant feedback.',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                  TweenAnimationBuilder(
-                    duration: const Duration(milliseconds: 1000),
-                    tween: Tween<double>(begin: 0, end: 1),
-                    builder: (context, value, child) {
-                      return Transform.translate(
-                        offset: Offset(0, (1 - value) * 50),
-                        child: Opacity(
-                          opacity: value,
-                          child: GestureDetector(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => FRQManager(
-                                    studySet: studySet,
-                                    username: username,
-                                    currentTheme: currentTheme,
-                                    frqCount: 7,
-                                  ),
-                                ),
-                              );
-                            },
-                            child: Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.all(28),
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  colors: [
-                                    Color(0xFF667eea),
-                                    Color(0xFF764ba2)
-                                  ],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
-                                borderRadius: BorderRadius.circular(24),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: const Color(0xFF667eea)
-                                        .withOpacity(0.4),
-                                    blurRadius: 20,
-                                    offset: const Offset(0, 10),
-                                  ),
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.3),
-                                    blurRadius: 15,
-                                    offset: const Offset(0, 5),
-                                  ),
-                                ],
-                                border: Border.all(
-                                  color: Colors.white.withOpacity(0.2),
-                                  width: 1,
-                                ),
-                              ),
-                              child: Column(
-                                children: const [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(Icons.code,
-                                          color: Colors.white, size: 32),
-                                      SizedBox(width: 16),
-                                      Text(
-                                        'Free Response Practice',
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 22,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  SizedBox(height: 4),
-                                  Text(
-                                    'Practice free response questions with detailed AI grading.',
-                                    style: TextStyle(
-                                      color: Colors.white70,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => FRQManager(
+                            studySet: studySet,
+                            username: username,
+                            currentTheme: currentTheme,
+                            frqCount: 7,
                           ),
                         ),
                       );
                     },
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(28),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [
+                            Color(0xFF667eea),
+                            Color(0xFF764ba2)
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF667eea)
+                                .withOpacity(0.4),
+                            blurRadius: 20,
+                            offset: const Offset(0, 10),
+                          ),
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.3),
+                            blurRadius: 15,
+                            offset: const Offset(0, 5),
+                          ),
+                        ],
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.2),
+                          width: 1,
+                        ),
+                      ),
+                      child: Column(
+                        children: const [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.code,
+                                  color: Colors.white, size: 32),
+                              SizedBox(width: 16),
+                              Text(
+                                'Free Response Practice',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            'Practice free response questions with detailed AI grading.',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                   const Spacer(),
                   Container(
