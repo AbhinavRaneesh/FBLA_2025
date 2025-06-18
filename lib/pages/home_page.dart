@@ -3,7 +3,6 @@ import 'package:student_learning_app/bloc/chat_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../models/chat_message_model.dart';
 import '../database_helper.dart';
-import 'package:student_learning_app/mcq_manager.dart';
 import 'dart:math';
 
 class HomePage extends StatefulWidget {
@@ -158,7 +157,7 @@ class _HomePageState extends State<HomePage> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
-                                message.parts.isNotEmpty ? message.parts.first.text : 'No message content',
+                                message.parts.first.text,
                                 style: TextStyle(color: Colors.white),
                               ),
                             );
@@ -254,7 +253,8 @@ class _HomePageState extends State<HomePage> {
         Map<String, dynamic>? parsedQuestion = _parseBracketFormat(line);
         if (parsedQuestion != null) {
           newQuestions.add(parsedQuestion);
-          print('Successfully added question ${newQuestions.length}: ${parsedQuestion['question']}');
+          print(
+              'Successfully added question ${newQuestions.length}: ${parsedQuestion['question']}');
         } else {
           print('Failed to parse question line: $line');
         }
@@ -274,7 +274,8 @@ class _HomePageState extends State<HomePage> {
               _parseBracketFormat(block.trim());
           if (parsedQuestion != null) {
             newQuestions.add(parsedQuestion);
-            print('Alternative parsing added question: ${parsedQuestion['question']}');
+            print(
+                'Alternative parsing added question: ${parsedQuestion['question']}');
           }
         }
 
@@ -285,7 +286,8 @@ class _HomePageState extends State<HomePage> {
                 _parseBracketFormat(line.trim());
             if (parsedQuestion != null) {
               newQuestions.add(parsedQuestion);
-              print('Single line parsing added question: ${parsedQuestion['question']}');
+              print(
+                  'Single line parsing added question: ${parsedQuestion['question']}');
             }
           }
         }
@@ -299,7 +301,8 @@ class _HomePageState extends State<HomePage> {
         }
 
         print('Setting state with ${newQuestions.length} questions');
-        print('Before setState - showQuizArea: $showQuizArea, scienceQuestions.length: ${scienceQuestions.length}');
+        print(
+            'Before setState - showQuizArea: $showQuizArea, scienceQuestions.length: ${scienceQuestions.length}');
         setState(() {
           scienceQuestions = newQuestions;
           answeredCorrectly = List.filled(newQuestions.length, false);
@@ -311,14 +314,22 @@ class _HomePageState extends State<HomePage> {
           showScoreSummary = false;
         });
 
-        print('After setState - showQuizArea: $showQuizArea, scienceQuestions.length: ${scienceQuestions.length}');
-        print('First question: ${scienceQuestions.isNotEmpty ? scienceQuestions[0]['question'] : 'No questions'}');
+        print(
+            'After setState - showQuizArea: $showQuizArea, scienceQuestions.length: ${scienceQuestions.length}');
+        print(
+            'First question: ${scienceQuestions.isNotEmpty ? scienceQuestions[0]['question'] : 'No questions'}');
 
         // Clear chat history after successful question generation
         _clearChatHistory();
 
-        // Show success message in console instead of UI
-        print('Successfully loaded ${newQuestions.length} new $selectedSubject questions!');
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+                'Successfully loaded ${newQuestions.length} new $selectedSubject questions!'),
+            backgroundColor: Colors.green,
+          ),
+        );
       } else {
         // If parsing failed, show error with more details
         print('No questions were parsed successfully');
@@ -467,63 +478,46 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
 
   @override
   Widget build(BuildContext context) {
-    print('HomePage build method called - showQuizArea: $showQuizArea, scienceQuestions.length: ${scienceQuestions.length}');
+    print(
+        'HomePage build method called - showQuizArea: $showQuizArea, scienceQuestions.length: ${scienceQuestions.length}');
     return BlocProvider.value(
       value: _chatBloc,
       child: Scaffold(
         extendBodyBehindAppBar: true,
         backgroundColor: Colors.transparent,
+        floatingActionButton: FloatingActionButton(
+          onPressed: () => _showChatModal(),
+          backgroundColor: Colors.purple,
+          child: Icon(Icons.message, color: Colors.white),
+          heroTag: "chatFAB",
+        ),
         body: Stack(
           children: [
             const SpaceBackground(),
             SafeArea(
               child: BlocListener<ChatBloc, ChatState>(
                 listener: (context, state) {
-                  print('BlocListener triggered with state: ${state.runtimeType}');
+                  print(
+                      'BlocListener triggered with state: ${state.runtimeType}');
                   print('isWaitingForQuestions: $isWaitingForQuestions');
                   if (state is ChatSuccessState) {
-                    print('ChatSuccessState received with ${state.messages.length} messages');
+                    print(
+                        'ChatSuccessState received with ${state.messages.length} messages');
                     if (isWaitingForQuestions && state.messages.isNotEmpty) {
-                      try {
-                        var lastMessage = state.messages.last;
-                        print('Last message role: ${lastMessage.role}');
-                        print('Last message parts length: ${lastMessage.parts.length}');
-                        if (lastMessage.role != "user" && lastMessage.parts.isNotEmpty) {
-                          print('Parsing AI response...');
-                          _parseAndReplaceQuestions(lastMessage.parts.first.text);
-                        } else {
-                          print('Skipping parsing - role: ${lastMessage.role}, parts empty: ${lastMessage.parts.isEmpty}');
-                        }
-                      } catch (e) {
-                        print('Error in BlocListener: $e');
-                        setState(() {
-                          isWaitingForQuestions = false;
-                        });
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Error processing AI response: $e'),
-                            backgroundColor: Colors.red,
-                          ),
-                        );
+                      var lastMessage = state.messages.last;
+                      print('Last message role: ${lastMessage.role}');
+                      if (lastMessage.role != "user") {
+                        print('Parsing AI response...');
+                        _parseAndReplaceQuestions(lastMessage.parts.first.text);
                       }
                     }
-                  } else if (state is ChatErrorState) {
-                    print('ChatErrorState received: ${state.message}');
-                    setState(() {
-                      isWaitingForQuestions = false;
-                    });
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Error: ${state.message}'),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
                   }
                 },
                 child: BlocBuilder<ChatBloc, ChatState>(
                   builder: (context, state) {
-                    print('BlocBuilder rebuilding. showQuizArea: $showQuizArea, scienceQuestions.length: ${scienceQuestions.length}, showScoreSummary: $showScoreSummary');
-                    
+                    print(
+                        'BlocBuilder rebuilding. showQuizArea: $showQuizArea, scienceQuestions.length: ${scienceQuestions.length}, showScoreSummary: $showScoreSummary');
+
                     return Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
                       child: Column(
@@ -550,189 +544,345 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
   }
 
   Widget _buildHomeScreen() {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFF1D1E33), Color(0xFF2A2B4A)],
-        ),
-      ),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Text(
-                'Choose Your Subject',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+    return Center(
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Quiz Configuration Card
+            Container(
+              width: MediaQuery.of(context).size.width * 0.9,
+              padding: EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.transparent,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.3),
+                  width: 2,
                 ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 20),
-              DropdownButtonFormField<String>(
-                value: selectedSubject,
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: Colors.white.withOpacity(0.1),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                ),
-                dropdownColor: const Color(0xFF2A2B4A),
-                style: const TextStyle(color: Colors.white),
-                items: subjects.map((String subject) {
-                  return DropdownMenuItem<String>(
-                    value: subject,
-                    child: Text(subject),
-                  );
-                }).toList(),
-                onChanged: (String? newValue) {
-                  if (newValue != null) {
-                    setState(() {
-                      selectedSubject = newValue;
-                    });
-                  }
-                },
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                'Number of Questions',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  IconButton(
-                    onPressed: () {
-                      if (numberOfQuestions > 5) {
-                        setState(() {
-                          numberOfQuestions -= 5;
-                        });
-                      }
-                    },
-                    icon: const Icon(Icons.remove_circle, color: Colors.white),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 10,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      '$numberOfQuestions',
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () {
-                      if (numberOfQuestions < 30) {
-                        setState(() {
-                          numberOfQuestions += 5;
-                        });
-                      }
-                    },
-                    icon: const Icon(Icons.add_circle, color: Colors.white),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.white.withOpacity(0.1),
+                    blurRadius: 10,
+                    offset: Offset(0, 5),
                   ),
                 ],
               ),
-              const Spacer(),
-              Container(
-                width: double.infinity,
-                height: 60,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [
-                      Color(0xFF4facfe),
-                      Color(0xFF00f2fe)
+              child: Column(
+                children: [
+                  // Header with icon
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.quiz,
+                        color: Colors.white,
+                        size: 32,
+                      ),
+                      SizedBox(width: 12),
+                      Text(
+                        "Quiz Configuration",
+                        style: TextStyle(
+                          fontSize: 24,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
                   ),
-                  borderRadius: BorderRadius.circular(30),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF4facfe).withOpacity(0.3),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
+                  SizedBox(height: 24),
+
+                  // Subject Selection
+                  Container(
+                    padding: EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.3),
+                        width: 1,
+                      ),
                     ),
-                  ],
-                ),
-                child: ElevatedButton(
-                  onPressed: isWaitingForQuestions ? null : () {
-                    _generateQuestions();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.transparent,
-                    shadowColor: Colors.transparent,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                  ),
-                  child: isWaitingForQuestions
-                      ? Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
                           children: [
-                            SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            const Text(
-                              'Generating Questions...',
+                            Icon(Icons.school, color: Colors.white, size: 20),
+                            SizedBox(width: 8),
+                            Text(
+                              "Subject",
                               style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
                                 color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ],
-                        )
-                      : const Text(
-                          'Start Learning',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                        ),
+                        SizedBox(height: 8),
+                        DropdownButton<String>(
+                          value: selectedSubject,
+                          dropdownColor: Colors.purple.shade800,
+                          style: TextStyle(color: Colors.white, fontSize: 16),
+                          isExpanded: true,
+                          underline: Container(),
+                          items: subjects.map((String subject) {
+                            return DropdownMenuItem<String>(
+                              value: subject,
+                              child: Text(subject),
+                            );
+                          }).toList(),
+                          onChanged: (String? newValue) {
+                            setState(() {
+                              selectedSubject = newValue!;
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  SizedBox(height: 16),
+
+                  // Number of Questions Selection
+                  Container(
+                    padding: EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.format_list_numbered,
+                                color: Colors.white, size: 20),
+                            SizedBox(width: 8),
+                            Text(
+                              "Number of Questions",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 8),
+                        DropdownButton<int>(
+                          value: numberOfQuestions,
+                          dropdownColor: Colors.purple.shade800,
+                          style: TextStyle(color: Colors.white, fontSize: 16),
+                          isExpanded: true,
+                          underline: Container(),
+                          items: List.generate(20, (index) => index + 1)
+                              .map((int value) {
+                            return DropdownMenuItem<int>(
+                              value: value,
+                              child: Text(value.toString()),
+                            );
+                          }).toList(),
+                          onChanged: (int? newValue) {
+                            setState(() {
+                              numberOfQuestions = newValue!;
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  SizedBox(height: 24),
+
+                  // Action Buttons
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          height: 50,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.green.withOpacity(0.8),
+                                Colors.greenAccent.withOpacity(0.8),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.green.withOpacity(0.3),
+                                blurRadius: 10,
+                                offset: Offset(0, 5),
+                              ),
+                            ],
+                          ),
+                          child: ElevatedButton(
+                            onPressed: isWaitingForQuestions
+                                ? null
+                                : _generateQuestions,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              shadowColor: Colors.transparent,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: isWaitingForQuestions
+                                ? Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                          color: Colors.white,
+                                          strokeWidth: 2,
+                                        ),
+                                      ),
+                                      SizedBox(width: 12),
+                                      Text(
+                                        "Starting...",
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                                : Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(Icons.play_arrow,
+                                          color: Colors.white),
+                                      SizedBox(width: 8),
+                                      Text(
+                                        "Start Quiz",
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                           ),
                         ),
+                      ),
+                      SizedBox(width: 12),
+                      Container(
+                        height: 50,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.orange.withOpacity(0.8),
+                              Colors.deepOrange.withOpacity(0.8),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.orange.withOpacity(0.3),
+                              blurRadius: 10,
+                              offset: Offset(0, 5),
+                            ),
+                          ],
+                        ),
+                        child: ElevatedButton(
+                          onPressed: () => _showChatModal(),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            shadowColor: Colors.transparent,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.chat, color: Colors.white),
+                              SizedBox(width: 8),
+                              Text(
+                                "Chat with AI",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            SizedBox(height: 20),
+
+            // Loading indicator when generating questions
+            if (isWaitingForQuestions)
+              Container(
+                width: MediaQuery.of(context).size.width * 0.9,
+                padding: EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.blue.withOpacity(0.2),
+                      Colors.purple.withOpacity(0.2),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: Colors.blue.withOpacity(0.3),
+                    width: 1,
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+                      strokeWidth: 3,
+                    ),
+                    SizedBox(height: 16),
+                    Text(
+                      "Generating $numberOfQuestions $selectedSubject questions...",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      "This may take a few moments",
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 14,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
+          ],
         ),
       ),
     );
   }
 
   Widget _buildQuizArea() {
-    print('_buildQuizArea called with ${scienceQuestions.length} questions, current index: $currentQuestionIndex');
+    print(
+        '_buildQuizArea called with ${scienceQuestions.length} questions, current index: $currentQuestionIndex');
     if (scienceQuestions.isEmpty) {
       print('No questions available!');
       return Center(
@@ -742,7 +892,7 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
         ),
       );
     }
-    
+
     if (currentQuestionIndex >= scienceQuestions.length) {
       print('Current index out of bounds!');
       return Center(
@@ -752,11 +902,11 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
         ),
       );
     }
-    
+
     final currentQuestion = scienceQuestions[currentQuestionIndex];
     print('Current question: ${currentQuestion['question']}');
     print('Current options: ${currentQuestion['options']}');
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -855,7 +1005,8 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
             itemBuilder: (context, index) {
               final option = currentQuestion["options"][index];
               final isSelected = selectedAnswer == option;
-              final isCorrect = showAnswer && option == currentQuestion["answer"];
+              final isCorrect =
+                  showAnswer && option == currentQuestion["answer"];
               final isWrong = showAnswer && isSelected && !isCorrect;
 
               return Padding(
@@ -908,7 +1059,11 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
                                 : isWrong
                                     ? Icons.cancel
                                     : null,
-                            color: isCorrect ? Colors.green : isWrong ? Colors.red : null,
+                            color: isCorrect
+                                ? Colors.green
+                                : isWrong
+                                    ? Colors.red
+                                    : null,
                           )
                         : null,
                     onTap: showAnswer
@@ -929,34 +1084,15 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
         if (!showAnswer && selectedAnswer != null)
           Padding(
             padding: const EdgeInsets.only(top: 24),
-            child: Container(
+            child: SizedBox(
               width: double.infinity,
-              height: 60,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [
-                    Color(0xFF667eea),
-                    Color(0xFF764ba2)
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(30),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF667eea).withOpacity(0.3),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
-              ),
               child: ElevatedButton(
                 onPressed: _submitAnswer,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.transparent,
-                  shadowColor: Colors.transparent,
+                  backgroundColor: Colors.blueAccent,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                 ),
                 child: const Text(
@@ -964,7 +1100,6 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
                   ),
                 ),
               ),
@@ -973,42 +1108,18 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
         else if (showAnswer)
           Padding(
             padding: const EdgeInsets.only(top: 24),
-            child: Container(
+            child: SizedBox(
               width: double.infinity,
-              height: 60,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: currentQuestionIndex + 1 == scienceQuestions.length
-                      ? [
-                          Color(0xFF56ab2f),
-                          Color(0xFFa8e6cf)
-                        ]
-                      : [
-                          Color(0xFF4facfe),
-                          Color(0xFF00f2fe)
-                        ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(30),
-                boxShadow: [
-                  BoxShadow(
-                    color: (currentQuestionIndex + 1 == scienceQuestions.length
-                        ? const Color(0xFF56ab2f)
-                        : const Color(0xFF4facfe))
-                        .withOpacity(0.3),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
-              ),
               child: ElevatedButton(
                 onPressed: goToNextQuestion,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.transparent,
-                  shadowColor: Colors.transparent,
+                  backgroundColor:
+                      currentQuestionIndex + 1 == scienceQuestions.length
+                          ? Colors.green
+                          : Colors.blueAccent,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                 ),
                 child: Text(
@@ -1018,7 +1129,6 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
                   ),
                 ),
               ),
@@ -1032,206 +1142,89 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
     int correctAnswers = answeredCorrectly.where((correct) => correct).length;
     double accuracy = (correctAnswers / scienceQuestions.length) * 100;
 
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          children: [
-            const SizedBox(height: 25),
-            // Trophy Icon with Animation
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFFFFD700).withOpacity(0.3),
-                    blurRadius: 30,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
-              ),
-              child: const Icon(
-                Icons.emoji_events,
-                size: 60,
-                color: Colors.white,
-              ),
+    return Container(
+      padding: EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade800.withOpacity(0.9),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            "Quiz Completed!",
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
             ),
-            const SizedBox(height: 30),
-            
-            // Quiz Completed Text
-            const Text(
-              "Quiz Completed!",
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-                letterSpacing: 1.2,
-              ),
+          ),
+          SizedBox(height: 20),
+          Text(
+            "Your Score:",
+            style: TextStyle(
+              fontSize: 20,
+              color: Colors.white,
             ),
-            const SizedBox(height: 40),
-            
-            // Score Card
-            Container(
-              padding: const EdgeInsets.all(30),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [
-                    Color(0xFF667eea),
-                    Color(0xFF764ba2)
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF667eea).withOpacity(0.3),
-                    blurRadius: 30,
-                    offset: const Offset(0, 15),
-                  ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  const Text(
-                    "Your Score",
-                    style: TextStyle(
-                      fontSize: 20,
-                      color: Colors.white70,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 15),
-                  Text(
-                    "$correctAnswers / ${scienceQuestions.length}",
-                    style: const TextStyle(
-                      fontSize: 48,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      letterSpacing: 2,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      "Accuracy: ${accuracy.toStringAsFixed(1)}%",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: accuracy > 70
-                            ? const Color(0xFF4CAF50)
-                            : accuracy > 40
-                                ? const Color(0xFFFF9800)
-                                : const Color(0xFFF44336),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+          ),
+          SizedBox(height: 10),
+          Text(
+            "$correctAnswers / ${scienceQuestions.length}",
+            style: TextStyle(
+              fontSize: 36,
+              fontWeight: FontWeight.bold,
+              color: Colors.purple,
             ),
-            const SizedBox(height: 40),
-            
-            // Action Buttons
-            Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    height: 45,
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [
-                          Color(0xFF4facfe),
-                          Color(0xFF00f2fe)
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(22.5),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF4facfe).withOpacity(0.3),
-                          blurRadius: 20,
-                          offset: const Offset(0, 10),
-                        ),
-                      ],
-                    ),
-                    child: ElevatedButton(
-                      onPressed: _restartQuiz,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.transparent,
-                        shadowColor: Colors.transparent,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(22.5),
-                        ),
-                      ),
-                      child: const Text(
-                        "Retry Quiz",
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Container(
-                    height: 45,
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [
-                          Color(0xFF667eea),
-                          Color(0xFF764ba2)
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(22.5),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF667eea).withOpacity(0.3),
-                          blurRadius: 20,
-                          offset: const Offset(0, 10),
-                        ),
-                      ],
-                    ),
-                    child: ElevatedButton(
-                      onPressed: _returnToHome,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.transparent,
-                        shadowColor: Colors.transparent,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(22.5),
-                        ),
-                      ),
-                      child: const Text(
-                        "Return Home",
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+          ),
+          SizedBox(height: 20),
+          Text(
+            "Accuracy: ${accuracy.toStringAsFixed(1)}%",
+            style: TextStyle(
+              fontSize: 20,
+              color: accuracy > 70
+                  ? Colors.green
+                  : accuracy > 40
+                      ? Colors.orange
+                      : Colors.red,
             ),
-          ],
-        ),
+          ),
+          SizedBox(height: 30),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              ElevatedButton(
+                onPressed: _restartQuiz,
+                child: Text("Retry Quiz"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: _returnToHome,
+                child: Text("Return Home"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.purple,
+                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 20),
+          ElevatedButton(
+            onPressed: () {
+              String prompt =
+                  "I scored $correctAnswers out of ${scienceQuestions.length} ($accuracy%) in my $selectedSubject quiz. "
+                  "Can you analyze my performance and suggest areas to improve?";
+              _showChatModal(initialMessage: prompt);
+            },
+            child: Text("Get Performance Analysis"),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1266,7 +1259,7 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
                   constraints: BoxConstraints(
                       maxWidth: MediaQuery.of(context).size.width * 0.75),
                   child: Text(
-                    message.parts.isNotEmpty ? message.parts.first.text : 'No message content',
+                    message.parts.first.text,
                     style: TextStyle(color: Colors.white),
                   ),
                 ),
