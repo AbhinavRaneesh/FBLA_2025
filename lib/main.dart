@@ -27,6 +27,7 @@ import 'package:student_learning_app/bloc/chat_bloc.dart';
 import 'package:student_learning_app/models/chat_message_model.dart';
 import 'mcq_manager.dart';
 import 'frq_manager.dart';
+import 'study_set_edit_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -2047,6 +2048,26 @@ class _LearnTabState extends State<LearnTab>
                             ),
                           ),
                           const SizedBox(width: 12),
+                          // Show edit button only for manually created sets (not imported ones)
+                          if (!isImported) ...[
+                            ElevatedButton.icon(
+                              onPressed: () => _editStudySet(studySet),
+                              icon: const Icon(Icons.edit, size: 18),
+                              label: const Text('Edit'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.orange.withOpacity(0.8),
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 10,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                          ],
                           ElevatedButton.icon(
                             onPressed: () => _startPractice(studySet),
                             icon: const Icon(Icons.play_arrow, size: 18),
@@ -2511,6 +2532,19 @@ class _LearnTabState extends State<LearnTab>
             child: const Text('Delete', style: TextStyle(color: Colors.red)),
           ),
         ],
+      ),
+    );
+  }
+
+  void _editStudySet(Map<String, dynamic> studySet) {
+    Navigator.push(
+      this.context,
+      MaterialPageRoute(
+        builder: (context) => StudySetEditScreen(
+          studySet: studySet,
+          username: widget.username,
+          onStudySetUpdated: _loadStudySets,
+        ),
       ),
     );
   }
@@ -5065,34 +5099,142 @@ class _QuizletImportScreenState extends State<QuizletImportScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final response = await http.get(Uri.parse(_urlController.text));
-      if (response.statusCode == 200) {
-        final document = html_parser.parse(response.body);
-        List<Map<String, dynamic>> parsedQuestions = [];
+      // Clean and validate the URL
+      String url = _urlController.text.trim();
+      if (!url.contains('quizlet.com')) {
+        throw Exception('Invalid Quizlet URL');
+      }
 
-        // Try to find JSON first
-        final scriptTags = document.getElementsByTagName('script');
-        String? jsonData;
-        for (var script in scriptTags) {
-          if (script.text.contains('window.Quizlet')) {
-            final start = script.text.indexOf('{');
-            final end = script.text.lastIndexOf('};');
-            if (start != -1 && end != -1) {
-              jsonData = script.text.substring(start, end + 1);
-              break;
-            }
+      // Add protocol if missing
+      if (!url.startsWith('http')) {
+        url = 'https://$url';
+      }
+
+      debugPrint('Fetching Quizlet URL: $url');
+      final response = await http.get(Uri.parse(url));
+      
+      if (response.statusCode != 200) {
+        throw Exception('Failed to fetch Quizlet set: HTTP ${response.statusCode}');
+      }
+
+      final document = html_parser.parse(response.body);
+      List<Map<String, dynamic>> parsedQuestions = [];
+
+      debugPrint('Parsing Quizlet HTML...');
+
+      // Method 1: Try to find JSON data in script tags
+      final scriptTags = document.getElementsByTagName('script');
+      String? jsonData;
+      
+      for (var script in scriptTags) {
+        final scriptText = script.text;
+        if (scriptText.contains('window.Quizlet') || 
+            scriptText.contains('__NEXT_DATA__') ||
+            scriptText.contains('"word"') && scriptText.contains('"definition"')) {
+          
+          debugPrint('Found potential JSON data in script tag');
+          
+          // Try to extract JSON
+          final start = scriptText.indexOf('{');
+          final end = scriptText.lastIndexOf('}');
+          if (start != -1 && end != -1 && end > start) {
+            jsonData = scriptText.substring(start, end + 1);
+            debugPrint('Extracted JSON data (${jsonData.length} characters)');
+            break;
           }
         }
+      }
 
-        if (jsonData != null) {
-          final termRegExp = RegExp(r'"word":"(.*?)","definition":"(.*?)"');
-          for (final match in termRegExp.allMatches(jsonData)) {
-            final question = match.group(1)?.replaceAll('\\u002F', '/') ?? '';
-            final answer = match.group(2)?.replaceAll('\\u002F', '/') ?? '';
-            if (question.isNotEmpty && answer.isNotEmpty) {
-              // Create 4 options with the correct answer as one of them
+      // Method 2: Parse JSON data if found
+      if (jsonData != null) {
+        try {
+          // Look for term patterns in the JSON
+          final termPatterns = [
+            RegExp(r'"word"\s*:\s*"([^"]+)"\s*,\s*"definition"\s*:\s*"([^"]+)"'),
+            RegExp(r'"term"\s*:\s*"([^"]+)"\s*,\s*"definition"\s*:\s*"([^"]+)"'),
+            RegExp(r'"front"\s*:\s*"([^"]+)"\s*,\s*"back"\s*:\s*"([^"]+)"'),
+          ];
+
+          for (final pattern in termPatterns) {
+            final matches = pattern.allMatches(jsonData);
+            debugPrint('Found ${matches.length} matches with pattern: ${pattern.pattern}');
+            
+            for (final match in matches) {
+              final question = match.group(1)?.replaceAll('\\u002F', '/').replaceAll('\\"', '"') ?? '';
+              final answer = match.group(2)?.replaceAll('\\u002F', '/').replaceAll('\\"', '"') ?? '';
+              
+              if (question.isNotEmpty && answer.isNotEmpty) {
+                // Create 4 options with the correct answer as one of them
+                List<String> options = [answer];
+                // Add some dummy options for now
+                while (options.length < 4) {
+                  options.add('Option ${options.length}');
+                }
+                options.shuffle();
+
+                parsedQuestions.add({
+                  'question': question,
+                  'correct_answer': answer,
+                  'options': options,
+                });
+              }
+            }
+            
+            if (parsedQuestions.isNotEmpty) break;
+          }
+        } catch (e) {
+          debugPrint('Error parsing JSON data: $e');
+        }
+      }
+
+      // Method 3: Try to parse HTML elements directly
+      if (parsedQuestions.isEmpty) {
+        debugPrint('Trying HTML element parsing...');
+        
+        // Look for various Quizlet HTML structures
+        final selectors = [
+          '.SetPageTerm-content',
+          '.SetPageTerm',
+          '.TermText',
+          '[data-testid="term"]',
+          '.Term',
+        ];
+
+        for (final selector in selectors) {
+          final elements = document.querySelectorAll(selector);
+          debugPrint('Found ${elements.length} elements with selector: $selector');
+          
+          for (var el in elements) {
+            String? question;
+            String? answer;
+
+            // Try different ways to extract question and answer
+            final wordEl = el.querySelector('.SetPageTerm-wordText') ?? 
+                          el.querySelector('.TermText') ??
+                          el.querySelector('[data-testid="word"]');
+            final defEl = el.querySelector('.SetPageTerm-definitionText') ?? 
+                         el.querySelector('.TermText') ??
+                         el.querySelector('[data-testid="definition"]');
+
+            if (wordEl != null) question = wordEl.text.trim();
+            if (defEl != null) answer = defEl.text.trim();
+
+            // If we still don't have both, try to get them from the element itself
+            if (question == null || answer == null) {
+              final textContent = el.text.trim();
+              if (textContent.contains('\n')) {
+                final parts = textContent.split('\n');
+                if (parts.length >= 2) {
+                  question = parts[0].trim();
+                  answer = parts[1].trim();
+                }
+              }
+            }
+
+            if (question != null && answer != null && 
+                question.isNotEmpty && answer.isNotEmpty) {
+              
               List<String> options = [answer];
-              // Add some dummy options for now - in a real app, you might generate these
               while (options.length < 4) {
                 options.add('Option ${options.length}');
               }
@@ -5105,72 +5247,62 @@ class _QuizletImportScreenState extends State<QuizletImportScreen> {
               });
             }
           }
+          
+          if (parsedQuestions.isNotEmpty) break;
         }
+      }
 
-        // Fallback: Try to parse HTML for terms
-        if (parsedQuestions.isEmpty) {
-          final termEls = document.querySelectorAll('.SetPageTerm-content');
-          for (var el in termEls) {
-            final question =
-                el.querySelector('.SetPageTerm-wordText')?.text.trim() ?? '';
-            final answer =
-                el.querySelector('.SetPageTerm-definitionText')?.text.trim() ??
-                    '';
-            if (question.isNotEmpty && answer.isNotEmpty) {
-              List<String> options = [answer];
-              while (options.length < 4) {
-                options.add('Option ${options.length}');
-              }
-              options.shuffle();
-
-              parsedQuestions.add({
-                'question': question,
-                'correct_answer': answer,
-                'options': options,
-              });
-            }
-          }
+      // Method 4: Try to parse from page title and description
+      if (parsedQuestions.isEmpty) {
+        debugPrint('Trying to parse from page metadata...');
+        
+        final title = document.querySelector('title')?.text ?? '';
+        final description = document.querySelector('meta[name="description"]')?.attributes['content'] ?? '';
+        
+        if (title.isNotEmpty && title.contains('Quizlet')) {
+          // Create a basic question from the title
+          parsedQuestions.add({
+            'question': 'What is this Quizlet set about?',
+            'correct_answer': title.replaceAll(' | Quizlet', '').replaceAll('Quizlet', '').trim(),
+            'options': [
+              title.replaceAll(' | Quizlet', '').replaceAll('Quizlet', '').trim(),
+              'General Knowledge',
+              'Study Material',
+              'Educational Content'
+            ],
+          });
         }
+      }
 
-        setState(() {
-          _questions = parsedQuestions;
-          _hasImported = parsedQuestions.isNotEmpty;
-          _isLoading = false;
-        });
+      setState(() {
+        _questions = parsedQuestions;
+        _hasImported = parsedQuestions.isNotEmpty;
+        _isLoading = false;
+      });
 
-        if (parsedQuestions.isNotEmpty) {
-          ScaffoldMessenger.of(this.context).showSnackBar(
-            SnackBar(
-              content:
-                  Text('Imported ${parsedQuestions.length} terms from Quizlet'),
-              backgroundColor: Colors.green,
-            ),
-          );
-        } else {
-          ScaffoldMessenger.of(this.context).showSnackBar(
-            const SnackBar(
-              content:
-                  Text('Could not parse Quizlet set. Please check the URL.'),
-              backgroundColor: Colors.orange,
-            ),
-          );
-        }
-      } else {
-        setState(() => _isLoading = false);
+      if (parsedQuestions.isNotEmpty) {
         ScaffoldMessenger.of(this.context).showSnackBar(
           SnackBar(
-            content:
-                Text('Failed to fetch Quizlet set: ${response.statusCode}'),
-            backgroundColor: Colors.red,
+            content: Text('Successfully imported ${parsedQuestions.length} terms from Quizlet'),
+            backgroundColor: Colors.green,
           ),
         );
+        debugPrint('Successfully imported ${parsedQuestions.length} questions');
+      } else {
+        ScaffoldMessenger.of(this.context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not parse Quizlet set. The set might be private or the format has changed.'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        debugPrint('Failed to parse any questions from Quizlet');
       }
     } catch (e) {
       setState(() => _isLoading = false);
       debugPrint('Quizlet import error: $e');
       ScaffoldMessenger.of(this.context).showSnackBar(
-        const SnackBar(
-          content: Text('Failed to import from Quizlet. Please check the URL.'),
+        SnackBar(
+          content: Text('Failed to import from Quizlet: ${e.toString()}'),
           backgroundColor: Colors.red,
         ),
       );

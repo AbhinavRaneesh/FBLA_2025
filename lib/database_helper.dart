@@ -532,4 +532,49 @@ class DatabaseHelper {
     );
     return Sqflite.firstIntValue(result) ?? 0;
   }
+
+  Future<void> updateStudySet(
+    int studySetId,
+    String name,
+    String description,
+  ) async {
+    final db = await database;
+    await db.update(
+      'study_sets',
+      {
+        'name': name,
+        'description': description,
+      },
+      where: 'id = ?',
+      whereArgs: [studySetId],
+    );
+  }
+
+  Future<void> updateQuestion(
+    int questionId,
+    String questionText,
+    String correctAnswer,
+    List<String> options,
+  ) async {
+    final db = await database;
+    await db.update(
+      'study_set_questions',
+      {
+        'question_text': questionText,
+        'correct_answer': correctAnswer,
+        'options': options.join('|'),
+      },
+      where: 'id = ?',
+      whereArgs: [questionId],
+    );
+  }
+
+  Future<void> deleteQuestion(int questionId) async {
+    final db = await database;
+    await db.delete(
+      'study_set_questions',
+      where: 'id = ?',
+      whereArgs: [questionId],
+    );
+  }
 }
