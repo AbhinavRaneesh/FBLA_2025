@@ -20,7 +20,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final TextEditingController followupController = TextEditingController();
-  final ScrollController _scrollController = ScrollController();
+  final ScrollController _scrollController = ScrollController(); // For chat only
   late final ChatBloc _chatBloc; // Create bloc instance here
   final DatabaseHelper _dbHelper = DatabaseHelper();
 
@@ -49,8 +49,148 @@ class _HomePageState extends State<HomePage> {
     "History",
     "Geography",
     "Computer Science",
-    "Economics"
+    "Economics",
+    "Literature",
+    "Art",
+    "Music",
+    "Psychology",
+    "Sociology",
+    "Philosophy",
+    "Astronomy",
+    "Geology",
+    "Environmental Science",
+    "Political Science"
   ];
+
+  // Sample questions for each subject
+  final Map<String, List<Map<String, dynamic>>> sampleQuestions = {
+    "Chemistry": [
+      {"question": "What is the chemical symbol for gold?", "options": ["Au", "Ag", "Fe", "Cu"], "answer": "Au"},
+      {"question": "What is the molecular formula for water?", "options": ["H2O", "CO2", "O2", "N2"], "answer": "H2O"},
+      {"question": "What is the atomic number of carbon?", "options": ["6", "12", "14", "16"], "answer": "6"},
+      {"question": "What type of bond is formed between sodium and chlorine in NaCl?", "options": ["Ionic", "Covalent", "Metallic", "Hydrogen"], "answer": "Ionic"},
+      {"question": "What is the pH of a neutral solution?", "options": ["0", "7", "14", "10"], "answer": "7"},
+    ],
+    "Physics": [
+      {"question": "What is the SI unit of force?", "options": ["Newton", "Joule", "Watt", "Pascal"], "answer": "Newton"},
+      {"question": "What is the speed of light in vacuum?", "options": ["3x10^8 m/s", "2x10^8 m/s", "4x10^8 m/s", "1x10^8 m/s"], "answer": "3x10^8 m/s"},
+      {"question": "What is Newton's first law also known as?", "options": ["Law of Inertia", "Law of Motion", "Law of Action-Reaction", "Law of Acceleration"], "answer": "Law of Inertia"},
+      {"question": "What is the unit of electrical resistance?", "options": ["Ohm", "Volt", "Ampere", "Watt"], "answer": "Ohm"},
+      {"question": "What is the formula for kinetic energy?", "options": ["1/2mv²", "mgh", "Fd", "Pt"], "answer": "1/2mv²"},
+    ],
+    "Biology": [
+      {"question": "What is the powerhouse of the cell?", "options": ["Mitochondria", "Nucleus", "Ribosome", "Golgi"], "answer": "Mitochondria"},
+      {"question": "What is the process by which plants make food?", "options": ["Photosynthesis", "Respiration", "Digestion", "Excretion"], "answer": "Photosynthesis"},
+      {"question": "What is the largest organ in the human body?", "options": ["Skin", "Liver", "Heart", "Brain"], "answer": "Skin"},
+      {"question": "What are the building blocks of proteins?", "options": ["Amino acids", "Nucleotides", "Fatty acids", "Monosaccharides"], "answer": "Amino acids"},
+      {"question": "What is the study of fossils called?", "options": ["Paleontology", "Archaeology", "Anthropology", "Geology"], "answer": "Paleontology"},
+    ],
+    "Mathematics": [
+      {"question": "What is the value of π (pi) to two decimal places?", "options": ["3.14", "3.41", "3.12", "3.16"], "answer": "3.14"},
+      {"question": "What is the square root of 144?", "options": ["12", "14", "10", "16"], "answer": "12"},
+      {"question": "What is the formula for the area of a circle?", "options": ["πr²", "2πr", "πd", "2πd"], "answer": "πr²"},
+      {"question": "What is the sum of angles in a triangle?", "options": ["180°", "90°", "360°", "270°"], "answer": "180°"},
+      {"question": "What is 2 to the power of 8?", "options": ["256", "128", "512", "64"], "answer": "256"},
+    ],
+    "History": [
+      {"question": "In what year did World War II end?", "options": ["1945", "1944", "1946", "1943"], "answer": "1945"},
+      {"question": "Who was the first President of the United States?", "options": ["George Washington", "Thomas Jefferson", "John Adams", "Benjamin Franklin"], "answer": "George Washington"},
+      {"question": "What year did Columbus discover America?", "options": ["1492", "1493", "1491", "1494"], "answer": "1492"},
+      {"question": "Who was the first Emperor of Rome?", "options": ["Augustus", "Julius Caesar", "Nero", "Caligula"], "answer": "Augustus"},
+      {"question": "What year did the French Revolution begin?", "options": ["1789", "1790", "1788", "1791"], "answer": "1789"},
+    ],
+    "Geography": [
+      {"question": "What is the capital of Australia?", "options": ["Canberra", "Sydney", "Melbourne", "Brisbane"], "answer": "Canberra"},
+      {"question": "What is the largest continent?", "options": ["Asia", "Africa", "North America", "Europe"], "answer": "Asia"},
+      {"question": "What is the longest river in the world?", "options": ["Nile", "Amazon", "Yangtze", "Mississippi"], "answer": "Nile"},
+      {"question": "What is the highest mountain in the world?", "options": ["Mount Everest", "K2", "Kangchenjunga", "Lhotse"], "answer": "Mount Everest"},
+      {"question": "What is the largest ocean?", "options": ["Pacific", "Atlantic", "Indian", "Arctic"], "answer": "Pacific"},
+    ],
+    "Computer Science": [
+      {"question": "What does CPU stand for?", "options": ["Central Processing Unit", "Computer Personal Unit", "Central Program Utility", "Computer Processing Unit"], "answer": "Central Processing Unit"},
+      {"question": "What is the primary function of RAM?", "options": ["Temporary storage", "Permanent storage", "Processing", "Display"], "answer": "Temporary storage"},
+      {"question": "What programming language was created by Guido van Rossum?", "options": ["Python", "Java", "C++", "JavaScript"], "answer": "Python"},
+      {"question": "What does HTML stand for?", "options": ["HyperText Markup Language", "High Tech Modern Language", "Hyper Transfer Markup Language", "Home Tool Markup Language"], "answer": "HyperText Markup Language"},
+      {"question": "What is the binary representation of decimal 10?", "options": ["1010", "1001", "1100", "1110"], "answer": "1010"},
+    ],
+    "Economics": [
+      {"question": "What is the study of how societies allocate scarce resources?", "options": ["Economics", "Sociology", "Psychology", "Political Science"], "answer": "Economics"},
+      {"question": "What is the law of supply and demand?", "options": ["Price increases with demand", "Price decreases with supply", "Price balances supply and demand", "Price is fixed"], "answer": "Price balances supply and demand"},
+      {"question": "What is GDP?", "options": ["Gross Domestic Product", "General Domestic Price", "Gross Demand Price", "General Demand Product"], "answer": "Gross Domestic Product"},
+      {"question": "What is inflation?", "options": ["Rise in general price level", "Fall in general price level", "No change in prices", "Currency devaluation"], "answer": "Rise in general price level"},
+      {"question": "What is a monopoly?", "options": ["Single seller", "Single buyer", "Many sellers", "Many buyers"], "answer": "Single seller"},
+    ],
+    "Literature": [
+      {"question": "Who wrote 'Romeo and Juliet'?", "options": ["William Shakespeare", "Charles Dickens", "Jane Austen", "Mark Twain"], "answer": "William Shakespeare"},
+      {"question": "What is a sonnet?", "options": ["14-line poem", "10-line poem", "20-line poem", "12-line poem"], "answer": "14-line poem"},
+      {"question": "Who wrote 'Pride and Prejudice'?", "options": ["Jane Austen", "Emily Brontë", "Charlotte Brontë", "Virginia Woolf"], "answer": "Jane Austen"},
+      {"question": "What is alliteration?", "options": ["Repetition of consonant sounds", "Repetition of vowel sounds", "Rhyming words", "Metaphor"], "answer": "Repetition of consonant sounds"},
+      {"question": "Who wrote 'The Great Gatsby'?", "options": ["F. Scott Fitzgerald", "Ernest Hemingway", "John Steinbeck", "William Faulkner"], "answer": "F. Scott Fitzgerald"},
+    ],
+    "Art": [
+      {"question": "Who painted the Mona Lisa?", "options": ["Leonardo da Vinci", "Michelangelo", "Raphael", "Donatello"], "answer": "Leonardo da Vinci"},
+      {"question": "What is the primary color that is not a primary color?", "options": ["Green", "Red", "Blue", "Yellow"], "answer": "Green"},
+      {"question": "What is chiaroscuro?", "options": ["Light and shadow contrast", "Color mixing", "Perspective", "Texture"], "answer": "Light and shadow contrast"},
+      {"question": "Who painted 'The Starry Night'?", "options": ["Vincent van Gogh", "Pablo Picasso", "Claude Monet", "Salvador Dalí"], "answer": "Vincent van Gogh"},
+      {"question": "What is a fresco?", "options": ["Wall painting on wet plaster", "Oil painting", "Watercolor", "Sculpture"], "answer": "Wall painting on wet plaster"},
+    ],
+    "Music": [
+      {"question": "How many notes are in an octave?", "options": ["8", "7", "12", "10"], "answer": "8"},
+      {"question": "What is the time signature 4/4 also known as?", "options": ["Common time", "Waltz time", "March time", "Cut time"], "answer": "Common time"},
+      {"question": "Who composed 'Symphony No. 9'?", "options": ["Ludwig van Beethoven", "Wolfgang Mozart", "Johann Bach", "Franz Schubert"], "answer": "Ludwig van Beethoven"},
+      {"question": "What is a chord?", "options": ["Three or more notes played together", "Two notes played together", "Single note", "Rhythm pattern"], "answer": "Three or more notes played together"},
+      {"question": "What is the Italian term for 'loud'?", "options": ["Forte", "Piano", "Allegro", "Adagio"], "answer": "Forte"},
+    ],
+    "Psychology": [
+      {"question": "Who is considered the father of psychoanalysis?", "options": ["Sigmund Freud", "Carl Jung", "B.F. Skinner", "Ivan Pavlov"], "answer": "Sigmund Freud"},
+      {"question": "What is classical conditioning?", "options": ["Learning through association", "Learning through consequences", "Learning through observation", "Learning through insight"], "answer": "Learning through association"},
+      {"question": "What is the study of behavior and mental processes?", "options": ["Psychology", "Sociology", "Anthropology", "Philosophy"], "answer": "Psychology"},
+      {"question": "What is the id?", "options": ["Unconscious desires", "Conscious mind", "Moral conscience", "Reality principle"], "answer": "Unconscious desires"},
+      {"question": "What is cognitive dissonance?", "options": ["Mental discomfort from conflicting beliefs", "Memory loss", "Anxiety disorder", "Depression"], "answer": "Mental discomfort from conflicting beliefs"},
+    ],
+    "Sociology": [
+      {"question": "What is the study of human society and social behavior?", "options": ["Sociology", "Psychology", "Anthropology", "Economics"], "answer": "Sociology"},
+      {"question": "What is a social norm?", "options": ["Expected behavior in society", "Law", "Religion", "Custom"], "answer": "Expected behavior in society"},
+      {"question": "What is social stratification?", "options": ["Division of society into classes", "Social mobility", "Social change", "Social interaction"], "answer": "Division of society into classes"},
+      {"question": "What is a primary group?", "options": ["Small, intimate group", "Large organization", "Formal group", "Temporary group"], "answer": "Small, intimate group"},
+      {"question": "What is deviance?", "options": ["Behavior that violates social norms", "Criminal behavior", "Social change", "Social control"], "answer": "Behavior that violates social norms"},
+    ],
+    "Philosophy": [
+      {"question": "Who said 'I think, therefore I am'?", "options": ["René Descartes", "Socrates", "Plato", "Aristotle"], "answer": "René Descartes"},
+      {"question": "What is epistemology?", "options": ["Study of knowledge", "Study of ethics", "Study of reality", "Study of beauty"], "answer": "Study of knowledge"},
+      {"question": "What is the Socratic method?", "options": ["Questioning to stimulate critical thinking", "Lecture method", "Debate method", "Research method"], "answer": "Questioning to stimulate critical thinking"},
+      {"question": "What is utilitarianism?", "options": ["Greatest good for greatest number", "Individual rights", "Duty-based ethics", "Virtue ethics"], "answer": "Greatest good for greatest number"},
+      {"question": "Who wrote 'The Republic'?", "options": ["Plato", "Aristotle", "Socrates", "Descartes"], "answer": "Plato"},
+    ],
+    "Astronomy": [
+      {"question": "What is the closest planet to the Sun?", "options": ["Mercury", "Venus", "Earth", "Mars"], "answer": "Mercury"},
+      {"question": "What is a light year?", "options": ["Distance light travels in one year", "Time light takes to reach Earth", "Speed of light", "Light intensity"], "answer": "Distance light travels in one year"},
+      {"question": "What is the largest planet in our solar system?", "options": ["Jupiter", "Saturn", "Neptune", "Uranus"], "answer": "Jupiter"},
+      {"question": "What is a black hole?", "options": ["Region where gravity is so strong nothing can escape", "Dark star", "Empty space", "Dead star"], "answer": "Region where gravity is so strong nothing can escape"},
+      {"question": "What is the name of our galaxy?", "options": ["Milky Way", "Andromeda", "Triangulum", "Large Magellanic Cloud"], "answer": "Milky Way"},
+    ],
+    "Geology": [
+      {"question": "What is the hardest mineral on Earth?", "options": ["Diamond", "Quartz", "Topaz", "Corundum"], "answer": "Diamond"},
+      {"question": "What type of rock is formed by heat and pressure?", "options": ["Metamorphic", "Igneous", "Sedimentary", "Volcanic"], "answer": "Metamorphic"},
+      {"question": "What is the center of the Earth called?", "options": ["Core", "Mantle", "Crust", "Lithosphere"], "answer": "Core"},
+      {"question": "What is the study of fossils called?", "options": ["Paleontology", "Archaeology", "Anthropology", "Biology"], "answer": "Paleontology"},
+      {"question": "What is the most abundant element in Earth's crust?", "options": ["Oxygen", "Silicon", "Aluminum", "Iron"], "answer": "Oxygen"},
+    ],
+    "Environmental Science": [
+      {"question": "What is the main cause of global warming?", "options": ["Greenhouse gases", "Solar radiation", "Volcanic activity", "Ocean currents"], "answer": "Greenhouse gases"},
+      {"question": "What is biodiversity?", "options": ["Variety of life on Earth", "Number of species", "Ecosystem health", "Environmental quality"], "answer": "Variety of life on Earth"},
+      {"question": "What is the ozone layer?", "options": ["Protective layer in atmosphere", "Pollution layer", "Cloud layer", "Wind layer"], "answer": "Protective layer in atmosphere"},
+      {"question": "What is renewable energy?", "options": ["Energy from natural sources", "Fossil fuel energy", "Nuclear energy", "Coal energy"], "answer": "Energy from natural sources"},
+      {"question": "What is deforestation?", "options": ["Clearing of forests", "Planting trees", "Forest management", "Wildlife protection"], "answer": "Clearing of forests"},
+    ],
+    "Political Science": [
+      {"question": "What is democracy?", "options": ["Government by the people", "Government by one person", "Government by military", "Government by religion"], "answer": "Government by the people"},
+      {"question": "What are the three branches of US government?", "options": ["Executive, Legislative, Judicial", "President, Congress, Senate", "Federal, State, Local", "Democrat, Republican, Independent"], "answer": "Executive, Legislative, Judicial"},
+      {"question": "What is the Bill of Rights?", "options": ["First 10 amendments to Constitution", "Declaration of Independence", "Articles of Confederation", "Federalist Papers"], "answer": "First 10 amendments to Constitution"},
+      {"question": "What is federalism?", "options": ["Division of power between levels of government", "Centralized government", "State government only", "Local government only"], "answer": "Division of power between levels of government"},
+      {"question": "What is the electoral college?", "options": ["System for electing president", "Congressional voting", "State legislature", "Popular vote"], "answer": "System for electing president"},
+    ],
+  };
 
   @override
   void initState() {
@@ -319,6 +459,27 @@ class _HomePageState extends State<HomePage> {
         }
       }
 
+      // If we still have fewer questions than requested, add sample questions
+      if (newQuestions.length < numberOfQuestions) {
+        print('Still have fewer questions than requested, adding sample questions');
+        int questionsNeeded = numberOfQuestions - newQuestions.length;
+        
+        // Get sample questions for the selected subject
+        List<Map<String, dynamic>> subjectSamples = sampleQuestions[selectedSubject] ?? [];
+        
+        if (subjectSamples.isNotEmpty) {
+          // Shuffle the sample questions to randomize them
+          List<Map<String, dynamic>> shuffledSamples = List.from(subjectSamples);
+          shuffledSamples.shuffle();
+          
+          // Add the needed number of sample questions
+          for (int i = 0; i < questionsNeeded && i < shuffledSamples.length; i++) {
+            newQuestions.add(shuffledSamples[i]);
+            print('Added sample question: ${shuffledSamples[i]['question']}');
+          }
+        }
+      }
+
       // If we successfully parsed questions, replace the current ones
       if (newQuestions.isNotEmpty) {
         // Ensure we don't exceed the requested number of questions
@@ -352,19 +513,46 @@ class _HomePageState extends State<HomePage> {
         print(
             'Successfully loaded ${newQuestions.length} new $selectedSubject questions!');
       } else {
-        // If parsing failed, show error with more details
-        print('No questions were parsed successfully');
-        setState(() {
-          isWaitingForQuestions = false;
-        });
+        // If parsing failed completely, use sample questions
+        print('No questions were parsed successfully, using sample questions');
+        List<Map<String, dynamic>> subjectSamples = sampleQuestions[selectedSubject] ?? [];
+        
+        if (subjectSamples.isNotEmpty) {
+          // Shuffle and take the requested number
+          List<Map<String, dynamic>> shuffledSamples = List.from(subjectSamples);
+          shuffledSamples.shuffle();
+          
+          int questionsToUse = numberOfQuestions < shuffledSamples.length 
+              ? numberOfQuestions 
+              : shuffledSamples.length;
+          
+          List<Map<String, dynamic>> finalQuestions = shuffledSamples.sublist(0, questionsToUse);
+          
+          setState(() {
+            scienceQuestions = finalQuestions;
+            answeredCorrectly = List.filled(finalQuestions.length, false);
+            currentQuestionIndex = 0;
+            showAnswer = false;
+            selectedAnswer = null;
+            isWaitingForQuestions = false;
+            showQuizArea = true;
+            showScoreSummary = false;
+          });
+          
+          print('Using ${finalQuestions.length} sample questions for $selectedSubject');
+        } else {
+          setState(() {
+            isWaitingForQuestions = false;
+          });
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to parse questions. Please try again.'),
-            backgroundColor: Colors.red,
-            duration: Duration(seconds: 5),
-          ),
-        );
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to parse questions and no sample questions available. Please try again.'),
+              backgroundColor: Colors.red,
+              duration: Duration(seconds: 5),
+            ),
+          );
+        }
       }
     } catch (e) {
       setState(() {
@@ -614,102 +802,17 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 20),
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-                childAspectRatio: 2.5,
+            SizedBox(
+              height: 200,
+              child: HorizontalSubjectWheel(
+                subjects: subjects,
+                selectedSubject: selectedSubject,
+                onSubjectSelected: (subject) {
+                  setState(() {
+                    selectedSubject = subject;
+                  });
+                },
               ),
-              itemCount: subjects.length,
-              itemBuilder: (context, index) {
-                final subject = subjects[index];
-                final isSelected = selectedSubject == subject;
-
-                final gradients = [
-                  [const Color(0xFF667eea), const Color(0xFF764ba2)],
-                  [const Color(0xFFf093fb), const Color(0xFFf5576c)],
-                  [const Color(0xFF4facfe), const Color(0xFF00f2fe)],
-                  [const Color(0xFF43e97b), const Color(0xFF38f9d7)],
-                  [const Color(0xFFfa709a), const Color(0xFFfee140)],
-                  [const Color(0xFFa8edea), const Color(0xFFfed6e3)],
-                  [const Color(0xFFffecd2), const Color(0xFFfcb69f)],
-                  [const Color(0xFFff9a9e), const Color(0xFFfecfef)],
-                ];
-
-                final icons = [
-                  Icons.science,
-                  Icons.rocket_launch,
-                  Icons.biotech,
-                  Icons.calculate,
-                  Icons.history_edu,
-                  Icons.public,
-                  Icons.computer,
-                  Icons.trending_up,
-                ];
-
-                return GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      selectedSubject = subject;
-                    });
-                  },
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: isSelected
-                            ? gradients[index]
-                            : [
-                                Colors.white.withOpacity(0.1),
-                                Colors.white.withOpacity(0.05)
-                              ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: isSelected
-                            ? Colors.white.withOpacity(0.3)
-                            : Colors.white.withOpacity(0.1),
-                        width: isSelected ? 2 : 1,
-                      ),
-                      boxShadow: isSelected
-                          ? [
-                              BoxShadow(
-                                color: gradients[index][0].withOpacity(0.3),
-                                blurRadius: 15,
-                                offset: const Offset(0, 8),
-                              ),
-                            ]
-                          : [],
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          icons[index],
-                          color: Colors.white,
-                          size: 24,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          subject,
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight:
-                                isSelected ? FontWeight.bold : FontWeight.w500,
-                            color: Colors.white,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
             ),
             const SizedBox(height: 20),
             const Text(
@@ -1485,6 +1588,258 @@ class SpaceBackground extends StatelessWidget {
                 },
               ),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+class HorizontalSubjectWheel extends StatefulWidget {
+  final List<String> subjects;
+  final String selectedSubject;
+  final Function(String) onSubjectSelected;
+
+  const HorizontalSubjectWheel({
+    Key? key,
+    required this.subjects,
+    required this.selectedSubject,
+    required this.onSubjectSelected,
+  }) : super(key: key);
+
+  @override
+  _HorizontalSubjectWheelState createState() => _HorizontalSubjectWheelState();
+}
+
+class _HorizontalSubjectWheelState extends State<HorizontalSubjectWheel>
+    with TickerProviderStateMixin {
+  late FixedExtentScrollController _scrollController;
+  late AnimationController _animationController;
+  int _selectedIndex = 0;
+
+  final List<Color> _gradients = [
+    const Color(0xFF667eea),
+    const Color(0xFFf093fb),
+    const Color(0xFF4facfe),
+    const Color(0xFF43e97b),
+    const Color(0xFFfa709a),
+    const Color(0xFFa8edea),
+    const Color(0xFFffecd2),
+    const Color(0xFFff9a9e),
+    const Color(0xFF667eea),
+    const Color(0xFFf093fb),
+    const Color(0xFF4facfe),
+    const Color(0xFF43e97b),
+    const Color(0xFFfa709a),
+    const Color(0xFFa8edea),
+    const Color(0xFFffecd2),
+    const Color(0xFFff9a9e),
+    const Color(0xFF667eea),
+  ];
+
+  final List<IconData> _icons = [
+    Icons.science,
+    Icons.rocket_launch,
+    Icons.biotech,
+    Icons.calculate,
+    Icons.history_edu,
+    Icons.public,
+    Icons.computer,
+    Icons.trending_up,
+    Icons.book,
+    Icons.palette,
+    Icons.music_note,
+    Icons.psychology,
+    Icons.people,
+    Icons.lightbulb,
+    Icons.visibility,
+    Icons.landscape,
+    Icons.eco,
+    Icons.gavel,
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = FixedExtentScrollController();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 400),
+      vsync: this,
+    );
+    
+    _selectedIndex = widget.subjects.indexOf(widget.selectedSubject);
+    if (_selectedIndex == -1) _selectedIndex = 0;
+    
+    // Set initial position after the widget is built
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollController.jumpToItem(_selectedIndex);
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  void _onSelectedItemChanged(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+    widget.onSubjectSelected(widget.subjects[index]);
+    _animationController.forward(from: 0.0);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 200,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // Selection indicator with glow - smaller size to match items
+          AnimatedBuilder(
+            animation: _animationController,
+            builder: (context, child) {
+              return Container(
+                height: 50,
+                margin: const EdgeInsets.symmetric(horizontal: 25),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(15),
+                  border: Border.all(
+                    color: _gradients[_selectedIndex % _gradients.length].withOpacity(0.8 + (_animationController.value * 0.2)),
+                    width: 2,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: _gradients[_selectedIndex % _gradients.length].withOpacity(0.4 + (_animationController.value * 0.3)),
+                      blurRadius: 15 + (_animationController.value * 8),
+                      spreadRadius: 1 + (_animationController.value * 2),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+          // Subject wheel
+          Container(
+            height: 180,
+            child: ListWheelScrollView.useDelegate(
+              controller: _scrollController,
+              itemExtent: 60,
+              diameterRatio: 1.8,
+              perspective: 0.01,
+              physics: const FixedExtentScrollPhysics(),
+              onSelectedItemChanged: _onSelectedItemChanged,
+              childDelegate: ListWheelChildBuilderDelegate(
+                builder: (context, index) {
+                  if (index >= widget.subjects.length) return Container();
+                  
+                  final subject = widget.subjects[index];
+                  final isSelected = index == _selectedIndex;
+                  
+                  return AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeOutCubic,
+                    margin: const EdgeInsets.symmetric(horizontal: 25, vertical: 5),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(15),
+                      gradient: LinearGradient(
+                        colors: isSelected
+                            ? [_gradients[index % _gradients.length], _gradients[index % _gradients.length].withOpacity(0.7)]
+                            : [Colors.white.withOpacity(0.15), Colors.white.withOpacity(0.05)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      boxShadow: isSelected
+                          ? [
+                              BoxShadow(
+                                color: _gradients[index % _gradients.length].withOpacity(0.5),
+                                blurRadius: 15,
+                                offset: const Offset(0, 6),
+                                spreadRadius: 1,
+                              ),
+                            ]
+                          : [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 3,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: isSelected 
+                                ? Colors.white.withOpacity(0.2)
+                                : Colors.transparent,
+                          ),
+                          child: Icon(
+                            _icons[index % _icons.length],
+                            color: isSelected ? Colors.white : Colors.white.withOpacity(0.6),
+                            size: isSelected ? 30 : 26,
+                          ),
+                        ),
+                        const SizedBox(width: 15),
+                        Expanded(
+                          child: Text(
+                            subject,
+                            style: TextStyle(
+                              color: isSelected ? Colors.white : Colors.white.withOpacity(0.7),
+                              fontSize: isSelected ? 20 : 17,
+                              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                            ),
+                            textAlign: TextAlign.left,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (isSelected)
+                          Container(
+                            margin: const EdgeInsets.only(right: 15),
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.white.withOpacity(0.3),
+                            ),
+                            child: Icon(
+                              Icons.check,
+                              color: Colors.white,
+                              size: 16,
+                            ),
+                          ),
+                      ],
+                    ),
+                  );
+                },
+                childCount: widget.subjects.length,
+              ),
+            ),
+          ),
+          // Center line indicators
+          Positioned(
+            top: 70,
+            left: 0,
+            right: 0,
+            child: Container(
+              height: 2,
+              color: _gradients[_selectedIndex % _gradients.length].withOpacity(0.6),
+            ),
+          ),
+          Positioned(
+            bottom: 70,
+            left: 0,
+            right: 0,
+            child: Container(
+              height: 2,
+              color: _gradients[_selectedIndex % _gradients.length].withOpacity(0.6),
+            ),
+          ),
         ],
       ),
     );

@@ -3106,7 +3106,7 @@ class _MCQManagerState extends State<MCQManager> {
   @override
   void initState() {
     super.initState();
-    _syncWithPremadeStudySets();
+    _initializeCourses();
     _loadUserPoints();
 
     // Initialize selectedSubject from widget if provided
@@ -3114,6 +3114,19 @@ class _MCQManagerState extends State<MCQManager> {
       selectedSubject = widget.selectedSubject;
       // Randomize questions for the selected subject
       _randomizeQuestions();
+    }
+  }
+
+  Future<void> _initializeCourses() async {
+    try {
+      // Ensure database is up to date with new courses
+      await _dbHelper.refreshPremadeSets();
+      // Sync with premade study sets
+      _syncWithPremadeStudySets();
+    } catch (e) {
+      debugPrint('Error initializing courses: $e');
+      // Still sync with premade study sets even if database refresh fails
+      _syncWithPremadeStudySets();
     }
   }
 
@@ -3137,9 +3150,12 @@ class _MCQManagerState extends State<MCQManager> {
 
   void _syncWithPremadeStudySets() {
     final premadeSets = PremadeStudySetsRepository.getPremadeSets();
+    debugPrint('Syncing with ${premadeSets.length} premade sets from repository');
+    
     for (final set in premadeSets) {
       final alreadyExists = apClasses.any((cls) => cls['name'] == set.name);
       if (!alreadyExists) {
+        debugPrint('Adding new course to MCQ manager: ${set.name}');
         apClasses.add({
           'name': set.name,
           'color': [Color(0xFF667eea), Color(0xFF764ba2)], // Default color
@@ -3154,8 +3170,12 @@ class _MCQManagerState extends State<MCQManager> {
                   })
               .toList(),
         });
+      } else {
+        debugPrint('Course already exists in MCQ manager: ${set.name}');
       }
     }
+    
+    debugPrint('Total courses in MCQ manager after sync: ${apClasses.length}');
   }
 
   @override
@@ -4320,6 +4340,13 @@ class _MCQManagerState extends State<MCQManager> {
       // The set name should match the one in PremadeStudySetsRepository
       final setName = subjectName;
 
+      // Check if all premade sets are loaded
+      final allSetsLoaded = await _dbHelper.areAllPremadeSetsLoaded();
+      if (!allSetsLoaded) {
+        debugPrint('Not all premade sets are loaded, refreshing database...');
+        await _dbHelper.refreshPremadeSets();
+      }
+
       // Find the set in the database
       final premadeSets = await _dbHelper.getPremadeStudySets();
 
@@ -4356,7 +4383,7 @@ class _MCQManagerState extends State<MCQManager> {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Set "$setName" not found in premade sets!'),
+                content: Text('Set "$setName" not found. Please try refreshing the app.'),
                 backgroundColor: Colors.red,
               ),
             );
@@ -4438,7 +4465,7 @@ class _MCQManagerState extends State<MCQManager> {
                 const Icon(Icons.error_outline, color: Colors.white),
                 const SizedBox(width: 16),
                 Expanded(
-                  child: Text('Failed to import set: ${e.toString()}'),
+                  child: Text('Failed to import set. Please try refreshing the app.'),
                 ),
               ],
             ),
