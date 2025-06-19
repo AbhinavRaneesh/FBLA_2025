@@ -153,7 +153,7 @@ class _HomePageState extends State<HomePage> {
                             );
                           }
                         });
-                        
+
                         return ListView.builder(
                           controller: _scrollController,
                           itemCount: state.messages.length,
@@ -169,7 +169,9 @@ class _HomePageState extends State<HomePage> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
-                                message.parts.isNotEmpty ? message.parts.first.text : 'No message content',
+                                message.parts.isNotEmpty
+                                    ? message.parts.first.text
+                                    : 'No message content',
                                 style: TextStyle(color: Colors.white),
                               ),
                             );
@@ -219,9 +221,10 @@ class _HomePageState extends State<HomePage> {
                               inputMessage: followupController.text,
                             ));
                             followupController.clear();
-                            
+
                             // Auto-scroll to bottom when user sends a message
-                            Future.delayed(const Duration(milliseconds: 100), () {
+                            Future.delayed(const Duration(milliseconds: 100),
+                                () {
                               if (_scrollController.hasClients) {
                                 _scrollController.animateTo(
                                   _scrollController.position.maxScrollExtent,
@@ -276,7 +279,8 @@ class _HomePageState extends State<HomePage> {
         Map<String, dynamic>? parsedQuestion = _parseBracketFormat(line);
         if (parsedQuestion != null) {
           newQuestions.add(parsedQuestion);
-          print('Successfully added question ${newQuestions.length}: ${parsedQuestion['question']}');
+          print(
+              'Successfully added question ${newQuestions.length}: ${parsedQuestion['question']}');
         } else {
           print('Failed to parse question line: $line');
         }
@@ -296,7 +300,8 @@ class _HomePageState extends State<HomePage> {
               _parseBracketFormat(block.trim());
           if (parsedQuestion != null) {
             newQuestions.add(parsedQuestion);
-            print('Alternative parsing added question: ${parsedQuestion['question']}');
+            print(
+                'Alternative parsing added question: ${parsedQuestion['question']}');
           }
         }
 
@@ -307,7 +312,8 @@ class _HomePageState extends State<HomePage> {
                 _parseBracketFormat(line.trim());
             if (parsedQuestion != null) {
               newQuestions.add(parsedQuestion);
-              print('Single line parsing added question: ${parsedQuestion['question']}');
+              print(
+                  'Single line parsing added question: ${parsedQuestion['question']}');
             }
           }
         }
@@ -321,7 +327,8 @@ class _HomePageState extends State<HomePage> {
         }
 
         print('Setting state with ${newQuestions.length} questions');
-        print('Before setState - showQuizArea: $showQuizArea, scienceQuestions.length: ${scienceQuestions.length}');
+        print(
+            'Before setState - showQuizArea: $showQuizArea, scienceQuestions.length: ${scienceQuestions.length}');
         setState(() {
           scienceQuestions = newQuestions;
           answeredCorrectly = List.filled(newQuestions.length, false);
@@ -333,14 +340,17 @@ class _HomePageState extends State<HomePage> {
           showScoreSummary = false;
         });
 
-        print('After setState - showQuizArea: $showQuizArea, scienceQuestions.length: ${scienceQuestions.length}');
-        print('First question: ${scienceQuestions.isNotEmpty ? scienceQuestions[0]['question'] : 'No questions'}');
+        print(
+            'After setState - showQuizArea: $showQuizArea, scienceQuestions.length: ${scienceQuestions.length}');
+        print(
+            'First question: ${scienceQuestions.isNotEmpty ? scienceQuestions[0]['question'] : 'No questions'}');
 
         // Clear chat history after successful question generation
         _clearChatHistory();
 
         // Show success message in console instead of UI
-        print('Successfully loaded ${newQuestions.length} new $selectedSubject questions!');
+        print(
+            'Successfully loaded ${newQuestions.length} new $selectedSubject questions!');
       } else {
         // If parsing failed, show error with more details
         print('No questions were parsed successfully');
@@ -497,7 +507,8 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
 
   @override
   Widget build(BuildContext context) {
-    print('HomePage build method called - showQuizArea: $showQuizArea, scienceQuestions.length: ${scienceQuestions.length}');
+    print(
+        'HomePage build method called - showQuizArea: $showQuizArea, scienceQuestions.length: ${scienceQuestions.length}');
     return BlocProvider.value(
       value: _chatBloc,
       child: Scaffold(
@@ -509,20 +520,26 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
             SafeArea(
               child: BlocListener<ChatBloc, ChatState>(
                 listener: (context, state) {
-                  print('BlocListener triggered with state: ${state.runtimeType}');
+                  print(
+                      'BlocListener triggered with state: ${state.runtimeType}');
                   print('isWaitingForQuestions: $isWaitingForQuestions');
                   if (state is ChatSuccessState) {
-                    print('ChatSuccessState received with ${state.messages.length} messages');
+                    print(
+                        'ChatSuccessState received with ${state.messages.length} messages');
                     if (isWaitingForQuestions && state.messages.isNotEmpty) {
                       try {
                         var lastMessage = state.messages.last;
                         print('Last message role: ${lastMessage.role}');
-                        print('Last message parts length: ${lastMessage.parts.length}');
-                        if (lastMessage.role != "user" && lastMessage.parts.isNotEmpty) {
+                        print(
+                            'Last message parts length: ${lastMessage.parts.length}');
+                        if (lastMessage.role != "user" &&
+                            lastMessage.parts.isNotEmpty) {
                           print('Parsing AI response...');
-                          _parseAndReplaceQuestions(lastMessage.parts.first.text);
+                          _parseAndReplaceQuestions(
+                              lastMessage.parts.first.text);
                         } else {
-                          print('Skipping parsing - role: ${lastMessage.role}, parts empty: ${lastMessage.parts.isEmpty}');
+                          print(
+                              'Skipping parsing - role: ${lastMessage.role}, parts empty: ${lastMessage.parts.isEmpty}');
                         }
                       } catch (e) {
                         print('Error in BlocListener: $e');
@@ -552,8 +569,9 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
                 },
                 child: BlocBuilder<ChatBloc, ChatState>(
                   builder: (context, state) {
-                    print('BlocBuilder rebuilding. showQuizArea: $showQuizArea, scienceQuestions.length: ${scienceQuestions.length}, showScoreSummary: $showScoreSummary');
-                    
+                    print(
+                        'BlocBuilder rebuilding. showQuizArea: $showQuizArea, scienceQuestions.length: ${scienceQuestions.length}, showScoreSummary: $showScoreSummary');
+
                     return Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
                       child: Column(
@@ -609,7 +627,7 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
               itemBuilder: (context, index) {
                 final subject = subjects[index];
                 final isSelected = selectedSubject == subject;
-                
+
                 final gradients = [
                   [const Color(0xFF667eea), const Color(0xFF764ba2)],
                   [const Color(0xFFf093fb), const Color(0xFFf5576c)],
@@ -620,7 +638,7 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
                   [const Color(0xFFffecd2), const Color(0xFFfcb69f)],
                   [const Color(0xFFff9a9e), const Color(0xFFfecfef)],
                 ];
-                
+
                 final icons = [
                   Icons.science,
                   Icons.rocket_launch,
@@ -631,7 +649,7 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
                   Icons.computer,
                   Icons.trending_up,
                 ];
-                
+
                 return GestureDetector(
                   onTap: () {
                     setState(() {
@@ -642,26 +660,31 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
                     duration: const Duration(milliseconds: 200),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: isSelected 
+                        colors: isSelected
                             ? gradients[index]
-                            : [Colors.white.withOpacity(0.1), Colors.white.withOpacity(0.05)],
+                            : [
+                                Colors.white.withOpacity(0.1),
+                                Colors.white.withOpacity(0.05)
+                              ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: isSelected 
+                        color: isSelected
                             ? Colors.white.withOpacity(0.3)
                             : Colors.white.withOpacity(0.1),
                         width: isSelected ? 2 : 1,
                       ),
-                      boxShadow: isSelected ? [
-                        BoxShadow(
-                          color: gradients[index][0].withOpacity(0.3),
-                          blurRadius: 15,
-                          offset: const Offset(0, 8),
-                        ),
-                      ] : [],
+                      boxShadow: isSelected
+                          ? [
+                              BoxShadow(
+                                color: gradients[index][0].withOpacity(0.3),
+                                blurRadius: 15,
+                                offset: const Offset(0, 8),
+                              ),
+                            ]
+                          : [],
                     ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -676,7 +699,8 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
                           subject,
                           style: TextStyle(
                             fontSize: 12,
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                            fontWeight:
+                                isSelected ? FontWeight.bold : FontWeight.w500,
                             color: Colors.white,
                           ),
                           textAlign: TextAlign.center,
@@ -747,10 +771,7 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
               height: 60,
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [
-                    Color(0xFF4facfe),
-                    Color(0xFF00f2fe)
-                  ],
+                  colors: [Color(0xFF4facfe), Color(0xFF00f2fe)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -764,9 +785,11 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
                 ],
               ),
               child: ElevatedButton(
-                onPressed: isWaitingForQuestions ? null : () {
-                  _generateQuestions();
-                },
+                onPressed: isWaitingForQuestions
+                    ? null
+                    : () {
+                        _generateQuestions();
+                      },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.transparent,
                   shadowColor: Colors.transparent,
@@ -783,7 +806,8 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
                             height: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              valueColor:
+                                  AlwaysStoppedAnimation<Color>(Colors.white),
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -814,7 +838,8 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
   }
 
   Widget _buildQuizArea() {
-    print('_buildQuizArea called with ${scienceQuestions.length} questions, current index: $currentQuestionIndex');
+    print(
+        '_buildQuizArea called with ${scienceQuestions.length} questions, current index: $currentQuestionIndex');
     if (scienceQuestions.isEmpty) {
       print('No questions available!');
       return Center(
@@ -824,7 +849,7 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
         ),
       );
     }
-    
+
     if (currentQuestionIndex >= scienceQuestions.length) {
       print('Current index out of bounds!');
       return Center(
@@ -834,11 +859,11 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
         ),
       );
     }
-    
+
     final currentQuestion = scienceQuestions[currentQuestionIndex];
     print('Current question: ${currentQuestion['question']}');
     print('Current options: ${currentQuestion['options']}');
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -918,7 +943,8 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
             itemBuilder: (context, index) {
               final option = currentQuestion["options"][index];
               final isSelected = selectedAnswer == option;
-              final isCorrect = showAnswer && option == currentQuestion["answer"];
+              final isCorrect =
+                  showAnswer && option == currentQuestion["answer"];
               final isWrong = showAnswer && isSelected && !isCorrect;
 
               return Padding(
@@ -971,7 +997,11 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
                                 : isWrong
                                     ? Icons.cancel
                                     : null,
-                            color: isCorrect ? Colors.green : isWrong ? Colors.red : null,
+                            color: isCorrect
+                                ? Colors.green
+                                : isWrong
+                                    ? Colors.red
+                                    : null,
                           )
                         : null,
                     onTap: showAnswer
@@ -997,10 +1027,7 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
               height: 60,
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [
-                    Color(0xFF667eea),
-                    Color(0xFF764ba2)
-                  ],
+                  colors: [Color(0xFF667eea), Color(0xFF764ba2)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -1044,10 +1071,7 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
                   height: 50,
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                      colors: [
-                        Color(0xFF667eea),
-                        Color(0xFF764ba2)
-                      ],
+                      colors: [Color(0xFF667eea), Color(0xFF764ba2)],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
@@ -1095,24 +1119,19 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: currentQuestionIndex + 1 == scienceQuestions.length
-                        ? [
-                            Color(0xFF56ab2f),
-                            Color(0xFFa8e6cf)
-                          ]
-                        : [
-                            Color(0xFF4facfe),
-                            Color(0xFF00f2fe)
-                          ],
+                        ? [Color(0xFF56ab2f), Color(0xFFa8e6cf)]
+                        : [Color(0xFF4facfe), Color(0xFF00f2fe)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   borderRadius: BorderRadius.circular(30),
                   boxShadow: [
                     BoxShadow(
-                      color: (currentQuestionIndex + 1 == scienceQuestions.length
-                          ? const Color(0xFF56ab2f)
-                          : const Color(0xFF4facfe))
-                          .withOpacity(0.3),
+                      color:
+                          (currentQuestionIndex + 1 == scienceQuestions.length
+                                  ? const Color(0xFF56ab2f)
+                                  : const Color(0xFF4facfe))
+                              .withOpacity(0.3),
                       blurRadius: 20,
                       offset: const Offset(0, 10),
                     ),
@@ -1180,7 +1199,7 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
               ),
             ),
             const SizedBox(height: 30),
-            
+
             // Quiz Completed Text
             const Text(
               "Quiz Completed!",
@@ -1192,16 +1211,13 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
               ),
             ),
             const SizedBox(height: 40),
-            
+
             // Score Card
             Container(
               padding: const EdgeInsets.all(30),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [
-                    Color(0xFF667eea),
-                    Color(0xFF764ba2)
-                  ],
+                  colors: [Color(0xFF667eea), Color(0xFF764ba2)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -1236,7 +1252,8 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
                   ),
                   const SizedBox(height: 20),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(20),
@@ -1258,7 +1275,7 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
               ),
             ),
             const SizedBox(height: 40),
-            
+
             // Action Buttons
             Row(
               children: [
@@ -1267,10 +1284,7 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
                     height: 45,
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [
-                          Color(0xFF4facfe),
-                          Color(0xFF00f2fe)
-                        ],
+                        colors: [Color(0xFF4facfe), Color(0xFF00f2fe)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
@@ -1309,10 +1323,7 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
                     height: 45,
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [
-                          Color(0xFF667eea),
-                          Color(0xFF764ba2)
-                        ],
+                        colors: [Color(0xFF667eea), Color(0xFF764ba2)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
@@ -1383,7 +1394,9 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
                   constraints: BoxConstraints(
                       maxWidth: MediaQuery.of(context).size.width * 0.75),
                   child: Text(
-                    message.parts.isNotEmpty ? message.parts.first.text : 'No message content',
+                    message.parts.isNotEmpty
+                        ? message.parts.first.text
+                        : 'No message content',
                     style: TextStyle(color: Colors.white),
                   ),
                 ),

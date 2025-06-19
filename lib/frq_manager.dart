@@ -30,6 +30,17 @@ const List<String> manualQuestions = [
   'Q4b'
 ];
 
+// Point values for AP CS A 2024 FRQ questions
+const Map<String, int> questionPointValues = {
+  'Q1a': 4,
+  'Q1b': 5,
+  'Q2': 9,
+  'Q3a': 3,
+  'Q3b': 6,
+  'Q4a': 3,
+  'Q4b': 6,
+};
+
 // SpaceBackground widget for the space theme
 class SpaceBackground extends StatelessWidget {
   const SpaceBackground({super.key});
@@ -479,9 +490,9 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
                     if (match != null) {
                       pointsAwarded = int.parse(match.group(1)!);
                     }
-                    // Get max points based on question
-                    int maxPoints = 3; // Default
-                    if (questionNumber == 'Q2') maxPoints = 4;
+                    // Get max points based on question - Updated to match AP CS A 2024 FRQ
+                    int maxPoints = questionPointValues[questionNumber] ??
+                        3; // Default to 3 if not found
                     results.add(FrqGradingResult(
                       subpart: questionNumber,
                       userAnswer: answers[questionNumber] ?? '',
@@ -1577,9 +1588,9 @@ class _FRQTextDisplayScreenState extends State<FRQTextDisplayScreen> {
                     if (match != null) {
                       pointsAwarded = int.parse(match.group(1)!);
                     }
-                    // Get max points based on question
-                    int maxPoints = 3; // Default
-                    if (questionNumber == 'Q2') maxPoints = 4;
+                    // Get max points based on question - Updated to match AP CS A 2024 FRQ
+                    int maxPoints = questionPointValues[questionNumber] ??
+                        3; // Default to 3 if not found
                     results.add(FrqGradingResult(
                       subpart: questionNumber,
                       userAnswer: answers[questionNumber] ?? '',

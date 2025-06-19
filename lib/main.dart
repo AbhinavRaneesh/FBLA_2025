@@ -422,7 +422,7 @@ class _FlappyBirdGameScreenState extends State<FlappyBirdGameScreen> {
                         color: Colors.black, // Always black
                       ),
                     ),
-                    const SizedBox(height: 20), // Add spacing
+                    const SizedBox(height: 12), // Add spacing
                     ...widget.questions[currentQuestionIndex].options
                         .map((option) => Container(
                               margin: const EdgeInsets.only(
@@ -1628,22 +1628,19 @@ class _MainScreenState extends State<MainScreen> {
           ),
         ],
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       floatingActionButton: (_currentIndex == 0 &&
               _learnTabIndex == 0) // Show only on My Sets tab
           ? Padding(
-              padding: const EdgeInsets.only(bottom: 16.0, left: 16.0),
+              padding: const EdgeInsets.only(bottom: 16.0, right: 16.0),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.end,
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Container(
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [
-                          Color(0xFF667eea),
-                          Color(0xFF764ba2)
-                        ],
+                        colors: [Color(0xFF667eea), Color(0xFF764ba2)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
@@ -1724,7 +1721,8 @@ class _LearnTabState extends State<LearnTab>
   void initState() {
     super.initState();
     _loadStudySets();
-    _tabController = TabController(length: 3, vsync: this, initialIndex: 0); // Set initial tab to My Sets
+    _tabController = TabController(
+        length: 3, vsync: this, initialIndex: 0); // Set initial tab to My Sets
     _tabController.addListener(() {
       if (!_tabController.indexIsChanging) {
         widget.onTabChanged(_tabController.index);
@@ -1825,7 +1823,7 @@ class _LearnTabState extends State<LearnTab>
                   ),
                 ),
                 // Add vertical space
-                const SizedBox(height: 32),
+                const SizedBox(height: 12),
                 // Study Sets Content
                 Expanded(
                   child: _isLoading
@@ -2450,7 +2448,7 @@ class _LearnTabState extends State<LearnTab>
     // Check if this is exactly AP Computer Science A
     String studySetName = studySet['name']?.toString() ?? '';
     bool isAPCompSciA = studySetName == 'AP Computer Science A';
-    
+
     if (isAPCompSciA) {
       // Show practice mode selection for AP Computer Science A
       Navigator.push(
@@ -3552,18 +3550,20 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
     });
   }
 
-  void _checkAnswer(String answer) {
+  void _checkAnswer(String selectedAnswer) {
     setState(() {
-      _selectedAnswer = answer;
+      _selectedAnswer = selectedAnswer;
       _showAnswer = true;
-      if (answer == _questions[_currentQuestionIndex]['correct_answer']) {
+      if (selectedAnswer ==
+          _questions[_currentQuestionIndex]['correct_answer']) {
         _correctAnswers++;
       }
     });
   }
 
   void _continueToNext() {
-    final int totalQuestions = _questions.length < _questionCount ? _questions.length : _questionCount;
+    final int totalQuestions =
+        _questions.length < _questionCount ? _questions.length : _questionCount;
     if (_currentQuestionIndex < totalQuestions - 1) {
       setState(() {
         _currentQuestionIndex++;
@@ -3599,7 +3599,7 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
 
     // Send the message to the chat
     _chatBloc.add(ChatGenerationNewTextMessageEvent(inputMessage: prompt));
-    
+
     // Auto-scroll to bottom after a short delay to ensure the chat interface is rendered
     Future.delayed(const Duration(milliseconds: 100), () {
       if (_chatScrollController.hasClients) {
@@ -3870,7 +3870,8 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
                                     borderRadius: BorderRadius.circular(16),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: const Color(0xFF4facfe).withOpacity(0.4),
+                                        color: const Color(0xFF4facfe)
+                                            .withOpacity(0.4),
                                         blurRadius: 20,
                                         offset: const Offset(0, 10),
                                       ),
@@ -3891,7 +3892,8 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
                                       ),
                                     ),
                                     child: const Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
                                         Icon(
                                           Icons.play_arrow,
@@ -4273,7 +4275,8 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
   }
 
   Widget _buildQuizContent() {
-    final int totalQuestions = _questions.length < _questionCount ? _questions.length : _questionCount;
+    final int totalQuestions =
+        _questions.length < _questionCount ? _questions.length : _questionCount;
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -4474,11 +4477,15 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
                     child: ElevatedButton.icon(
                       onPressed: _continueToNext,
                       icon: Icon(
-                        _currentQuestionIndex < totalQuestions - 1 ? Icons.arrow_forward : Icons.check_circle,
+                        _currentQuestionIndex < totalQuestions - 1
+                            ? Icons.arrow_forward
+                            : Icons.check_circle,
                         color: Colors.white,
                       ),
                       label: Text(
-                        _currentQuestionIndex < totalQuestions - 1 ? 'Next Question' : 'Finish',
+                        _currentQuestionIndex < totalQuestions - 1
+                            ? 'Next Question'
+                            : 'Finish',
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -4564,7 +4571,7 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
                       );
                     }
                   });
-                  
+
                   return ListView.builder(
                     controller: _chatScrollController,
                     padding: const EdgeInsets.all(16),
@@ -4601,7 +4608,9 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
                                   borderRadius: BorderRadius.circular(16),
                                 ),
                                 child: Text(
-                                  message.parts.isNotEmpty ? message.parts.first.text : 'No message content',
+                                  message.parts.isNotEmpty
+                                      ? message.parts.first.text
+                                      : 'No message content',
                                   style: const TextStyle(
                                       color: Colors.white, fontSize: 14),
                                 ),
@@ -4667,7 +4676,7 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
                       _chatBloc.add(ChatGenerationNewTextMessageEvent(
                           inputMessage: _chatController.text));
                       _chatController.clear();
-                      
+
                       // Auto-scroll to bottom when user sends a message
                       Future.delayed(const Duration(milliseconds: 100), () {
                         if (_chatScrollController.hasClients) {
@@ -4790,7 +4799,9 @@ class _QuizScreenState extends State<QuizScreen> {
     });
 
     if (answer == widget.questions[currentQuestionIndex].correctAnswer) {
-      score++;
+      setState(() {
+        score += 10;
+      });
     }
 
     Future.delayed(const Duration(seconds: 1), () {
@@ -6833,18 +6844,14 @@ class PracticeTypeChoiceScreen extends StatelessWidget {
                       margin: const EdgeInsets.only(bottom: 24),
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
-                          colors: [
-                            Color(0xFF4facfe),
-                            Color(0xFF00f2fe)
-                          ],
+                          colors: [Color(0xFF4facfe), Color(0xFF00f2fe)],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
                         borderRadius: BorderRadius.circular(24),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF4facfe)
-                                .withOpacity(0.4),
+                            color: const Color(0xFF4facfe).withOpacity(0.4),
                             blurRadius: 20,
                             offset: const Offset(0, 10),
                           ),
@@ -6908,18 +6915,14 @@ class PracticeTypeChoiceScreen extends StatelessWidget {
                       padding: const EdgeInsets.all(28),
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
-                          colors: [
-                            Color(0xFF667eea),
-                            Color(0xFF764ba2)
-                          ],
+                          colors: [Color(0xFF667eea), Color(0xFF764ba2)],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
                         borderRadius: BorderRadius.circular(24),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF667eea)
-                                .withOpacity(0.4),
+                            color: const Color(0xFF667eea).withOpacity(0.4),
                             blurRadius: 20,
                             offset: const Offset(0, 10),
                           ),
@@ -6939,8 +6942,7 @@ class PracticeTypeChoiceScreen extends StatelessWidget {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.code,
-                                  color: Colors.white, size: 32),
+                              Icon(Icons.code, color: Colors.white, size: 32),
                               SizedBox(width: 16),
                               Text(
                                 'Free Response Practice',

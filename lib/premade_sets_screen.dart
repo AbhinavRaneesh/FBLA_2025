@@ -162,178 +162,174 @@ class _PremadeSetsScreenState extends State<PremadeSetsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Browse Sets'),
-        backgroundColor: const Color(0xFF1D1E33),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        shadowColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
         foregroundColor: Colors.white,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _isLoading ? null : _refreshSets,
-            tooltip: 'Refresh Study Sets',
-          ),
-        ],
+        actions: [],
       ),
-      body: Stack(
-        children: [
-          const SpaceBackground(),
-          SafeArea(
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: DropdownButtonFormField<String>(
-                    value: _selectedSubject,
-                    decoration: const InputDecoration(
-                      labelText: 'Filter by Subject',
-                      labelStyle: TextStyle(color: Colors.white),
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.white),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.blueAccent),
-                      ),
+      body: SafeArea(
+        child: RefreshIndicator(
+          onRefresh: _refreshSets,
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: DropdownButtonFormField<String>(
+                  value: _selectedSubject,
+                  decoration: const InputDecoration(
+                    labelText: 'Filter by Subject',
+                    labelStyle: TextStyle(color: Colors.white),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white),
                     ),
-                    dropdownColor: const Color(0xFF1D1E33),
-                    style: const TextStyle(color: Colors.white),
-                    items: [
-                      'All',
-                      'Math',
-                      'Science',
-                      'Computer Science',
-                    ].map((subject) {
-                      return DropdownMenuItem(
-                        value: subject,
-                        child: Text(subject),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      if (value != null) {
-                        setState(() {
-                          _selectedSubject = value;
-                        });
-                      }
-                    },
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.blueAccent),
+                    ),
                   ),
+                  dropdownColor: Colors.transparent,
+                  style: const TextStyle(color: Colors.white),
+                  items: [
+                    'All',
+                    'Math',
+                    'Science',
+                    'Computer Science',
+                  ].map((subject) {
+                    return DropdownMenuItem(
+                      value: subject,
+                      child: Text(subject),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() {
+                        _selectedSubject = value;
+                      });
+                    }
+                  },
                 ),
-                Expanded(
-                  child: _isLoading
-                      ? const Center(child: CircularProgressIndicator())
-                      : ListView.builder(
-                          padding: const EdgeInsets.all(16),
-                          itemCount: _getFilteredSets().length,
-                          itemBuilder: (context, index) {
-                            final studySet = _getFilteredSets()[index];
-                            final isImported = _isSetImported(studySet['id']);
-                            final premadeSet =
-                                PremadeStudySetsRepository.getPremadeSetByName(
-                                    studySet['name']);
+              ),
+              Expanded(
+                child: _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : ListView.builder(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: _getFilteredSets().length,
+                        itemBuilder: (context, index) {
+                          final studySet = _getFilteredSets()[index];
+                          final isImported = _isSetImported(studySet['id']);
+                          final premadeSet =
+                              PremadeStudySetsRepository.getPremadeSetByName(
+                                  studySet['name']);
 
-                            return Card(
-                              margin: const EdgeInsets.only(bottom: 12),
-                              elevation: 4,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(16),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Container(
-                                          padding: const EdgeInsets.all(8),
-                                          decoration: BoxDecoration(
-                                            color: _getSubjectColor(
-                                                    premadeSet?.subject ?? '')
-                                                .withOpacity(0.1),
-                                            borderRadius:
-                                                BorderRadius.circular(8),
-                                          ),
-                                          child: Icon(
-                                            _getSubjectIcon(
-                                                premadeSet?.subject ?? ''),
-                                            color: _getSubjectColor(
-                                                premadeSet?.subject ?? ''),
-                                          ),
+                          return Card(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            color: Colors.transparent,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          color: _getSubjectColor(
+                                                  premadeSet?.subject ?? '')
+                                              .withOpacity(0.1),
+                                          borderRadius:
+                                              BorderRadius.circular(8),
                                         ),
-                                        const SizedBox(width: 12),
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                studySet['name'],
-                                                style: const TextStyle(
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 18,
-                                                ),
-                                              ),
-                                              const SizedBox(height: 4),
-                                              Text(
-                                                studySet['description'],
-                                                style: TextStyle(
-                                                  color: Colors.grey[600],
-                                                ),
-                                              ),
-                                              const SizedBox(height: 4),
-                                              Text(
-                                                'Subject: ${premadeSet?.subject ?? 'Unknown'}',
-                                                style: TextStyle(
-                                                  color: Colors.grey[600],
-                                                  fontSize: 12,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
+                                        child: Icon(
+                                          _getSubjectIcon(
+                                              premadeSet?.subject ?? ''),
+                                          color: _getSubjectColor(
+                                              premadeSet?.subject ?? ''),
                                         ),
-                                        Row(
-                                          mainAxisSize: MainAxisSize.min,
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
                                           children: [
-                                            if (isImported)
-                                              IconButton(
-                                                icon: const Icon(Icons.delete,
-                                                    color: Colors.red),
-                                                onPressed: () =>
-                                                    _removeSet(studySet['id']),
+                                            Text(
+                                              studySet['name'],
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 18,
                                               ),
-                                            ElevatedButton(
-                                              onPressed: isImported
-                                                  ? null
-                                                  : () => _importSet(
-                                                      studySet['id']),
-                                              style: ElevatedButton.styleFrom(
-                                                backgroundColor: isImported
-                                                    ? Colors.grey
-                                                    : Colors.blueAccent,
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(8),
-                                                ),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              studySet['description'],
+                                              style: TextStyle(
+                                                color: Colors.grey[600],
                                               ),
-                                              child: Text(
-                                                isImported
-                                                    ? 'Imported'
-                                                    : 'Import',
-                                                style: const TextStyle(
-                                                    color: Colors.white),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              'Subject: ${premadeSet?.subject ?? 'Unknown'}',
+                                              style: TextStyle(
+                                                color: Colors.grey[600],
+                                                fontSize: 12,
                                               ),
                                             ),
                                           ],
                                         ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
+                                      ),
+                                      Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          if (isImported)
+                                            IconButton(
+                                              icon: const Icon(Icons.delete,
+                                                  color: Colors.red),
+                                              onPressed: () =>
+                                                  _removeSet(studySet['id']),
+                                            ),
+                                          ElevatedButton(
+                                            onPressed: isImported
+                                                ? null
+                                                : () =>
+                                                    _importSet(studySet['id']),
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: isImported
+                                                  ? Colors.grey
+                                                  : Colors.blueAccent,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
+                                              ),
+                                            ),
+                                            child: Text(
+                                              isImported
+                                                  ? 'Imported'
+                                                  : 'Import',
+                                              style: const TextStyle(
+                                                  color: Colors.white),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ),
-                            );
-                          },
-                        ),
-                ),
-              ],
-            ),
+                            ),
+                          );
+                        },
+                      ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

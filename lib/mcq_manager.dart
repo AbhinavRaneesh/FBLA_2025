@@ -12,6 +12,7 @@ class MCQManager extends StatefulWidget {
   final String currentTheme;
   final String? selectedSubject;
   final int? questionCount;
+  final Function(int)? onPointsUpdated;
 
   const MCQManager({
     super.key,
@@ -21,6 +22,7 @@ class MCQManager extends StatefulWidget {
     this.onSetImported,
     this.selectedSubject,
     this.questionCount,
+    this.onPointsUpdated,
   });
 
   @override
@@ -3110,6 +3112,19 @@ class _MCQManagerState extends State<MCQManager> {
     // Initialize selectedSubject from widget if provided
     if (widget.selectedSubject != null) {
       selectedSubject = widget.selectedSubject;
+      // Randomize questions for the selected subject
+      _randomizeQuestions();
+    }
+  }
+
+  void _randomizeQuestions() {
+    if (selectedSubject != null) {
+      final selectedClass =
+          apClasses.firstWhere((cls) => cls['name'] == selectedSubject);
+      final questions =
+          List<Map<String, dynamic>>.from(selectedClass['questions']);
+      questions.shuffle(); // Randomize the questions
+      selectedClass['questions'] = questions;
     }
   }
 
@@ -3306,7 +3321,7 @@ class _MCQManagerState extends State<MCQManager> {
           onTap: () async {
             // Add haptic feedback
             HapticFeedback.lightImpact();
-            
+
             // Import the course for all courses without showing choice screen
             await _importMCQSet(apClass['name']);
             // The choice screen will only appear when practicing from MySets
@@ -3363,13 +3378,14 @@ class _MCQManagerState extends State<MCQManager> {
                   ),
                   const SizedBox(height: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      apClass['name'] == 'AP Computer Science A' 
+                      apClass['name'] == 'AP Computer Science A'
                           ? '20 MCQs + 4 FRQs'
                           : '20 Questions',
                       style: const TextStyle(
@@ -3703,6 +3719,9 @@ class _MCQManagerState extends State<MCQManager> {
                                 answer == currentQuestion['correct']) {
                               await _dbHelper.updateUserPoints(
                                   widget.username, currentPoints);
+                              if (widget.onPointsUpdated != null) {
+                                widget.onPointsUpdated!(currentPoints);
+                              }
                             }
                           },
                           style: ElevatedButton.styleFrom(
@@ -3953,7 +3972,7 @@ class _MCQManagerState extends State<MCQManager> {
         'icon': Icons.school,
       },
     );
-    
+
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -3978,7 +3997,8 @@ class _MCQManagerState extends State<MCQManager> {
                 child: Row(
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.arrow_back, color: Colors.white, size: 28),
+                      icon: const Icon(Icons.arrow_back,
+                          color: Colors.white, size: 28),
                       onPressed: () {
                         setState(() {
                           showAPCSChoice = false;
@@ -4000,7 +4020,7 @@ class _MCQManagerState extends State<MCQManager> {
                   ],
                 ),
               ),
-              
+
               // Main Content
               Expanded(
                 child: Padding(
@@ -4034,12 +4054,13 @@ class _MCQManagerState extends State<MCQManager> {
                           color: Colors.white,
                         ),
                       ),
-                      
+
                       const SizedBox(height: 40),
-                      
+
                       // Title with animation
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 10),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(25),
                           gradient: LinearGradient(
@@ -4064,9 +4085,9 @@ class _MCQManagerState extends State<MCQManager> {
                           textAlign: TextAlign.center,
                         ),
                       ),
-                      
+
                       const SizedBox(height: 50),
-                      
+
                       // MCQ Button with enhanced design
                       Container(
                         width: double.infinity,
@@ -4241,9 +4262,9 @@ class _MCQManagerState extends State<MCQManager> {
                           ),
                         ),
                       ),
-                      
+
                       const SizedBox(height: 40),
-                      
+
                       // Decorative element
                       Container(
                         width: 60,
@@ -4298,39 +4319,39 @@ class _MCQManagerState extends State<MCQManager> {
 
       // The set name should match the one in PremadeStudySetsRepository
       final setName = subjectName;
-      
+
       // Find the set in the database
       final premadeSets = await _dbHelper.getPremadeStudySets();
-      
+
       // Debug: Print all available premade sets
       debugPrint('Available premade sets in database:');
       for (var set in premadeSets) {
         debugPrint('- ${set['name']}');
       }
       debugPrint('Looking for: $setName');
-      
+
       final dbSet = premadeSets.firstWhere(
         (set) => set['name'] == setName,
         orElse: () => {},
       );
-      
+
       if (dbSet.isEmpty) {
         // Try refreshing premade sets first
         debugPrint('Set not found, attempting to refresh premade sets...');
         await _dbHelper.refreshPremadeSets();
-        
+
         // Try again after refresh
         final refreshedSets = await _dbHelper.getPremadeStudySets();
         debugPrint('After refresh, available sets:');
         for (var set in refreshedSets) {
           debugPrint('- ${set['name']}');
         }
-        
+
         final refreshedDbSet = refreshedSets.firstWhere(
           (set) => set['name'] == setName,
           orElse: () => {},
         );
-        
+
         if (refreshedDbSet.isEmpty) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -4342,7 +4363,7 @@ class _MCQManagerState extends State<MCQManager> {
           }
           return;
         }
-        
+
         // Use the refreshed set
         final studySetId = refreshedDbSet['id'];
         await _dbHelper.importPremadeSet(widget.username, studySetId);
@@ -4350,7 +4371,7 @@ class _MCQManagerState extends State<MCQManager> {
         final studySetId = dbSet['id'];
         await _dbHelper.importPremadeSet(widget.username, studySetId);
       }
-      
+
       // Show success message with animation
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -4404,7 +4425,7 @@ class _MCQManagerState extends State<MCQManager> {
           ),
         );
       }
-      
+
       // Notify parent to refresh
       widget.onSetImported?.call();
     } catch (e) {

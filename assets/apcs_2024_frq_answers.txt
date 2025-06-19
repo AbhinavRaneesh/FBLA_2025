@@ -111,15 +111,36 @@ public int simulateManyDays(int numBirds, int numDays) {
 //     return daysSoFar;
 // }
 
-Q2 (6 points):
-public ArrayList<String> createList(String target) {
-    ArrayList<String> result = new ArrayList<String>();
-    for (String word : wordList) {
-        if (word.startsWith(target)) {
-            result.add(word.substring(target.length()));
+Q2 (9 points):
+public class Scoreboard {
+    private String team1Name;
+    private String team2Name;
+    private int team1Score;
+    private int team2Score;
+    private boolean team1Active;
+    
+    public Scoreboard(String team1, String team2) {
+        team1Name = team1;
+        team2Name = team2;
+        team1Score = 0;
+        team2Score = 0;
+        team1Active = true;
+    }
+    
+    public void recordPlay(int points) {
+        if (points != 0) {
+            if (team1Active) {
+                team1Score += points;
+            } else {
+                team2Score += points;
+            }
+            team1Active = !team1Active;
         }
     }
-    return result;
+    
+    public String getScore() {
+        return team1Name + ": " + team1Score + ", " + team2Name + ": " + team2Score;
+    }
 }
 
 Q3a (3 points):
