@@ -523,4 +523,13 @@ class DatabaseHelper {
       whereArgs: [userId, setId],
     );
   }
+
+  Future<int> getStudySetQuestionCount(int studySetId) async {
+    final db = await database;
+    final result = await db.rawQuery(
+      'SELECT COUNT(*) as count FROM study_set_questions WHERE study_set_id = ?',
+      [studySetId],
+    );
+    return Sqflite.firstIntValue(result) ?? 0;
+  }
 }

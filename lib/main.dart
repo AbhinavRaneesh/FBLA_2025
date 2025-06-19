@@ -1921,141 +1921,156 @@ class _LearnTabState extends State<LearnTab>
         final studySet = allSets[index];
         final isImported =
             _premadeStudySets.any((s) => s['id'] == studySet['id']);
-        return Card(
-          margin: const EdgeInsets.only(bottom: 20),
-          elevation: 10,
-          shadowColor: Colors.black.withOpacity(0.4),
-          clipBehavior: Clip.antiAlias,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  const Color(0xFF2A2D3E).withOpacity(0.9),
-                  const Color(0xFF1D1E33),
-                ],
+        return FutureBuilder<int>(
+          future: _dbHelper.getStudySetQuestionCount(studySet['id']),
+          builder: (context, snapshot) {
+            final questionCount = snapshot.data ?? 0;
+            return Card(
+              margin: const EdgeInsets.only(bottom: 20),
+              elevation: 10,
+              shadowColor: Colors.black.withOpacity(0.4),
+              clipBehavior: Clip.antiAlias,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
               ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      const Color(0xFF2A2D3E).withOpacity(0.9),
+                      const Color(0xFF1D1E33),
+                    ],
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.blueAccent.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Icon(
-                          _getSubjectIcon(studySet['name']),
-                          color: Colors.blueAccent,
-                          size: 32,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              studySet['name'],
-                              style: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.blueAccent.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Icon(
+                              _getSubjectIcon(studySet['name']),
+                              color: Colors.blueAccent,
+                              size: 32,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  studySet['name'],
+                                  style: const TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  studySet['description'] ?? '',
+                                  style: TextStyle(
+                                    color: Colors.white.withOpacity(0.7),
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  '$questionCount question${questionCount == 1 ? '' : 's'}',
+                                  style: TextStyle(
+                                    color: Colors.white.withOpacity(0.8),
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          if (isImported)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: const Text(
+                                'Imported',
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
-                            const SizedBox(height: 8),
-                            Text(
-                              studySet['description'] ?? '',
-                              style: TextStyle(
-                                color: Colors.white.withOpacity(0.7),
-                                fontSize: 14,
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Created: ${_formatDate(studySet['created_at'])}',
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.5),
+                          fontSize: 12,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          ElevatedButton.icon(
+                            onPressed: () => _deleteStudySet(studySet['id']),
+                            icon: const Icon(Icons.delete, size: 18),
+                            label: const Text('Delete'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.redAccent.withOpacity(0.8),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 10,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
                               ),
                             ),
-                          ],
-                        ),
-                      ),
-                      if (isImported)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
                           ),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: const Text(
-                            'Imported',
-                            style: TextStyle(
-                              color: Colors.white70,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
+                          const SizedBox(width: 12),
+                          ElevatedButton.icon(
+                            onPressed: () => _startPractice(studySet),
+                            icon: const Icon(Icons.play_arrow, size: 18),
+                            label: const Text('Practice'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green.withOpacity(0.8),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 10,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                             ),
                           ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Created: ${_formatDate(studySet['created_at'])}',
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.5),
-                      fontSize: 12,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      ElevatedButton.icon(
-                        onPressed: () => _deleteStudySet(studySet['id']),
-                        icon: const Icon(Icons.delete, size: 18),
-                        label: const Text('Delete'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.redAccent.withOpacity(0.8),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 10,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      ElevatedButton.icon(
-                        onPressed: () => _startPractice(studySet),
-                        icon: const Icon(Icons.play_arrow, size: 18),
-                        label: const Text('Practice'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green.withOpacity(0.8),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 10,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
+                        ],
                       ),
                     ],
                   ),
-                ],
+                ),
               ),
-            ),
-          ),
+            );
+          },
         );
       },
     );
@@ -3522,6 +3537,7 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
           await _dbHelper.getStudySetQuestions(widget.studySet['id']);
       setState(() {
         _questions = questions;
+        _questionCount = _questions.isNotEmpty ? _questions.length : 1;
         _isLoading = false;
       });
     } catch (e) {
@@ -3838,10 +3854,10 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
                                           ),
                                         ),
                                         child: Slider(
-                                          value: _questionCount.toDouble(),
+                                          value: _questionCount.clamp(1, _questions.length).toDouble(),
                                           min: 1.0,
-                                          max: 20.0,
-                                          divisions: 19,
+                                          max: _questions.length.toDouble(),
+                                          divisions: _questions.length > 1 ? _questions.length - 1 : 1,
                                           label: '$_questionCount',
                                           onChanged: (value) {
                                             setState(() {
@@ -4017,158 +4033,26 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
                                   ),
                                 ),
                               )
-                            : Column(
-                                children: [
-                                  // Top navigation bar
-                                  Padding(
-                                    padding: const EdgeInsets.only(
-                                        top: 24,
-                                        left: 16,
-                                        right: 16,
-                                        bottom: 0),
-                                    child: Row(
-                                      children: [
-                                        Container(
-                                          decoration: BoxDecoration(
-                                            color:
-                                                Colors.white.withOpacity(0.1),
-                                            borderRadius:
-                                                BorderRadius.circular(12),
-                                          ),
-                                          child: IconButton(
-                                            icon: const Icon(Icons.arrow_back,
-                                                color: Colors.white, size: 24),
-                                            onPressed: () =>
-                                                Navigator.pop(context),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 16),
-                                        // Gradient pill for question counter (blue/cyan)
-                                        Expanded(
-                                          child: Center(
-                                            child: Container(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                      horizontal: 28,
-                                                      vertical: 12),
-                                              decoration: BoxDecoration(
-                                                gradient: const LinearGradient(
-                                                  colors: [
-                                                    Color(0xFF4facfe),
-                                                    Color(0xFF00f2fe)
-                                                  ],
-                                                  begin: Alignment.topLeft,
-                                                  end: Alignment.bottomRight,
-                                                ),
-                                                borderRadius:
-                                                    BorderRadius.circular(30),
-                                                boxShadow: [
-                                                  BoxShadow(
-                                                    color:
-                                                        const Color(0xFF4facfe)
-                                                            .withOpacity(0.18),
-                                                    blurRadius: 10,
-                                                    offset: const Offset(0, 4),
-                                                  ),
-                                                ],
-                                              ),
-                                              child: Text(
-                                                '${_currentQuestionIndex + 1} of $_questionCount',
-                                                style: const TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 20,
-                                                  fontWeight: FontWeight.bold,
-                                                  letterSpacing: 0.5,
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(
-                                            width:
-                                                48), // Balance the back button
-                                      ],
+                            : Expanded(
+                                child: Stack(
+                                  children: [
+                                    // Always show the quiz content
+                                    SingleChildScrollView(
+                                      padding: const EdgeInsets.only(bottom: 24),
+                                      child: _buildQuizContent(),
                                     ),
-                                  ),
-                                  const SizedBox(height: 18),
-                                  Container(
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(16),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: const Color(0xFF4facfe)
-                                              .withOpacity(0.18),
-                                          blurRadius: 10,
-                                          offset: const Offset(0, 4),
+                                    // Show the chat overlay covering 3/4 of the screen from the bottom
+                                    if (_showChat)
+                                      Align(
+                                        alignment: Alignment.bottomCenter,
+                                        child: FractionallySizedBox(
+                                          heightFactor: 0.75,
+                                          widthFactor: 1.0,
+                                          child: _buildChatInterface(),
                                         ),
-                                      ],
-                                    ),
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(16),
-                                      child: Stack(
-                                        children: [
-                                          Container(
-                                            height: 10,
-                                            decoration: BoxDecoration(
-                                              gradient: LinearGradient(
-                                                colors: [
-                                                  Colors.white.withOpacity(0.1),
-                                                  Colors.white
-                                                      .withOpacity(0.05),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                          FractionallySizedBox(
-                                            widthFactor:
-                                                (_currentQuestionIndex + 1) /
-                                                    _questionCount,
-                                            child: Container(
-                                              height: 10,
-                                              decoration: const BoxDecoration(
-                                                gradient: LinearGradient(
-                                                  colors: [
-                                                    Color(0xFF4facfe),
-                                                    Color(0xFF00f2fe)
-                                                  ],
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ],
                                       ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 32),
-                                  // Main content area - split between quiz and chat
-                                  Expanded(
-                                    child: _showChat
-                                        ? Column(
-                                            children: [
-                                              // Quiz area (top half)
-                                              Expanded(
-                                                flex: 1,
-                                                child: SingleChildScrollView(
-                                                  padding:
-                                                      const EdgeInsets.only(
-                                                          bottom: 16),
-                                                  child: _buildQuizContent(),
-                                                ),
-                                              ),
-                                              // Chat area (bottom half)
-                                              Expanded(
-                                                flex: 1,
-                                                child: _buildChatInterface(),
-                                              ),
-                                            ],
-                                          )
-                                        : SingleChildScrollView(
-                                            padding: const EdgeInsets.only(
-                                                bottom: 24),
-                                            child: _buildQuizContent(),
-                                          ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
           ),
         ],
@@ -4281,6 +4165,45 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        // Header with progress
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              onPressed: () {
+                setState(() {
+                  _showModeSelection = true;
+                  _showQuizArea = false;
+                  _showScoreSummary = false;
+                });
+              },
+            ),
+            Expanded(
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.blueAccent.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    'Question ${_currentQuestionIndex + 1}/$totalQuestions',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 48),
+          ],
+        ),
+        const SizedBox(height: 24),
         LayoutBuilder(
           builder: (context, constraints) {
             final double minHeight = MediaQuery.of(context).size.height * 0.14;
@@ -5352,7 +5275,6 @@ class _QuizletImportScreenState extends State<QuizletImportScreen> {
           ),
           TextButton(
             onPressed: () {
-              Navigator.pop(context);
               widget.onStudySetCreated();
               Navigator.pop(context);
             },
@@ -5798,7 +5720,6 @@ class _SpreadsheetImportScreenState extends State<SpreadsheetImportScreen> {
           ),
           TextButton(
             onPressed: () {
-              Navigator.pop(context);
               widget.onStudySetCreated();
               Navigator.pop(context);
             },
@@ -6232,7 +6153,6 @@ class _ManualQuestionCreationScreenState
           ),
           TextButton(
             onPressed: () {
-              Navigator.pop(context);
               widget.onStudySetCreated();
               Navigator.pop(context);
             },
