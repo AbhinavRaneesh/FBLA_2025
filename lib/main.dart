@@ -28,6 +28,8 @@ import 'package:student_learning_app/models/chat_message_model.dart';
 import 'mcq_manager.dart';
 import 'frq_manager.dart';
 import 'study_set_edit_screen.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:lottie/lottie.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -2903,6 +2905,7 @@ class _ProfileTabState extends State<ProfileTab>
     with AutomaticKeepAliveClientMixin {
   final DatabaseHelper _dbHelper = DatabaseHelper();
   Map<String, dynamic>? _userStats;
+  File? _profileImage;
 
   @override
   bool get wantKeepAlive => true;
@@ -2911,6 +2914,7 @@ class _ProfileTabState extends State<ProfileTab>
   void initState() {
     super.initState();
     _loadUserStats();
+    _loadProfileImage();
   }
 
   Future<void> _loadUserStats() async {
@@ -2922,6 +2926,52 @@ class _ProfileTabState extends State<ProfileTab>
         'averageScore': 0, // You can implement this if needed
       };
     });
+  }
+
+  Future<void> _loadProfileImage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final path = prefs.getString('profile_image_${widget.username}');
+    if (path != null && path.isNotEmpty) {
+      setState(() {
+        _profileImage = File(path);
+      });
+    }
+  }
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await showModalBottomSheet<XFile?>(
+      context: this.context,
+      builder: (BuildContext context) => SafeArea(
+        child: Wrap(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text('Take a photo'),
+              onTap: () async {
+                final photo = await picker.pickImage(source: ImageSource.camera);
+                Navigator.pop(context, photo);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Choose from gallery'),
+              onTap: () async {
+                final gallery = await picker.pickImage(source: ImageSource.gallery);
+                Navigator.pop(context, gallery);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+    if (pickedFile != null) {
+      setState(() {
+        _profileImage = File(pickedFile.path);
+      });
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('profile_image_${widget.username}', pickedFile.path);
+    }
   }
 
   @override
@@ -2958,19 +3008,43 @@ class _ProfileTabState extends State<ProfileTab>
                       ),
                       child: Column(
                         children: [
-                          CircleAvatar(
-                            radius: 50,
-                            backgroundColor: Colors.white.withOpacity(0.2),
-                            child: Text(
-                              widget.username.isNotEmpty
-                                  ? widget.username[0].toUpperCase()
-                                  : 'U',
-                              style: const TextStyle(
-                                fontSize: 40,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
+                          Stack(
+                            alignment: Alignment.bottomRight,
+                            children: [
+                              CircleAvatar(
+                                radius: 50,
+                                backgroundColor: Colors.white.withOpacity(0.2),
+                                backgroundImage: _profileImage != null ? FileImage(_profileImage!) : null,
+                                child: _profileImage == null
+                                    ? Text(
+                                        widget.username.isNotEmpty
+                                            ? widget.username[0].toUpperCase()
+                                            : 'U',
+                                        style: const TextStyle(
+                                          fontSize: 40,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
+                                      )
+                                    : null,
                               ),
-                            ),
+                              Positioned(
+                                bottom: 0,
+                                right: 4,
+                                child: GestureDetector(
+                                  onTap: _pickImage,
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: Colors.blueAccent,
+                                      shape: BoxShape.circle,
+                                      border: Border.all(color: Colors.white, width: 2),
+                                    ),
+                                    padding: const EdgeInsets.all(8),
+                                    child: const Icon(Icons.camera_alt, color: Colors.white, size: 22),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                           const SizedBox(height: 16),
                           Text(
@@ -4598,8 +4672,13 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
                     ),
                   );
                 }
-                return const Center(
-                  child: CircularProgressIndicator(color: Colors.blueAccent),
+                return Center(
+                  child: Lottie.asset(
+                    'assets/animation/Animation - 1750352180300.json',
+                    width: 120,
+                    height: 120,
+                    fit: BoxFit.contain,
+                  ),
                 );
               },
             ),

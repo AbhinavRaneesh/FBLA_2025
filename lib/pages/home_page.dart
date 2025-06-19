@@ -5,6 +5,7 @@ import '../models/chat_message_model.dart';
 import '../database_helper.dart';
 import 'package:student_learning_app/mcq_manager.dart';
 import 'dart:math';
+import 'package:lottie/lottie.dart';
 
 class HomePage extends StatefulWidget {
   final String username;
@@ -326,7 +327,12 @@ class _HomePageState extends State<HomePage> {
                         );
                       } else {
                         return Center(
-                          child: CircularProgressIndicator(),
+                          child: Lottie.asset(
+                            'assets/animation/Animation - 1750352180300.json',
+                            width: 120,
+                            height: 120,
+                            fit: BoxFit.contain,
+                          ),
                         );
                       }
                     },
@@ -858,7 +864,7 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
                 ),
                 IconButton(
                   onPressed: () {
-                    if (numberOfQuestions < 30) {
+                    if (numberOfQuestions < 100) {
                       setState(() {
                         numberOfQuestions += 5;
                       });
