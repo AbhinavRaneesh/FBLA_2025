@@ -399,7 +399,11 @@ class _StudySetEditScreenState extends State<StudySetEditScreen> {
                                   ),
                                   child: Container(
                                     decoration: BoxDecoration(
-                                      color: Colors.white.withOpacity(0.1),
+                                      gradient: const LinearGradient(
+                                        colors: [Color(0xFF23243a), Color(0xFF16213E)],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      ),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     padding: const EdgeInsets.all(16),
@@ -528,7 +532,15 @@ class _QuestionEditDialogState extends State<QuestionEditDialog> {
       _questionController.text = widget.question!['question_text'] ?? widget.question!['question'] ?? '';
       _correctAnswerController.text = widget.question!['correct_answer'] ?? '';
       
-      final options = widget.question!['options'] ?? [];
+      var optionsRaw = widget.question!['options'] ?? [];
+      List<String> options;
+      if (optionsRaw is String) {
+        options = optionsRaw.split('|');
+      } else if (optionsRaw is List) {
+        options = List<String>.from(optionsRaw);
+      } else {
+        options = [];
+      }
       for (int i = 0; i < 4; i++) {
         if (i < options.length) {
           _optionControllers[i].text = options[i];
@@ -576,78 +588,140 @@ class _QuestionEditDialogState extends State<QuestionEditDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(widget.question == null ? 'Add Question' : 'Edit Question'),
-      content: SingleChildScrollView(
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: _questionController,
-                decoration: const InputDecoration(
-                  labelText: 'Question',
-                  border: OutlineInputBorder(),
-                ),
-                maxLines: 3,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a question';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _correctAnswerController,
-                decoration: const InputDecoration(
-                  labelText: 'Correct Answer',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter the correct answer';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Options:',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              ...List.generate(4, (index) => Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: TextFormField(
-                  controller: _optionControllers[index],
-                  decoration: InputDecoration(
-                    labelText: 'Option ${index + 1}',
-                    border: const OutlineInputBorder(),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter option ${index + 1}';
-                    }
-                    return null;
-                  },
-                ),
-              )),
-            ],
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF764ba2), Color(0xFF667eea)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        padding: const EdgeInsets.all(0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+              child: Text(
+                widget.question == null ? 'Add Question' : 'Edit Question',
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(24),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextFormField(
+                      controller: _questionController,
+                      decoration: const InputDecoration(
+                        labelText: 'Question',
+                        border: OutlineInputBorder(),
+                        labelStyle: TextStyle(color: Colors.white70),
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.white30),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.white),
+                        ),
+                      ),
+                      style: const TextStyle(color: Colors.white),
+                      maxLines: 3,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter a question';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _correctAnswerController,
+                      decoration: const InputDecoration(
+                        labelText: 'Correct Answer',
+                        border: OutlineInputBorder(),
+                        labelStyle: TextStyle(color: Colors.white70),
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.white30),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.white),
+                        ),
+                      ),
+                      style: const TextStyle(color: Colors.white),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter the correct answer';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Options:',
+                      style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                    ),
+                    const SizedBox(height: 8),
+                    ...List.generate(4, (index) => Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: TextFormField(
+                        controller: _optionControllers[index],
+                        decoration: InputDecoration(
+                          labelText: 'Option ${index + 1}',
+                          border: const OutlineInputBorder(),
+                          labelStyle: const TextStyle(color: Colors.white70),
+                          enabledBorder: const OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.white30),
+                          ),
+                          focusedBorder: const OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.white),
+                          ),
+                        ),
+                        style: const TextStyle(color: Colors.white),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter option ${index + 1}';
+                          }
+                          return null;
+                        },
+                      ),
+                    )),
+                  ],
+                ),
+              ),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel', style: TextStyle(color: Colors.white)),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: _saveQuestion,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.deepPurple,
+                  ),
+                  child: Text(widget.question == null ? 'Add' : 'Save'),
+                ),
+                const SizedBox(width: 16),
+              ],
+            ),
+            const SizedBox(height: 16),
+          ],
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
-        ),
-        ElevatedButton(
-          onPressed: _saveQuestion,
-          child: Text(widget.question == null ? 'Add' : 'Save'),
-        ),
-      ],
     );
   }
 } 
