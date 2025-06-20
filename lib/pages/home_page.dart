@@ -60,7 +60,30 @@ class _HomePageState extends State<HomePage> {
     "Astronomy",
     "Geology",
     "Environmental Science",
-    "Political Science"
+    "Political Science",
+    "Anthropology",
+    "Linguistics",
+    "Engineering",
+    "Ethics",
+    "Statistics",
+    "Media Studies",
+    "Theater",
+    "Architecture",
+    "Law",
+    "Business Studies",
+    "Education",
+    "Archaeology",
+    "Religious Studies",
+    "Health Sciences",
+    "Veterinary Science",
+    "Nutrition",
+    "Communication Studies",
+    "Criminology",
+    "Cultural Studies",
+    "Agricultural Science",
+    "Marine Biology",
+    "Robotics"
+
   ];
 
   // Sample questions for each subject
