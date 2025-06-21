@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'frq_manager.dart' as frq;
-import 'database_helper.dart';
-import 'premade_study_sets.dart';
-import 'main.dart' as main;
+import '../helpers/frq_manager.dart' as frq;
+import '../helpers/database_helper.dart';
+import '../data/premade_study_sets.dart';
+import '../main.dart' as main;
 import 'package:flutter/services.dart';
 
 class MCQManager extends StatefulWidget {

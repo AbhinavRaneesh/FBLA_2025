@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:student_learning_app/bloc/chat_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../models/chat_message_model.dart';
-import '../database_helper.dart';
-import 'package:student_learning_app/mcq_manager.dart';
+import '../helpers/database_helper.dart';
+import 'package:student_learning_app/screens/browse_sets_screen.dart';
 import 'dart:math';
 import 'package:lottie/lottie.dart';
 import 'dart:io';
@@ -1313,7 +1313,7 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
                 ],
               ),
             ),
-            const SizedBox(height: 20),
+            const Spacer(),
             // Points information
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
@@ -1369,7 +1369,8 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
                 ],
               ),
             ),
-            const Spacer(),
+            const SizedBox(height: 20),
+            // Start Learning Button
             Container(
               width: double.infinity,
               height: 60,
@@ -1444,217 +1445,8 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
                           ),
               ),
             ),
-            const SizedBox(height: 20),
-            // Removed controls locked message to fix pixel overflow
-            Opacity(
-              opacity: isQuizActive ? 0.5 : 1.0,
-              child: SizedBox(
-                height: 200,
-                child: HorizontalSubjectWheel(
-                  subjects: subjects,
-                  selectedSubject: selectedSubject,
-                  onSubjectSelected: isQuizActive ? null : (subject) {
-                    setState(() {
-                      selectedSubject = subject;
-                    });
-                  },
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              'Number of Questions',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 20),
-            Opacity(
-              opacity: isQuizActive ? 0.5 : 1.0,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  IconButton(
-                    onPressed: isQuizActive ? null : () {
-                      if (numberOfQuestions > 5) {
-                        setState(() {
-                          numberOfQuestions -= 5;
-                        });
-                      }
-                    },
-                    icon: Icon(
-                      Icons.remove_circle, 
-                      color: isQuizActive ? Colors.white.withOpacity(0.5) : Colors.white
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 10,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      '$numberOfQuestions',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: isQuizActive ? Colors.white.withOpacity(0.5) : Colors.white,
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: isQuizActive ? null : () {
-                      if (numberOfQuestions < 200) {
-                        setState(() {
-                          numberOfQuestions += 5;
-                        });
-                      }
-                    },
-                    icon: Icon(
-                      Icons.add_circle, 
-                      color: isQuizActive ? Colors.white.withOpacity(0.5) : Colors.white
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-            // Points information
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: Colors.white.withOpacity(0.2),
-                  width: 1,
-                ),
-              ),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.check_circle,
-                        color: Colors.green,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 8),
-                      const Text(
-                        'Correct Answer: +15',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.cancel,
-                        color: Colors.red,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 8),
-                      const Text(
-                        'Incorrect Answer: -5',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
             const Spacer(),
-            Container(
-              width: double.infinity,
-              height: 60,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF4facfe), Color(0xFF00f2fe)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(30),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF4facfe).withOpacity(0.3),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
-              ),
-              child: ElevatedButton(
-                onPressed: (isWaitingForQuestions || isQuizActive)
-                    ? null
-                    : () {
-                        _generateQuestions();
-                      },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.transparent,
-                  shadowColor: Colors.transparent,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                ),
-                child: isWaitingForQuestions
-                    ? Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor:
-                                  AlwaysStoppedAnimation<Color>(Colors.white),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          const Text(
-                            'Generating Questions...',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
-                      )
-                    : isQuizActive
-                        ? const Text(
-                            'Quiz in Progress',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          )
-                        : const Text(
-                            'Start Learning',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-              ),
-            ),
+           
           ],
         ),
       ),

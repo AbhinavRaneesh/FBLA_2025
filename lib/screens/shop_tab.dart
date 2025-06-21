@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'database_helper.dart';
-import 'main.dart' show SpaceBackground;
+import '../helpers/database_helper.dart';
+import '../main.dart' show SpaceBackground;
 
 class ShopTab extends StatefulWidget {
   final String username;

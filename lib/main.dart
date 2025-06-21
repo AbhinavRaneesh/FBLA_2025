@@ -12,25 +12,25 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:student_learning_app/frq_manager.dart';
-import 'package:student_learning_app/mcq_manager.dart';
+import 'package:student_learning_app/helpers/frq_manager.dart';
+import 'package:student_learning_app/screens/browse_sets_screen.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
-import 'database_helper.dart';
-import 'questions.dart' as quiz;
-import 'premade_sets_screen.dart';
-import 'premade_study_sets.dart' as premade;
-import 'package:student_learning_app/pages/home_page.dart';
+import 'helpers/database_helper.dart';
+import 'data/questions.dart' as quiz;
+import 'screens/premade_sets_screen.dart';
+import 'data/premade_study_sets.dart' as premade;
+import 'package:student_learning_app/screens/quick_play_screen.dart';
 import 'package:student_learning_app/bloc/chat_bloc.dart';
 import 'package:student_learning_app/models/chat_message_model.dart';
-import 'mcq_manager.dart';
-import 'frq_manager.dart';
-import 'study_set_edit_screen.dart';
+import 'screens/browse_sets_screen.dart';
+import 'helpers/frq_manager.dart';
+import 'screens/study_set_edit_screen.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:lottie/lottie.dart';
-import 'package:student_learning_app/shop_tab.dart';
+import 'package:student_learning_app/screens/shop_tab.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -2924,6 +2924,15 @@ class _ProfileTabState extends State<ProfileTab>
                                     '${_userStats!['studySetsCreated']}',
                                     Icons.school,
                                     Colors.blue,
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.only(left: 20),
+                                    child: _buildStatItem(
+                                      'Points',
+                                      widget.userPoints.toString(),
+                                      Icons.diamond,
+                                      Colors.amber,
+                                    ),
                                   ),
                                   _buildStatItem(
                                     'Current Theme',
