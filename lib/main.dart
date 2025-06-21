@@ -3659,24 +3659,212 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
     );
   }
 
-  void _useHint() {
+  void _useHint() async {
     final currentQuestion = _questions[_currentQuestionIndex];
     final questionText = currentQuestion['question_text'];
-    final correctAnswer = currentQuestion['correct_answer'];
+    final options = currentQuestion['options'].split('|');
 
-    String hint =
-        "Hint: The correct answer starts with '${correctAnswer.substring(0, 1)}'";
-    if (correctAnswer.length > 3) {
-      hint =
-          "Hint: The correct answer contains '${correctAnswer.substring(1, 3)}'";
+    // Create the prompt for AI
+    String prompt = "Question: $questionText\nOptions: ${options.join(', ')}\n\nGive a helpful hint for this question. Only provide the hint, no other text.";
+
+    // Show loading dialog
+    showDialog(
+      context: this.context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF667eea).withOpacity(0.3),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Generating AI Hint...',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+
+    try {
+      // Send message to AI
+      _chatBloc.add(ChatGenerationNewTextMessageEvent(
+        inputMessage: prompt,
+      ));
+
+      // Wait for the response using a one-time listener
+      bool responseReceived = false;
+      StreamSubscription<ChatState>? subscription;
+
+      subscription = _chatBloc.stream.listen((state) {
+        if (!responseReceived) {
+          if (state is ChatSuccessState && state.messages.isNotEmpty) {
+            final lastMessage = state.messages.last;
+            if (lastMessage.role == "model") {
+              responseReceived = true;
+              subscription?.cancel();
+              Navigator.of(this.context).pop(); // Close loading dialog
+              final hintText = lastMessage.parts.first.text;
+              _showHintDialog(hintText);
+            }
+          } else if (state is ChatErrorState) {
+            responseReceived = true;
+            subscription?.cancel();
+            Navigator.of(this.context).pop(); // Close loading dialog
+            _showHintDialog("Sorry, I couldn't generate a hint right now. Please try again.");
+          }
+        }
+      });
+
+      // Add timeout
+      Timer(const Duration(seconds: 30), () {
+        if (!responseReceived) {
+          subscription?.cancel();
+          Navigator.of(this.context).pop(); // Close loading dialog
+          _showHintDialog("Sorry, the hint request timed out. Please try again.");
+        }
+      });
+
+    } catch (e) {
+      Navigator.of(this.context).pop(); // Close loading dialog
+      _showHintDialog("Sorry, I couldn't generate a hint right now. Please try again.");
     }
+  }
 
-    ScaffoldMessenger.of(this.context).showSnackBar(
-      SnackBar(
-        content: Text(hint),
-        backgroundColor: Colors.indigo,
-        duration: const Duration(seconds: 4),
-      ),
+  void _showHintDialog(String hintText) {
+    showDialog(
+      context: this.context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF667eea).withOpacity(0.3),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.lightbulb,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    const Text(
+                      'AI Hint',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                // Hint content
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.2),
+                      width: 1,
+                    ),
+                  ),
+                  child: Text(
+                    hintText,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: Colors.white,
+                      height: 1.5,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                // Close button
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: const Color(0xFF667eea),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: const Text(
+                      'Close',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -3759,6 +3947,9 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
 
     // Refresh profile image before showing chat
     _refreshUserProfileImage();
+
+    // Clear previous chat history
+    _chatBloc.add(ChatClearHistoryEvent());
 
     // Show the chat interface
     setState(() {
