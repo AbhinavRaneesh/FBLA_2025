@@ -45,6 +45,7 @@ class _HomePageState extends State<HomePage> {
   bool showQuizArea = false;
   bool showScoreSummary =
       false; // New variable to control score summary visibility
+  bool isQuizActive = false; // New variable to track if quiz is active
   String selectedSubject = "Chemistry";
   int numberOfQuestions = 10; // New variable for question count
   File? _userProfileImage; // Add profile image state
@@ -974,6 +975,7 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       isWaitingForQuestions = true;
       showQuizArea = false; // Reset quiz area visibility
+      isQuizActive = true; // Set quiz as active
     });
 
     print('Generating $numberOfQuestions questions for: $selectedSubject');
@@ -1005,6 +1007,7 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
       showAnswer = false;
       showScoreSummary = false;
       showQuizArea = true;
+      isQuizActive = true; // Keep quiz active when restarting
       answeredCorrectly = List.filled(scienceQuestions.length, false);
     });
   }
@@ -1013,6 +1016,7 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
     setState(() {
       showQuizArea = false;
       showScoreSummary = false;
+      isQuizActive = false; // Reset quiz active state
       currentQuestionIndex = 0;
       selectedAnswer = null;
       showAnswer = false;
@@ -1231,16 +1235,19 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
               ],
             ),
             const SizedBox(height: 20),
-            SizedBox(
-              height: 200,
-              child: HorizontalSubjectWheel(
-                subjects: subjects,
-                selectedSubject: selectedSubject,
-                onSubjectSelected: (subject) {
-                  setState(() {
-                    selectedSubject = subject;
-                  });
-                },
+            Opacity(
+              opacity: isQuizActive ? 0.5 : 1.0,
+              child: SizedBox(
+                height: 200,
+                child: HorizontalSubjectWheel(
+                  subjects: subjects,
+                  selectedSubject: selectedSubject,
+                  onSubjectSelected: isQuizActive ? null : (subject) {
+                    setState(() {
+                      selectedSubject = subject;
+                    });
+                  },
+                ),
               ),
             ),
             const SizedBox(height: 20),
@@ -1254,48 +1261,57 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                IconButton(
-                  onPressed: () {
-                    if (numberOfQuestions > 5) {
-                      setState(() {
-                        numberOfQuestions -= 5;
-                      });
-                    }
-                  },
-                  icon: const Icon(Icons.remove_circle, color: Colors.white),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 10,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    '$numberOfQuestions',
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+            Opacity(
+              opacity: isQuizActive ? 0.5 : 1.0,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  IconButton(
+                    onPressed: isQuizActive ? null : () {
+                      if (numberOfQuestions > 5) {
+                        setState(() {
+                          numberOfQuestions -= 5;
+                        });
+                      }
+                    },
+                    icon: Icon(
+                      Icons.remove_circle, 
+                      color: isQuizActive ? Colors.white.withOpacity(0.5) : Colors.white
                     ),
                   ),
-                ),
-                IconButton(
-                  onPressed: () {
-                    if (numberOfQuestions < 200) {
-                      setState(() {
-                        numberOfQuestions += 5;
-                      });
-                    }
-                  },
-                  icon: const Icon(Icons.add_circle, color: Colors.white),
-                ),
-              ],
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '$numberOfQuestions',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: isQuizActive ? Colors.white.withOpacity(0.5) : Colors.white,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: isQuizActive ? null : () {
+                      if (numberOfQuestions < 200) {
+                        setState(() {
+                          numberOfQuestions += 5;
+                        });
+                      }
+                    },
+                    icon: Icon(
+                      Icons.add_circle, 
+                      color: isQuizActive ? Colors.white.withOpacity(0.5) : Colors.white
+                    ),
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 20),
             // Points information
@@ -1373,7 +1389,7 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
                 ],
               ),
               child: ElevatedButton(
-                onPressed: isWaitingForQuestions
+                onPressed: (isWaitingForQuestions || isQuizActive)
                     ? null
                     : () {
                         _generateQuestions();
@@ -1409,14 +1425,234 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
                           ),
                         ],
                       )
-                    : const Text(
-                        'Start Learning',
+                    : isQuizActive
+                        ? const Text(
+                            'Quiz in Progress',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Text(
+                            'Start Learning',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            // Removed controls locked message to fix pixel overflow
+            Opacity(
+              opacity: isQuizActive ? 0.5 : 1.0,
+              child: SizedBox(
+                height: 200,
+                child: HorizontalSubjectWheel(
+                  subjects: subjects,
+                  selectedSubject: selectedSubject,
+                  onSubjectSelected: isQuizActive ? null : (subject) {
+                    setState(() {
+                      selectedSubject = subject;
+                    });
+                  },
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'Number of Questions',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+            Opacity(
+              opacity: isQuizActive ? 0.5 : 1.0,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  IconButton(
+                    onPressed: isQuizActive ? null : () {
+                      if (numberOfQuestions > 5) {
+                        setState(() {
+                          numberOfQuestions -= 5;
+                        });
+                      }
+                    },
+                    icon: Icon(
+                      Icons.remove_circle, 
+                      color: isQuizActive ? Colors.white.withOpacity(0.5) : Colors.white
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '$numberOfQuestions',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: isQuizActive ? Colors.white.withOpacity(0.5) : Colors.white,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: isQuizActive ? null : () {
+                      if (numberOfQuestions < 200) {
+                        setState(() {
+                          numberOfQuestions += 5;
+                        });
+                      }
+                    },
+                    icon: Icon(
+                      Icons.add_circle, 
+                      color: isQuizActive ? Colors.white.withOpacity(0.5) : Colors.white
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            // Points information
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.2),
+                  width: 1,
+                ),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.check_circle,
+                        color: Colors.green,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Correct Answer: +15',
                         style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
                           color: Colors.white,
                         ),
                       ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.cancel,
+                        color: Colors.red,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Incorrect Answer: -5',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const Spacer(),
+            Container(
+              width: double.infinity,
+              height: 60,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF4facfe), Color(0xFF00f2fe)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(30),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF4facfe).withOpacity(0.3),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: ElevatedButton(
+                onPressed: (isWaitingForQuestions || isQuizActive)
+                    ? null
+                    : () {
+                        _generateQuestions();
+                      },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  shadowColor: Colors.transparent,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                ),
+                child: isWaitingForQuestions
+                    ? Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor:
+                                  AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          const Text(
+                            'Generating Questions...',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      )
+                    : isQuizActive
+                        ? const Text(
+                            'Quiz in Progress',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Text(
+                            'Start Learning',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
               ),
             ),
           ],
@@ -2510,13 +2746,13 @@ class SpaceBackground extends StatelessWidget {
 class HorizontalSubjectWheel extends StatefulWidget {
   final List<String> subjects;
   final String selectedSubject;
-  final Function(String) onSubjectSelected;
+  final Function(String)? onSubjectSelected;
 
   const HorizontalSubjectWheel({
     Key? key,
     required this.subjects,
     required this.selectedSubject,
-    required this.onSubjectSelected,
+    this.onSubjectSelected,
   }) : super(key: key);
 
   @override
@@ -2528,6 +2764,10 @@ class _HorizontalSubjectWheelState extends State<HorizontalSubjectWheel>
   late FixedExtentScrollController _scrollController;
   late AnimationController _animationController;
   int _selectedIndex = 0;
+  
+  // For infinite scrolling, we'll repeat the subjects multiple times
+  static const int _repeatCount = 5; // Repeat subjects 5 times for smooth infinite scrolling
+  late List<String> _repeatedSubjects;
 
   final List<Color> _gradients = [
     const Color(0xFF667eea),
@@ -2578,12 +2818,18 @@ class _HorizontalSubjectWheelState extends State<HorizontalSubjectWheel>
       vsync: this,
     );
     
+    // Create repeated subjects list for infinite scrolling
+    _repeatedSubjects = List.generate(_repeatCount, (index) => widget.subjects).expand((subjects) => subjects).toList();
+    
     _selectedIndex = widget.subjects.indexOf(widget.selectedSubject);
     if (_selectedIndex == -1) _selectedIndex = 0;
     
+    // Set initial position to the middle of the repeated list
+    int initialPosition = (_repeatedSubjects.length ~/ 2) + _selectedIndex;
+    
     // Set initial position after the widget is built
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _scrollController.jumpToItem(_selectedIndex);
+      _scrollController.jumpToItem(initialPosition);
     });
   }
 
@@ -2595,10 +2841,16 @@ class _HorizontalSubjectWheelState extends State<HorizontalSubjectWheel>
   }
 
   void _onSelectedItemChanged(int index) {
+    // Map the repeated index back to the original subject index
+    int originalIndex = index % widget.subjects.length;
+    
     setState(() {
-      _selectedIndex = index;
+      _selectedIndex = originalIndex;
     });
-    widget.onSubjectSelected(widget.subjects[index]);
+    
+    if (widget.onSubjectSelected != null) {
+      widget.onSubjectSelected!(widget.subjects[originalIndex]);
+    }
     _animationController.forward(from: 0.0);
   }
 
@@ -2641,14 +2893,17 @@ class _HorizontalSubjectWheelState extends State<HorizontalSubjectWheel>
               itemExtent: 60,
               diameterRatio: 1.8,
               perspective: 0.01,
-              physics: const FixedExtentScrollPhysics(),
-              onSelectedItemChanged: _onSelectedItemChanged,
+              physics: widget.onSubjectSelected != null 
+                  ? const FixedExtentScrollPhysics()
+                  : const NeverScrollableScrollPhysics(),
+              onSelectedItemChanged: widget.onSubjectSelected != null ? _onSelectedItemChanged : null,
               childDelegate: ListWheelChildBuilderDelegate(
                 builder: (context, index) {
-                  if (index >= widget.subjects.length) return Container();
+                  if (index >= _repeatedSubjects.length) return Container();
                   
-                  final subject = widget.subjects[index];
-                  final isSelected = index == _selectedIndex;
+                  final subject = _repeatedSubjects[index];
+                  final originalIndex = index % widget.subjects.length;
+                  final isSelected = originalIndex == _selectedIndex;
                   
                   return AnimatedContainer(
                     duration: const Duration(milliseconds: 300),
@@ -2658,7 +2913,7 @@ class _HorizontalSubjectWheelState extends State<HorizontalSubjectWheel>
                       borderRadius: BorderRadius.circular(15),
                       gradient: LinearGradient(
                         colors: isSelected
-                            ? [_gradients[index % _gradients.length], _gradients[index % _gradients.length].withOpacity(0.7)]
+                            ? [_gradients[originalIndex % _gradients.length], _gradients[originalIndex % _gradients.length].withOpacity(0.7)]
                             : [Colors.white.withOpacity(0.15), Colors.white.withOpacity(0.05)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
@@ -2666,7 +2921,7 @@ class _HorizontalSubjectWheelState extends State<HorizontalSubjectWheel>
                       boxShadow: isSelected
                           ? [
                               BoxShadow(
-                                color: _gradients[index % _gradients.length].withOpacity(0.5),
+                                color: _gradients[originalIndex % _gradients.length].withOpacity(0.5),
                                 blurRadius: 15,
                                 offset: const Offset(0, 6),
                                 spreadRadius: 1,
@@ -2693,7 +2948,7 @@ class _HorizontalSubjectWheelState extends State<HorizontalSubjectWheel>
                                 : Colors.transparent,
                           ),
                           child: Icon(
-                            _icons[index % _icons.length],
+                            _icons[originalIndex % _icons.length],
                             color: isSelected ? Colors.white : Colors.white.withOpacity(0.6),
                             size: isSelected ? 30 : 26,
                           ),
@@ -2729,7 +2984,7 @@ class _HorizontalSubjectWheelState extends State<HorizontalSubjectWheel>
                     ),
                   );
                 },
-                childCount: widget.subjects.length,
+                childCount: _repeatedSubjects.length,
               ),
             ),
           ),
