@@ -1896,339 +1896,246 @@ class _FRQTextDisplayScreenState extends State<FRQTextDisplayScreen> {
 
         // Enhanced text input modal overlay
         if (showTextInput)
-          Container(
-            color: Colors.black.withOpacity(0.6),
-            child: Column(
-              children: [
-                // Enhanced top half - Question content
-                Expanded(
-                  flex: 1,
-                  child: Container(
-                    margin: const EdgeInsets.all(20),
-                    padding: const EdgeInsets.all(24),
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              height: MediaQuery.of(context).size.height * 0.5,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    const Color(0xFF2A2B4A),
+                    const Color(0xFF1F1F3A),
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
+                ),
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.2),
+                  width: 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.3),
+                    blurRadius: 20,
+                    offset: const Offset(0, -8),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  // Enhanced header with drag handle
+                  Container(
+                    padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          Colors.white.withOpacity(0.08),
-                          Colors.white.withOpacity(0.03),
+                          Colors.white.withOpacity(0.12),
+                          Colors.white.withOpacity(0.06),
                         ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
                       ),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: Colors.white.withOpacity(0.15),
-                        width: 1,
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(24),
+                        topRight: Radius.circular(24),
                       ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.3),
-                          blurRadius: 24,
-                          offset: const Offset(0, 12),
-                        ),
-                      ],
                     ),
-                    child: SingleChildScrollView(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Enhanced question number header
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 12),
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFF4facfe), Color(0xFF00f2fe)],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              borderRadius: BorderRadius.circular(12),
-                              boxShadow: [
-                                BoxShadow(
-                                  color:
-                                      const Color(0xFF4facfe).withOpacity(0.3),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
+                    child: Column(
+                      children: [
+                        // Enhanced drag handle
+                        Container(
+                          width: 48,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.4),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        // Enhanced header content
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
                               children: [
-                                Icon(
-                                  Icons.assignment_outlined,
-                                  color: Colors.white,
-                                  size: 20,
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF667eea)
+                                        .withOpacity(0.2),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Icon(
+                                    Icons.edit_note,
+                                    color: const Color(0xFF667eea),
+                                    size: 20,
+                                  ),
                                 ),
-                                const SizedBox(width: 8),
+                                const SizedBox(width: 12),
                                 Text(
-                                  'Question ${currentQuestionIndex + 1}',
+                                  currentAnswerKey,
                                   style: const TextStyle(
                                     color: Colors.white,
-                                    fontSize: 18,
+                                    fontSize: 20,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
                               ],
                             ),
-                          ),
-                          const SizedBox(height: 24),
-
-                          // Enhanced question text
-                          Text(
-                            questions[currentQuestionIndex],
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              height: 1.8,
-                              letterSpacing: 0.3,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-
-                // Enhanced bottom half - Text input area
-                Container(
-                  height: MediaQuery.of(context).size.height * 0.5,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        const Color(0xFF2A2B4A),
-                        const Color(0xFF1F1F3A),
-                      ],
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                    ),
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(24),
-                      topRight: Radius.circular(24),
-                    ),
-                    border: Border.all(
-                      color: Colors.white.withOpacity(0.2),
-                      width: 1,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.3),
-                        blurRadius: 20,
-                        offset: const Offset(0, -8),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      // Enhanced header with drag handle
-                      Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              Colors.white.withOpacity(0.12),
-                              Colors.white.withOpacity(0.06),
-                            ],
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                          ),
-                          borderRadius: const BorderRadius.only(
-                            topLeft: Radius.circular(24),
-                            topRight: Radius.circular(24),
-                          ),
-                        ),
-                        child: Column(
-                          children: [
-                            // Enhanced drag handle
                             Container(
-                              width: 48,
-                              height: 4,
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.4),
-                                borderRadius: BorderRadius.circular(2),
+                                color: Colors.red.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
                               ),
-                            ),
-                            const SizedBox(height: 16),
-                            // Enhanced header content
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Row(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFF667eea)
-                                            .withOpacity(0.2),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Icon(
-                                        Icons.edit_note,
-                                        color: const Color(0xFF667eea),
-                                        size: 20,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Text(
-                                      currentAnswerKey,
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                Container(
-                                  decoration: BoxDecoration(
-                                    color: Colors.red.withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: IconButton(
-                                    onPressed: _closeTextInput,
-                                    icon: const Icon(Icons.close,
-                                        color: Colors.white),
-                                  ),
-                                ),
-                              ],
+                              child: IconButton(
+                                onPressed: _closeTextInput,
+                                icon: const Icon(Icons.close,
+                                    color: Colors.white),
+                              ),
                             ),
                           ],
                         ),
-                      ),
+                      ],
+                    ),
+                  ),
 
-                      // Enhanced text input area
-                      Expanded(
-                        child: Container(
-                          margin: const EdgeInsets.all(20),
+                  // Enhanced text input area
+                  Expanded(
+                    child: Container(
+                      margin: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.white.withOpacity(0.08),
+                            Colors.white.withOpacity(0.03),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.2),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: TextField(
+                        controller: _answerController,
+                        maxLines: null,
+                        expands: true,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          height: 1.5,
+                          fontFamily:
+                              'Fira Code', // Use a monospace font for code
+                        ),
+                        decoration: InputDecoration(
+                          hintText:
+                              'Type your answer here...\n\nTip: For code, use proper Java syntax and comments to explain your solution.',
+                          hintStyle: TextStyle(
+                            color: Colors.white.withOpacity(0.5),
+                            fontSize: 16,
+                            fontFamily: 'Fira Code',
+                          ),
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.all(20),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // Enhanced action buttons
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Cancel button
+                        Container(
                           decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                Colors.white.withOpacity(0.08),
-                                Colors.white.withOpacity(0.03),
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
+                            color: Colors.white.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
                               color: Colors.white.withOpacity(0.2),
+                              width: 1,
                             ),
+                          ),
+                          child: TextButton.icon(
+                            onPressed: _closeTextInput,
+                            icon: Icon(
+                              Icons.cancel_outlined,
+                              color: Colors.white.withOpacity(0.8),
+                              size: 18,
+                            ),
+                            label: Text(
+                              'Cancel',
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.8),
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        // Save button
+                        Container(
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [
+                                Color(0xFF4CAF50),
+                                Color(0xFF45A049)
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(12),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
+                                color: const Color(0xFF4CAF50)
+                                    .withOpacity(0.3),
                                 blurRadius: 8,
                                 offset: const Offset(0, 4),
                               ),
                             ],
                           ),
-                          child: TextField(
-                            controller: _answerController,
-                            maxLines: null,
-                            expands: true,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              height: 1.5,
-                              fontFamily:
-                                  'Fira Code', // Use a monospace font for code
+                          child: ElevatedButton.icon(
+                            onPressed: _saveAnswer,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              shadowColor: Colors.transparent,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 24, vertical: 12),
                             ),
-                            decoration: InputDecoration(
-                              hintText:
-                                  'Type your answer here...\n\nTip: For code, use proper Java syntax and comments to explain your solution.',
-                              hintStyle: TextStyle(
-                                color: Colors.white.withOpacity(0.5),
+                            icon: const Icon(
+                              Icons.save_outlined,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                            label: const Text(
+                              'Save Answer',
+                              style: TextStyle(
+                                color: Colors.white,
                                 fontSize: 16,
-                                fontFamily: 'Fira Code',
+                                fontWeight: FontWeight.w600,
                               ),
-                              border: InputBorder.none,
-                              contentPadding: const EdgeInsets.all(20),
                             ),
                           ),
                         ),
-                      ),
-
-                      // Enhanced action buttons
-                      Container(
-                        padding: const EdgeInsets.all(20),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            // Cancel button
-                            Container(
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: Colors.white.withOpacity(0.2),
-                                  width: 1,
-                                ),
-                              ),
-                              child: TextButton.icon(
-                                onPressed: _closeTextInput,
-                                icon: Icon(
-                                  Icons.cancel_outlined,
-                                  color: Colors.white.withOpacity(0.8),
-                                  size: 18,
-                                ),
-                                label: Text(
-                                  'Cancel',
-                                  style: TextStyle(
-                                    color: Colors.white.withOpacity(0.8),
-                                    fontSize: 16,
-                                  ),
-                                ),
-                              ),
-                            ),
-
-                            // Save button
-                            Container(
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  colors: [
-                                    Color(0xFF4CAF50),
-                                    Color(0xFF45A049)
-                                  ],
-                                ),
-                                borderRadius: BorderRadius.circular(12),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: const Color(0xFF4CAF50)
-                                        .withOpacity(0.3),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
-                              ),
-                              child: ElevatedButton.icon(
-                                onPressed: _saveAnswer,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.transparent,
-                                  shadowColor: Colors.transparent,
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 24, vertical: 12),
-                                ),
-                                icon: const Icon(
-                                  Icons.save_outlined,
-                                  color: Colors.white,
-                                  size: 20,
-                                ),
-                                label: const Text(
-                                  'Save Answer',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
       ],

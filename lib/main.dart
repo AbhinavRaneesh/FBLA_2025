@@ -2418,53 +2418,136 @@ class _LearnTabState extends State<LearnTab>
           const SizedBox(height: 30),
           Column(
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: restartQuiz,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                      ),
-                      child: const Text(
-                        "Retry Quiz",
-                        style: TextStyle(color: Colors.white),
-                      ),
+              // Enhanced Retry Quiz Button
+              Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF667eea).withOpacity(0.3),
+                      blurRadius: 12,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: ElevatedButton.icon(
+                  onPressed: restartQuiz,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
                     ),
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: returnToConfig,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.purple,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                      ),
-                      child: const Text(
-                        "New Quiz",
-                        style: TextStyle(color: Colors.white),
-                      ),
+                  icon: const Icon(
+                    Icons.refresh_rounded,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                  label: const Text(
+                    "Try Again",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                ],
+                ),
               ),
               const SizedBox(height: 16),
-              SizedBox(
+              
+              // Enhanced New Quiz Button
+              Container(
                 width: double.infinity,
-                child: ElevatedButton(
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFf093fb), Color(0xFFf5576c)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFf093fb).withOpacity(0.3),
+                      blurRadius: 12,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: ElevatedButton.icon(
+                  onPressed: returnToConfig,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  icon: const Icon(
+                    Icons.quiz_rounded,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                  label: const Text(
+                    "New Quiz",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              
+              // Enhanced Return Home Button
+              Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF11998e), Color(0xFF38ef7d)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF11998e).withOpacity(0.3),
+                      blurRadius: 12,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: ElevatedButton.icon(
                   onPressed: () {
                     Navigator.pop(this.context);
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                   ),
-                  child: const Text(
+                  icon: const Icon(
+                    Icons.home_rounded,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                  label: const Text(
                     "Return Home",
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 16,
+                      fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -2620,6 +2703,13 @@ class _ShopTabState extends State<ShopTab> with AutomaticKeepAliveClientMixin {
       'color': const Color(0xFF121212),
       'description': 'Pure dark mode',
       'icon': Icons.dark_mode,
+    },
+    {
+      'name': 'Lightning',
+      'price': 0,
+      'color': Colors.blueAccent,
+      'description': 'A flash of brilliance',
+      'icon': Icons.flash_on,
     },
   ];
 
@@ -2906,6 +2996,7 @@ class _ProfileTabState extends State<ProfileTab>
   final DatabaseHelper _dbHelper = DatabaseHelper();
   Map<String, dynamic>? _userStats;
   File? _profileImage;
+  File? _userProfileImage; // Add profile image state
 
   @override
   bool get wantKeepAlive => true;
@@ -2915,6 +3006,14 @@ class _ProfileTabState extends State<ProfileTab>
     super.initState();
     _loadUserStats();
     _loadProfileImage();
+    _loadUserProfileImage(); // Load profile image on init
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Refresh profile image when screen becomes visible
+    _refreshUserProfileImage();
   }
 
   Future<void> _loadUserStats() async {
@@ -2936,6 +3035,24 @@ class _ProfileTabState extends State<ProfileTab>
         _profileImage = File(path);
       });
     }
+  }
+
+  Future<void> _loadUserProfileImage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final path = prefs.getString('profile_image_${widget.username}');
+    if (path != null && path.isNotEmpty) {
+      setState(() {
+        _userProfileImage = File(path);
+      });
+    }
+  }
+
+  void _refreshUserProfileImage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final path = prefs.getString('profile_image_${widget.username}');
+    setState(() {
+      _userProfileImage = path != null && path.isNotEmpty ? File(path) : null;
+    });
   }
 
   Future<void> _pickImage() async {
@@ -3597,33 +3714,44 @@ class PracticeModeScreen extends StatefulWidget {
   _PracticeModeScreenState createState() => _PracticeModeScreenState();
 }
 
-class _PracticeModeScreenState extends State<PracticeModeScreen> {
+class _PracticeModeScreenState extends State<PracticeModeScreen>
+    with AutomaticKeepAliveClientMixin {
   final DatabaseHelper _dbHelper = DatabaseHelper();
+  final ChatBloc _chatBloc = ChatBloc();
+  final TextEditingController _chatController = TextEditingController();
+  final ScrollController _chatScrollController = ScrollController();
+
+  List<Map<String, dynamic>> _questions = [];
+  int _questionCount = 5;
   bool _isLoading = true;
   bool _hasError = false;
   String _errorMessage = '';
-  List<Map<String, dynamic>> _questions = [];
-  int _questionCount = 20;
-  String _selectedMode = 'classic';
+  String _selectedMode = '';
   bool _showModeSelection = true;
   bool _showQuizArea = false;
   bool _showScoreSummary = false;
+  bool _showChat = false;
   int _currentQuestionIndex = 0;
+  int _correctAnswers = 0;
   String? _selectedAnswer;
   bool _showAnswer = false;
-  int _correctAnswers = 0;
-  bool _showChat = false;
-  late ChatBloc _chatBloc;
-  final TextEditingController _chatController = TextEditingController();
-  final ScrollController _chatScrollController = ScrollController();
-  double _chatHeightRatio = 0.5; // Default 50% of available area
-  bool _isResizing = false;
+  File? _userProfileImage; // Add profile image state
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
     super.initState();
     _loadQuestions();
-    _chatBloc = ChatBloc();
+    _loadUserProfileImage(); // Load profile image on init
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Refresh profile image when screen becomes visible
+    _refreshUserProfileImage();
   }
 
   @override
@@ -3655,6 +3783,24 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
         _isLoading = false;
       });
     }
+  }
+
+  void _loadUserProfileImage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final path = prefs.getString('profile_image_${widget.username}');
+    if (path != null && path.isNotEmpty) {
+      setState(() {
+        _userProfileImage = File(path);
+      });
+    }
+  }
+
+  void _refreshUserProfileImage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final path = prefs.getString('profile_image_${widget.username}');
+    setState(() {
+      _userProfileImage = path != null && path.isNotEmpty ? File(path) : null;
+    });
   }
 
   void _startPractice(BuildContext context) {
@@ -3716,6 +3862,9 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
     prompt +=
         "\nPlease help me understand this question and explain the correct answer.";
 
+    // Refresh profile image before showing chat
+    _refreshUserProfileImage();
+
     // Show the chat interface
     setState(() {
       _showChat = true;
@@ -3770,15 +3919,47 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
                               textAlign: TextAlign.center,
                             ),
                             const SizedBox(height: 24),
-                            ElevatedButton.icon(
-                              onPressed: _loadQuestions,
-                              icon: const Icon(Icons.refresh),
-                              label: const Text('Try Again'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.blueAccent,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 24,
-                                  vertical: 12,
+                            Container(
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFF667eea).withOpacity(0.3),
+                                    blurRadius: 12,
+                                    offset: const Offset(0, 6),
+                                  ),
+                                ],
+                              ),
+                              child: ElevatedButton.icon(
+                                onPressed: _loadQuestions,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.transparent,
+                                  shadowColor: Colors.transparent,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 32,
+                                    vertical: 16,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                ),
+                                icon: const Icon(
+                                  Icons.refresh_rounded,
+                                  color: Colors.white,
+                                  size: 24,
+                                ),
+                                label: const Text(
+                                  'Try Again',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ),
                             ),
@@ -4090,49 +4271,103 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
                                         ),
                                       ),
                                       const SizedBox(height: 32),
-                                      SizedBox(
+                                      // Enhanced Try Again Button
+                                      Container(
                                         width: double.infinity,
+                                        decoration: BoxDecoration(
+                                          gradient: const LinearGradient(
+                                            colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                          ),
+                                          borderRadius: BorderRadius.circular(16),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: const Color(0xFF667eea).withOpacity(0.3),
+                                              blurRadius: 12,
+                                              offset: const Offset(0, 6),
+                                            ),
+                                          ],
+                                        ),
                                         child: ElevatedButton.icon(
                                           onPressed: () {
                                             setState(() {
                                               _showModeSelection = true;
                                               _showQuizArea = false;
                                               _showScoreSummary = false;
+                                              // Reset all quiz state variables to prevent auto-answering
+                                              _selectedAnswer = null;
+                                              _showAnswer = false;
+                                              _showChat = false;
+                                              _currentQuestionIndex = 0;
+                                              _correctAnswers = 0;
                                             });
                                           },
-                                          icon: const Icon(Icons.refresh),
-                                          label: const Text('Try Again'),
                                           style: ElevatedButton.styleFrom(
-                                            backgroundColor: Colors.blueAccent,
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 32,
-                                              vertical: 16,
-                                            ),
+                                            backgroundColor: Colors.transparent,
+                                            shadowColor: Colors.transparent,
+                                            padding: const EdgeInsets.symmetric(vertical: 16),
                                             shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(16),
+                                              borderRadius: BorderRadius.circular(16),
+                                            ),
+                                          ),
+                                          icon: const Icon(
+                                            Icons.refresh_rounded,
+                                            color: Colors.white,
+                                            size: 24,
+                                          ),
+                                          label: const Text(
+                                            'Try Again',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.bold,
                                             ),
                                           ),
                                         ),
                                       ),
                                       const SizedBox(height: 16),
-                                      SizedBox(
+                                      // Enhanced Return Home Button
+                                      Container(
                                         width: double.infinity,
+                                        decoration: BoxDecoration(
+                                          gradient: const LinearGradient(
+                                            colors: [Color(0xFF11998e), Color(0xFF38ef7d)],
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                          ),
+                                          borderRadius: BorderRadius.circular(16),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: const Color(0xFF11998e).withOpacity(0.3),
+                                              blurRadius: 12,
+                                              offset: const Offset(0, 6),
+                                            ),
+                                          ],
+                                        ),
                                         child: ElevatedButton.icon(
                                           onPressed: () {
                                             Navigator.pop(context);
                                           },
-                                          icon: const Icon(Icons.home),
-                                          label: const Text('Return Home'),
                                           style: ElevatedButton.styleFrom(
-                                            backgroundColor: Colors.green,
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 32,
-                                              vertical: 16,
-                                            ),
+                                            backgroundColor: Colors.transparent,
+                                            shadowColor: Colors.transparent,
+                                            padding: const EdgeInsets.symmetric(vertical: 16),
                                             shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(16),
+                                              borderRadius: BorderRadius.circular(16),
+                                            ),
+                                          ),
+                                          icon: const Icon(
+                                            Icons.home_rounded,
+                                            color: Colors.white,
+                                            size: 24,
+                                          ),
+                                          label: const Text(
+                                            'Return Home',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.bold,
                                             ),
                                           ),
                                         ),
@@ -4649,14 +4884,40 @@ class _PracticeModeScreenState extends State<PracticeModeScreen> {
                             ),
                             if (isUser) ...[
                               const SizedBox(width: 8),
-                              Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF4facfe),
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: const Icon(Icons.person,
-                                    color: Colors.white, size: 16),
+                              CircleAvatar(
+                                radius: 16,
+                                backgroundColor: Colors.transparent,
+                                backgroundImage: _userProfileImage != null ? FileImage(_userProfileImage!) : null,
+                                child: _userProfileImage == null
+                                    ? Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          gradient: const LinearGradient(
+                                            colors: [Color(0xFF4facfe), Color(0xFF00f2fe)],
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                          ),
+                                          borderRadius: BorderRadius.circular(20),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: const Color(0xFF4facfe).withOpacity(0.3),
+                                              blurRadius: 8,
+                                              offset: const Offset(0, 2),
+                                            ),
+                                          ],
+                                        ),
+                                        child: Text(
+                                          widget.username.isNotEmpty 
+                                              ? widget.username.substring(0, 1).toUpperCase()
+                                              : 'U',
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      )
+                                    : null,
                               ),
                             ],
                           ],
@@ -5509,7 +5770,12 @@ class _QuizletImportScreenState extends State<QuizletImportScreen> {
         children: [
           const SpaceBackground(),
           _isLoading
-              ? const Center(child: CircularProgressIndicator())
+              ? const Center(
+                  child: CircularProgressIndicator(
+                    valueColor:
+                        AlwaysStoppedAnimation<Color>(Colors.blueAccent),
+                  ),
+                )
               : SingleChildScrollView(
                   padding: const EdgeInsets.all(24),
                   child: Form(

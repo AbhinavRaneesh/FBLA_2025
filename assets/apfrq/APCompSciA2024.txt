@@ -42,12 +42,11 @@ might eat 10, 11, . . . , 49, or 50 grams of food. The amount of food eaten by e
 randomly generated and each integer from 10 to 50, inclusive, has an equal chance of being chosen.
 For example, a run of the simulation might predict that for a certain day under normal conditions, each
 bird coming to the feeder will eat 11 grams of food. If 10 birds come to the feeder on that day, then a
-total of 110 grams of food will be consumed.
-If the simulated food consumed is greater than the amount of food in the feeder, the birds empty the
+total of 110 grams of food will be consumed. If the simulated food consumed is greater than the amount of food in the feeder, the birds empty the
 feeder and the amount of food in the feeder at the end of the day is zero.
 Under abnormal conditions, a bear empties the feeder and the amount of food in the feeder at the end of
-the day is zero.
-The following examples show possible results of three calls to simulateOneDay.
+the day is zero. 
+    The following examples show possible results of three calls to simulateOneDay.
 • Example 1: If the feeder initially contains 500 grams of food, the call
 simulateOneDay(12) could result in 12 birds eating 20 grams of food each,
 leaving 260 grams of food in the feeder.

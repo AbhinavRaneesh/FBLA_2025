@@ -6,6 +6,8 @@ import '../database_helper.dart';
 import 'package:student_learning_app/mcq_manager.dart';
 import 'dart:math';
 import 'package:lottie/lottie.dart';
+import 'dart:io';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
   final String username;
@@ -41,6 +43,7 @@ class _HomePageState extends State<HomePage> {
       false; // New variable to control score summary visibility
   String selectedSubject = "Chemistry";
   int numberOfQuestions = 10; // New variable for question count
+  File? _userProfileImage; // Add profile image state
 
   List<String> subjects = [
     "Chemistry",
@@ -221,6 +224,7 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     _chatBloc = ChatBloc(); // Initialize bloc once
     _loadUsername(); // Load username when page initializes
+    _loadUserProfileImage(); // Load profile image on init
   }
 
   Future<void> _loadUsername() async {
@@ -228,6 +232,24 @@ class _HomePageState extends State<HomePage> {
     // For now, we'll use a default value
     setState(() {
       username = widget.username; // Replace with actual username loading logic
+    });
+  }
+
+  void _loadUserProfileImage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final path = prefs.getString('profile_image_${widget.username}');
+    if (path != null && path.isNotEmpty) {
+      setState(() {
+        _userProfileImage = File(path);
+      });
+    }
+  }
+
+  void _refreshUserProfileImage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final path = prefs.getString('profile_image_${widget.username}');
+    setState(() {
+      _userProfileImage = path != null && path.isNotEmpty ? File(path) : null;
     });
   }
 
@@ -270,38 +292,102 @@ class _HomePageState extends State<HomePage> {
 
   // Function to show half-screen chat modal
   void _showChatModal({String? initialMessage}) {
+    // Refresh profile image before showing chat
+    _refreshUserProfileImage();
+    
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return Dialog(
-          backgroundColor: Colors.grey.shade900,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
+          backgroundColor: Colors.transparent,
           child: Container(
-            width: MediaQuery.of(context).size.width * 0.9,
-            height: MediaQuery.of(context).size.height * 0.7,
-            padding: EdgeInsets.all(16),
+            width: MediaQuery.of(context).size.width * 0.95,
+            height: MediaQuery.of(context).size.height * 0.8,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.grey.shade900.withOpacity(0.95),
+                  Colors.grey.shade800.withOpacity(0.95),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.1),
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.3),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
             child: Column(
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'AI Assistant',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                // Header
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        const Color(0xFF667eea),
+                        const Color(0xFF764ba2),
+                      ],
+                    ),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(24),
+                      topRight: Radius.circular(24),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(
+                          Icons.psychology,
+                          color: Colors.white,
+                          size: 24,
+                        ),
                       ),
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.close, color: Colors.white),
-                      onPressed: () => Navigator.of(context).pop(),
-                    ),
-                  ],
+                      const SizedBox(width: 12),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'AI Learning Assistant',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                            Text(
+                              'Ask me anything about your studies!',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.white70,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close, color: Colors.white),
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                    ],
+                  ),
                 ),
-                Divider(color: Colors.grey),
+                
+                // Chat Messages
                 Expanded(
                   child: BlocBuilder<ChatBloc, ChatState>(
                     bloc: _chatBloc,
@@ -320,90 +406,268 @@ class _HomePageState extends State<HomePage> {
 
                         return ListView.builder(
                           controller: _scrollController,
+                          padding: const EdgeInsets.all(16),
                           itemCount: state.messages.length,
                           itemBuilder: (context, index) {
                             final message = state.messages[index];
-                            return Container(
-                              margin: EdgeInsets.symmetric(vertical: 8),
-                              padding: EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: message.role == "user"
-                                    ? Colors.blue.withOpacity(0.2)
-                                    : Colors.purple.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(
-                                message.parts.isNotEmpty
-                                    ? message.parts.first.text
-                                    : 'No message content',
-                                style: TextStyle(color: Colors.white),
+                            final isUser = message.role == "user";
+                            
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 16),
+                              child: Row(
+                                mainAxisAlignment: isUser
+                                    ? MainAxisAlignment.end
+                                    : MainAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  if (!isUser) ...[
+                                    Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        gradient: const LinearGradient(
+                                          colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+                                        ),
+                                        borderRadius: BorderRadius.circular(16),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: const Color(0xFF667eea).withOpacity(0.3),
+                                            blurRadius: 8,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ],
+                                      ),
+                                      child: const Icon(
+                                        Icons.psychology,
+                                        color: Colors.white,
+                                        size: 16,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                  ],
+                                  
+                                  Flexible(
+                                    child: Container(
+                                      constraints: BoxConstraints(
+                                        maxWidth: MediaQuery.of(context).size.width * 0.7,
+                                      ),
+                                      padding: const EdgeInsets.all(16),
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          colors: isUser
+                                              ? [
+                                                  const Color(0xFF4facfe),
+                                                  const Color(0xFF00f2fe),
+                                                ]
+                                              : [
+                                                  Colors.white.withOpacity(0.1),
+                                                  Colors.white.withOpacity(0.05),
+                                                ],
+                                        ),
+                                        borderRadius: BorderRadius.circular(20),
+                                        border: Border.all(
+                                          color: isUser
+                                              ? const Color(0xFF4facfe).withOpacity(0.3)
+                                              : Colors.white.withOpacity(0.1),
+                                          width: 1,
+                                        ),
+                                        boxShadow: isUser
+                                            ? [
+                                                BoxShadow(
+                                                  color: const Color(0xFF4facfe).withOpacity(0.2),
+                                                  blurRadius: 12,
+                                                  offset: const Offset(0, 4),
+                                                ),
+                                              ]
+                                            : [],
+                                      ),
+                                      child: Text(
+                                        message.parts.isNotEmpty
+                                            ? message.parts.first.text
+                                            : 'No message content',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 15,
+                                          height: 1.4,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  
+                                  if (isUser) ...[
+                                    const SizedBox(width: 8),
+                                    CircleAvatar(
+                                      radius: 16,
+                                      backgroundColor: Colors.transparent,
+                                      backgroundImage: _userProfileImage != null ? FileImage(_userProfileImage!) : null,
+                                      child: _userProfileImage == null
+                                          ? Container(
+                                              padding: const EdgeInsets.all(8),
+                                              decoration: BoxDecoration(
+                                                gradient: const LinearGradient(
+                                                  colors: [Color(0xFF4facfe), Color(0xFF00f2fe)],
+                                                  begin: Alignment.topLeft,
+                                                  end: Alignment.bottomRight,
+                                                ),
+                                                borderRadius: BorderRadius.circular(16),
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: const Color(0xFF4facfe).withOpacity(0.3),
+                                                    blurRadius: 8,
+                                                    offset: const Offset(0, 2),
+                                                  ),
+                                                ],
+                                              ),
+                                              child: Text(
+                                                widget.username.isNotEmpty 
+                                                    ? widget.username.substring(0, 1).toUpperCase()
+                                                    : 'U',
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            )
+                                          : null,
+                                    ),
+                                  ],
+                                ],
                               ),
                             );
                           },
                         );
                       } else if (state is ChatErrorState) {
                         return Center(
-                          child: Text(
-                            state.message,
-                            style: TextStyle(color: Colors.red),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.error_outline,
+                                size: 48,
+                                color: Colors.red.withOpacity(0.8),
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'Error: ${state.message}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
                           ),
                         );
                       } else {
                         return Center(
-                          child: Lottie.asset(
-                            'assets/animation/Animation - 1750352180300.json',
-                            width: 120,
-                            height: 120,
-                            fit: BoxFit.contain,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Lottie.asset(
+                                'assets/animation/Animation - 1750352180300.json',
+                                width: 120,
+                                height: 120,
+                                fit: BoxFit.contain,
+                              ),
+                              const SizedBox(height: 16),
+                              const Text(
+                                'AI Assistant Ready!',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Ask me anything about your studies',
+                                style: TextStyle(
+                                  color: Colors.white.withOpacity(0.7),
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
                           ),
                         );
                       }
                     },
                   ),
                 ),
-                Divider(color: Colors.grey),
-                Padding(
-                  padding: EdgeInsets.only(bottom: 8),
+                
+                // Input Area
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.05),
+                    borderRadius: const BorderRadius.only(
+                      bottomLeft: Radius.circular(24),
+                      bottomRight: Radius.circular(24),
+                    ),
+                  ),
                   child: Row(
                     children: [
                       Expanded(
-                        child: TextField(
-                          controller: followupController,
-                          style: TextStyle(color: Colors.white),
-                          decoration: InputDecoration(
-                            hintText: 'Ask a follow-up question...',
-                            hintStyle: TextStyle(color: Colors.grey),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: Colors.white.withOpacity(0.2),
+                              width: 1,
                             ),
-                            filled: true,
-                            fillColor: Colors.grey.shade800,
+                          ),
+                          child: TextField(
+                            controller: followupController,
+                            style: const TextStyle(color: Colors.white),
+                            decoration: const InputDecoration(
+                              hintText: 'Ask a follow-up question...',
+                              hintStyle: TextStyle(color: Colors.white60),
+                              border: InputBorder.none,
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                      SizedBox(width: 8),
-                      IconButton(
-                        icon: Icon(Icons.send, color: Colors.purple),
-                        onPressed: () {
-                          if (followupController.text.isNotEmpty) {
-                            _chatBloc.add(ChatGenerationNewTextMessageEvent(
-                              inputMessage: followupController.text,
-                            ));
-                            followupController.clear();
+                      const SizedBox(width: 12),
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+                          ),
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF667eea).withOpacity(0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: IconButton(
+                          icon: const Icon(Icons.send, color: Colors.white),
+                          onPressed: () {
+                            if (followupController.text.trim().isNotEmpty) {
+                              _chatBloc.add(ChatGenerationNewTextMessageEvent(
+                                inputMessage: followupController.text.trim(),
+                              ));
+                              followupController.clear();
 
-                            // Auto-scroll to bottom when user sends a message
-                            Future.delayed(const Duration(milliseconds: 100),
-                                () {
-                              if (_scrollController.hasClients) {
-                                _scrollController.animateTo(
-                                  _scrollController.position.maxScrollExtent,
-                                  duration: const Duration(milliseconds: 300),
-                                  curve: Curves.easeOut,
-                                );
-                              }
-                            });
-                          }
-                        },
+                              // Auto-scroll to bottom when user sends a message
+                              Future.delayed(const Duration(milliseconds: 100), () {
+                                if (_scrollController.hasClients) {
+                                  _scrollController.animateTo(
+                                    _scrollController.position.maxScrollExtent,
+                                    duration: const Duration(milliseconds: 300),
+                                    curve: Curves.easeOut,
+                                  );
+                                }
+                              });
+                            }
+                          },
+                        ),
                       ),
                     ],
                   ),
@@ -671,7 +935,7 @@ class _HomePageState extends State<HomePage> {
     String prompt = """
 Generate exactly $numberOfQuestions multiple choice questions for $selectedSubject.
 Format each question exactly like this: [question text, option A, option B, option C, option D, correct answer]
-Do not include any explanations or additional text, just the questions in this exact format.
+Do not include any explanations or additional text, just the questions in this exact format and randomize the correct answer.
 Example format:
 [What is the chemical symbol for water?, H2O, CO2, NaCl, O2, H2O]
 [What is the capital of France?, London, Berlin, Paris, Madrid, Paris]
@@ -887,7 +1151,7 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
                 ),
                 IconButton(
                   onPressed: () {
-                    if (numberOfQuestions < 100) {
+                    if (numberOfQuestions < 200) {
                       setState(() {
                         numberOfQuestions += 5;
                       });

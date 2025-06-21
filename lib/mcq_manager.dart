@@ -4310,9 +4310,47 @@ class _MCQManagerState extends State<MCQManager> {
     );
   }
 
+  // Check if a set is already imported by the user
+  Future<bool> _isSetAlreadyImported(String subjectName) async {
+    try {
+      final importedSets = await _dbHelper.getUserImportedSets(widget.username);
+      return importedSets.any((set) => set['name'] == subjectName);
+    } catch (e) {
+      debugPrint('Error checking if set is imported: $e');
+      return false;
+    }
+  }
+
   // Add import functionality for MCQ sets
   Future<void> _importMCQSet(String subjectName) async {
     try {
+      // Check if the set is already imported
+      final isAlreadyImported = await _isSetAlreadyImported(subjectName);
+      if (isAlreadyImported) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.info_outline, color: Colors.white),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Text('Set "$subjectName" is already imported!'),
+                  ),
+                ],
+              ),
+              backgroundColor: Colors.orange,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              margin: const EdgeInsets.all(16),
+            ),
+          );
+        }
+        return;
+      }
+
       // Show loading state
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
