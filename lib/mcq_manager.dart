@@ -3150,8 +3150,9 @@ class _MCQManagerState extends State<MCQManager> {
 
   void _syncWithPremadeStudySets() {
     final premadeSets = PremadeStudySetsRepository.getPremadeSets();
-    debugPrint('Syncing with ${premadeSets.length} premade sets from repository');
-    
+    debugPrint(
+        'Syncing with ${premadeSets.length} premade sets from repository');
+
     for (final set in premadeSets) {
       final alreadyExists = apClasses.any((cls) => cls['name'] == set.name);
       if (!alreadyExists) {
@@ -3174,7 +3175,7 @@ class _MCQManagerState extends State<MCQManager> {
         debugPrint('Course already exists in MCQ manager: ${set.name}');
       }
     }
-    
+
     debugPrint('Total courses in MCQ manager after sync: ${apClasses.length}');
   }
 
@@ -3522,7 +3523,7 @@ class _MCQManagerState extends State<MCQManager> {
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.star,
+                            const Icon(Icons.diamond,
                                 color: Colors.white, size: 20),
                             const SizedBox(width: 5),
                             Text(
@@ -3593,7 +3594,7 @@ class _MCQManagerState extends State<MCQManager> {
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.star,
+                            const Icon(Icons.diamond,
                                 color: Colors.white, size: 20),
                             const SizedBox(width: 5),
                             Text(
@@ -3898,7 +3899,7 @@ class _MCQManagerState extends State<MCQManager> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.star, color: Colors.white, size: 24),
+                      const Icon(Icons.diamond, color: Colors.white, size: 24),
                       const SizedBox(width: 8),
                       Text(
                         'Earned ${currentScore * 10} points!',
@@ -4421,7 +4422,8 @@ class _MCQManagerState extends State<MCQManager> {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Set "$setName" not found. Please try refreshing the app.'),
+                content: Text(
+                    'Set "$setName" not found. Please try refreshing the app.'),
                 backgroundColor: Colors.red,
               ),
             );
@@ -4503,7 +4505,8 @@ class _MCQManagerState extends State<MCQManager> {
                 const Icon(Icons.error_outline, color: Colors.white),
                 const SizedBox(width: 16),
                 Expanded(
-                  child: Text('Failed to import set. Please try refreshing the app.'),
+                  child: Text(
+                      'Failed to import set. Please try refreshing the app.'),
                 ),
               ],
             ),

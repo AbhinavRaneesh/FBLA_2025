@@ -21,7 +21,7 @@ class DatabaseHelper {
     String path = join(await getDatabasesPath(), 'eduquest.db');
     return await openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -77,6 +77,18 @@ class DatabaseHelper {
       )
     ''');
 
+    // Create user_powerups table
+    await db.execute('''
+      CREATE TABLE user_powerups(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT NOT NULL,
+        powerup_id TEXT NOT NULL,
+        count INTEGER DEFAULT 1,
+        purchased_at TEXT NOT NULL,
+        FOREIGN KEY (username) REFERENCES users (username) ON DELETE CASCADE
+      )
+    ''');
+
     // Insert default premade study sets
     await _insertPremadeStudySets(db);
   }
@@ -85,6 +97,19 @@ class DatabaseHelper {
     if (oldVersion < 2) {
       // Add new courses to existing database
       await _insertPremadeStudySets(db);
+    }
+    if (oldVersion < 3) {
+      // Add user_powerups table
+      await db.execute('''
+        CREATE TABLE user_powerups(
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          username TEXT NOT NULL,
+          powerup_id TEXT NOT NULL,
+          count INTEGER DEFAULT 1,
+          purchased_at TEXT NOT NULL,
+          FOREIGN KEY (username) REFERENCES users (username) ON DELETE CASCADE
+        )
+      ''');
     }
   }
 
@@ -119,13 +144,14 @@ class DatabaseHelper {
             'options': question.options.join('|'),
           });
         }
-        
-        debugPrint('Added new premade set: ${set.name} with ${set.questions.length} questions');
+
+        debugPrint(
+            'Added new premade set: ${set.name} with ${set.questions.length} questions');
       } else {
         debugPrint('Premade set already exists: ${set.name}');
       }
     }
-    
+
     // Debug: Print all premade sets in database
     final allPremadeSets = await db.query(
       'study_sets',
@@ -255,9 +281,10 @@ class DatabaseHelper {
       where: 'is_premade = ?',
       whereArgs: [1],
     );
-    
-    debugPrint('Repository has ${premadeSets.length} sets, database has ${dbSets.length} sets');
-    
+
+    debugPrint(
+        'Repository has ${premadeSets.length} sets, database has ${dbSets.length} sets');
+
     // Check if all repository sets exist in database
     for (var set in premadeSets) {
       final exists = dbSets.any((dbSet) => dbSet['name'] == set.name);
@@ -266,25 +293,26 @@ class DatabaseHelper {
         return false;
       }
     }
-    
+
     return true;
   }
 
   Future<void> refreshPremadeSets() async {
     final db = await database;
-    
+
     // Get existing premade sets
     final existingSets = await db.query(
       'study_sets',
       where: 'is_premade = ?',
       whereArgs: [1],
     );
-    
+
     // Get all premade sets from repository
     final premadeSets = PremadeStudySetsRepository.getPremadeSets();
-    
-    debugPrint('Refreshing premade sets: ${existingSets.length} existing, ${premadeSets.length} in repository');
-    
+
+    debugPrint(
+        'Refreshing premade sets: ${existingSets.length} existing, ${premadeSets.length} in repository');
+
     for (var set in premadeSets) {
       // Check if set already exists
       final existingSet = existingSets.firstWhere(
@@ -311,7 +339,7 @@ class DatabaseHelper {
             'options': question.options.join('|'),
           });
         }
-        
+
         debugPrint('Added new premade set: ${set.name} with ID $studySetId');
       } else {
         // Update existing set (preserve ID)
@@ -325,14 +353,14 @@ class DatabaseHelper {
           where: 'id = ?',
           whereArgs: [studySetId],
         );
-        
+
         // Delete old questions and insert new ones
         await db.delete(
           'study_set_questions',
           where: 'study_set_id = ?',
           whereArgs: [studySetId],
         );
-        
+
         for (var question in set.questions) {
           await db.insert('study_set_questions', {
             'study_set_id': studySetId,
@@ -341,14 +369,16 @@ class DatabaseHelper {
             'options': question.options.join('|'),
           });
         }
-        
-        debugPrint('Updated existing premade set: ${set.name} with ID $studySetId');
+
+        debugPrint(
+            'Updated existing premade set: ${set.name} with ID $studySetId');
       }
     }
-    
+
     // Remove any premade sets that are no longer in the repository
     for (var existingSet in existingSets) {
-      final stillExists = premadeSets.any((repoSet) => repoSet.name == existingSet['name']);
+      final stillExists =
+          premadeSets.any((repoSet) => repoSet.name == existingSet['name']);
       if (!stillExists) {
         await db.delete(
           'study_sets',
@@ -358,14 +388,15 @@ class DatabaseHelper {
         debugPrint('Removed obsolete premade set: ${existingSet['name']}');
       }
     }
-    
+
     // Debug: Print all premade sets in database after refresh
     final allPremadeSets = await db.query(
       'study_sets',
       where: 'is_premade = ?',
       whereArgs: [1],
     );
-    debugPrint('Total premade sets in database after refresh: ${allPremadeSets.length}');
+    debugPrint(
+        'Total premade sets in database after refresh: ${allPremadeSets.length}');
     for (var set in allPremadeSets) {
       debugPrint('- ${set['name']} (ID: ${set['id']})');
     }
@@ -462,7 +493,8 @@ class DatabaseHelper {
     final db = await database;
     final userId = await getUserId(username);
 
-    debugPrint('Attempting to import set ID $studySetId for user $username (ID: $userId)');
+    debugPrint(
+        'Attempting to import set ID $studySetId for user $username (ID: $userId)');
 
     // Check if user already has this set
     final existingSet = await db.query(
@@ -481,14 +513,14 @@ class DatabaseHelper {
     } else {
       debugPrint('User already has set ID $studySetId, skipping import');
     }
-    
+
     // Debug: Show all sets for this user after import
     final allUserSets = await db.rawQuery('''
       SELECT s.* FROM study_sets s
       INNER JOIN user_study_sets us ON s.id = us.study_set_id
       WHERE us.user_id = ?
     ''', [userId]);
-    
+
     debugPrint('User $username now has ${allUserSets.length} imported sets:');
     for (var set in allUserSets) {
       debugPrint('- ${set['name']} (ID: ${set['id']})');
@@ -505,12 +537,13 @@ class DatabaseHelper {
       INNER JOIN user_study_sets us ON s.id = us.study_set_id
       WHERE us.user_id = ?
     ''', [userId]);
-    
-    debugPrint('User $username (ID: $userId) has ${result.length} imported sets:');
+
+    debugPrint(
+        'User $username (ID: $userId) has ${result.length} imported sets:');
     for (var set in result) {
       debugPrint('- ${set['name']} (ID: ${set['id']})');
     }
-    
+
     return result;
   }
 
@@ -576,5 +609,99 @@ class DatabaseHelper {
       where: 'id = ?',
       whereArgs: [questionId],
     );
+  }
+
+  // Powerup methods
+  Future<Map<String, int>> getUserPowerups(String username) async {
+    final db = await database;
+    final result = await db.query(
+      'user_powerups',
+      where: 'username = ?',
+      whereArgs: [username],
+    );
+
+    Map<String, int> powerups = {};
+    for (var row in result) {
+      final powerupId = row['powerup_id'] as String;
+      final count = row['count'] as int;
+      powerups[powerupId] = (powerups[powerupId] ?? 0) + count;
+    }
+
+    return powerups;
+  }
+
+  Future<void> purchasePowerup(String username, String powerupId) async {
+    final db = await database;
+
+    // Check if user already has this powerup
+    final existingPowerup = await db.query(
+      'user_powerups',
+      where: 'username = ? AND powerup_id = ?',
+      whereArgs: [username, powerupId],
+    );
+
+    if (existingPowerup.isNotEmpty) {
+      // Increment count
+      final currentCount = existingPowerup.first['count'] as int;
+      await db.update(
+        'user_powerups',
+        {'count': currentCount + 1},
+        where: 'username = ? AND powerup_id = ?',
+        whereArgs: [username, powerupId],
+      );
+    } else {
+      // Insert new powerup
+      await db.insert('user_powerups', {
+        'username': username,
+        'powerup_id': powerupId,
+        'count': 1,
+        'purchased_at': DateTime.now().toIso8601String(),
+      });
+    }
+  }
+
+  Future<void> usePowerup(String username, String powerupId) async {
+    final db = await database;
+
+    final existingPowerup = await db.query(
+      'user_powerups',
+      where: 'username = ? AND powerup_id = ?',
+      whereArgs: [username, powerupId],
+    );
+
+    if (existingPowerup.isNotEmpty) {
+      final currentCount = existingPowerup.first['count'] as int;
+      if (currentCount > 1) {
+        // Decrement count
+        await db.update(
+          'user_powerups',
+          {'count': currentCount - 1},
+          where: 'username = ? AND powerup_id = ?',
+          whereArgs: [username, powerupId],
+        );
+      } else {
+        // Remove powerup if count becomes 0
+        await db.delete(
+          'user_powerups',
+          where: 'username = ? AND powerup_id = ?',
+          whereArgs: [username, powerupId],
+        );
+      }
+    }
+  }
+
+  Future<int> getPowerupCount(String username, String powerupId) async {
+    final db = await database;
+    final result = await db.query(
+      'user_powerups',
+      columns: ['count'],
+      where: 'username = ? AND powerup_id = ?',
+      whereArgs: [username, powerupId],
+    );
+
+    if (result.isNotEmpty) {
+      return result.first['count'] as int;
+    }
+    return 0;
   }
 }

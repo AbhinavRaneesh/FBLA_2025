@@ -30,6 +30,7 @@ import 'frq_manager.dart';
 import 'study_set_edit_screen.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:lottie/lottie.dart';
+import 'package:student_learning_app/shop_tab.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -1753,6 +1754,16 @@ class _LearnTabState extends State<LearnTab>
     }
   }
 
+  Future<void> _loadUserData() async {
+    try {
+      final points = await _dbHelper.getUserPoints(widget.username);
+      // Trigger parent update
+      widget.onPointsUpdated(points);
+    } catch (e) {
+      debugPrint('Error loading user data: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
@@ -1807,16 +1818,17 @@ class _LearnTabState extends State<LearnTab>
                           ],
                         ),
                         child: Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.star,
-                                color: Colors.white, size: 20),
-                            const SizedBox(width: 5),
+                            const Icon(Icons.diamond,
+                                color: Colors.white, size: 22),
+                            const SizedBox(width: 8),
                             Text(
                               '${widget.userPoints}',
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
-                                fontSize: 16,
+                                fontSize: 18,
                               ),
                             ),
                           ],
@@ -2038,7 +2050,8 @@ class _LearnTabState extends State<LearnTab>
                             icon: const Icon(Icons.delete, size: 18),
                             label: const Text('Delete'),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.redAccent.withOpacity(0.8),
+                              backgroundColor:
+                                  Colors.redAccent.withOpacity(0.8),
                               foregroundColor: Colors.white,
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 20,
@@ -2462,7 +2475,7 @@ class _LearnTabState extends State<LearnTab>
                 ),
               ),
               const SizedBox(height: 16),
-              
+
               // Enhanced New Quiz Button
               Container(
                 width: double.infinity,
@@ -2507,7 +2520,7 @@ class _LearnTabState extends State<LearnTab>
                 ),
               ),
               const SizedBox(height: 16),
-              
+
               // Enhanced Return Home Button
               Container(
                 width: double.infinity,
@@ -2581,7 +2594,10 @@ class _LearnTabState extends State<LearnTab>
             currentTheme: widget.currentTheme,
           ),
         ),
-      );
+      ).then((_) {
+        // Refresh points when returning from practice
+        _loadUserData();
+      });
     } else {
       // Go directly to MCQ practice for all other courses
       Navigator.push(
@@ -2593,7 +2609,10 @@ class _LearnTabState extends State<LearnTab>
             currentTheme: widget.currentTheme,
           ),
         ),
-      );
+      ).then((_) {
+        // Refresh points when returning from practice
+        _loadUserData();
+      });
     }
   }
 
@@ -2632,346 +2651,6 @@ class _LearnTabState extends State<LearnTab>
         ),
       ),
     );
-  }
-}
-
-class ShopTab extends StatefulWidget {
-  final String username;
-  final int userPoints;
-  final String currentTheme;
-  final Function(int) onPointsUpdated;
-  final Function(String) onThemeChanged;
-
-  const ShopTab({
-    super.key,
-    required this.username,
-    required this.userPoints,
-    required this.currentTheme,
-    required this.onPointsUpdated,
-    required this.onThemeChanged,
-  });
-
-  @override
-  _ShopTabState createState() => _ShopTabState();
-}
-
-class _ShopTabState extends State<ShopTab> with AutomaticKeepAliveClientMixin {
-  final DatabaseHelper _dbHelper = DatabaseHelper();
-
-  @override
-  bool get wantKeepAlive => true;
-
-  final List<Map<String, dynamic>> _themes = [
-    {
-      'name': 'Space',
-      'price': 0,
-      'color': const Color(0xFF0A0E21),
-      'description': 'Classic space theme',
-      'icon': Icons.rocket_launch,
-    },
-    {
-      'name': 'Ocean',
-      'price': 100,
-      'color': const Color(0xFF006994),
-      'description': 'Deep ocean vibes',
-      'icon': Icons.waves,
-    },
-    {
-      'name': 'Forest',
-      'price': 100,
-      'color': const Color(0xFF2E7D32),
-      'description': 'Natural forest feel',
-      'icon': Icons.forest,
-    },
-    {
-      'name': 'Sunset',
-      'price': 150,
-      'color': const Color(0xFFFF6D00),
-      'description': 'Warm sunset colors',
-      'icon': Icons.wb_sunny,
-    },
-    {
-      'name': 'Purple',
-      'price': 100,
-      'color': const Color(0xFF6A1B9A),
-      'description': 'Royal purple theme',
-      'icon': Icons.color_lens,
-    },
-    {
-      'name': 'Dark',
-      'price': 200,
-      'color': const Color(0xFF121212),
-      'description': 'Pure dark mode',
-      'icon': Icons.dark_mode,
-    },
-    {
-      'name': 'Lightning',
-      'price': 0,
-      'color': Colors.blueAccent,
-      'description': 'A flash of brilliance',
-      'icon': Icons.flash_on,
-    },
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    super.build(context);
-    return Scaffold(
-      body: Stack(
-        children: [
-          const SpaceBackground(),
-          SafeArea(
-            child: Column(
-              children: [
-                // Header
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Theme Shop',
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.amber,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.star,
-                                color: Colors.white, size: 20),
-                            const SizedBox(width: 5),
-                            Text(
-                              '${widget.userPoints}',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                // Themes Grid
-                Expanded(
-                  child: GridView.builder(
-                    padding: const EdgeInsets.all(16),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
-                      childAspectRatio: 0.8,
-                    ),
-                    itemCount: _themes.length,
-                    itemBuilder: (BuildContext context, int index) {
-                      final theme = _themes[index];
-                      final isOwned = theme['price'] == 0 ||
-                          widget.currentTheme == theme['name'].toLowerCase();
-                      final canAfford =
-                          widget.userPoints >= (theme['price'] as int);
-
-                      return Card(
-                        elevation: 6,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          side: widget.currentTheme ==
-                                  theme['name'].toLowerCase()
-                              ? const BorderSide(color: Colors.amber, width: 2)
-                              : BorderSide.none,
-                        ),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(16),
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                theme['color'],
-                                theme['color'].withOpacity(0.7),
-                              ],
-                            ),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Column(
-                                  children: [
-                                    Icon(
-                                      theme['icon'],
-                                      size: 40,
-                                      color: Colors.white,
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      theme['name'],
-                                      style: const TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      theme['description'],
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.white.withOpacity(0.8),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                Column(
-                                  children: [
-                                    if (widget.currentTheme ==
-                                        theme['name'].toLowerCase())
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 12, vertical: 6),
-                                        decoration: BoxDecoration(
-                                          color: Colors.amber,
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                        ),
-                                        child: const Text(
-                                          'EQUIPPED',
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      )
-                                    else if (theme['price'] == 0)
-                                      ElevatedButton(
-                                        onPressed: () => _selectTheme(
-                                            theme['name'].toLowerCase()),
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.green,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(8),
-                                          ),
-                                        ),
-                                        child: const Text('SELECT',
-                                            style:
-                                                TextStyle(color: Colors.white)),
-                                      )
-                                    else
-                                      ElevatedButton(
-                                        onPressed: canAfford
-                                            ? () => _purchaseTheme(theme)
-                                            : null,
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: canAfford
-                                              ? Colors.blueAccent
-                                              : Colors.grey,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(8),
-                                          ),
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            const Icon(Icons.star,
-                                                size: 16, color: Colors.white),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                              '${theme['price']}',
-                                              style: const TextStyle(
-                                                  color: Colors.white),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _purchaseTheme(Map<String, dynamic> theme) async {
-    if (widget.userPoints < (theme['price'] as int)) {
-      ScaffoldMessenger.of(this.context).showSnackBar(
-        const SnackBar(
-          content: Text('Not enough points!'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    try {
-      await _dbHelper.purchaseTheme(
-          widget.username, theme['name'].toLowerCase());
-      final newPoints = widget.userPoints - (theme['price'] as int);
-      await _dbHelper.updateUserPoints(widget.username, newPoints);
-
-      widget.onPointsUpdated(newPoints);
-      widget.onThemeChanged(theme['name'].toLowerCase());
-
-      ScaffoldMessenger.of(this.context).showSnackBar(
-        SnackBar(
-          content: Text('Successfully purchased ${theme['name']} theme!'),
-          backgroundColor: Colors.green,
-        ),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(this.context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to purchase theme: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
-
-  Future<void> _selectTheme(String themeName) async {
-    try {
-      await _dbHelper.updateCurrentTheme(widget.username, themeName);
-      widget.onThemeChanged(themeName);
-
-      ScaffoldMessenger.of(this.context).showSnackBar(
-        SnackBar(
-          content: Text('Theme changed to $themeName!'),
-          backgroundColor: Colors.green,
-        ),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(this.context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to change theme: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
   }
 }
 
@@ -3066,7 +2745,8 @@ class _ProfileTabState extends State<ProfileTab>
               leading: const Icon(Icons.camera_alt),
               title: const Text('Take a photo'),
               onTap: () async {
-                final photo = await picker.pickImage(source: ImageSource.camera);
+                final photo =
+                    await picker.pickImage(source: ImageSource.camera);
                 Navigator.pop(context, photo);
               },
             ),
@@ -3074,7 +2754,8 @@ class _ProfileTabState extends State<ProfileTab>
               leading: const Icon(Icons.photo_library),
               title: const Text('Choose from gallery'),
               onTap: () async {
-                final gallery = await picker.pickImage(source: ImageSource.gallery);
+                final gallery =
+                    await picker.pickImage(source: ImageSource.gallery);
                 Navigator.pop(context, gallery);
               },
             ),
@@ -3087,7 +2768,8 @@ class _ProfileTabState extends State<ProfileTab>
         _profileImage = File(pickedFile.path);
       });
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('profile_image_${widget.username}', pickedFile.path);
+      await prefs.setString(
+          'profile_image_${widget.username}', pickedFile.path);
     }
   }
 
@@ -3131,7 +2813,9 @@ class _ProfileTabState extends State<ProfileTab>
                               CircleAvatar(
                                 radius: 50,
                                 backgroundColor: Colors.white.withOpacity(0.2),
-                                backgroundImage: _profileImage != null ? FileImage(_profileImage!) : null,
+                                backgroundImage: _profileImage != null
+                                    ? FileImage(_profileImage!)
+                                    : null,
                                 child: _profileImage == null
                                     ? Text(
                                         widget.username.isNotEmpty
@@ -3154,10 +2838,12 @@ class _ProfileTabState extends State<ProfileTab>
                                     decoration: BoxDecoration(
                                       color: Colors.blueAccent,
                                       shape: BoxShape.circle,
-                                      border: Border.all(color: Colors.white, width: 2),
+                                      border: Border.all(
+                                          color: Colors.white, width: 2),
                                     ),
                                     padding: const EdgeInsets.all(8),
-                                    child: const Icon(Icons.camera_alt, color: Colors.white, size: 22),
+                                    child: const Icon(Icons.camera_alt,
+                                        color: Colors.white, size: 22),
                                   ),
                                 ),
                               ),
@@ -3183,15 +2869,15 @@ class _ProfileTabState extends State<ProfileTab>
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.star,
-                                    color: Colors.amber, size: 20),
+                                const Icon(Icons.diamond,
+                                    color: Colors.white, size: 22),
                                 const SizedBox(width: 8),
                                 Text(
-                                  '${widget.userPoints} points',
+                                  '${widget.userPoints}',
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 16,
+                                    fontSize: 18,
                                   ),
                                 ),
                               ],
@@ -3735,7 +3421,19 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
   int _correctAnswers = 0;
   String? _selectedAnswer;
   bool _showAnswer = false;
-  File? _userProfileImage; // Add profile image state
+  File? _userProfileImage;
+
+  // Points and powerups
+  int _currentPoints = 0;
+  Map<String, int> _userPowerups = {};
+  bool _isLoadingPowerups = false;
+
+  // Powerup states
+  bool _skipUsed = false;
+  bool _fiftyFiftyUsed = false;
+  bool _doublePointsActive = false;
+  bool _extraTimeUsed = false;
+  List<String> _removedOptions = [];
 
   @override
   bool get wantKeepAlive => true;
@@ -3744,13 +3442,13 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
   void initState() {
     super.initState();
     _loadQuestions();
-    _loadUserProfileImage(); // Load profile image on init
+    _loadUserProfileImage();
+    _loadUserData();
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Refresh profile image when screen becomes visible
     _refreshUserProfileImage();
   }
 
@@ -3771,8 +3469,46 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
     try {
       final questions =
           await _dbHelper.getStudySetQuestions(widget.studySet['id']);
+
+      // Create a deep copy of questions to make them mutable
+      final shuffledQuestions = questions.map((question) {
+        return Map<String, dynamic>.from(question);
+      }).toList();
+
+      // Randomize the questions
+      shuffledQuestions.shuffle();
+
+      // Randomize the options for each question to prevent answer always being A
+      for (var question in shuffledQuestions) {
+        final options = (question['options'] as String).split('|');
+        final correctAnswer = question['correct_answer'] as String;
+
+        // Create a list of option indices
+        List<int> optionIndices = List.generate(options.length, (i) => i);
+        optionIndices.shuffle();
+
+        // Reorder options and update correct answer index
+        List<String> shuffledOptions = [];
+        String newCorrectAnswer = correctAnswer;
+
+        for (int i = 0; i < optionIndices.length; i++) {
+          final originalIndex = optionIndices[i];
+          final option = options[originalIndex];
+          shuffledOptions.add(option);
+
+          // If this was the original correct answer, update the new correct answer
+          if (option == correctAnswer) {
+            newCorrectAnswer = option;
+          }
+        }
+
+        // Update the question with shuffled options and new correct answer
+        question['options'] = shuffledOptions.join('|');
+        question['correct_answer'] = newCorrectAnswer;
+      }
+
       setState(() {
-        _questions = questions;
+        _questions = shuffledQuestions;
         _questionCount = _questions.isNotEmpty ? _questions.length : 1;
         _isLoading = false;
       });
@@ -3782,6 +3518,19 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
         _errorMessage = e.toString();
         _isLoading = false;
       });
+    }
+  }
+
+  Future<void> _loadUserData() async {
+    try {
+      final points = await _dbHelper.getUserPoints(widget.username);
+      final powerups = await _dbHelper.getUserPowerups(widget.username);
+      setState(() {
+        _currentPoints = points;
+        _userPowerups = powerups;
+      });
+    } catch (e) {
+      debugPrint('Error loading user data: $e');
     }
   }
 
@@ -3803,6 +3552,129 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
     });
   }
 
+  Future<void> _updatePoints(int pointsToAdd) async {
+    final newPoints = _currentPoints + pointsToAdd;
+    await _dbHelper.updateUserPoints(widget.username, newPoints);
+    setState(() {
+      _currentPoints = newPoints;
+    });
+  }
+
+  Future<void> _usePowerup(String powerupId) async {
+    if ((_userPowerups[powerupId] ?? 0) > 0) {
+      await _dbHelper.usePowerup(widget.username, powerupId);
+      setState(() {
+        _userPowerups[powerupId] = (_userPowerups[powerupId] ?? 1) - 1;
+      });
+
+      // Apply powerup effect
+      switch (powerupId) {
+        case 'skip_question':
+          _useSkipQuestion();
+          break;
+        case 'fifty_fifty':
+          _useFiftyFifty();
+          break;
+        case 'double_points':
+          _useDoublePoints();
+          break;
+        case 'extra_time':
+          _useExtraTime();
+          break;
+        case 'hint':
+          _useHint();
+          break;
+      }
+    }
+  }
+
+  void _useSkipQuestion() {
+    setState(() {
+      _skipUsed = true;
+    });
+    _continueToNext();
+    ScaffoldMessenger.of(this.context).showSnackBar(
+      const SnackBar(
+        content: Text('Question skipped! No penalty applied.'),
+        backgroundColor: Colors.blue,
+      ),
+    );
+  }
+
+  void _useFiftyFifty() {
+    if (_showAnswer) return;
+
+    final currentQuestion = _questions[_currentQuestionIndex];
+    final options = currentQuestion['options'].split('|');
+    final correctAnswer = currentQuestion['correct_answer'];
+
+    // Find incorrect options
+    final incorrectOptions =
+        options.where((opt) => opt != correctAnswer).toList();
+    incorrectOptions.shuffle();
+
+    // Remove 2 incorrect options
+    final optionsToRemove = incorrectOptions.take(2).toList();
+
+    setState(() {
+      _fiftyFiftyUsed = true;
+      _removedOptions = optionsToRemove;
+    });
+
+    ScaffoldMessenger.of(this.context).showSnackBar(
+      const SnackBar(
+        content: Text('50/50 used! Two incorrect answers removed.'),
+        backgroundColor: Colors.orange,
+      ),
+    );
+  }
+
+  void _useDoublePoints() {
+    setState(() {
+      _doublePointsActive = true;
+    });
+    ScaffoldMessenger.of(this.context).showSnackBar(
+      const SnackBar(
+        content: Text(
+            'Double Points activated! Next correct answer worth 20 points.'),
+        backgroundColor: Colors.purple,
+      ),
+    );
+  }
+
+  void _useExtraTime() {
+    setState(() {
+      _extraTimeUsed = true;
+    });
+    ScaffoldMessenger.of(this.context).showSnackBar(
+      const SnackBar(
+        content: Text('Extra Time activated! +30 seconds added.'),
+        backgroundColor: Colors.green,
+      ),
+    );
+  }
+
+  void _useHint() {
+    final currentQuestion = _questions[_currentQuestionIndex];
+    final questionText = currentQuestion['question_text'];
+    final correctAnswer = currentQuestion['correct_answer'];
+
+    String hint =
+        "Hint: The correct answer starts with '${correctAnswer.substring(0, 1)}'";
+    if (correctAnswer.length > 3) {
+      hint =
+          "Hint: The correct answer contains '${correctAnswer.substring(1, 3)}'";
+    }
+
+    ScaffoldMessenger.of(this.context).showSnackBar(
+      SnackBar(
+        content: Text(hint),
+        backgroundColor: Colors.indigo,
+        duration: const Duration(seconds: 4),
+      ),
+    );
+  }
+
   void _startPractice(BuildContext context) {
     if (_selectedMode.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -3817,6 +3689,12 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
       _showScoreSummary = false;
       _currentQuestionIndex = 0;
       _correctAnswers = 0;
+      // Reset powerup states for new session
+      _skipUsed = false;
+      _fiftyFiftyUsed = false;
+      _doublePointsActive = false;
+      _extraTimeUsed = false;
+      _removedOptions = [];
     });
   }
 
@@ -3827,6 +3705,14 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
       if (selectedAnswer ==
           _questions[_currentQuestionIndex]['correct_answer']) {
         _correctAnswers++;
+        // Award points for correct answer
+        int pointsToAward = _doublePointsActive ? 20 : 10;
+        _updatePoints(pointsToAward);
+
+        // Reset double points after use
+        if (_doublePointsActive) {
+          _doublePointsActive = false;
+        }
       }
     });
   }
@@ -3839,6 +3725,10 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
         _currentQuestionIndex++;
         _selectedAnswer = null;
         _showAnswer = false;
+        // Reset question-specific powerup states
+        _fiftyFiftyUsed = false;
+        _removedOptions = [];
+        _skipUsed = false;
       });
     } else {
       setState(() {
@@ -3922,14 +3812,18 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                             Container(
                               decoration: BoxDecoration(
                                 gradient: const LinearGradient(
-                                  colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+                                  colors: [
+                                    Color(0xFF667eea),
+                                    Color(0xFF764ba2)
+                                  ],
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
                                 ),
                                 borderRadius: BorderRadius.circular(16),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: const Color(0xFF667eea).withOpacity(0.3),
+                                    color: const Color(0xFF667eea)
+                                        .withOpacity(0.3),
                                     blurRadius: 12,
                                     offset: const Offset(0, 6),
                                   ),
@@ -4006,6 +3900,41 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                                               fontSize: 16,
                                               color:
                                                   Colors.white.withOpacity(0.7),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    // Points display
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 16, vertical: 8),
+                                      decoration: BoxDecoration(
+                                        gradient: const LinearGradient(
+                                          colors: [Colors.amber, Colors.orange],
+                                        ),
+                                        borderRadius: BorderRadius.circular(20),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color:
+                                                Colors.amber.withOpacity(0.3),
+                                            blurRadius: 10,
+                                            offset: const Offset(0, 5),
+                                          ),
+                                        ],
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Icon(Icons.diamond,
+                                              color: Colors.white, size: 22),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            '$_currentPoints',
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 18,
                                             ),
                                           ),
                                         ],
@@ -4143,10 +4072,14 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                                           ),
                                         ),
                                         child: Slider(
-                                          value: _questionCount.clamp(1, _questions.length).toDouble(),
+                                          value: _questionCount
+                                              .clamp(1, _questions.length)
+                                              .toDouble(),
                                           min: 1.0,
                                           max: _questions.length.toDouble(),
-                                          divisions: _questions.length > 1 ? _questions.length - 1 : 1,
+                                          divisions: _questions.length > 1
+                                              ? _questions.length - 1
+                                              : 1,
                                           label: '$_questionCount',
                                           onChanged: (value) {
                                             setState(() {
@@ -4270,20 +4203,56 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                                           fontSize: 24,
                                         ),
                                       ),
+                                      const SizedBox(height: 12),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 16, vertical: 8),
+                                        decoration: BoxDecoration(
+                                          gradient: const LinearGradient(
+                                            colors: [
+                                              Colors.amber,
+                                              Colors.orange
+                                            ],
+                                          ),
+                                          borderRadius:
+                                              BorderRadius.circular(20),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const Icon(Icons.diamond,
+                                                color: Colors.white, size: 22),
+                                            const SizedBox(width: 8),
+                                            Text(
+                                              '$_currentPoints',
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 18,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
                                       const SizedBox(height: 32),
                                       // Enhanced Try Again Button
                                       Container(
                                         width: double.infinity,
                                         decoration: BoxDecoration(
                                           gradient: const LinearGradient(
-                                            colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+                                            colors: [
+                                              Color(0xFF667eea),
+                                              Color(0xFF764ba2)
+                                            ],
                                             begin: Alignment.topLeft,
                                             end: Alignment.bottomRight,
                                           ),
-                                          borderRadius: BorderRadius.circular(16),
+                                          borderRadius:
+                                              BorderRadius.circular(16),
                                           boxShadow: [
                                             BoxShadow(
-                                              color: const Color(0xFF667eea).withOpacity(0.3),
+                                              color: const Color(0xFF667eea)
+                                                  .withOpacity(0.3),
                                               blurRadius: 12,
                                               offset: const Offset(0, 6),
                                             ),
@@ -4301,14 +4270,22 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                                               _showChat = false;
                                               _currentQuestionIndex = 0;
                                               _correctAnswers = 0;
+                                              // Reset powerup states
+                                              _skipUsed = false;
+                                              _fiftyFiftyUsed = false;
+                                              _doublePointsActive = false;
+                                              _extraTimeUsed = false;
+                                              _removedOptions = [];
                                             });
                                           },
                                           style: ElevatedButton.styleFrom(
                                             backgroundColor: Colors.transparent,
                                             shadowColor: Colors.transparent,
-                                            padding: const EdgeInsets.symmetric(vertical: 16),
+                                            padding: const EdgeInsets.symmetric(
+                                                vertical: 16),
                                             shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(16),
+                                              borderRadius:
+                                                  BorderRadius.circular(16),
                                             ),
                                           ),
                                           icon: const Icon(
@@ -4332,14 +4309,19 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                                         width: double.infinity,
                                         decoration: BoxDecoration(
                                           gradient: const LinearGradient(
-                                            colors: [Color(0xFF11998e), Color(0xFF38ef7d)],
+                                            colors: [
+                                              Color(0xFF11998e),
+                                              Color(0xFF38ef7d)
+                                            ],
                                             begin: Alignment.topLeft,
                                             end: Alignment.bottomRight,
                                           ),
-                                          borderRadius: BorderRadius.circular(16),
+                                          borderRadius:
+                                              BorderRadius.circular(16),
                                           boxShadow: [
                                             BoxShadow(
-                                              color: const Color(0xFF11998e).withOpacity(0.3),
+                                              color: const Color(0xFF11998e)
+                                                  .withOpacity(0.3),
                                               blurRadius: 12,
                                               offset: const Offset(0, 6),
                                             ),
@@ -4352,9 +4334,11 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                                           style: ElevatedButton.styleFrom(
                                             backgroundColor: Colors.transparent,
                                             shadowColor: Colors.transparent,
-                                            padding: const EdgeInsets.symmetric(vertical: 16),
+                                            padding: const EdgeInsets.symmetric(
+                                                vertical: 16),
                                             shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(16),
+                                              borderRadius:
+                                                  BorderRadius.circular(16),
                                             ),
                                           ),
                                           icon: const Icon(
@@ -4376,29 +4360,253 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                                   ),
                                 ),
                               )
-                            : Expanded(
-                                child: Stack(
-                                  children: [
-                                    // Always show the quiz content
-                                    SingleChildScrollView(
-                                      padding: const EdgeInsets.only(bottom: 24),
-                                      child: _buildQuizContent(),
-                                    ),
-                                    // Show the chat overlay covering 3/4 of the screen from the bottom
-                                    if (_showChat)
-                                      Align(
-                                        alignment: Alignment.bottomCenter,
-                                        child: FractionallySizedBox(
-                                          heightFactor: 0.75,
-                                          widthFactor: 1.0,
-                                          child: _buildChatInterface(),
+                            : Column(
+                                children: [
+                                  Expanded(
+                                    child: Stack(
+                                      children: [
+                                        // Always show the quiz content
+                                        SingleChildScrollView(
+                                          padding: const EdgeInsets.only(
+                                              bottom:
+                                                  120), // Increased from 100 to provide more space for powerup bar
+                                          child: _buildQuizContent(),
                                         ),
-                                      ),
-                                  ],
-                                ),
+                                        // Show the chat overlay covering 3/4 of the screen from the bottom
+                                        if (_showChat)
+                                          Align(
+                                            alignment: Alignment.bottomCenter,
+                                            child: FractionallySizedBox(
+                                              heightFactor: 0.75,
+                                              widthFactor: 1.0,
+                                              child: _buildChatInterface(),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                  // Powerup bar at bottom
+                                  if (_showQuizArea) _buildPowerupBar(),
+                                ],
                               ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildPowerupBar() {
+    List<Widget> powerupButtons = [
+      _buildPowerupButton(
+        'skip_question',
+        Icons.skip_next,
+        'Skip',
+        const Color(0xFF4CAF50),
+        _skipUsed,
+      ),
+      _buildPowerupButton(
+        'fifty_fifty',
+        Icons.filter_2,
+        '50/50',
+        const Color(0xFF2196F3),
+        _fiftyFiftyUsed,
+      ),
+      _buildPowerupButton(
+        'double_points',
+        Icons.star,
+        '2x Points',
+        const Color(0xFFFFD700),
+        _doublePointsActive,
+      ),
+    ];
+
+    if (_selectedMode == 'timed') {
+      powerupButtons.add(
+        _buildPowerupButton(
+          'extra_time',
+          Icons.access_time,
+          '+Time',
+          const Color(0xFFFF9800),
+          _extraTimeUsed,
+        ),
+      );
+    }
+
+    powerupButtons.add(
+      _buildPowerupButton(
+        'hint',
+        Icons.lightbulb,
+        'Hint',
+        const Color(0xFF9C27B0),
+        false, // Hint can be used multiple times
+      ),
+    );
+
+    return Container(
+      height: 70, // Reduced from 90
+      margin: const EdgeInsets.fromLTRB(20, 8, 20, 16), // Reduced bottom margin
+      padding: const EdgeInsets.symmetric(
+          horizontal: 16, vertical: 6), // Reduced vertical padding
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            const Color(0xFF2A2D3E).withOpacity(0.95),
+            const Color(0xFF1D1E33).withOpacity(0.95),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(20), // Reduced from 25
+        border: Border.all(
+          color: Colors.white.withOpacity(0.15),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+          BoxShadow(
+            color: const Color(0xFF4facfe).withOpacity(0.1),
+            blurRadius: 15,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: powerupButtons,
+      ),
+    );
+  }
+
+  Widget _buildPowerupButton(
+      String powerupId, IconData icon, String label, Color color, bool used) {
+    final count = _userPowerups[powerupId] ?? 0;
+    final canUse = count > 0 && !used && !_showAnswer;
+
+    return GestureDetector(
+      onTap: canUse ? () => _usePowerup(powerupId) : null,
+      child: Container(
+        width: 52, // Reduced from 58
+        height: 58, // Reduced from 70
+        padding: const EdgeInsets.symmetric(
+            vertical: 6, horizontal: 4), // Reduced vertical padding
+        decoration: BoxDecoration(
+          gradient: canUse
+              ? LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [color, color.withOpacity(0.8)],
+                )
+              : LinearGradient(
+                  colors: [Colors.grey.shade700, Colors.grey.shade800],
+                ),
+          borderRadius: BorderRadius.circular(14), // Reduced from 16
+          border: Border.all(
+            color: canUse ? color.withOpacity(0.6) : Colors.grey.shade600,
+            width: 1.5,
+          ),
+          boxShadow: canUse
+              ? [
+                  BoxShadow(
+                    color: color.withOpacity(0.4),
+                    blurRadius: 12,
+                    offset: const Offset(0, 6),
+                  ),
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.2),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.3),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+        ),
+        child: Stack(
+          children: [
+            Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    icon,
+                    color: Colors.white,
+                    size: 20, // Reduced from 22
+                  ),
+                  const SizedBox(height: 3), // Reduced from 4
+                  Text(
+                    label,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 8, // Reduced from 9
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.2,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            if (count > 0)
+              Positioned(
+                top: 2,
+                right: 2,
+                child: Container(
+                  width: 16, // Reduced from 18
+                  height: 16, // Reduced from 18
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF4CAF50), Color(0xFF2E7D32)],
+                    ),
+                    borderRadius: BorderRadius.circular(8), // Reduced from 9
+                    border: Border.all(color: Colors.white, width: 1.5),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.3),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: Text(
+                      '$count',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 9, // Reduced from 10
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            if (used)
+              Container(
+                width: 52, // Reduced from 58
+                height: 58, // Reduced from 70
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.7),
+                  borderRadius: BorderRadius.circular(14), // Reduced from 16
+                ),
+                child: const Center(
+                  child: Icon(
+                    Icons.check_circle,
+                    color: Colors.white,
+                    size: 24, // Reduced from 28
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -4509,52 +4717,126 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         // Header with progress
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.white),
-              onPressed: () {
-                setState(() {
-                  _showModeSelection = true;
-                  _showQuizArea = false;
-                  _showScoreSummary = false;
-                });
-              },
-            ),
-            Expanded(
-              child: Center(
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            children: [
+              // Back button with fixed width
+              SizedBox(
+                width: 48,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
                   decoration: BoxDecoration(
-                    color: Colors.blueAccent.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(20),
+                    color: Colors.white.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Text(
-                    'Question ${_currentQuestionIndex + 1}/$totalQuestions',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
+                  child: IconButton(
+                    icon: const Icon(Icons.arrow_back_ios_rounded,
+                        color: Colors.white),
+                    onPressed: () {
+                      setState(() {
+                        _showModeSelection = true;
+                        _showQuizArea = false;
+                        _showScoreSummary = false;
+                      });
+                    },
+                  ),
+                ),
+              ),
+              // Centered question counter
+              Expanded(
+                child: Center(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          const Color(0xFF667eea).withOpacity(0.8),
+                          const Color(0xFF764ba2).withOpacity(0.8),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(25),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.2),
+                        width: 1,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF667eea).withOpacity(0.3),
+                          blurRadius: 12,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+                    ),
+                    child: Text(
+                      'Question ${_currentQuestionIndex + 1}/$totalQuestions',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        letterSpacing: 0.5,
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-            const SizedBox(width: 48),
-          ],
+              // Points display with flexible width
+              Container(
+                constraints: const BoxConstraints(minWidth: 70, maxWidth: 100),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFFFD700), Color(0xFFFF8F00)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(25),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFFFD700).withOpacity(0.4),
+                        blurRadius: 12,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.diamond, color: Colors.white, size: 16),
+                      const SizedBox(width: 4),
+                      Flexible(
+                        child: Text(
+                          '$_currentPoints',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 20), // Reduced from 24
         LayoutBuilder(
           builder: (context, constraints) {
-            final double minHeight = MediaQuery.of(context).size.height * 0.14;
+            final double minHeight =
+                MediaQuery.of(context).size.height * 0.12; // Reduced from 0.14
             return Container(
               margin: const EdgeInsets.symmetric(horizontal: 20),
               constraints: BoxConstraints(minHeight: minHeight),
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(28),
+                borderRadius: BorderRadius.circular(24), // Reduced from 28
                 boxShadow: [
                   BoxShadow(
                     color: const Color(0xFF4facfe).withOpacity(0.22),
@@ -4569,8 +4851,9 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                 ],
               ),
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 20), // Increased horizontal padding
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
@@ -4581,7 +4864,7 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                       const Color(0xFF16213E).withOpacity(0.9),
                     ],
                   ),
-                  borderRadius: BorderRadius.circular(28),
+                  borderRadius: BorderRadius.circular(24), // Reduced from 28
                   border: Border.all(
                     color: Colors.white.withOpacity(0.10),
                     width: 1.5,
@@ -4592,10 +4875,10 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                     _questions[_currentQuestionIndex]['question_text'],
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 26,
+                      fontSize: 24, // Reduced from 26
                       fontWeight: FontWeight.bold,
-                      height: 1.5,
-                      letterSpacing: 0.3,
+                      height: 1.4, // Reduced from 1.5
+                      letterSpacing: 0.2, // Reduced from 0.3
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -4604,11 +4887,13 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
             );
           },
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 24), // Reduced from 32
         ..._questions[_currentQuestionIndex]['options']
             .split('|')
             .asMap()
             .entries
+            .where((e) => !_removedOptions
+                .contains(e.value)) // Filter out removed options
             .map((e) {
           final i = e.key;
           final opt = e.value;
@@ -4617,7 +4902,8 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
               opt == _questions[_currentQuestionIndex]['correct_answer'];
           final wrg = _showAnswer && sel && !cor;
           return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            padding: const EdgeInsets.symmetric(
+                horizontal: 12, vertical: 4), // Reduced vertical padding
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               curve: Curves.easeInOut,
@@ -4633,7 +4919,7 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                                 colors: [Color(0xFF4facfe), Color(0xFF00f2fe)])
                             : const LinearGradient(
                                 colors: [Color(0xFF23243a), Color(0xFF23243a)]),
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(16), // Reduced from 18
                 boxShadow: sel
                     ? [
                         BoxShadow(
@@ -4655,20 +4941,24 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
-                  borderRadius: BorderRadius.circular(18),
+                  borderRadius: BorderRadius.circular(16), // Reduced from 18
                   onTap: _showAnswer ? null : () => _checkAnswer(opt),
                   child: Padding(
-                    padding:
-                        const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 16,
+                        horizontal: 20), // Increased horizontal padding
                     child: Center(
                       child: Text(
                         opt,
                         style: const TextStyle(
                           color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 0.2,
+                          fontSize: 18, // Reduced from 20
+                          fontWeight: FontWeight.w600, // Reduced from w700
+                          letterSpacing: 0.1, // Reduced from 0.2
+                          height:
+                              1.3, // Added line height for better readability
                         ),
+                        textAlign: TextAlign.center,
                       ),
                     ),
                   ),
@@ -4678,65 +4968,75 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
           );
         }).toList(),
         if (_showAnswer) ...[
-          const SizedBox(height: 24),
+          const SizedBox(height: 24), // Reduced from 32
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Row(
               children: [
                 // Ask AI Button
                 Expanded(
                   child: Container(
-                    height: 54,
+                    height: 52, // Reduced from 56
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
                         colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
-                      borderRadius: BorderRadius.circular(30),
+                      borderRadius:
+                          BorderRadius.circular(26), // Reduced from 28
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF667eea).withOpacity(0.2),
-                          blurRadius: 12,
-                          offset: const Offset(0, 6),
+                          color: const Color(0xFF667eea).withOpacity(0.3),
+                          blurRadius: 15,
+                          offset: const Offset(0, 8),
                         ),
                       ],
                     ),
                     child: ElevatedButton.icon(
                       onPressed: _answerWithAI,
-                      icon: const Icon(Icons.psychology, color: Colors.white),
+                      icon: const Icon(Icons.psychology,
+                          color: Colors.white, size: 18), // Reduced from 20
                       label: const Text(
                         'Ask AI',
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 15, // Reduced from 16
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
+                          letterSpacing: 0.5,
                         ),
                       ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.transparent,
                         shadowColor: Colors.transparent,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
+                          borderRadius:
+                              BorderRadius.circular(26), // Reduced from 28
                         ),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 14), // Reduced from 16
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 20),
+                const SizedBox(width: 16),
                 // Next Question Button
                 Expanded(
                   child: Container(
-                    height: 54,
+                    height: 52, // Reduced from 56
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
                         colors: [Color(0xFF4facfe), Color(0xFF00f2fe)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
-                      borderRadius: BorderRadius.circular(30),
+                      borderRadius:
+                          BorderRadius.circular(26), // Reduced from 28
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF4facfe).withOpacity(0.2),
-                          blurRadius: 12,
-                          offset: const Offset(0, 6),
+                          color: const Color(0xFF4facfe).withOpacity(0.3),
+                          blurRadius: 15,
+                          offset: const Offset(0, 8),
                         ),
                       ],
                     ),
@@ -4744,9 +5044,10 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                       onPressed: _continueToNext,
                       icon: Icon(
                         _currentQuestionIndex < totalQuestions - 1
-                            ? Icons.arrow_forward
-                            : Icons.check_circle,
+                            ? Icons.arrow_forward_rounded
+                            : Icons.check_circle_rounded,
                         color: Colors.white,
+                        size: 18, // Reduced from 20
                       ),
                       label: Text(
                         _currentQuestionIndex < totalQuestions - 1
@@ -4756,15 +5057,16 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
+                          letterSpacing: 0.5,
                         ),
                       ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.transparent,
                         shadowColor: Colors.transparent,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
+                          borderRadius: BorderRadius.circular(28),
                         ),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
                     ),
                   ),
@@ -4887,28 +5189,37 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                               CircleAvatar(
                                 radius: 16,
                                 backgroundColor: Colors.transparent,
-                                backgroundImage: _userProfileImage != null ? FileImage(_userProfileImage!) : null,
+                                backgroundImage: _userProfileImage != null
+                                    ? FileImage(_userProfileImage!)
+                                    : null,
                                 child: _userProfileImage == null
                                     ? Container(
                                         padding: const EdgeInsets.all(8),
                                         decoration: BoxDecoration(
                                           gradient: const LinearGradient(
-                                            colors: [Color(0xFF4facfe), Color(0xFF00f2fe)],
+                                            colors: [
+                                              Color(0xFF4facfe),
+                                              Color(0xFF00f2fe)
+                                            ],
                                             begin: Alignment.topLeft,
                                             end: Alignment.bottomRight,
                                           ),
-                                          borderRadius: BorderRadius.circular(20),
+                                          borderRadius:
+                                              BorderRadius.circular(20),
                                           boxShadow: [
                                             BoxShadow(
-                                              color: const Color(0xFF4facfe).withOpacity(0.3),
+                                              color: const Color(0xFF4facfe)
+                                                  .withOpacity(0.3),
                                               blurRadius: 8,
                                               offset: const Offset(0, 2),
                                             ),
                                           ],
                                         ),
                                         child: Text(
-                                          widget.username.isNotEmpty 
-                                              ? widget.username.substring(0, 1).toUpperCase()
+                                          widget.username.isNotEmpty
+                                              ? widget.username
+                                                  .substring(0, 1)
+                                                  .toUpperCase()
                                               : 'U',
                                           style: const TextStyle(
                                             color: Colors.white,
@@ -5452,9 +5763,10 @@ class _QuizletImportScreenState extends State<QuizletImportScreen> {
 
       debugPrint('Fetching Quizlet URL: $url');
       final response = await http.get(Uri.parse(url));
-      
+
       if (response.statusCode != 200) {
-        throw Exception('Failed to fetch Quizlet set: HTTP ${response.statusCode}');
+        throw Exception(
+            'Failed to fetch Quizlet set: HTTP ${response.statusCode}');
       }
 
       final document = html_parser.parse(response.body);
@@ -5465,15 +5777,15 @@ class _QuizletImportScreenState extends State<QuizletImportScreen> {
       // Method 1: Try to find JSON data in script tags
       final scriptTags = document.getElementsByTagName('script');
       String? jsonData;
-      
+
       for (var script in scriptTags) {
         final scriptText = script.text;
-        if (scriptText.contains('window.Quizlet') || 
+        if (scriptText.contains('window.Quizlet') ||
             scriptText.contains('__NEXT_DATA__') ||
-            scriptText.contains('"word"') && scriptText.contains('"definition"')) {
-          
+            scriptText.contains('"word"') &&
+                scriptText.contains('"definition"')) {
           debugPrint('Found potential JSON data in script tag');
-          
+
           // Try to extract JSON
           final start = scriptText.indexOf('{');
           final end = scriptText.lastIndexOf('}');
@@ -5490,19 +5802,30 @@ class _QuizletImportScreenState extends State<QuizletImportScreen> {
         try {
           // Look for term patterns in the JSON
           final termPatterns = [
-            RegExp(r'"word"\s*:\s*"([^"]+)"\s*,\s*"definition"\s*:\s*"([^"]+)"'),
-            RegExp(r'"term"\s*:\s*"([^"]+)"\s*,\s*"definition"\s*:\s*"([^"]+)"'),
+            RegExp(
+                r'"word"\s*:\s*"([^"]+)"\s*,\s*"definition"\s*:\s*"([^"]+)"'),
+            RegExp(
+                r'"term"\s*:\s*"([^"]+)"\s*,\s*"definition"\s*:\s*"([^"]+)"'),
             RegExp(r'"front"\s*:\s*"([^"]+)"\s*,\s*"back"\s*:\s*"([^"]+)"'),
           ];
 
           for (final pattern in termPatterns) {
             final matches = pattern.allMatches(jsonData);
-            debugPrint('Found ${matches.length} matches with pattern: ${pattern.pattern}');
-            
+            debugPrint(
+                'Found ${matches.length} matches with pattern: ${pattern.pattern}');
+
             for (final match in matches) {
-              final question = match.group(1)?.replaceAll('\\u002F', '/').replaceAll('\\"', '"') ?? '';
-              final answer = match.group(2)?.replaceAll('\\u002F', '/').replaceAll('\\"', '"') ?? '';
-              
+              final question = match
+                      .group(1)
+                      ?.replaceAll('\\u002F', '/')
+                      .replaceAll('\\"', '"') ??
+                  '';
+              final answer = match
+                      .group(2)
+                      ?.replaceAll('\\u002F', '/')
+                      .replaceAll('\\"', '"') ??
+                  '';
+
               if (question.isNotEmpty && answer.isNotEmpty) {
                 // Create 4 options with the correct answer as one of them
                 List<String> options = [answer];
@@ -5519,7 +5842,7 @@ class _QuizletImportScreenState extends State<QuizletImportScreen> {
                 });
               }
             }
-            
+
             if (parsedQuestions.isNotEmpty) break;
           }
         } catch (e) {
@@ -5530,7 +5853,7 @@ class _QuizletImportScreenState extends State<QuizletImportScreen> {
       // Method 3: Try to parse HTML elements directly
       if (parsedQuestions.isEmpty) {
         debugPrint('Trying HTML element parsing...');
-        
+
         // Look for various Quizlet HTML structures
         final selectors = [
           '.SetPageTerm-content',
@@ -5542,19 +5865,20 @@ class _QuizletImportScreenState extends State<QuizletImportScreen> {
 
         for (final selector in selectors) {
           final elements = document.querySelectorAll(selector);
-          debugPrint('Found ${elements.length} elements with selector: $selector');
-          
+          debugPrint(
+              'Found ${elements.length} elements with selector: $selector');
+
           for (var el in elements) {
             String? question;
             String? answer;
 
             // Try different ways to extract question and answer
-            final wordEl = el.querySelector('.SetPageTerm-wordText') ?? 
-                          el.querySelector('.TermText') ??
-                          el.querySelector('[data-testid="word"]');
-            final defEl = el.querySelector('.SetPageTerm-definitionText') ?? 
-                         el.querySelector('.TermText') ??
-                         el.querySelector('[data-testid="definition"]');
+            final wordEl = el.querySelector('.SetPageTerm-wordText') ??
+                el.querySelector('.TermText') ??
+                el.querySelector('[data-testid="word"]');
+            final defEl = el.querySelector('.SetPageTerm-definitionText') ??
+                el.querySelector('.TermText') ??
+                el.querySelector('[data-testid="definition"]');
 
             if (wordEl != null) question = wordEl.text.trim();
             if (defEl != null) answer = defEl.text.trim();
@@ -5571,9 +5895,10 @@ class _QuizletImportScreenState extends State<QuizletImportScreen> {
               }
             }
 
-            if (question != null && answer != null && 
-                question.isNotEmpty && answer.isNotEmpty) {
-              
+            if (question != null &&
+                answer != null &&
+                question.isNotEmpty &&
+                answer.isNotEmpty) {
               List<String> options = [answer];
               while (options.length < 4) {
                 options.add('Option ${options.length}');
@@ -5587,7 +5912,7 @@ class _QuizletImportScreenState extends State<QuizletImportScreen> {
               });
             }
           }
-          
+
           if (parsedQuestions.isNotEmpty) break;
         }
       }
@@ -5595,17 +5920,26 @@ class _QuizletImportScreenState extends State<QuizletImportScreen> {
       // Method 4: Try to parse from page title and description
       if (parsedQuestions.isEmpty) {
         debugPrint('Trying to parse from page metadata...');
-        
+
         final title = document.querySelector('title')?.text ?? '';
-        final description = document.querySelector('meta[name="description"]')?.attributes['content'] ?? '';
-        
+        final description = document
+                .querySelector('meta[name="description"]')
+                ?.attributes['content'] ??
+            '';
+
         if (title.isNotEmpty && title.contains('Quizlet')) {
           // Create a basic question from the title
           parsedQuestions.add({
             'question': 'What is this Quizlet set about?',
-            'correct_answer': title.replaceAll(' | Quizlet', '').replaceAll('Quizlet', '').trim(),
+            'correct_answer': title
+                .replaceAll(' | Quizlet', '')
+                .replaceAll('Quizlet', '')
+                .trim(),
             'options': [
-              title.replaceAll(' | Quizlet', '').replaceAll('Quizlet', '').trim(),
+              title
+                  .replaceAll(' | Quizlet', '')
+                  .replaceAll('Quizlet', '')
+                  .trim(),
               'General Knowledge',
               'Study Material',
               'Educational Content'
@@ -5623,7 +5957,8 @@ class _QuizletImportScreenState extends State<QuizletImportScreen> {
       if (parsedQuestions.isNotEmpty) {
         ScaffoldMessenger.of(this.context).showSnackBar(
           SnackBar(
-            content: Text('Successfully imported ${parsedQuestions.length} terms from Quizlet'),
+            content: Text(
+                'Successfully imported ${parsedQuestions.length} terms from Quizlet'),
             backgroundColor: Colors.green,
           ),
         );
@@ -5631,7 +5966,8 @@ class _QuizletImportScreenState extends State<QuizletImportScreen> {
       } else {
         ScaffoldMessenger.of(this.context).showSnackBar(
           const SnackBar(
-            content: Text('Could not parse Quizlet set. The set might be private or the format has changed.'),
+            content: Text(
+                'Could not parse Quizlet set. The set might be private or the format has changed.'),
             backgroundColor: Colors.orange,
           ),
         );
