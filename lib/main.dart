@@ -2122,7 +2122,12 @@ class _LearnTabState extends State<LearnTab>
   }
 
   Widget _buildQuickPlayTab() {
-    return HomePage(username: widget.username);
+    return HomePage(
+      username: widget.username,
+      onPointsUpdated: (newPoints) {
+        widget.onPointsUpdated(newPoints);
+      },
+    );
   }
 
   Widget _buildQuickPlay() {

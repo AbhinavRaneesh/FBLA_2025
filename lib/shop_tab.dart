@@ -310,7 +310,7 @@ class _ShopTabState extends State<ShopTab>
           crossAxisCount: 2,
           crossAxisSpacing: 20,
           mainAxisSpacing: 20,
-          childAspectRatio: 0.72,
+          childAspectRatio: 0.65,
         ),
         itemCount: _themes.length,
         itemBuilder: (BuildContext context, int index) {
@@ -500,7 +500,7 @@ class _ShopTabState extends State<ShopTab>
           crossAxisCount: 2,
           crossAxisSpacing: 20,
           mainAxisSpacing: 20,
-          childAspectRatio: 0.72,
+          childAspectRatio: 0.65,
         ),
         itemCount: _powerups.length,
         itemBuilder: (BuildContext context, int index) {
@@ -724,6 +724,7 @@ class _ShopTabState extends State<ShopTab>
           behavior: SnackBarBehavior.floating,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          duration: const Duration(seconds: 2),
         ),
       );
     } catch (e) {
@@ -825,6 +826,7 @@ class _ShopTabState extends State<ShopTab>
           behavior: SnackBarBehavior.floating,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          duration: const Duration(seconds: 2),
         ),
       );
     } catch (e) {

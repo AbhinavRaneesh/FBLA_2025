@@ -8,13 +8,17 @@ import 'dart:math';
 import 'package:lottie/lottie.dart';
 import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/material.dart';
+import 'dart:async';
 
 class HomePage extends StatefulWidget {
   final String username;
+  final Function(int)? onPointsUpdated; // Add callback for points updates
 
   const HomePage({
     super.key,
     required this.username,
+    this.onPointsUpdated, // Add this parameter
   });
 
   @override
@@ -44,6 +48,47 @@ class _HomePageState extends State<HomePage> {
   String selectedSubject = "Chemistry";
   int numberOfQuestions = 10; // New variable for question count
   File? _userProfileImage; // Add profile image state
+
+  // Powerup state variables
+  Map<String, int> _userPowerups = {};
+  bool _skipUsed = false;
+  bool _fiftyFiftyUsed = false;
+  bool _doublePointsActive = false;
+  bool _extraTimeUsed = false;
+  List<String> _removedOptions = [];
+  // Add this for hint dialog state
+
+  // Powerup definitions
+  final List<Map<String, dynamic>> _powerups = [
+    {
+      'id': 'skip_question',
+      'name': 'Skip Question',
+      'description': 'Skip any difficult question without penalty',
+      'icon': Icons.skip_next,
+      'color': const Color(0xFF4CAF50),
+    },
+    {
+      'id': 'fifty_fifty',
+      'name': '50/50',
+      'description': 'Remove two incorrect answer options',
+      'icon': Icons.filter_2,
+      'color': const Color(0xFF2196F3),
+    },
+    {
+      'id': 'double_points',
+      'name': 'Double Points',
+      'description': 'Double points for the next correct answer',
+      'icon': Icons.star,
+      'color': const Color(0xFFFFD700),
+    },
+    {
+      'id': 'hint',
+      'name': 'Hint',
+      'description': 'Get a helpful hint for the current question',
+      'icon': Icons.lightbulb,
+      'color': const Color(0xFF9C27B0),
+    },
+  ];
 
   List<String> subjects = [
     "Chemistry",
@@ -225,6 +270,7 @@ class _HomePageState extends State<HomePage> {
     _chatBloc = ChatBloc(); // Initialize bloc once
     _loadUsername(); // Load username when page initializes
     _loadUserProfileImage(); // Load profile image on init
+    _loadUserPowerups(); // Load user powerups
   }
 
   Future<void> _loadUsername() async {
@@ -270,6 +316,10 @@ class _HomePageState extends State<HomePage> {
         currentQuestionIndex = currentQuestionIndex + 1;
         showAnswer = false;
         selectedAnswer = null;
+        // Reset question-specific powerup states
+        _fiftyFiftyUsed = false;
+        _removedOptions = [];
+        _skipUsed = false;
       }
     });
   }
@@ -971,7 +1021,7 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
     });
   }
 
-  void _submitAnswer() {
+  void _submitAnswer() async {
     if (selectedAnswer == null) return;
 
     final isCorrect =
@@ -981,9 +1031,60 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
       showAnswer = true;
       if (isCorrect) {
         answeredCorrectly[currentQuestionIndex] = true;
-        _dbHelper.updateUserPoints(username, 50);
       }
     });
+
+    // Handle points for both correct and incorrect answers
+    try {
+      final currentPoints = await _dbHelper.getUserPoints(username);
+      int pointsToAward;
+      
+      if (isCorrect) {
+        // Award points for correct answer
+        pointsToAward = _doublePointsActive ? 30 : 15; // Double points: 30, normal: 15
+        final newPoints = currentPoints + pointsToAward;
+        await _dbHelper.updateUserPoints(username, newPoints);
+        
+        // Call the callback to update the main app's points display
+        if (widget.onPointsUpdated != null) {
+          widget.onPointsUpdated!(newPoints);
+        }
+        
+        // Reset double points after use
+        if (_doublePointsActive) {
+          _doublePointsActive = false;
+        }
+        
+      } else {
+        // Deduct points for wrong answer
+        pointsToAward = -5;
+        final newPoints = currentPoints + pointsToAward;
+        await _dbHelper.updateUserPoints(username, newPoints);
+        
+        // Call the callback to update the main app's points display
+        if (widget.onPointsUpdated != null) {
+          widget.onPointsUpdated!(newPoints);
+        }
+        
+      }
+    } catch (e) {
+      // Show error message if points update fails
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.error_outline, color: Colors.white),
+              const SizedBox(width: 12),
+              Text('Failed to update points: $e'),
+            ],
+          ),
+          backgroundColor: Colors.orange.shade600,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
   }
 
   @override
@@ -1085,14 +1186,49 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
-              'Choose Your Subject',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-              textAlign: TextAlign.center,
+            // Header with free points button
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const SizedBox(width: 50), // Spacer to center the title
+                const Text(
+                  'Choose Your Subject',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                // Free Points Button
+                GestureDetector(
+                  onTap: () => _giveFreePoints(),
+                  child: Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(25),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFFFFD700).withOpacity(0.4),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.diamond,
+                      color: Colors.white,
+                      size: 24,
+                    ),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 20),
             SizedBox(
@@ -1160,6 +1296,62 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
                   icon: const Icon(Icons.add_circle, color: Colors.white),
                 ),
               ],
+            ),
+            const SizedBox(height: 20),
+            // Points information
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.2),
+                  width: 1,
+                ),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.check_circle,
+                        color: Colors.green,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Correct Answer: +15',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.cancel,
+                        color: Colors.red,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Incorrect Answer: -5',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
             const Spacer(),
             Container(
@@ -1271,6 +1463,76 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
               icon: const Icon(Icons.arrow_back, color: Colors.white),
               onPressed: _returnToHome,
             ),
+            // Powerup Buttons (small, in header)
+            if (_userPowerups.isNotEmpty && _userPowerups.values.any((count) => count > 0))
+              Row(
+                children: _powerups.map((powerup) {
+                  final powerupId = powerup['id'];
+                  final userCount = _userPowerups[powerupId] ?? 0;
+                  final canUse = userCount > 0;
+
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: GestureDetector(
+                      onTap: canUse ? () => _usePowerup(powerupId) : null,
+                      child: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: canUse
+                                ? [powerup['color'], powerup['color'].withOpacity(0.8)]
+                                : [Colors.grey.shade600, Colors.grey.shade700],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: canUse
+                                  ? powerup['color'].withOpacity(0.3)
+                                  : Colors.grey.withOpacity(0.2),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Stack(
+                          children: [
+                            Center(
+                              child: Icon(
+                                powerup['icon'],
+                                color: Colors.white,
+                                size: 18,
+                              ),
+                            ),
+                            if (userCount > 0)
+                              Positioned(
+                                right: 2,
+                                top: 2,
+                                child: Container(
+                                  padding: const EdgeInsets.all(2),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    '$userCount',
+                                    style: TextStyle(
+                                      color: powerup['color'],
+                                      fontSize: 8,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
             Container(
               padding: const EdgeInsets.symmetric(
                 horizontal: 16,
@@ -1338,6 +1600,12 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
             itemCount: currentQuestion["options"].length,
             itemBuilder: (context, index) {
               final option = currentQuestion["options"][index];
+              
+              // Skip this option if it's been removed by 50/50 powerup
+              if (_fiftyFiftyUsed && _removedOptions.contains(option)) {
+                return const SizedBox.shrink();
+              }
+              
               final isSelected = selectedAnswer == option;
               final isCorrect =
                   showAnswer && option == currentQuestion["answer"];
@@ -1416,42 +1684,39 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
 
         // Navigation Buttons
         if (!showAnswer && selectedAnswer != null)
-          Padding(
-            padding: const EdgeInsets.only(top: 24),
-            child: Container(
-              width: double.infinity,
-              height: 60,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF667eea), Color(0xFF764ba2)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(30),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF667eea).withOpacity(0.3),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
+          Container(
+            width: double.infinity,
+            height: 60,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
-              child: ElevatedButton(
-                onPressed: _submitAnswer,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.transparent,
-                  shadowColor: Colors.transparent,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
-                  ),
+              borderRadius: BorderRadius.circular(30),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF667eea).withOpacity(0.3),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
                 ),
-                child: const Text(
-                  'Submit Answer',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
+              ],
+            ),
+            child: ElevatedButton(
+              onPressed: _submitAnswer,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                shadowColor: Colors.transparent,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30),
+                ),
+              ),
+              child: const Text(
+                'Submit Answer',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
                 ),
               ),
             ),
@@ -1846,6 +2111,361 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
       child: Text(subject),
     );
   }
+
+  // Powerup methods
+  Future<void> _loadUserPowerups() async {
+    final powerups = await _dbHelper.getUserPowerups(widget.username);
+    setState(() {
+      _userPowerups = powerups;
+    });
+  }
+
+  Future<void> _usePowerup(String powerupId) async {
+    if ((_userPowerups[powerupId] ?? 0) > 0) {
+      await _dbHelper.usePowerup(widget.username, powerupId);
+      setState(() {
+        _userPowerups[powerupId] = (_userPowerups[powerupId] ?? 1) - 1;
+      });
+
+      // Apply powerup effect
+      switch (powerupId) {
+        case 'skip_question':
+          _useSkipQuestion();
+          break;
+        case 'fifty_fifty':
+          _useFiftyFifty();
+          break;
+        case 'double_points':
+          _useDoublePoints();
+          break;
+        case 'hint':
+          _useHint();
+          break;
+      }
+    }
+  }
+
+  void _useSkipQuestion() {
+    setState(() {
+      _skipUsed = true;
+    });
+    goToNextQuestion();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Question skipped! No penalty applied.'),
+        backgroundColor: Colors.blue,
+      ),
+    );
+  }
+
+  void _useFiftyFifty() {
+    if (showAnswer) return;
+
+    final currentQuestion = scienceQuestions[currentQuestionIndex];
+    final options = currentQuestion["options"];
+    final correctAnswer = currentQuestion["answer"];
+
+    // Find incorrect options
+    final incorrectOptions = options.where((opt) => opt != correctAnswer).toList();
+    incorrectOptions.shuffle();
+
+    // Remove 2 incorrect options
+    final optionsToRemove = incorrectOptions.take(2).toList();
+
+    setState(() {
+      _fiftyFiftyUsed = true;
+      _removedOptions = optionsToRemove;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('50/50 used! Two incorrect answers removed.'),
+        backgroundColor: Colors.orange,
+      ),
+    );
+  }
+
+  void _useDoublePoints() {
+    setState(() {
+      _doublePointsActive = true;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Double Points activated! Next correct answer worth 20 points.'),
+        backgroundColor: Colors.purple,
+      ),
+    );
+  }
+
+  void _useHint() async {
+    final currentQuestion = scienceQuestions[currentQuestionIndex];
+    final question = currentQuestion["question"];
+    final options = List<String>.from(currentQuestion["options"]);
+    
+    // Create the prompt for AI
+    String prompt = "Question: $question\nOptions: ${options.join(', ')}\n\nGive a helpful hint for this question. Only provide the hint, no other text.";
+    
+    // Show loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF667eea).withOpacity(0.3),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Generating AI Hint...',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+    
+    try {
+      // Send message to AI
+      _chatBloc.add(ChatGenerationNewTextMessageEvent(
+        inputMessage: prompt,
+      ));
+      
+      // Wait for the response using a one-time listener
+      bool responseReceived = false;
+      StreamSubscription<ChatState>? subscription;
+      
+      subscription = _chatBloc.stream.listen((state) {
+        if (!responseReceived) {
+          if (state is ChatSuccessState && state.messages.isNotEmpty) {
+            final lastMessage = state.messages.last;
+            if (lastMessage.role == "model") {
+              responseReceived = true;
+              subscription?.cancel();
+              Navigator.of(context).pop(); // Close loading dialog
+              final hintText = lastMessage.parts.first.text;
+              _showHintDialog(hintText);
+            }
+          } else if (state is ChatErrorState) {
+            responseReceived = true;
+            subscription?.cancel();
+            Navigator.of(context).pop(); // Close loading dialog
+            _showHintDialog("Sorry, I couldn't generate a hint right now. Please try again.");
+          }
+        }
+      });
+      
+      // Add timeout
+      Timer(const Duration(seconds: 30), () {
+        if (!responseReceived) {
+          subscription?.cancel();
+          Navigator.of(context).pop(); // Close loading dialog
+          _showHintDialog("Sorry, the hint request timed out. Please try again.");
+        }
+      });
+      
+    } catch (e) {
+      Navigator.of(context).pop(); // Close loading dialog
+      _showHintDialog("Sorry, I couldn't generate a hint right now. Please try again.");
+    }
+  }
+
+  void _showHintDialog(String hintText) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF667eea).withOpacity(0.3),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.lightbulb,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    const Text(
+                      'AI Hint',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                
+                // Hint content
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.2),
+                      width: 1,
+                    ),
+                  ),
+                  child: Text(
+                    hintText,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: Colors.white,
+                      height: 1.5,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                
+                // Close button
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: const Color(0xFF667eea),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: const Text(
+                      'Close',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _resetPowerupStates() {
+    setState(() {
+      _skipUsed = false;
+      _fiftyFiftyUsed = false;
+      _doublePointsActive = false;
+      _extraTimeUsed = false;
+      _removedOptions = [];
+    });
+  }
+
+  void _giveFreePoints() async {
+    try {
+      // Get current points
+      final currentPoints = await _dbHelper.getUserPoints(widget.username);
+      final newPoints = currentPoints + 100;
+      
+      // Update points in database
+      await _dbHelper.updateUserPoints(widget.username, newPoints);
+      
+      // Call the callback to update the main app's points display
+      if (widget.onPointsUpdated != null) {
+        widget.onPointsUpdated!(newPoints);
+      }
+      
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.diamond, color: Colors.white),
+              const SizedBox(width: 12),
+              const Text('You received 100 free points!'),
+            ],
+          ),
+          backgroundColor: const Color(0xFFFFD700),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    } catch (e) {
+      // Show error message if something goes wrong
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.error_outline, color: Colors.white),
+              const SizedBox(width: 12),
+              Text('Failed to add points: $e'),
+            ],
+          ),
+          backgroundColor: Colors.red.shade600,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
+    }
+  }
 }
 
 class SpaceBackground extends StatelessWidget {
@@ -1944,7 +2564,6 @@ class _HorizontalSubjectWheelState extends State<HorizontalSubjectWheel>
     Icons.psychology,
     Icons.people,
     Icons.lightbulb,
-    Icons.visibility,
     Icons.landscape,
     Icons.eco,
     Icons.gavel,
