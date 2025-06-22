@@ -5333,7 +5333,13 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
             child: BlocBuilder<ChatBloc, ChatState>(
               bloc: _chatBloc,
               builder: (context, state) {
-                if (state is ChatSuccessState) {
+                if (state is ChatSuccessState || state is ChatGeneratingState) {
+                  List<ChatMessageModel> messages = [];
+                  if (state is ChatSuccessState) {
+                    messages = state.messages;
+                  } else if (state is ChatGeneratingState) {
+                    messages = state.messages;
+                  }
                   // Auto-scroll to bottom when new messages arrive
                   WidgetsBinding.instance.addPostFrameCallback((_) {
                     if (_chatScrollController.hasClients) {
@@ -5348,9 +5354,16 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                   return ListView.builder(
                     controller: _chatScrollController,
                     padding: const EdgeInsets.all(16),
-                    itemCount: state.messages.length,
+                    itemCount: messages.length + (_chatBloc.generating ? 1 : 0),
                     itemBuilder: (context, index) {
-                      final message = state.messages[index];
+                      if (_chatBloc.generating && index == messages.length) {
+                        return Container(
+                          height: 54,
+                          width: 54,
+                          child: Lottie.asset('assets/animation/loader.json'),
+                        );
+                      }
+                      final message = messages[index];
                       final isUser = message.role == 'user';
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 12),
@@ -5443,20 +5456,32 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                   );
                 } else if (state is ChatErrorState) {
                   return Center(
-                    child: Text(
-                      state.message,
-                      style: const TextStyle(color: Colors.red),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Text(
+                        'Error: ${state.message}',
+                        style: const TextStyle(color: Colors.red, fontSize: 16),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  );
+                } else {
+                  // Initial or empty state
+                  return const Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.chat_bubble_outline,
+                            color: Colors.white54, size: 48),
+                        SizedBox(height: 16),
+                        Text(
+                          'Ask me anything!',
+                          style: TextStyle(color: Colors.white70, fontSize: 16),
+                        ),
+                      ],
                     ),
                   );
                 }
-                return Center(
-                  child: Lottie.asset(
-                    'assets/animation/Animation - 1750352180300.json',
-                    width: 120,
-                    height: 120,
-                    fit: BoxFit.contain,
-                  ),
-                );
               },
             ),
           ),

@@ -3358,7 +3358,7 @@ class _MCQManagerState extends State<MCQManager> {
               ),
             ),
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 31),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [

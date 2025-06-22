@@ -443,7 +443,14 @@ class _HomePageState extends State<HomePage> {
                   child: BlocBuilder<ChatBloc, ChatState>(
                     bloc: _chatBloc,
                     builder: (context, state) {
-                      if (state is ChatSuccessState) {
+                      if (state is ChatSuccessState || state is ChatGeneratingState) {
+                        List<ChatMessageModel> messages = [];
+                        if (state is ChatSuccessState) {
+                          messages = state.messages;
+                        } else if (state is ChatGeneratingState) {
+                          messages = state.messages;
+                        }
+
                         // Auto-scroll to bottom when new messages arrive
                         WidgetsBinding.instance.addPostFrameCallback((_) {
                           if (_scrollController.hasClients) {
@@ -458,9 +465,16 @@ class _HomePageState extends State<HomePage> {
                         return ListView.builder(
                           controller: _scrollController,
                           padding: const EdgeInsets.all(16),
-                          itemCount: state.messages.length,
+                          itemCount: messages.length + (_chatBloc.generating ? 1 : 0),
                           itemBuilder: (context, index) {
-                            final message = state.messages[index];
+                            if (_chatBloc.generating && index == messages.length) {
+                              return Container(
+                                height: 54,
+                                width: 54,
+                                child: Lottie.asset('assets/loader.json'),
+                              );
+                            }
+                            final message = messages[index];
                             final isUser = message.role == "user";
                             
                             return Padding(
@@ -1105,46 +1119,36 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
             const SpaceBackground(),
             SafeArea(
               child: BlocListener<ChatBloc, ChatState>(
+                bloc: _chatBloc,
                 listener: (context, state) {
-                  print(
-                      'BlocListener triggered with state: ${state.runtimeType}');
-                  print('isWaitingForQuestions: $isWaitingForQuestions');
                   if (state is ChatSuccessState) {
+                    // Handle success state if needed, e.g., show a success message
                     print(
                         'ChatSuccessState received with ${state.messages.length} messages');
-                    if (isWaitingForQuestions && state.messages.isNotEmpty) {
-                      try {
-                        var lastMessage = state.messages.last;
-                        print('Last message role: ${lastMessage.role}');
-                        print(
-                            'Last message parts length: ${lastMessage.parts.length}');
-                        if (lastMessage.role != "user" &&
-                            lastMessage.parts.isNotEmpty) {
-                          print('Parsing AI response...');
-                          _parseAndReplaceQuestions(
-                              lastMessage.parts.first.text);
-                        } else {
-                          print(
-                              'Skipping parsing - role: ${lastMessage.role}, parts empty: ${lastMessage.parts.isEmpty}');
-                        }
-                      } catch (e) {
-                        print('Error in BlocListener: $e');
-                        setState(() {
-                          isWaitingForQuestions = false;
-                        });
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Error processing AI response: $e'),
-                            backgroundColor: Colors.red,
-                          ),
-                        );
+
+                    // Find the last message from the AI model
+                    final lastMessage = state.messages.lastWhere(
+                      (m) => m.role == 'model',
+                      orElse: () =>
+                          ChatMessageModel(role: '', parts: []), // Return empty if not found
+                    );
+
+                    if (lastMessage.role.isNotEmpty) {
+                      // Check if the response contains parsable questions
+                      bool hasQuestions =
+                          lastMessage.parts.first.text.contains('[') &&
+                              lastMessage.parts.first.text.contains(']');
+
+                      if (hasQuestions) {
+                        // If it's a question-generation response, parse it
+                        _parseAndReplaceQuestions(lastMessage.parts.first.text);
+                      } else {
+                        // Handle regular chat messages if needed
                       }
                     }
                   } else if (state is ChatErrorState) {
                     print('ChatErrorState received: ${state.message}');
-                    setState(() {
-                      isWaitingForQuestions = false;
-                    });
+                    // Optionally, show an error snackbar or dialog
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text('Error: ${state.message}'),
@@ -1185,269 +1189,278 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
 
   Widget _buildHomeScreen() {
     return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Header with free points button
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const SizedBox(width: 50), // Spacer to center the title
-                const Text(
-                  'Choose Your Subject',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Header with free points button
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const SizedBox(width: 50), // Spacer to center the title
+                  const Text(
+                    'Choose Your Subject',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  textAlign: TextAlign.center,
-                ),
-                // Free Points Button
-                GestureDetector(
-                  onTap: () => _giveFreePoints(),
-                  child: Container(
-                    width: 50,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
+                  // Free Points Button
+                  GestureDetector(
+                    onTap: () => _giveFreePoints(),
+                    child: Container(
+                      width: 50,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(25),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFFFFD700).withOpacity(0.4),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
-                      borderRadius: BorderRadius.circular(25),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFFFFD700).withOpacity(0.4),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
+                      child: const Icon(
+                        Icons.diamond,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              Opacity(
+                opacity: isQuizActive ? 0.5 : 1.0,
+                child: SizedBox(
+                  height: 200,
+                  child: HorizontalSubjectWheel(
+                    subjects: subjects,
+                    selectedSubject: selectedSubject,
+                    onSubjectSelected: isQuizActive
+                        ? null
+                        : (subject) {
+                            setState(() {
+                              selectedSubject = subject;
+                            });
+                          },
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'Number of Questions',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+              Opacity(
+                opacity: isQuizActive ? 0.5 : 1.0,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      onPressed: isQuizActive
+                          ? null
+                          : () {
+                              if (numberOfQuestions > 5) {
+                                setState(() {
+                                  numberOfQuestions -= 5;
+                                });
+                              }
+                            },
+                      icon: Icon(Icons.remove_circle,
+                          color: isQuizActive
+                              ? Colors.white.withOpacity(0.5)
+                              : Colors.white),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '$numberOfQuestions',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: isQuizActive
+                              ? Colors.white.withOpacity(0.5)
+                              : Colors.white,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: isQuizActive
+                          ? null
+                          : () {
+                              if (numberOfQuestions < 200) {
+                                setState(() {
+                                  numberOfQuestions += 5;
+                                });
+                              }
+                            },
+                      icon: Icon(Icons.add_circle,
+                          color: isQuizActive
+                              ? Colors.white.withOpacity(0.5)
+                              : Colors.white),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 40),
+              // Points information
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.2),
+                    width: 1,
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.check_circle,
+                          color: Colors.green,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        const Text(
+                          'Correct Answer: +15',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
                         ),
                       ],
                     ),
-                    child: const Icon(
-                      Icons.diamond,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            Opacity(
-              opacity: isQuizActive ? 0.5 : 1.0,
-              child: SizedBox(
-                height: 200,
-                child: HorizontalSubjectWheel(
-                  subjects: subjects,
-                  selectedSubject: selectedSubject,
-                  onSubjectSelected: isQuizActive ? null : (subject) {
-                    setState(() {
-                      selectedSubject = subject;
-                    });
-                  },
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              'Number of Questions',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 20),
-            Opacity(
-              opacity: isQuizActive ? 0.5 : 1.0,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  IconButton(
-                    onPressed: isQuizActive ? null : () {
-                      if (numberOfQuestions > 5) {
-                        setState(() {
-                          numberOfQuestions -= 5;
-                        });
-                      }
-                    },
-                    icon: Icon(
-                      Icons.remove_circle, 
-                      color: isQuizActive ? Colors.white.withOpacity(0.5) : Colors.white
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 10,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      '$numberOfQuestions',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: isQuizActive ? Colors.white.withOpacity(0.5) : Colors.white,
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: isQuizActive ? null : () {
-                      if (numberOfQuestions < 200) {
-                        setState(() {
-                          numberOfQuestions += 5;
-                        });
-                      }
-                    },
-                    icon: Icon(
-                      Icons.add_circle, 
-                      color: isQuizActive ? Colors.white.withOpacity(0.5) : Colors.white
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Spacer(),
-            // Points information
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: Colors.white.withOpacity(0.2),
-                  width: 1,
-                ),
-              ),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.check_circle,
-                        color: Colors.green,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 8),
-                      const Text(
-                        'Correct Answer: +15',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.cancel,
+                          color: Colors.red,
+                          size: 20,
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.cancel,
-                        color: Colors.red,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 8),
-                      const Text(
-                        'Incorrect Answer: -5',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                        const SizedBox(width: 8),
+                        const Text(
+                          'Incorrect Answer: -5',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-            // Start Learning Button
-            Container(
-              width: double.infinity,
-              height: 60,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF4facfe), Color(0xFF00f2fe)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+                      ],
+                    ),
+                  ],
                 ),
-                borderRadius: BorderRadius.circular(30),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF4facfe).withOpacity(0.3),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
               ),
-              child: ElevatedButton(
-                onPressed: (isWaitingForQuestions || isQuizActive)
-                    ? null
-                    : () {
-                        _generateQuestions();
-                      },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.transparent,
-                  shadowColor: Colors.transparent,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
+              const SizedBox(height: 20),
+              // Start Learning Button
+              Container(
+                width: double.infinity,
+                height: 60,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF4facfe), Color(0xFF00f2fe)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
+                  borderRadius: BorderRadius.circular(30),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF4facfe).withOpacity(0.3),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
                 ),
-                child: isWaitingForQuestions
-                    ? Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor:
-                                  AlwaysStoppedAnimation<Color>(Colors.white),
+                child: ElevatedButton(
+                  onPressed: (isWaitingForQuestions || isQuizActive)
+                      ? null
+                      : () {
+                          _generateQuestions();
+                        },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                  ),
+                  child: isWaitingForQuestions
+                      ? Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor:
+                                    AlwaysStoppedAnimation<Color>(Colors.white),
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 12),
-                          const Text(
-                            'Generating Questions...',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                            const SizedBox(width: 12),
+                            const Text(
+                              'Generating Questions...',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
                             ),
-                          ),
-                        ],
-                      )
-                    : isQuizActive
-                        ? const Text(
-                            'Quiz in Progress',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                          ],
+                        )
+                      : isQuizActive
+                          ? const Text(
+                              'Quiz in Progress',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Text(
+                              'Start Learning',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
                             ),
-                          )
-                        : const Text(
-                            'Start Learning',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
+                ),
               ),
-            ),
-            const Spacer(),
-           
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -1775,6 +1788,7 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
                   ),
                   child: ElevatedButton.icon(
                     onPressed: () {
+                      _clearChatHistory();
                       String question = currentQuestion["question"]!;
                       String options = currentQuestion["options"].join('\n• ');
                       String prompt =
