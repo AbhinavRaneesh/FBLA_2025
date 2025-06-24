@@ -15,19 +15,17 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   }
 
   List<ChatMessageModel> messages = [];
+  bool generating = false;
 
   Future<void> _handleChatGeneration(
     ChatGenerationNewTextMessageEvent event,
     Emitter<ChatState> emit,
   ) async {
+    messages.add(ChatMessageModel(
+        role: "user", parts: [ChatPartModel(text: event.inputMessage)]));
+    generating = true;
+    emit(ChatGeneratingState(messages: messages));
     try {
-      // Add user message
-      messages.add(ChatMessageModel(
-        role: "user",
-        parts: [ChatPartModel(text: event.inputMessage)],
-      ));
-      emit(ChatSuccessState(messages: messages));
-
       // Get AI response
       final generatedText = await ChatRepo.chatTextGenerationRepo(messages);
 
@@ -40,8 +38,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         role: "model",
         parts: [ChatPartModel(text: generatedText)],
       ));
+      generating = false;
       emit(ChatSuccessState(messages: messages));
     } catch (e) {
+      generating = false;
       emit(ChatErrorState(message: "Error: ${e.toString()}"));
     }
   }
