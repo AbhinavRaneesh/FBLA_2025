@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'database_helper.dart';
-import 'main.dart' show SpaceBackground;
+import '../helpers/database_helper.dart';
+import '../main.dart' show SpaceBackground;
 
 class ShopTab extends StatefulWidget {
   final String username;
@@ -151,48 +151,45 @@ class _ShopTabState extends State<ShopTab>
               children: [
                 // Enhanced Professional Header
                 Container(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+                  padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
                   child: Column(
                     children: [
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'EduQuest Store',
-                                  style: TextStyle(
-                                    fontSize: 28,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                    letterSpacing: 0.5,
-                                  ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'EduQuest Store',
+                                style: TextStyle(
+                                  fontSize: 32,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                  letterSpacing: 0.5,
                                 ),
-                                const SizedBox(height: 3),
-                                Text(
-                                  'Enhance your learning experience',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.white.withOpacity(0.8),
-                                    fontWeight: FontWeight.w400,
-                                  ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Enhance your learning experience',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.white.withOpacity(0.8),
+                                  fontWeight: FontWeight.w400,
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(width: 12),
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 10),
+                                horizontal: 16, vertical: 8),
                             decoration: BoxDecoration(
                               gradient: const LinearGradient(
                                 colors: [Color(0xFFFFD700), Color(0xFFFF8F00)],
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                               ),
-                              borderRadius: BorderRadius.circular(20),
+                              borderRadius: BorderRadius.circular(25),
                               boxShadow: [
                                 BoxShadow(
                                   color:
@@ -206,14 +203,14 @@ class _ShopTabState extends State<ShopTab>
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 const Icon(Icons.diamond,
-                                    color: Colors.white, size: 22),
-                                const SizedBox(width: 8),
+                                    color: Colors.white, size: 18),
+                                const SizedBox(width: 6),
                                 Text(
                                   '${widget.userPoints}',
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 18,
+                                    fontSize: 16,
                                   ),
                                 ),
                               ],
@@ -224,10 +221,10 @@ class _ShopTabState extends State<ShopTab>
                       const SizedBox(height: 24),
                       // Enhanced Tab Bar
                       Container(
-                        padding: const EdgeInsets.all(3),
+                        padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular(25),
                           border: Border.all(
                             color: Colors.white.withOpacity(0.2),
                             width: 1,
@@ -241,7 +238,7 @@ class _ShopTabState extends State<ShopTab>
                             gradient: const LinearGradient(
                               colors: [Color(0xFF667eea), Color(0xFF764ba2)],
                             ),
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(20),
                             boxShadow: [
                               BoxShadow(
                                 color: const Color(0xFF667eea).withOpacity(0.3),
@@ -254,29 +251,29 @@ class _ShopTabState extends State<ShopTab>
                           dividerColor: Colors.transparent,
                           tabs: const [
                             Tab(
-                              height: 44,
+                              height: 50,
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(Icons.palette, size: 18),
-                                  SizedBox(width: 6),
+                                  Icon(Icons.palette, size: 20),
+                                  SizedBox(width: 8),
                                   Text('Themes',
                                       style: TextStyle(
-                                          fontSize: 14,
+                                          fontSize: 16,
                                           fontWeight: FontWeight.w600)),
                                 ],
                               ),
                             ),
                             Tab(
-                              height: 44,
+                              height: 50,
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(Icons.flash_on, size: 18),
-                                  SizedBox(width: 6),
+                                  Icon(Icons.flash_on, size: 20),
+                                  SizedBox(width: 8),
                                   Text('Powerups',
                                       style: TextStyle(
-                                          fontSize: 14,
+                                          fontSize: 16,
                                           fontWeight: FontWeight.w600)),
                                 ],
                               ),
@@ -307,13 +304,13 @@ class _ShopTabState extends State<ShopTab>
 
   Widget _buildThemesTab() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
       child: GridView.builder(
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
-          childAspectRatio: 0.75,
+          crossAxisSpacing: 20,
+          mainAxisSpacing: 20,
+          childAspectRatio: 0.65,
         ),
         itemCount: _themes.length,
         itemBuilder: (BuildContext context, int index) {
@@ -323,7 +320,7 @@ class _ShopTabState extends State<ShopTab>
 
           return Container(
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
                   color: isEquipped
@@ -337,14 +334,14 @@ class _ShopTabState extends State<ShopTab>
             child: Card(
               elevation: 0,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(20),
                 side: isEquipped
                     ? const BorderSide(color: Color(0xFFFFD700), width: 3)
                     : BorderSide.none,
               ),
               child: Container(
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(20),
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -355,42 +352,42 @@ class _ShopTabState extends State<ShopTab>
                   ),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(16),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Column(
                         children: [
                           Container(
-                            padding: const EdgeInsets.all(12),
+                            padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
                               color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(16),
                             ),
                             child: Icon(
                               theme['icon'],
-                              size: 28,
+                              size: 32,
                               color: Colors.white,
                             ),
                           ),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 12),
                           Text(
                             theme['name'],
                             textAlign: TextAlign.center,
                             style: const TextStyle(
-                              fontSize: 16,
+                              fontSize: 18,
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
                             ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
-                          const SizedBox(height: 5),
+                          const SizedBox(height: 6),
                           Text(
                             theme['description'],
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              fontSize: 10,
+                              fontSize: 11,
                               color: Colors.white.withOpacity(0.9),
                               height: 1.3,
                             ),
@@ -497,13 +494,13 @@ class _ShopTabState extends State<ShopTab>
 
   Widget _buildPowerupsTab() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
       child: GridView.builder(
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
-          childAspectRatio: 0.75,
+          crossAxisSpacing: 20,
+          mainAxisSpacing: 20,
+          childAspectRatio: 0.65,
         ),
         itemCount: _powerups.length,
         itemBuilder: (BuildContext context, int index) {
@@ -513,7 +510,7 @@ class _ShopTabState extends State<ShopTab>
 
           return Container(
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
                   color: powerup['color'].withOpacity(0.3),
@@ -530,11 +527,11 @@ class _ShopTabState extends State<ShopTab>
             child: Card(
               elevation: 0,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(20),
               ),
               child: Container(
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(20),
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -545,7 +542,7 @@ class _ShopTabState extends State<ShopTab>
                   ),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 48),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -554,14 +551,14 @@ class _ShopTabState extends State<ShopTab>
                           Stack(
                             children: [
                               Container(
-                                padding: const EdgeInsets.all(12),
+                                padding: const EdgeInsets.all(16),
                                 decoration: BoxDecoration(
                                   color: Colors.white.withOpacity(0.2),
-                                  borderRadius: BorderRadius.circular(12),
+                                  borderRadius: BorderRadius.circular(16),
                                 ),
                                 child: Icon(
                                   powerup['icon'],
-                                  size: 28,
+                                  size: 32,
                                   color: Colors.white,
                                 ),
                               ),
@@ -570,10 +567,10 @@ class _ShopTabState extends State<ShopTab>
                                   right: -4,
                                   top: -4,
                                   child: Container(
-                                    padding: const EdgeInsets.all(5),
+                                    padding: const EdgeInsets.all(6),
                                     decoration: BoxDecoration(
                                       color: const Color(0xFF4CAF50),
-                                      borderRadius: BorderRadius.circular(10),
+                                      borderRadius: BorderRadius.circular(12),
                                       border: Border.all(
                                           color: Colors.white, width: 2),
                                     ),
@@ -581,7 +578,7 @@ class _ShopTabState extends State<ShopTab>
                                       '$userCount',
                                       style: const TextStyle(
                                         color: Colors.white,
-                                        fontSize: 11,
+                                        fontSize: 12,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
@@ -589,11 +586,11 @@ class _ShopTabState extends State<ShopTab>
                                 ),
                             ],
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 12),
                           Text(
                             powerup['name'],
                             style: const TextStyle(
-                              fontSize: 14,
+                              fontSize: 18,
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
                             ),
@@ -601,36 +598,36 @@ class _ShopTabState extends State<ShopTab>
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 6),
                           Text(
                             powerup['description'],
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              fontSize: 10,
+                              fontSize: 11,
                               color: Colors.white.withOpacity(0.9),
-                              height: 1.2,
+                              height: 1.3,
                             ),
-                            maxLines: 2,
+                            maxLines: 3,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ],
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 12),
                       if (userCount > 0)
                         Container(
                           width: double.infinity,
-                          padding: const EdgeInsets.symmetric(vertical: 6),
-                          margin: const EdgeInsets.only(bottom: 6),
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          margin: const EdgeInsets.only(bottom: 8),
                           decoration: BoxDecoration(
                             color: const Color(0xFF4CAF50).withOpacity(0.9),
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(
                             'Owned: $userCount',
                             textAlign: TextAlign.center,
                             style: const TextStyle(
                               color: Colors.white,
-                              fontSize: 10,
+                              fontSize: 12,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -645,9 +642,9 @@ class _ShopTabState extends State<ShopTab>
                             backgroundColor: canAfford
                                 ? powerup['color']
                                 : Colors.grey.shade600,
-                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(12),
                             ),
                             elevation: canAfford ? 4 : 0,
                           ),
@@ -656,17 +653,17 @@ class _ShopTabState extends State<ShopTab>
                             children: [
                               Icon(
                                 Icons.diamond,
-                                size: 16,
+                                size: 18,
                                 color:
                                     canAfford ? Colors.white : Colors.white70,
                               ),
-                              const SizedBox(width: 4),
+                              const SizedBox(width: 6),
                               Text(
                                 '${powerup['price']}',
                                 style: TextStyle(
                                   color:
                                       canAfford ? Colors.white : Colors.white70,
-                                  fontSize: 12,
+                                  fontSize: 14,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -727,6 +724,7 @@ class _ShopTabState extends State<ShopTab>
           behavior: SnackBarBehavior.floating,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          duration: const Duration(seconds: 2),
         ),
       );
     } catch (e) {
@@ -828,6 +826,7 @@ class _ShopTabState extends State<ShopTab>
           behavior: SnackBarBehavior.floating,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          duration: const Duration(seconds: 2),
         ),
       );
     } catch (e) {

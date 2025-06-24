@@ -5,6 +5,11 @@ sealed class ChatState {}
 
 final class ChatInitial extends ChatState {}
 
+class ChatGeneratingState extends ChatState {
+  final List<ChatMessageModel> messages;
+  ChatGeneratingState({required this.messages});
+}
+
 class ChatSuccessState extends ChatState {
   final List<ChatMessageModel> messages;
 
