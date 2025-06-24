@@ -2,23 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:student_learning_app/bloc/chat_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../models/chat_message_model.dart';
-import '../helpers/database_helper.dart';
-import 'package:student_learning_app/screens/browse_sets_screen.dart';
+import '../database_helper.dart';
+import 'package:student_learning_app/mcq_manager.dart';
 import 'dart:math';
 import 'package:lottie/lottie.dart';
 import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter/material.dart';
-import 'dart:async';
 
 class HomePage extends StatefulWidget {
   final String username;
-  final Function(int)? onPointsUpdated; // Add callback for points updates
 
   const HomePage({
     super.key,
     required this.username,
-    this.onPointsUpdated, // Add this parameter
   });
 
   @override
@@ -28,7 +24,6 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final TextEditingController followupController = TextEditingController();
   final ScrollController _scrollController = ScrollController(); // For chat only
-  final TextEditingController _searchController = TextEditingController(); // Add search controller
   late final ChatBloc _chatBloc; // Create bloc instance here
   final DatabaseHelper _dbHelper = DatabaseHelper();
 
@@ -46,55 +41,9 @@ class _HomePageState extends State<HomePage> {
   bool showQuizArea = false;
   bool showScoreSummary =
       false; // New variable to control score summary visibility
-  bool isQuizActive = false; // New variable to track if quiz is active
-  String selectedSubject = "Linguistics";
+  String selectedSubject = "Chemistry";
   int numberOfQuestions = 10; // New variable for question count
   File? _userProfileImage; // Add profile image state
-
-  // Search functionality
-  List<String> filteredSubjects = [];
-  bool isSearching = false;
-
-  // Powerup state variables
-  Map<String, int> _userPowerups = {};
-  bool _skipUsed = false;
-  bool _fiftyFiftyUsed = false;
-  bool _doublePointsActive = false;
-  bool _extraTimeUsed = false;
-  List<String> _removedOptions = [];
-  // Add this for hint dialog state
-
-  // Powerup definitions
-  final List<Map<String, dynamic>> _powerups = [
-    {
-      'id': 'skip_question',
-      'name': 'Skip Question',
-      'description': 'Skip any difficult question without penalty',
-      'icon': Icons.skip_next,
-      'color': const Color(0xFF4CAF50),
-    },
-    {
-      'id': 'fifty_fifty',
-      'name': '50/50',
-      'description': 'Remove two incorrect answer options',
-      'icon': Icons.filter_2,
-      'color': const Color(0xFF2196F3),
-    },
-    {
-      'id': 'double_points',
-      'name': 'Double Points',
-      'description': 'Double points for the next correct answer',
-      'icon': Icons.star,
-      'color': const Color(0xFFFFD700),
-    },
-    {
-      'id': 'hint',
-      'name': 'Hint',
-      'description': 'Get a helpful hint for the current question',
-      'icon': Icons.lightbulb,
-      'color': const Color(0xFF9C27B0),
-    },
-  ];
 
   List<String> subjects = [
     "Chemistry",
@@ -276,44 +225,6 @@ class _HomePageState extends State<HomePage> {
     _chatBloc = ChatBloc(); // Initialize bloc once
     _loadUsername(); // Load username when page initializes
     _loadUserProfileImage(); // Load profile image on init
-    _loadUserPowerups(); // Load user powerups
-    
-    // Initialize filtered subjects
-    filteredSubjects = List.from(subjects);
-    
-    // Add search listener
-    _searchController.addListener(_onSearchChanged);
-  }
-
-  void _onSearchChanged() {
-    final query = _searchController.text.toLowerCase();
-    setState(() {
-      if (query.isEmpty) {
-        filteredSubjects = List.from(subjects);
-        isSearching = false;
-      } else {
-        filteredSubjects = subjects
-            .where((subject) => subject.toLowerCase().contains(query))
-            .toList();
-        isSearching = true;
-        
-        // Only auto-scroll if we have exactly one match or if the current selection doesn't match the search
-        if (filteredSubjects.isNotEmpty) {
-          final firstMatch = filteredSubjects.first;
-          final currentMatchesSearch = selectedSubject.toLowerCase().contains(query);
-          
-          // Only change if we have exactly one match or if current selection doesn't match
-          if (filteredSubjects.length == 1 || !currentMatchesSearch) {
-            selectedSubject = firstMatch;
-          }
-        } else {
-          // If no matches found, keep the current selection but ensure it's valid
-          if (!subjects.contains(selectedSubject)) {
-            selectedSubject = subjects.isNotEmpty ? subjects.first : "Chemistry";
-          }
-        }
-      }
-    });
   }
 
   Future<void> _loadUsername() async {
@@ -345,7 +256,6 @@ class _HomePageState extends State<HomePage> {
   @override
   void dispose() {
     _scrollController.dispose();
-    _searchController.dispose();
     _chatBloc.close(); // Don't forget to close the bloc
     super.dispose();
   }
@@ -360,10 +270,6 @@ class _HomePageState extends State<HomePage> {
         currentQuestionIndex = currentQuestionIndex + 1;
         showAnswer = false;
         selectedAnswer = null;
-        // Reset question-specific powerup states
-        _fiftyFiftyUsed = false;
-        _removedOptions = [];
-        _skipUsed = false;
       }
     });
   }
@@ -486,14 +392,7 @@ class _HomePageState extends State<HomePage> {
                   child: BlocBuilder<ChatBloc, ChatState>(
                     bloc: _chatBloc,
                     builder: (context, state) {
-                      if (state is ChatSuccessState || state is ChatGeneratingState) {
-                        List<ChatMessageModel> messages = [];
-                        if (state is ChatSuccessState) {
-                          messages = state.messages;
-                        } else if (state is ChatGeneratingState) {
-                          messages = state.messages;
-                        }
-
+                      if (state is ChatSuccessState) {
                         // Auto-scroll to bottom when new messages arrive
                         WidgetsBinding.instance.addPostFrameCallback((_) {
                           if (_scrollController.hasClients) {
@@ -508,16 +407,9 @@ class _HomePageState extends State<HomePage> {
                         return ListView.builder(
                           controller: _scrollController,
                           padding: const EdgeInsets.all(16),
-                          itemCount: messages.length + (_chatBloc.generating ? 1 : 0),
+                          itemCount: state.messages.length,
                           itemBuilder: (context, index) {
-                            if (_chatBloc.generating && index == messages.length) {
-                              return Container(
-                                height: 54,
-                                width: 54,
-                                child: Lottie.asset('assets/loader.json'),
-                              );
-                            }
-                            final message = messages[index];
+                            final message = state.messages[index];
                             final isUser = message.role == "user";
                             
                             return Padding(
@@ -1032,7 +924,6 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       isWaitingForQuestions = true;
       showQuizArea = false; // Reset quiz area visibility
-      isQuizActive = true; // Set quiz as active
     });
 
     print('Generating $numberOfQuestions questions for: $selectedSubject');
@@ -1064,7 +955,6 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
       showAnswer = false;
       showScoreSummary = false;
       showQuizArea = true;
-      isQuizActive = true; // Keep quiz active when restarting
       answeredCorrectly = List.filled(scienceQuestions.length, false);
     });
   }
@@ -1073,7 +963,6 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
     setState(() {
       showQuizArea = false;
       showScoreSummary = false;
-      isQuizActive = false; // Reset quiz active state
       currentQuestionIndex = 0;
       selectedAnswer = null;
       showAnswer = false;
@@ -1082,7 +971,7 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
     });
   }
 
-  void _submitAnswer() async {
+  void _submitAnswer() {
     if (selectedAnswer == null) return;
 
     final isCorrect =
@@ -1092,60 +981,9 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
       showAnswer = true;
       if (isCorrect) {
         answeredCorrectly[currentQuestionIndex] = true;
+        _dbHelper.updateUserPoints(username, 50);
       }
     });
-
-    // Handle points for both correct and incorrect answers
-    try {
-      final currentPoints = await _dbHelper.getUserPoints(username);
-      int pointsToAward;
-      
-      if (isCorrect) {
-        // Award points for correct answer
-        pointsToAward = _doublePointsActive ? 30 : 15; // Double points: 30, normal: 15
-        final newPoints = currentPoints + pointsToAward;
-        await _dbHelper.updateUserPoints(username, newPoints);
-        
-        // Call the callback to update the main app's points display
-        if (widget.onPointsUpdated != null) {
-          widget.onPointsUpdated!(newPoints);
-        }
-        
-        // Reset double points after use
-        if (_doublePointsActive) {
-          _doublePointsActive = false;
-        }
-        
-      } else {
-        // Deduct points for wrong answer
-        pointsToAward = -5;
-        final newPoints = currentPoints + pointsToAward;
-        await _dbHelper.updateUserPoints(username, newPoints);
-        
-        // Call the callback to update the main app's points display
-        if (widget.onPointsUpdated != null) {
-          widget.onPointsUpdated!(newPoints);
-        }
-        
-      }
-    } catch (e) {
-      // Show error message if points update fails
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.error_outline, color: Colors.white),
-              const SizedBox(width: 12),
-              Text('Failed to update points: $e'),
-            ],
-          ),
-          backgroundColor: Colors.orange.shade600,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          duration: const Duration(seconds: 2),
-        ),
-      );
-    }
   }
 
   @override
@@ -1162,36 +1000,46 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
             const SpaceBackground(),
             SafeArea(
               child: BlocListener<ChatBloc, ChatState>(
-                bloc: _chatBloc,
                 listener: (context, state) {
+                  print(
+                      'BlocListener triggered with state: ${state.runtimeType}');
+                  print('isWaitingForQuestions: $isWaitingForQuestions');
                   if (state is ChatSuccessState) {
-                    // Handle success state if needed, e.g., show a success message
                     print(
                         'ChatSuccessState received with ${state.messages.length} messages');
-
-                    // Find the last message from the AI model
-                    final lastMessage = state.messages.lastWhere(
-                      (m) => m.role == 'model',
-                      orElse: () =>
-                          ChatMessageModel(role: '', parts: []), // Return empty if not found
-                    );
-
-                    if (lastMessage.role.isNotEmpty) {
-                      // Check if the response contains parsable questions
-                      bool hasQuestions =
-                          lastMessage.parts.first.text.contains('[') &&
-                              lastMessage.parts.first.text.contains(']');
-
-                      if (hasQuestions) {
-                        // If it's a question-generation response, parse it
-                        _parseAndReplaceQuestions(lastMessage.parts.first.text);
-                      } else {
-                        // Handle regular chat messages if needed
+                    if (isWaitingForQuestions && state.messages.isNotEmpty) {
+                      try {
+                        var lastMessage = state.messages.last;
+                        print('Last message role: ${lastMessage.role}');
+                        print(
+                            'Last message parts length: ${lastMessage.parts.length}');
+                        if (lastMessage.role != "user" &&
+                            lastMessage.parts.isNotEmpty) {
+                          print('Parsing AI response...');
+                          _parseAndReplaceQuestions(
+                              lastMessage.parts.first.text);
+                        } else {
+                          print(
+                              'Skipping parsing - role: ${lastMessage.role}, parts empty: ${lastMessage.parts.isEmpty}');
+                        }
+                      } catch (e) {
+                        print('Error in BlocListener: $e');
+                        setState(() {
+                          isWaitingForQuestions = false;
+                        });
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Error processing AI response: $e'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
                       }
                     }
                   } else if (state is ChatErrorState) {
                     print('ChatErrorState received: ${state.message}');
-                    // Optionally, show an error snackbar or dialog
+                    setState(() {
+                      isWaitingForQuestions = false;
+                    });
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text('Error: ${state.message}'),
@@ -1232,443 +1080,154 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
 
   Widget _buildHomeScreen() {
     return SafeArea(
-      child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Header with free points button
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const SizedBox(width: 50), // Spacer to center the title
-                  const Text(
-                    'Choose Your Subject',
-                    style: TextStyle(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text(
+              'Choose Your Subject',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              height: 200,
+              child: HorizontalSubjectWheel(
+                subjects: subjects,
+                selectedSubject: selectedSubject,
+                onSubjectSelected: (subject) {
+                  setState(() {
+                    selectedSubject = subject;
+                  });
+                },
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'Number of Questions',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                IconButton(
+                  onPressed: () {
+                    if (numberOfQuestions > 5) {
+                      setState(() {
+                        numberOfQuestions -= 5;
+                      });
+                    }
+                  },
+                  icon: const Icon(Icons.remove_circle, color: Colors.white),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    '$numberOfQuestions',
+                    style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
-                    textAlign: TextAlign.center,
                   ),
-                  // Free Points Button
-                  GestureDetector(
-                    onTap: () => _giveFreePoints(),
-                    child: Container(
-                      width: 50,
-                      height: 50,
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(25),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFFFFD700).withOpacity(0.4),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: const Icon(
-                        Icons.diamond,
-                        color: Colors.white,
-                        size: 24,
-                      ),
-                    ),
+                ),
+                IconButton(
+                  onPressed: () {
+                    if (numberOfQuestions < 200) {
+                      setState(() {
+                        numberOfQuestions += 5;
+                      });
+                    }
+                  },
+                  icon: const Icon(Icons.add_circle, color: Colors.white),
+                ),
+              ],
+            ),
+            const Spacer(),
+            Container(
+              width: double.infinity,
+              height: 60,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF4facfe), Color(0xFF00f2fe)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(30),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF4facfe).withOpacity(0.3),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
-              
-              // Beautiful Search Bar
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 10),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Colors.white.withOpacity(0.15),
-                      Colors.white.withOpacity(0.05),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+              child: ElevatedButton(
+                onPressed: isWaitingForQuestions
+                    ? null
+                    : () {
+                        _generateQuestions();
+                      },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  shadowColor: Colors.transparent,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
                   ),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: Colors.white.withOpacity(0.2),
-                    width: 1,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
                 ),
-                child: TextField(
-                  controller: _searchController,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  decoration: InputDecoration(
-                    hintText: 'Search for a subject...',
-                    hintStyle: TextStyle(
-                      color: Colors.white.withOpacity(0.6),
-                      fontSize: 16,
-                    ),
-                    prefixIcon: Container(
-                      margin: const EdgeInsets.all(8),
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            const Color(0xFF667eea),
-                            const Color(0xFF764ba2),
-                          ],
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        isSearching ? Icons.search : Icons.search,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                    ),
-                    suffixIcon: _searchController.text.isNotEmpty
-                        ? IconButton(
-                            icon: Icon(
-                              Icons.clear,
-                              color: Colors.white.withOpacity(0.7),
+                child: isWaitingForQuestions
+                    ? Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor:
+                                  AlwaysStoppedAnimation<Color>(Colors.white),
                             ),
-                            onPressed: () {
-                              _searchController.clear();
-                            },
-                          )
-                        : null,
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 16,
-                    ),
-                  ),
-                ),
-              ),
-              
-              const SizedBox(height: 25),
-              
-              // Enhanced Subject Wheel
-              Opacity(
-                opacity: isQuizActive ? 0.5 : 1.0,
-                child: Container(
-                  height: 220,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
-                    gradient: LinearGradient(
-                      colors: [
-                        Colors.white.withOpacity(0.1),
-                        Colors.white.withOpacity(0.05),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    border: Border.all(
-                      color: Colors.white.withOpacity(0.1),
-                      width: 1,
-                    ),
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(20),
-                    child: HorizontalSubjectWheel(
-                      subjects: filteredSubjects.isEmpty ? subjects : filteredSubjects,
-                      selectedSubject: selectedSubject,
-                      onSubjectSelected: isQuizActive
-                          ? null
-                          : (subject) {
-                              setState(() {
-                                selectedSubject = subject;
-                              });
-                            },
-                    ),
-                  ),
-                ),
-              ),
-              
-              // Search results indicator
-              if (isSearching && filteredSubjects.isNotEmpty)
-                Container(
-                  margin: const EdgeInsets.only(top: 15),
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF4CAF50).withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(15),
-                    border: Border.all(
-                      color: const Color(0xFF4CAF50).withOpacity(0.3),
-                      width: 1,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.check_circle,
-                        color: const Color(0xFF4CAF50),
-                        size: 18,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Found ${filteredSubjects.length} subject${filteredSubjects.length == 1 ? '' : 's'}',
+                          ),
+                          const SizedBox(width: 12),
+                          const Text(
+                            'Generating Questions...',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      )
+                    : const Text(
+                        'Start Learning',
                         style: TextStyle(
-                          color: const Color(0xFF4CAF50),
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              
-              if (isSearching && filteredSubjects.isEmpty)
-                Container(
-                  margin: const EdgeInsets.only(top: 15),
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFF6B6B).withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(15),
-                    border: Border.all(
-                      color: const Color(0xFFFF6B6B).withOpacity(0.3),
-                      width: 1,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.search_off,
-                        color: const Color(0xFFFF6B6B),
-                        size: 18,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'No subjects found matching "${_searchController.text}"',
-                        style: TextStyle(
-                          color: const Color(0xFFFF6B6B),
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              const SizedBox(height: 20),
-              const Text(
-                'Number of Questions',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 20),
-              Opacity(
-                opacity: isQuizActive ? 0.5 : 1.0,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    IconButton(
-                      onPressed: isQuizActive
-                          ? null
-                          : () {
-                              if (numberOfQuestions > 5) {
-                                setState(() {
-                                  numberOfQuestions -= 5;
-                                });
-                              }
-                            },
-                      icon: Icon(Icons.remove_circle,
-                          color: isQuizActive
-                              ? Colors.white.withOpacity(0.5)
-                              : Colors.white),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 10,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        '$numberOfQuestions',
-                        style: TextStyle(
-                          fontSize: 24,
+                          fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: isQuizActive
-                              ? Colors.white.withOpacity(0.5)
-                              : Colors.white,
+                          color: Colors.white,
                         ),
                       ),
-                    ),
-                    IconButton(
-                      onPressed: isQuizActive
-                          ? null
-                          : () {
-                              if (numberOfQuestions < 200) {
-                                setState(() {
-                                  numberOfQuestions += 5;
-                                });
-                              }
-                            },
-                      icon: Icon(Icons.add_circle,
-                          color: isQuizActive
-                              ? Colors.white.withOpacity(0.5)
-                              : Colors.white),
-                    ),
-                  ],
-                ),
               ),
-              const SizedBox(height: 40),
-              // Points information
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: Colors.white.withOpacity(0.2),
-                    width: 1,
-                  ),
-                ),
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(
-                          Icons.check_circle,
-                          color: Colors.green,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 8),
-                        const Text(
-                          'Correct Answer: +15',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(
-                          Icons.cancel,
-                          color: Colors.red,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 8),
-                        const Text(
-                          'Incorrect Answer: -5',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
-              // Start Learning Button
-              Container(
-                width: double.infinity,
-                height: 60,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF4facfe), Color(0xFF00f2fe)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(30),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF4facfe).withOpacity(0.3),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
-                ),
-                child: ElevatedButton(
-                  onPressed: (isWaitingForQuestions || isQuizActive)
-                      ? null
-                      : () {
-                          _generateQuestions();
-                        },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.transparent,
-                    shadowColor: Colors.transparent,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                  ),
-                  child: isWaitingForQuestions
-                      ? Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor:
-                                    AlwaysStoppedAnimation<Color>(Colors.white),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            const Text(
-                              'Generating Questions...',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ],
-                        )
-                      : isQuizActive
-                          ? const Text(
-                              'Quiz in Progress',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            )
-                          : const Text(
-                              'Start Learning',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -1712,76 +1271,6 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
               icon: const Icon(Icons.arrow_back, color: Colors.white),
               onPressed: _returnToHome,
             ),
-            // Powerup Buttons (small, in header)
-            if (_userPowerups.isNotEmpty && _userPowerups.values.any((count) => count > 0))
-              Row(
-                children: _powerups.map((powerup) {
-                  final powerupId = powerup['id'];
-                  final userCount = _userPowerups[powerupId] ?? 0;
-                  final canUse = userCount > 0;
-
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: GestureDetector(
-                      onTap: canUse ? () => _usePowerup(powerupId) : null,
-                      child: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: canUse
-                                ? [powerup['color'], powerup['color'].withOpacity(0.8)]
-                                : [Colors.grey.shade600, Colors.grey.shade700],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: canUse
-                                  ? powerup['color'].withOpacity(0.3)
-                                  : Colors.grey.withOpacity(0.2),
-                              blurRadius: 4,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Stack(
-                          children: [
-                            Center(
-                              child: Icon(
-                                powerup['icon'],
-                                color: Colors.white,
-                                size: 18,
-                              ),
-                            ),
-                            if (userCount > 0)
-                              Positioned(
-                                right: 2,
-                                top: 2,
-                                child: Container(
-                                  padding: const EdgeInsets.all(2),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Text(
-                                    '$userCount',
-                                    style: TextStyle(
-                                      color: powerup['color'],
-                                      fontSize: 8,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
             Container(
               padding: const EdgeInsets.symmetric(
                 horizontal: 16,
@@ -1849,12 +1338,6 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
             itemCount: currentQuestion["options"].length,
             itemBuilder: (context, index) {
               final option = currentQuestion["options"][index];
-              
-              // Skip this option if it's been removed by 50/50 powerup
-              if (_fiftyFiftyUsed && _removedOptions.contains(option)) {
-                return const SizedBox.shrink();
-              }
-              
               final isSelected = selectedAnswer == option;
               final isCorrect =
                   showAnswer && option == currentQuestion["answer"];
@@ -1933,39 +1416,42 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
 
         // Navigation Buttons
         if (!showAnswer && selectedAnswer != null)
-          Container(
-            width: double.infinity,
-            height: 60,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF667eea), Color(0xFF764ba2)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(30),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF667eea).withOpacity(0.3),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
+          Padding(
+            padding: const EdgeInsets.only(top: 24),
+            child: Container(
+              width: double.infinity,
+              height: 60,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-              ],
-            ),
-            child: ElevatedButton(
-              onPressed: _submitAnswer,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.transparent,
-                shadowColor: Colors.transparent,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
-                ),
+                borderRadius: BorderRadius.circular(30),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF667eea).withOpacity(0.3),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
               ),
-              child: const Text(
-                'Submit Answer',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+              child: ElevatedButton(
+                onPressed: _submitAnswer,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  shadowColor: Colors.transparent,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                ),
+                child: const Text(
+                  'Submit Answer',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ),
@@ -1996,7 +1482,6 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
                   ),
                   child: ElevatedButton.icon(
                     onPressed: () {
-                      _clearChatHistory();
                       String question = currentQuestion["question"]!;
                       String options = currentQuestion["options"].join('\n• ');
                       String prompt =
@@ -2361,361 +1846,6 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
       child: Text(subject),
     );
   }
-
-  // Powerup methods
-  Future<void> _loadUserPowerups() async {
-    final powerups = await _dbHelper.getUserPowerups(widget.username);
-    setState(() {
-      _userPowerups = powerups;
-    });
-  }
-
-  Future<void> _usePowerup(String powerupId) async {
-    if ((_userPowerups[powerupId] ?? 0) > 0) {
-      await _dbHelper.usePowerup(widget.username, powerupId);
-      setState(() {
-        _userPowerups[powerupId] = (_userPowerups[powerupId] ?? 1) - 1;
-      });
-
-      // Apply powerup effect
-      switch (powerupId) {
-        case 'skip_question':
-          _useSkipQuestion();
-          break;
-        case 'fifty_fifty':
-          _useFiftyFifty();
-          break;
-        case 'double_points':
-          _useDoublePoints();
-          break;
-        case 'hint':
-          _useHint();
-          break;
-      }
-    }
-  }
-
-  void _useSkipQuestion() {
-    setState(() {
-      _skipUsed = true;
-    });
-    goToNextQuestion();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Question skipped! No penalty applied.'),
-        backgroundColor: Colors.blue,
-      ),
-    );
-  }
-
-  void _useFiftyFifty() {
-    if (showAnswer) return;
-
-    final currentQuestion = scienceQuestions[currentQuestionIndex];
-    final options = currentQuestion["options"];
-    final correctAnswer = currentQuestion["answer"];
-
-    // Find incorrect options
-    final incorrectOptions = options.where((opt) => opt != correctAnswer).toList();
-    incorrectOptions.shuffle();
-
-    // Remove 2 incorrect options
-    final optionsToRemove = incorrectOptions.take(2).toList();
-
-    setState(() {
-      _fiftyFiftyUsed = true;
-      _removedOptions = optionsToRemove;
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('50/50 used! Two incorrect answers removed.'),
-        backgroundColor: Colors.orange,
-      ),
-    );
-  }
-
-  void _useDoublePoints() {
-    setState(() {
-      _doublePointsActive = true;
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Double Points activated! Next correct answer worth 20 points.'),
-        backgroundColor: Colors.purple,
-      ),
-    );
-  }
-
-  void _useHint() async {
-    final currentQuestion = scienceQuestions[currentQuestionIndex];
-    final question = currentQuestion["question"];
-    final options = List<String>.from(currentQuestion["options"]);
-    
-    // Create the prompt for AI
-    String prompt = "Question: $question\nOptions: ${options.join(', ')}\n\nGive a helpful hint for this question. Only provide the hint, no other text.";
-    
-    // Show loading dialog
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF667eea), Color(0xFF764ba2)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF667eea).withOpacity(0.3),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
-                ),
-              ],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'Generating AI Hint...',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.white,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-    
-    try {
-      // Send message to AI
-      _chatBloc.add(ChatGenerationNewTextMessageEvent(
-        inputMessage: prompt,
-      ));
-      
-      // Wait for the response using a one-time listener
-      bool responseReceived = false;
-      StreamSubscription<ChatState>? subscription;
-      
-      subscription = _chatBloc.stream.listen((state) {
-        if (!responseReceived) {
-          if (state is ChatSuccessState && state.messages.isNotEmpty) {
-            final lastMessage = state.messages.last;
-            if (lastMessage.role == "model") {
-              responseReceived = true;
-              subscription?.cancel();
-              Navigator.of(context).pop(); // Close loading dialog
-              final hintText = lastMessage.parts.first.text;
-              _showHintDialog(hintText);
-            }
-          } else if (state is ChatErrorState) {
-            responseReceived = true;
-            subscription?.cancel();
-            Navigator.of(context).pop(); // Close loading dialog
-            _showHintDialog("Sorry, I couldn't generate a hint right now. Please try again.");
-          }
-        }
-      });
-      
-      // Add timeout
-      Timer(const Duration(seconds: 30), () {
-        if (!responseReceived) {
-          subscription?.cancel();
-          Navigator.of(context).pop(); // Close loading dialog
-          _showHintDialog("Sorry, the hint request timed out. Please try again.");
-        }
-      });
-      
-    } catch (e) {
-      Navigator.of(context).pop(); // Close loading dialog
-      _showHintDialog("Sorry, I couldn't generate a hint right now. Please try again.");
-    }
-  }
-
-  void _showHintDialog(String hintText) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF667eea), Color(0xFF764ba2)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF667eea).withOpacity(0.3),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
-                ),
-              ],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Header
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Icons.lightbulb,
-                        color: Colors.white,
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    const Text(
-                      'AI Hint',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                
-                // Hint content
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: Colors.white.withOpacity(0.2),
-                      width: 1,
-                    ),
-                  ),
-                  child: Text(
-                    hintText,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: Colors.white,
-                      height: 1.5,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                
-                // Close button
-                SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: const Color(0xFF667eea),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: const Text(
-                      'Close',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  void _resetPowerupStates() {
-    setState(() {
-      _skipUsed = false;
-      _fiftyFiftyUsed = false;
-      _doublePointsActive = false;
-      _extraTimeUsed = false;
-      _removedOptions = [];
-    });
-  }
-
-  void _giveFreePoints() async {
-    try {
-      // Get current points
-      final currentPoints = await _dbHelper.getUserPoints(widget.username);
-      final newPoints = currentPoints + 100;
-      
-      // Update points in database
-      await _dbHelper.updateUserPoints(widget.username, newPoints);
-      
-      // Call the callback to update the main app's points display
-      if (widget.onPointsUpdated != null) {
-        widget.onPointsUpdated!(newPoints);
-      }
-      
-      // Show success message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.diamond, color: Colors.white),
-              const SizedBox(width: 12),
-              const Text('You received 100 free points!'),
-            ],
-          ),
-          backgroundColor: const Color(0xFFFFD700),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          duration: const Duration(seconds: 3),
-        ),
-      );
-    } catch (e) {
-      // Show error message if something goes wrong
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.error_outline, color: Colors.white),
-              const SizedBox(width: 12),
-              Text('Failed to add points: $e'),
-            ],
-          ),
-          backgroundColor: Colors.red.shade600,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-      );
-    }
-  }
 }
 
 class SpaceBackground extends StatelessWidget {
@@ -2760,13 +1890,13 @@ class SpaceBackground extends StatelessWidget {
 class HorizontalSubjectWheel extends StatefulWidget {
   final List<String> subjects;
   final String selectedSubject;
-  final Function(String)? onSubjectSelected;
+  final Function(String) onSubjectSelected;
 
   const HorizontalSubjectWheel({
     Key? key,
     required this.subjects,
     required this.selectedSubject,
-    this.onSubjectSelected,
+    required this.onSubjectSelected,
   }) : super(key: key);
 
   @override
@@ -2778,11 +1908,6 @@ class _HorizontalSubjectWheelState extends State<HorizontalSubjectWheel>
   late FixedExtentScrollController _scrollController;
   late AnimationController _animationController;
   int _selectedIndex = 0;
-  bool _isProgrammaticallyScrolling = false; // Add flag to prevent unnecessary scrolling
-  
-  // For infinite scrolling, we'll repeat the subjects only once
-  static const int _repeatCount = 1; // Repeat subjects only once for cleaner display
-  late List<String> _repeatedSubjects;
 
   final List<Color> _gradients = [
     const Color(0xFF667eea),
@@ -2819,6 +1944,7 @@ class _HorizontalSubjectWheelState extends State<HorizontalSubjectWheel>
     Icons.psychology,
     Icons.people,
     Icons.lightbulb,
+    Icons.visibility,
     Icons.landscape,
     Icons.eco,
     Icons.gavel,
@@ -2833,73 +1959,13 @@ class _HorizontalSubjectWheelState extends State<HorizontalSubjectWheel>
       vsync: this,
     );
     
-    // Create repeated subjects list for infinite scrolling
-    _repeatedSubjects = List.generate(_repeatCount, (index) => widget.subjects).expand((subjects) => subjects).toList();
-    
     _selectedIndex = widget.subjects.indexOf(widget.selectedSubject);
-    if (_selectedIndex == -1 || _selectedIndex >= widget.subjects.length) {
-      _selectedIndex = widget.subjects.isNotEmpty ? 0 : 0;
-    }
-    
-    // Set initial position to the selected subject
-    int initialPosition = _selectedIndex;
+    if (_selectedIndex == -1) _selectedIndex = 0;
     
     // Set initial position after the widget is built
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_repeatedSubjects.isNotEmpty && initialPosition < _repeatedSubjects.length) {
-        try {
-          _scrollController.jumpToItem(initialPosition);
-        } catch (e) {
-          // Fallback to first item if there's an error
-          if (_repeatedSubjects.isNotEmpty) {
-            _scrollController.jumpToItem(0);
-          }
-        }
-      }
+      _scrollController.jumpToItem(_selectedIndex);
     });
-  }
-
-  @override
-  void didUpdateWidget(HorizontalSubjectWheel oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    
-    // Update repeated subjects if the subjects list changed
-    if (oldWidget.subjects != widget.subjects) {
-      _repeatedSubjects = List.generate(_repeatCount, (index) => widget.subjects).expand((subjects) => subjects).toList();
-      
-      // Ensure selected index is valid after subjects change
-      if (_selectedIndex >= widget.subjects.length) {
-        _selectedIndex = widget.subjects.isNotEmpty ? 0 : 0;
-      }
-    }
-    
-    // If selected subject changed and it's not the same as current, scroll to it
-    if (oldWidget.selectedSubject != widget.selectedSubject && 
-        _selectedIndex < widget.subjects.length &&
-        widget.selectedSubject != widget.subjects[_selectedIndex]) {
-      _scrollToSubject(widget.selectedSubject);
-    }
-  }
-
-  void _scrollToSubject(String subject) {
-    final index = widget.subjects.indexOf(subject);
-    if (index != -1 && index != _selectedIndex && index < widget.subjects.length) {
-      _isProgrammaticallyScrolling = true;
-      final targetPosition = index;
-      
-      // Ensure target position is within bounds
-      if (targetPosition >= 0 && targetPosition < _repeatedSubjects.length) {
-        _scrollController.animateToItem(
-          targetPosition,
-          duration: const Duration(milliseconds: 500),
-          curve: Curves.easeInOutCubic,
-        ).then((_) {
-          _isProgrammaticallyScrolling = false;
-        });
-      } else {
-        _isProgrammaticallyScrolling = false;
-      }
-    }
   }
 
   @override
@@ -2910,25 +1976,10 @@ class _HorizontalSubjectWheelState extends State<HorizontalSubjectWheel>
   }
 
   void _onSelectedItemChanged(int index) {
-    // Don't trigger if we're programmatically scrolling
-    if (_isProgrammaticallyScrolling) return;
-    
-    // Ensure index is within bounds
-    if (index < 0 || index >= _repeatedSubjects.length) return;
-    
-    // Map the repeated index back to the original subject index
-    int originalIndex = index % widget.subjects.length;
-    
-    // Ensure original index is within bounds
-    if (originalIndex < 0 || originalIndex >= widget.subjects.length) return;
-    
     setState(() {
-      _selectedIndex = originalIndex;
+      _selectedIndex = index;
     });
-    
-    if (widget.onSubjectSelected != null) {
-      widget.onSubjectSelected!(widget.subjects[originalIndex]);
-    }
+    widget.onSubjectSelected(widget.subjects[index]);
     _animationController.forward(from: 0.0);
   }
 
@@ -2943,19 +1994,18 @@ class _HorizontalSubjectWheelState extends State<HorizontalSubjectWheel>
           AnimatedBuilder(
             animation: _animationController,
             builder: (context, child) {
-              final gradientIndex = _selectedIndex % _gradients.length;
               return Container(
                 height: 50,
                 margin: const EdgeInsets.symmetric(horizontal: 25),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(15),
                   border: Border.all(
-                    color: _gradients[gradientIndex].withOpacity(0.8 + (_animationController.value * 0.2)),
+                    color: _gradients[_selectedIndex % _gradients.length].withOpacity(0.8 + (_animationController.value * 0.2)),
                     width: 2,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: _gradients[gradientIndex].withOpacity(0.4 + (_animationController.value * 0.3)),
+                      color: _gradients[_selectedIndex % _gradients.length].withOpacity(0.4 + (_animationController.value * 0.3)),
                       blurRadius: 15 + (_animationController.value * 8),
                       spreadRadius: 1 + (_animationController.value * 2),
                     ),
@@ -2972,21 +2022,14 @@ class _HorizontalSubjectWheelState extends State<HorizontalSubjectWheel>
               itemExtent: 60,
               diameterRatio: 1.8,
               perspective: 0.01,
-              physics: widget.onSubjectSelected != null 
-                  ? const FixedExtentScrollPhysics()
-                  : const NeverScrollableScrollPhysics(),
-              onSelectedItemChanged: widget.onSubjectSelected != null ? _onSelectedItemChanged : null,
+              physics: const FixedExtentScrollPhysics(),
+              onSelectedItemChanged: _onSelectedItemChanged,
               childDelegate: ListWheelChildBuilderDelegate(
                 builder: (context, index) {
-                  if (index >= _repeatedSubjects.length) return Container();
+                  if (index >= widget.subjects.length) return Container();
                   
-                  final subject = _repeatedSubjects[index];
-                  final originalIndex = index % widget.subjects.length;
-                  final isSelected = originalIndex == _selectedIndex;
-                  
-                  // Ensure indices are within bounds
-                  final gradientIndex = originalIndex % _gradients.length;
-                  final iconIndex = originalIndex % _icons.length;
+                  final subject = widget.subjects[index];
+                  final isSelected = index == _selectedIndex;
                   
                   return AnimatedContainer(
                     duration: const Duration(milliseconds: 300),
@@ -2996,7 +2039,7 @@ class _HorizontalSubjectWheelState extends State<HorizontalSubjectWheel>
                       borderRadius: BorderRadius.circular(15),
                       gradient: LinearGradient(
                         colors: isSelected
-                            ? [_gradients[gradientIndex], _gradients[gradientIndex].withOpacity(0.7)]
+                            ? [_gradients[index % _gradients.length], _gradients[index % _gradients.length].withOpacity(0.7)]
                             : [Colors.white.withOpacity(0.15), Colors.white.withOpacity(0.05)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
@@ -3004,7 +2047,7 @@ class _HorizontalSubjectWheelState extends State<HorizontalSubjectWheel>
                       boxShadow: isSelected
                           ? [
                               BoxShadow(
-                                color: _gradients[gradientIndex].withOpacity(0.5),
+                                color: _gradients[index % _gradients.length].withOpacity(0.5),
                                 blurRadius: 15,
                                 offset: const Offset(0, 6),
                                 spreadRadius: 1,
@@ -3031,7 +2074,7 @@ class _HorizontalSubjectWheelState extends State<HorizontalSubjectWheel>
                                 : Colors.transparent,
                           ),
                           child: Icon(
-                            _icons[iconIndex],
+                            _icons[index % _icons.length],
                             color: isSelected ? Colors.white : Colors.white.withOpacity(0.6),
                             size: isSelected ? 30 : 26,
                           ),
@@ -3067,7 +2110,7 @@ class _HorizontalSubjectWheelState extends State<HorizontalSubjectWheel>
                     ),
                   );
                 },
-                childCount: _repeatedSubjects.length,
+                childCount: widget.subjects.length,
               ),
             ),
           ),

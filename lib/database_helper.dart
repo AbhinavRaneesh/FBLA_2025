@@ -1,7 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:flutter/foundation.dart';
-import '../data/premade_study_sets.dart';
+import 'premade_study_sets.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();

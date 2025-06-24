@@ -12,25 +12,25 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:student_learning_app/helpers/frq_manager.dart';
-import 'package:student_learning_app/screens/browse_sets_screen.dart';
+import 'package:student_learning_app/frq_manager.dart';
+import 'package:student_learning_app/mcq_manager.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
-import 'helpers/database_helper.dart';
-import 'data/questions.dart' as quiz;
-import 'screens/premade_sets_screen.dart';
-import 'data/premade_study_sets.dart' as premade;
-import 'package:student_learning_app/screens/quick_play_screen.dart';
+import 'database_helper.dart';
+import 'questions.dart' as quiz;
+import 'premade_sets_screen.dart';
+import 'premade_study_sets.dart' as premade;
+import 'package:student_learning_app/pages/home_page.dart';
 import 'package:student_learning_app/bloc/chat_bloc.dart';
 import 'package:student_learning_app/models/chat_message_model.dart';
-import 'screens/browse_sets_screen.dart';
-import 'helpers/frq_manager.dart';
-import 'screens/study_set_edit_screen.dart';
+import 'mcq_manager.dart';
+import 'frq_manager.dart';
+import 'study_set_edit_screen.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:lottie/lottie.dart';
-import 'package:student_learning_app/screens/shop_tab.dart';
+import 'package:student_learning_app/shop_tab.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -2122,12 +2122,7 @@ class _LearnTabState extends State<LearnTab>
   }
 
   Widget _buildQuickPlayTab() {
-    return HomePage(
-      username: widget.username,
-      onPointsUpdated: (newPoints) {
-        widget.onPointsUpdated(newPoints);
-      },
-    );
+    return HomePage(username: widget.username);
   }
 
   Widget _buildQuickPlay() {
@@ -2925,15 +2920,6 @@ class _ProfileTabState extends State<ProfileTab>
                                     Icons.school,
                                     Colors.blue,
                                   ),
-                                  Padding(
-                                    padding: const EdgeInsets.only(left: 20),
-                                    child: _buildStatItem(
-                                      'Points',
-                                      widget.userPoints.toString(),
-                                      Icons.diamond,
-                                      Colors.amber,
-                                    ),
-                                  ),
                                   _buildStatItem(
                                     'Current Theme',
                                     widget.currentTheme.toUpperCase(),
@@ -3668,212 +3654,24 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
     );
   }
 
-  void _useHint() async {
+  void _useHint() {
     final currentQuestion = _questions[_currentQuestionIndex];
     final questionText = currentQuestion['question_text'];
-    final options = currentQuestion['options'].split('|');
+    final correctAnswer = currentQuestion['correct_answer'];
 
-    // Create the prompt for AI
-    String prompt = "Question: $questionText\nOptions: ${options.join(', ')}\n\nGive a helpful hint for this question. Only provide the hint, no other text.";
-
-    // Show loading dialog
-    showDialog(
-      context: this.context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF667eea), Color(0xFF764ba2)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF667eea).withOpacity(0.3),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
-                ),
-              ],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'Generating AI Hint...',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.white,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-
-    try {
-      // Send message to AI
-      _chatBloc.add(ChatGenerationNewTextMessageEvent(
-        inputMessage: prompt,
-      ));
-
-      // Wait for the response using a one-time listener
-      bool responseReceived = false;
-      StreamSubscription<ChatState>? subscription;
-
-      subscription = _chatBloc.stream.listen((state) {
-        if (!responseReceived) {
-          if (state is ChatSuccessState && state.messages.isNotEmpty) {
-            final lastMessage = state.messages.last;
-            if (lastMessage.role == "model") {
-              responseReceived = true;
-              subscription?.cancel();
-              Navigator.of(this.context).pop(); // Close loading dialog
-              final hintText = lastMessage.parts.first.text;
-              _showHintDialog(hintText);
-            }
-          } else if (state is ChatErrorState) {
-            responseReceived = true;
-            subscription?.cancel();
-            Navigator.of(this.context).pop(); // Close loading dialog
-            _showHintDialog("Sorry, I couldn't generate a hint right now. Please try again.");
-          }
-        }
-      });
-
-      // Add timeout
-      Timer(const Duration(seconds: 30), () {
-        if (!responseReceived) {
-          subscription?.cancel();
-          Navigator.of(this.context).pop(); // Close loading dialog
-          _showHintDialog("Sorry, the hint request timed out. Please try again.");
-        }
-      });
-
-    } catch (e) {
-      Navigator.of(this.context).pop(); // Close loading dialog
-      _showHintDialog("Sorry, I couldn't generate a hint right now. Please try again.");
+    String hint =
+        "Hint: The correct answer starts with '${correctAnswer.substring(0, 1)}'";
+    if (correctAnswer.length > 3) {
+      hint =
+          "Hint: The correct answer contains '${correctAnswer.substring(1, 3)}'";
     }
-  }
 
-  void _showHintDialog(String hintText) {
-    showDialog(
-      context: this.context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF667eea), Color(0xFF764ba2)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF667eea).withOpacity(0.3),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
-                ),
-              ],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Header
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Icons.lightbulb,
-                        color: Colors.white,
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    const Text(
-                      'AI Hint',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                // Hint content
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: Colors.white.withOpacity(0.2),
-                      width: 1,
-                    ),
-                  ),
-                  child: Text(
-                    hintText,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: Colors.white,
-                      height: 1.5,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                // Close button
-                SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: const Color(0xFF667eea),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: const Text(
-                      'Close',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
+    ScaffoldMessenger.of(this.context).showSnackBar(
+      SnackBar(
+        content: Text(hint),
+        backgroundColor: Colors.indigo,
+        duration: const Duration(seconds: 4),
+      ),
     );
   }
 
@@ -3956,9 +3754,6 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
 
     // Refresh profile image before showing chat
     _refreshUserProfileImage();
-
-    // Clear previous chat history
-    _chatBloc.add(ChatClearHistoryEvent());
 
     // Show the chat interface
     setState(() {
@@ -5333,13 +5128,7 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
             child: BlocBuilder<ChatBloc, ChatState>(
               bloc: _chatBloc,
               builder: (context, state) {
-                if (state is ChatSuccessState || state is ChatGeneratingState) {
-                  List<ChatMessageModel> messages = [];
-                  if (state is ChatSuccessState) {
-                    messages = state.messages;
-                  } else if (state is ChatGeneratingState) {
-                    messages = state.messages;
-                  }
+                if (state is ChatSuccessState) {
                   // Auto-scroll to bottom when new messages arrive
                   WidgetsBinding.instance.addPostFrameCallback((_) {
                     if (_chatScrollController.hasClients) {
@@ -5354,16 +5143,9 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                   return ListView.builder(
                     controller: _chatScrollController,
                     padding: const EdgeInsets.all(16),
-                    itemCount: messages.length + (_chatBloc.generating ? 1 : 0),
+                    itemCount: state.messages.length,
                     itemBuilder: (context, index) {
-                      if (_chatBloc.generating && index == messages.length) {
-                        return Container(
-                          height: 54,
-                          width: 54,
-                          child: Lottie.asset('assets/animation/loader.json'),
-                        );
-                      }
-                      final message = messages[index];
+                      final message = state.messages[index];
                       final isUser = message.role == 'user';
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 12),
@@ -5456,32 +5238,20 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                   );
                 } else if (state is ChatErrorState) {
                   return Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Text(
-                        'Error: ${state.message}',
-                        style: const TextStyle(color: Colors.red, fontSize: 16),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  );
-                } else {
-                  // Initial or empty state
-                  return const Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.chat_bubble_outline,
-                            color: Colors.white54, size: 48),
-                        SizedBox(height: 16),
-                        Text(
-                          'Ask me anything!',
-                          style: TextStyle(color: Colors.white70, fontSize: 16),
-                        ),
-                      ],
+                    child: Text(
+                      state.message,
+                      style: const TextStyle(color: Colors.red),
                     ),
                   );
                 }
+                return Center(
+                  child: Lottie.asset(
+                    'assets/animation/Animation - 1750352180300.json',
+                    width: 120,
+                    height: 120,
+                    fit: BoxFit.contain,
+                  ),
+                );
               },
             ),
           ),

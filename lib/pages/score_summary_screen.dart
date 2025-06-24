@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../helpers/frq_manager.dart';
+import '../../frq_manager.dart';
 
 class ScoreSummaryScreen extends StatefulWidget {
   final String aiResponse;

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../helpers/frq_manager.dart';
+import '../frq_manager.dart';
 
 // Point values for AP CS A 2024 FRQ questions - matching the FRQ manager
 const Map<String, int> questionPointValues = {

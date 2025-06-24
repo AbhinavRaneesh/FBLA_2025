@@ -43,8 +43,7 @@ flutter:
 
   assets:
     - assets/images/
-    - assets/animation/
-    - assets/animation/Animation - 1750352180300.json
+    - assets/animations/
     - assets/icons/
     - assets/apfrq/
     - assets/images/planet.png

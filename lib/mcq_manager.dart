@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../helpers/frq_manager.dart' as frq;
-import '../helpers/database_helper.dart';
-import '../data/premade_study_sets.dart';
-import '../main.dart' as main;
+import 'frq_manager.dart' as frq;
+import 'database_helper.dart';
+import 'premade_study_sets.dart';
+import 'main.dart' as main;
 import 'package:flutter/services.dart';
 
 class MCQManager extends StatefulWidget {
@@ -3358,7 +3358,7 @@ class _MCQManagerState extends State<MCQManager> {
               ),
             ),
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 31),
+              padding: const EdgeInsets.all(16),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [

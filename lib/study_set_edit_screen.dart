@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:student_learning_app/helpers/frq_manager.dart';
-import '../helpers/database_helper.dart';
-import '../utils/constants.dart';
+import 'package:student_learning_app/frq_manager.dart';
+import 'database_helper.dart';
+import 'utils/constants.dart';
 
 class StudySetEditScreen extends StatefulWidget {
   final Map<String, dynamic> studySet;

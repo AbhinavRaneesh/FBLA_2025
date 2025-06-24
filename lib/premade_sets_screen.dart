@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../helpers/database_helper.dart';
-import '../data/premade_study_sets.dart';
-import '../main.dart';
+import 'database_helper.dart';
+import 'premade_study_sets.dart';
+import 'main.dart';
 
 class PremadeSetsScreen extends StatefulWidget {
   final String username;
