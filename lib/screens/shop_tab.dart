@@ -182,7 +182,7 @@ class _ShopTabState extends State<ShopTab>
                           ),
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 20, vertical: 12),
+                                horizontal: 16, vertical: 8),
                             decoration: BoxDecoration(
                               gradient: const LinearGradient(
                                 colors: [Color(0xFFFFD700), Color(0xFFFF8F00)],
@@ -203,14 +203,14 @@ class _ShopTabState extends State<ShopTab>
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 const Icon(Icons.diamond,
-                                    color: Colors.white, size: 22),
-                                const SizedBox(width: 8),
+                                    color: Colors.white, size: 18),
+                                const SizedBox(width: 6),
                                 Text(
                                   '${widget.userPoints}',
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 18,
+                                    fontSize: 16,
                                   ),
                                 ),
                               ],
@@ -542,7 +542,7 @@ class _ShopTabState extends State<ShopTab>
                   ),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 48),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [

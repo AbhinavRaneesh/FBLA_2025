@@ -28,6 +28,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final TextEditingController followupController = TextEditingController();
   final ScrollController _scrollController = ScrollController(); // For chat only
+  final TextEditingController _searchController = TextEditingController(); // Add search controller
   late final ChatBloc _chatBloc; // Create bloc instance here
   final DatabaseHelper _dbHelper = DatabaseHelper();
 
@@ -46,9 +47,13 @@ class _HomePageState extends State<HomePage> {
   bool showScoreSummary =
       false; // New variable to control score summary visibility
   bool isQuizActive = false; // New variable to track if quiz is active
-  String selectedSubject = "Chemistry";
+  String selectedSubject = "Linguistics";
   int numberOfQuestions = 10; // New variable for question count
   File? _userProfileImage; // Add profile image state
+
+  // Search functionality
+  List<String> filteredSubjects = [];
+  bool isSearching = false;
 
   // Powerup state variables
   Map<String, int> _userPowerups = {};
@@ -272,6 +277,43 @@ class _HomePageState extends State<HomePage> {
     _loadUsername(); // Load username when page initializes
     _loadUserProfileImage(); // Load profile image on init
     _loadUserPowerups(); // Load user powerups
+    
+    // Initialize filtered subjects
+    filteredSubjects = List.from(subjects);
+    
+    // Add search listener
+    _searchController.addListener(_onSearchChanged);
+  }
+
+  void _onSearchChanged() {
+    final query = _searchController.text.toLowerCase();
+    setState(() {
+      if (query.isEmpty) {
+        filteredSubjects = List.from(subjects);
+        isSearching = false;
+      } else {
+        filteredSubjects = subjects
+            .where((subject) => subject.toLowerCase().contains(query))
+            .toList();
+        isSearching = true;
+        
+        // Only auto-scroll if we have exactly one match or if the current selection doesn't match the search
+        if (filteredSubjects.isNotEmpty) {
+          final firstMatch = filteredSubjects.first;
+          final currentMatchesSearch = selectedSubject.toLowerCase().contains(query);
+          
+          // Only change if we have exactly one match or if current selection doesn't match
+          if (filteredSubjects.length == 1 || !currentMatchesSearch) {
+            selectedSubject = firstMatch;
+          }
+        } else {
+          // If no matches found, keep the current selection but ensure it's valid
+          if (!subjects.contains(selectedSubject)) {
+            selectedSubject = subjects.isNotEmpty ? subjects.first : "Chemistry";
+          }
+        }
+      }
+    });
   }
 
   Future<void> _loadUsername() async {
@@ -303,6 +345,7 @@ class _HomePageState extends State<HomePage> {
   @override
   void dispose() {
     _scrollController.dispose();
+    _searchController.dispose();
     _chatBloc.close(); // Don't forget to close the bloc
     super.dispose();
   }
@@ -1240,23 +1283,188 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
                 ],
               ),
               const SizedBox(height: 20),
-              Opacity(
-                opacity: isQuizActive ? 0.5 : 1.0,
-                child: SizedBox(
-                  height: 200,
-                  child: HorizontalSubjectWheel(
-                    subjects: subjects,
-                    selectedSubject: selectedSubject,
-                    onSubjectSelected: isQuizActive
-                        ? null
-                        : (subject) {
-                            setState(() {
-                              selectedSubject = subject;
-                            });
-                          },
+              
+              // Beautiful Search Bar
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 10),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.white.withOpacity(0.15),
+                      Colors.white.withOpacity(0.05),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.2),
+                    width: 1,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: TextField(
+                  controller: _searchController,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: 'Search for a subject...',
+                    hintStyle: TextStyle(
+                      color: Colors.white.withOpacity(0.6),
+                      fontSize: 16,
+                    ),
+                    prefixIcon: Container(
+                      margin: const EdgeInsets.all(8),
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            const Color(0xFF667eea),
+                            const Color(0xFF764ba2),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        isSearching ? Icons.search : Icons.search,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ),
+                    suffixIcon: _searchController.text.isNotEmpty
+                        ? IconButton(
+                            icon: Icon(
+                              Icons.clear,
+                              color: Colors.white.withOpacity(0.7),
+                            ),
+                            onPressed: () {
+                              _searchController.clear();
+                            },
+                          )
+                        : null,
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 16,
+                    ),
                   ),
                 ),
               ),
+              
+              const SizedBox(height: 25),
+              
+              // Enhanced Subject Wheel
+              Opacity(
+                opacity: isQuizActive ? 0.5 : 1.0,
+                child: Container(
+                  height: 220,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.white.withOpacity(0.1),
+                        Colors.white.withOpacity(0.05),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.1),
+                      width: 1,
+                    ),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: HorizontalSubjectWheel(
+                      subjects: filteredSubjects.isEmpty ? subjects : filteredSubjects,
+                      selectedSubject: selectedSubject,
+                      onSubjectSelected: isQuizActive
+                          ? null
+                          : (subject) {
+                              setState(() {
+                                selectedSubject = subject;
+                              });
+                            },
+                    ),
+                  ),
+                ),
+              ),
+              
+              // Search results indicator
+              if (isSearching && filteredSubjects.isNotEmpty)
+                Container(
+                  margin: const EdgeInsets.only(top: 15),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF4CAF50).withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(15),
+                    border: Border.all(
+                      color: const Color(0xFF4CAF50).withOpacity(0.3),
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.check_circle,
+                        color: const Color(0xFF4CAF50),
+                        size: 18,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Found ${filteredSubjects.length} subject${filteredSubjects.length == 1 ? '' : 's'}',
+                        style: TextStyle(
+                          color: const Color(0xFF4CAF50),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              
+              if (isSearching && filteredSubjects.isEmpty)
+                Container(
+                  margin: const EdgeInsets.only(top: 15),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFF6B6B).withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(15),
+                    border: Border.all(
+                      color: const Color(0xFFFF6B6B).withOpacity(0.3),
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.search_off,
+                        color: const Color(0xFFFF6B6B),
+                        size: 18,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'No subjects found matching "${_searchController.text}"',
+                        style: TextStyle(
+                          color: const Color(0xFFFF6B6B),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               const SizedBox(height: 20),
               const Text(
                 'Number of Questions',
@@ -2570,9 +2778,10 @@ class _HorizontalSubjectWheelState extends State<HorizontalSubjectWheel>
   late FixedExtentScrollController _scrollController;
   late AnimationController _animationController;
   int _selectedIndex = 0;
+  bool _isProgrammaticallyScrolling = false; // Add flag to prevent unnecessary scrolling
   
-  // For infinite scrolling, we'll repeat the subjects multiple times
-  static const int _repeatCount = 5; // Repeat subjects 5 times for smooth infinite scrolling
+  // For infinite scrolling, we'll repeat the subjects only once
+  static const int _repeatCount = 1; // Repeat subjects only once for cleaner display
   late List<String> _repeatedSubjects;
 
   final List<Color> _gradients = [
@@ -2628,15 +2837,69 @@ class _HorizontalSubjectWheelState extends State<HorizontalSubjectWheel>
     _repeatedSubjects = List.generate(_repeatCount, (index) => widget.subjects).expand((subjects) => subjects).toList();
     
     _selectedIndex = widget.subjects.indexOf(widget.selectedSubject);
-    if (_selectedIndex == -1) _selectedIndex = 0;
+    if (_selectedIndex == -1 || _selectedIndex >= widget.subjects.length) {
+      _selectedIndex = widget.subjects.isNotEmpty ? 0 : 0;
+    }
     
-    // Set initial position to the middle of the repeated list
-    int initialPosition = (_repeatedSubjects.length ~/ 2) + _selectedIndex;
+    // Set initial position to the selected subject
+    int initialPosition = _selectedIndex;
     
     // Set initial position after the widget is built
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _scrollController.jumpToItem(initialPosition);
+      if (_repeatedSubjects.isNotEmpty && initialPosition < _repeatedSubjects.length) {
+        try {
+          _scrollController.jumpToItem(initialPosition);
+        } catch (e) {
+          // Fallback to first item if there's an error
+          if (_repeatedSubjects.isNotEmpty) {
+            _scrollController.jumpToItem(0);
+          }
+        }
+      }
     });
+  }
+
+  @override
+  void didUpdateWidget(HorizontalSubjectWheel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    
+    // Update repeated subjects if the subjects list changed
+    if (oldWidget.subjects != widget.subjects) {
+      _repeatedSubjects = List.generate(_repeatCount, (index) => widget.subjects).expand((subjects) => subjects).toList();
+      
+      // Ensure selected index is valid after subjects change
+      if (_selectedIndex >= widget.subjects.length) {
+        _selectedIndex = widget.subjects.isNotEmpty ? 0 : 0;
+      }
+    }
+    
+    // If selected subject changed and it's not the same as current, scroll to it
+    if (oldWidget.selectedSubject != widget.selectedSubject && 
+        _selectedIndex < widget.subjects.length &&
+        widget.selectedSubject != widget.subjects[_selectedIndex]) {
+      _scrollToSubject(widget.selectedSubject);
+    }
+  }
+
+  void _scrollToSubject(String subject) {
+    final index = widget.subjects.indexOf(subject);
+    if (index != -1 && index != _selectedIndex && index < widget.subjects.length) {
+      _isProgrammaticallyScrolling = true;
+      final targetPosition = index;
+      
+      // Ensure target position is within bounds
+      if (targetPosition >= 0 && targetPosition < _repeatedSubjects.length) {
+        _scrollController.animateToItem(
+          targetPosition,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOutCubic,
+        ).then((_) {
+          _isProgrammaticallyScrolling = false;
+        });
+      } else {
+        _isProgrammaticallyScrolling = false;
+      }
+    }
   }
 
   @override
@@ -2647,8 +2910,17 @@ class _HorizontalSubjectWheelState extends State<HorizontalSubjectWheel>
   }
 
   void _onSelectedItemChanged(int index) {
+    // Don't trigger if we're programmatically scrolling
+    if (_isProgrammaticallyScrolling) return;
+    
+    // Ensure index is within bounds
+    if (index < 0 || index >= _repeatedSubjects.length) return;
+    
     // Map the repeated index back to the original subject index
     int originalIndex = index % widget.subjects.length;
+    
+    // Ensure original index is within bounds
+    if (originalIndex < 0 || originalIndex >= widget.subjects.length) return;
     
     setState(() {
       _selectedIndex = originalIndex;
@@ -2671,18 +2943,19 @@ class _HorizontalSubjectWheelState extends State<HorizontalSubjectWheel>
           AnimatedBuilder(
             animation: _animationController,
             builder: (context, child) {
+              final gradientIndex = _selectedIndex % _gradients.length;
               return Container(
                 height: 50,
                 margin: const EdgeInsets.symmetric(horizontal: 25),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(15),
                   border: Border.all(
-                    color: _gradients[_selectedIndex % _gradients.length].withOpacity(0.8 + (_animationController.value * 0.2)),
+                    color: _gradients[gradientIndex].withOpacity(0.8 + (_animationController.value * 0.2)),
                     width: 2,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: _gradients[_selectedIndex % _gradients.length].withOpacity(0.4 + (_animationController.value * 0.3)),
+                      color: _gradients[gradientIndex].withOpacity(0.4 + (_animationController.value * 0.3)),
                       blurRadius: 15 + (_animationController.value * 8),
                       spreadRadius: 1 + (_animationController.value * 2),
                     ),
@@ -2711,6 +2984,10 @@ class _HorizontalSubjectWheelState extends State<HorizontalSubjectWheel>
                   final originalIndex = index % widget.subjects.length;
                   final isSelected = originalIndex == _selectedIndex;
                   
+                  // Ensure indices are within bounds
+                  final gradientIndex = originalIndex % _gradients.length;
+                  final iconIndex = originalIndex % _icons.length;
+                  
                   return AnimatedContainer(
                     duration: const Duration(milliseconds: 300),
                     curve: Curves.easeOutCubic,
@@ -2719,7 +2996,7 @@ class _HorizontalSubjectWheelState extends State<HorizontalSubjectWheel>
                       borderRadius: BorderRadius.circular(15),
                       gradient: LinearGradient(
                         colors: isSelected
-                            ? [_gradients[originalIndex % _gradients.length], _gradients[originalIndex % _gradients.length].withOpacity(0.7)]
+                            ? [_gradients[gradientIndex], _gradients[gradientIndex].withOpacity(0.7)]
                             : [Colors.white.withOpacity(0.15), Colors.white.withOpacity(0.05)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
@@ -2727,7 +3004,7 @@ class _HorizontalSubjectWheelState extends State<HorizontalSubjectWheel>
                       boxShadow: isSelected
                           ? [
                               BoxShadow(
-                                color: _gradients[originalIndex % _gradients.length].withOpacity(0.5),
+                                color: _gradients[gradientIndex].withOpacity(0.5),
                                 blurRadius: 15,
                                 offset: const Offset(0, 6),
                                 spreadRadius: 1,
@@ -2754,7 +3031,7 @@ class _HorizontalSubjectWheelState extends State<HorizontalSubjectWheel>
                                 : Colors.transparent,
                           ),
                           child: Icon(
-                            _icons[originalIndex % _icons.length],
+                            _icons[iconIndex],
                             color: isSelected ? Colors.white : Colors.white.withOpacity(0.6),
                             size: isSelected ? 30 : 26,
                           ),
