@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../helpers/database_helper.dart';
-import '../main.dart' show SpaceBackground;
+import '../main.dart'
+    show SpaceBackground, BeachBackground, getBackgroundForTheme;
 
 class ShopTab extends StatefulWidget {
   final String username;
@@ -60,11 +61,11 @@ class _ShopTabState extends State<ShopTab>
       'icon': Icons.rocket_launch,
     },
     {
-      'name': 'Ocean',
+      'name': 'Beach',
       'price': 100,
-      'color': const Color(0xFF006994),
-      'description': 'Deep ocean depths and waves',
-      'icon': Icons.waves,
+      'color': const Color(0xFFFF8A65),
+      'description': 'Warm sandy beaches and tropical vibes',
+      'icon': Icons.beach_access,
     },
     {
       'name': 'Forest',
@@ -114,14 +115,6 @@ class _ShopTabState extends State<ShopTab>
       'color': const Color(0xFF2196F3),
     },
     {
-      'id': 'extra_time',
-      'name': 'Extra Time',
-      'price': 20,
-      'description': 'Add 30 seconds to timer in timed mode',
-      'icon': Icons.access_time,
-      'color': const Color(0xFFFF9800),
-    },
-    {
       'id': 'double_points',
       'name': 'Double Points',
       'price': 50,
@@ -145,7 +138,7 @@ class _ShopTabState extends State<ShopTab>
     return Scaffold(
       body: Stack(
         children: [
-          const SpaceBackground(),
+          getBackgroundForTheme(widget.currentTheme),
           SafeArea(
             child: Column(
               children: [
@@ -308,9 +301,9 @@ class _ShopTabState extends State<ShopTab>
       child: GridView.builder(
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
-          crossAxisSpacing: 20,
-          mainAxisSpacing: 20,
-          childAspectRatio: 0.65,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
+          childAspectRatio: 0.8,
         ),
         itemCount: _themes.length,
         itemBuilder: (BuildContext context, int index) {
@@ -324,10 +317,11 @@ class _ShopTabState extends State<ShopTab>
               boxShadow: [
                 BoxShadow(
                   color: isEquipped
-                      ? const Color(0xFFFFD700).withOpacity(0.4)
-                      : Colors.black.withOpacity(0.2),
-                  blurRadius: isEquipped ? 15 : 10,
-                  offset: const Offset(0, 8),
+                      ? theme['color'].withOpacity(0.4)
+                      : Colors.black.withOpacity(0.15),
+                  blurRadius: isEquipped ? 20 : 8,
+                  offset: const Offset(0, 6),
+                  spreadRadius: isEquipped ? 2 : 0,
                 ),
               ],
             ),
@@ -335,9 +329,6 @@ class _ShopTabState extends State<ShopTab>
               elevation: 0,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
-                side: isEquipped
-                    ? const BorderSide(color: Color(0xFFFFD700), width: 3)
-                    : BorderSide.none,
               ),
               child: Container(
                 decoration: BoxDecoration(
@@ -350,139 +341,200 @@ class _ShopTabState extends State<ShopTab>
                       theme['color'].withOpacity(0.8),
                     ],
                   ),
+                  border: isEquipped
+                      ? Border.all(
+                          color: Colors.white.withOpacity(0.6),
+                          width: 2,
+                        )
+                      : null,
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: Icon(
-                              theme['icon'],
-                              size: 32,
-                              color: Colors.white,
-                            ),
+                child: Stack(
+                  children: [
+                    if (isEquipped)
+                      Positioned(
+                        top: 12,
+                        right: 12,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
                           ),
-                          const SizedBox(height: 12),
-                          Text(
-                            theme['name'],
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            theme['description'],
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: Colors.white.withOpacity(0.9),
-                              height: 1.3,
-                            ),
-                            maxLines: 3,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      if (isEquipped)
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFFFD700),
+                            color: Colors.white.withOpacity(0.9),
                             borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Text(
-                            'EQUIPPED',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 1,
-                            ),
-                          ),
-                        )
-                      else if (theme['price'] == 0)
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () =>
-                                _selectTheme(theme['name'].toLowerCase()),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF4CAF50),
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.2),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
                               ),
-                              elevation: 4,
-                            ),
-                            child: const Text(
-                              'SELECT',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 1,
-                              ),
-                            ),
+                            ],
                           ),
-                        )
-                      else
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed:
-                                canAfford ? () => _purchaseTheme(theme) : null,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: canAfford
-                                  ? theme['color']
-                                  : Colors.grey.shade600,
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.check_circle,
+                                color: theme['color'],
+                                size: 14,
                               ),
-                              elevation: canAfford ? 4 : 0,
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.diamond,
-                                  size: 18,
-                                  color:
-                                      canAfford ? Colors.white : Colors.white70,
+                              const SizedBox(width: 4),
+                              Text(
+                                'EQUIPPED',
+                                style: TextStyle(
+                                  color: theme['color'],
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 0.5,
                                 ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  '${theme['price']}',
-                                  style: TextStyle(
-                                    color: canAfford
-                                        ? Colors.white
-                                        : Colors.white70,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ),
-                    ],
-                  ),
+                      ),
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(14),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Icon(
+                                  theme['icon'],
+                                  size: 28,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              Text(
+                                theme['name'],
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                  letterSpacing: 0.5,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                theme['description'],
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white.withOpacity(0.9),
+                                  height: 1.3,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          if (isEquipped)
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: Colors.white.withOpacity(0.3),
+                                  width: 1,
+                                ),
+                              ),
+                              child: const Text(
+                                'CURRENTLY ACTIVE',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 0.8,
+                                ),
+                              ),
+                            )
+                          else if (theme['price'] == 0)
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: () =>
+                                    _selectTheme(theme['name'].toLowerCase()),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor:
+                                      theme['color'].withOpacity(0.15),
+                                  foregroundColor: Colors.white,
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 10),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  elevation: 0,
+                                ),
+                                child: const Text(
+                                  'SELECT',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 0.8,
+                                  ),
+                                ),
+                              ),
+                            )
+                          else
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: canAfford
+                                    ? () => _purchaseTheme(theme)
+                                    : null,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: canAfford
+                                      ? theme['color'].withOpacity(0.15)
+                                      : Colors.grey.shade600.withOpacity(0.8),
+                                  foregroundColor: Colors.white,
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 10),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  elevation: 0,
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(
+                                      Icons.diamond,
+                                      size: 16,
+                                      color: Colors.white,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      '${theme['price']}',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -498,9 +550,9 @@ class _ShopTabState extends State<ShopTab>
       child: GridView.builder(
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
-          crossAxisSpacing: 20,
-          mainAxisSpacing: 20,
-          childAspectRatio: 0.65,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
+          childAspectRatio: 0.8,
         ),
         itemCount: _powerups.length,
         itemBuilder: (BuildContext context, int index) {
@@ -513,12 +565,13 @@ class _ShopTabState extends State<ShopTab>
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: powerup['color'].withOpacity(0.3),
-                  blurRadius: 12,
-                  offset: const Offset(0, 8),
+                  color: powerup['color'].withOpacity(0.4),
+                  blurRadius: 20,
+                  offset: const Offset(0, 6),
+                  spreadRadius: 2,
                 ),
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: Colors.black.withOpacity(0.15),
                   blurRadius: 8,
                   offset: const Offset(0, 4),
                 ),
@@ -540,130 +593,47 @@ class _ShopTabState extends State<ShopTab>
                       powerup['color'].withOpacity(0.8),
                     ],
                   ),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.3),
+                    width: 1,
+                  ),
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 48),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        children: [
-                          Stack(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.2),
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                child: Icon(
-                                  powerup['icon'],
-                                  size: 32,
-                                  color: Colors.white,
-                                ),
+                child: Stack(
+                  children: [
+                    if (userCount > 0)
+                      Positioned(
+                        top: 12,
+                        right: 12,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.9),
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.2),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
                               ),
-                              if (userCount > 0)
-                                Positioned(
-                                  right: -4,
-                                  top: -4,
-                                  child: Container(
-                                    padding: const EdgeInsets.all(6),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFF4CAF50),
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(
-                                          color: Colors.white, width: 2),
-                                    ),
-                                    child: Text(
-                                      '$userCount',
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ),
                             ],
                           ),
-                          const SizedBox(height: 12),
-                          Text(
-                            powerup['name'],
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                            textAlign: TextAlign.center,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            powerup['description'],
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: Colors.white.withOpacity(0.9),
-                              height: 1.3,
-                            ),
-                            maxLines: 3,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      if (userCount > 0)
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          margin: const EdgeInsets.only(bottom: 8),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF4CAF50).withOpacity(0.9),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Text(
-                            'Owned: $userCount',
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: canAfford
-                              ? () => _purchasePowerup(powerup)
-                              : null,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: canAfford
-                                ? powerup['color']
-                                : Colors.grey.shade600,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            elevation: canAfford ? 4 : 0,
-                          ),
                           child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(
-                                Icons.diamond,
-                                size: 18,
-                                color:
-                                    canAfford ? Colors.white : Colors.white70,
+                                Icons.inventory,
+                                color: powerup['color'],
+                                size: 14,
                               ),
-                              const SizedBox(width: 6),
+                              const SizedBox(width: 4),
                               Text(
-                                '${powerup['price']}',
+                                '$userCount',
                                 style: TextStyle(
-                                  color:
-                                      canAfford ? Colors.white : Colors.white70,
-                                  fontSize: 14,
+                                  color: powerup['color'],
+                                  fontSize: 12,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -671,8 +641,127 @@ class _ShopTabState extends State<ShopTab>
                           ),
                         ),
                       ),
-                    ],
-                  ),
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(14),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Icon(
+                                  powerup['icon'],
+                                  size: 28,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              Text(
+                                powerup['name'],
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                  letterSpacing: 0.5,
+                                ),
+                                textAlign: TextAlign.center,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                powerup['description'],
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.white.withOpacity(0.9),
+                                  height: 1.3,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Column(
+                            children: [
+                              if (userCount > 0)
+                                Container(
+                                  width: double.infinity,
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 6),
+                                  margin: const EdgeInsets.only(bottom: 6),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.2),
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(
+                                      color: Colors.white.withOpacity(0.3),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    'Owned: $userCount',
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                                ),
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton(
+                                  onPressed: canAfford
+                                      ? () => _purchasePowerup(powerup)
+                                      : null,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: canAfford
+                                        ? powerup['color'].withOpacity(0.15)
+                                        : Colors.grey.shade600.withOpacity(0.8),
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 10),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    elevation: 0,
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Icon(
+                                        Icons.diamond,
+                                        size: 16,
+                                        color: Colors.white,
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        '${powerup['price']}',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                          letterSpacing: 0.5,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),

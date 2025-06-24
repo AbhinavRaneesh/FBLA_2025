@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../helpers/frq_manager.dart' as frq;
+import '../main.dart' show getBackgroundForTheme;
 import '../helpers/database_helper.dart';
 import '../data/premade_study_sets.dart';
 import '../main.dart' as main;
@@ -33,6 +34,7 @@ class _MCQManagerState extends State<MCQManager> {
   int currentQuestionIndex = 0;
   int currentScore = 0;
   int currentPoints = 0;
+  int quizPointsEarned = 0; // Track points earned in this quiz session
   bool showResults = false;
   Map<int, int> userAnswers = {};
   Map<int, int> submittedAnswers = {};
@@ -3254,7 +3256,7 @@ class _MCQManagerState extends State<MCQManager> {
       ),
       body: Stack(
         children: [
-          const frq.SpaceBackground(),
+          getBackgroundForTheme(widget.currentTheme),
           SafeArea(
             child: Column(
               children: [
@@ -3730,14 +3732,18 @@ class _MCQManagerState extends State<MCQManager> {
                                 if (answer == currentQuestion['correct']) {
                                   currentScore++;
                                   currentPoints +=
-                                      10; // Update points immediately
+                                      15; // Update points immediately
+                                  quizPointsEarned += 15; // Track quiz points
+                                } else {
+                                  currentPoints -=
+                                      5; // Deduct points for wrong answer
+                                  quizPointsEarned -= 5; // Track quiz points
                                 }
                               }
                             });
-                            // Award 10 points for a correct answer
+                            // Update points for both correct and incorrect answers
                             final answer = userAnswers[currentQuestionIndex];
-                            if (answer != null &&
-                                answer == currentQuestion['correct']) {
+                            if (answer != null) {
                               await _dbHelper.updateUserPoints(
                                   widget.username, currentPoints);
                               if (widget.onPointsUpdated != null) {
@@ -3902,7 +3908,7 @@ class _MCQManagerState extends State<MCQManager> {
                       const Icon(Icons.diamond, color: Colors.white, size: 24),
                       const SizedBox(width: 8),
                       Text(
-                        'Earned ${currentScore * 10} points!',
+                        'Earned ${quizPointsEarned} points!',
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -3936,6 +3942,7 @@ class _MCQManagerState extends State<MCQManager> {
                           selectedSubject = null;
                           currentQuestionIndex = 0;
                           currentScore = 0;
+                          quizPointsEarned = 0;
                           showResults = false;
                           userAnswers.clear();
                           submittedAnswers.clear();
@@ -3953,6 +3960,7 @@ class _MCQManagerState extends State<MCQManager> {
                         setState(() {
                           currentQuestionIndex = 0;
                           currentScore = 0;
+                          quizPointsEarned = 0;
                           showResults = false;
                           userAnswers.clear();
                           submittedAnswers.clear();

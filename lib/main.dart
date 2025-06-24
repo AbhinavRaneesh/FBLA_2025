@@ -23,8 +23,8 @@ import 'data/questions.dart' as quiz;
 import 'screens/premade_sets_screen.dart';
 import 'data/premade_study_sets.dart' as premade;
 import 'package:student_learning_app/screens/quick_play_screen.dart';
-import 'package:student_learning_app/bloc/chat_bloc.dart';
-import 'package:student_learning_app/models/chat_message_model.dart';
+import 'package:student_learning_app/ai/bloc/chat_bloc.dart';
+import 'package:student_learning_app/ai/models/chat_message_model.dart';
 import 'screens/browse_sets_screen.dart';
 import 'helpers/frq_manager.dart';
 import 'screens/study_set_edit_screen.dart';
@@ -314,17 +314,21 @@ class _FlappyBirdGameScreenState extends State<FlappyBirdGameScreen> {
       builder: (BuildContext context) => Theme(
         data: Theme.of(context).copyWith(
           dialogBackgroundColor: widget.currentTheme == 'beach'
-              ? Colors.orange.withOpacity(0.9)
-              : const Color(0xFF1D1E33),
+              ? ThemeColors.getSecondaryColor('beach')
+              : ThemeColors.getSecondaryColor(widget.currentTheme),
           textTheme: Theme.of(context).textTheme.copyWith(
                 titleLarge: TextStyle(
-                  fontSize: 28, // Larger title
+                  fontSize: 28,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black, // Always black
+                  color: widget.currentTheme == 'beach'
+                      ? Colors.brown.shade800
+                      : Colors.white,
                 ),
                 bodyMedium: TextStyle(
-                  fontSize: 22, // Larger body text
-                  color: Colors.black, // Always black
+                  fontSize: 22,
+                  color: widget.currentTheme == 'beach'
+                      ? Colors.brown.shade700
+                      : Colors.white,
                 ),
               ),
         ),
@@ -334,7 +338,9 @@ class _FlappyBirdGameScreenState extends State<FlappyBirdGameScreen> {
             style: TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.bold,
-              color: Colors.black, // Always black
+              color: widget.currentTheme == 'beach'
+                  ? Colors.brown.shade800
+                  : Colors.white,
             ),
           ),
           content: SizedBox(
@@ -350,7 +356,9 @@ class _FlappyBirdGameScreenState extends State<FlappyBirdGameScreen> {
                       'Your score: $score',
                       style: TextStyle(
                         fontSize: 22,
-                        color: Colors.black, // Always black
+                        color: widget.currentTheme == 'beach'
+                            ? Colors.brown.shade700
+                            : Colors.white,
                       ),
                     ),
                   ],
@@ -368,7 +376,9 @@ class _FlappyBirdGameScreenState extends State<FlappyBirdGameScreen> {
                 'OK',
                 style: TextStyle(
                   fontSize: 20,
-                  color: Colors.black, // Always black
+                  color: widget.currentTheme == 'beach'
+                      ? Colors.brown.shade800
+                      : Colors.white,
                 ),
               ),
             ),
@@ -387,8 +397,8 @@ class _FlappyBirdGameScreenState extends State<FlappyBirdGameScreen> {
       builder: (BuildContext context) => Theme(
         data: Theme.of(context).copyWith(
           dialogBackgroundColor: widget.currentTheme == 'beach'
-              ? Colors.orange.withOpacity(0.9)
-              : const Color(0xFF1D1E33),
+              ? ThemeColors.getSecondaryColor('beach')
+              : ThemeColors.getSecondaryColor(widget.currentTheme),
           textTheme: Theme.of(context).textTheme.copyWith(
                 titleLarge: TextStyle(
                   fontSize: 28, // Larger title
@@ -407,7 +417,9 @@ class _FlappyBirdGameScreenState extends State<FlappyBirdGameScreen> {
             style: TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.bold,
-              color: Colors.black, // Always black
+              color: widget.currentTheme == 'beach'
+                  ? Colors.brown.shade800
+                  : Colors.white,
             ),
           ),
           content: SizedBox(
@@ -422,8 +434,10 @@ class _FlappyBirdGameScreenState extends State<FlappyBirdGameScreen> {
                     Text(
                       widget.questions[currentQuestionIndex].questionText,
                       style: TextStyle(
-                        fontSize: 22, // Larger question text
-                        color: Colors.black, // Always black
+                        fontSize: 22,
+                        color: widget.currentTheme == 'beach'
+                            ? Colors.brown.shade700
+                            : Colors.white,
                       ),
                     ),
                     const SizedBox(height: 12), // Add spacing
@@ -454,16 +468,17 @@ class _FlappyBirdGameScreenState extends State<FlappyBirdGameScreen> {
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor:
                                       widget.currentTheme == 'beach'
-                                          ? Colors.orange
-                                          : Colors.blueAccent,
-                                  padding: const EdgeInsets.symmetric(
-                                      vertical: 16), // Larger button padding
+                                          ? ThemeColors.getButtonColor('beach')
+                                          : ThemeColors.getButtonColor(
+                                              widget.currentTheme),
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 16),
                                 ),
                                 child: Text(
                                   option,
                                   style: TextStyle(
-                                    fontSize: 20, // Larger button text
-                                    color: Colors.black, // Always black
+                                    fontSize: 20,
+                                    color: Colors.white,
                                   ),
                                 ),
                               ),
@@ -488,19 +503,12 @@ class _FlappyBirdGameScreenState extends State<FlappyBirdGameScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: widget.currentTheme == 'beach'
-          ? Colors.orange.withOpacity(0.1)
-          : const Color(0xFF1A1A2E),
+          ? ThemeColors.getPrimaryColor('beach').withOpacity(0.1)
+          : ThemeColors.getPrimaryColor(widget.currentTheme),
       body: Stack(
         children: [
           // Background
-          widget.currentTheme == 'beach'
-              ? Image.asset(
-                  'assets/images/beach.jpg',
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  height: double.infinity,
-                )
-              : const SpaceBackground(),
+          getBackgroundForTheme(widget.currentTheme),
 
           // Bird
           Positioned(
@@ -548,8 +556,24 @@ class _FlappyBirdGameScreenState extends State<FlappyBirdGameScreen> {
               style: TextStyle(
                 fontSize: 24,
                 color: widget.currentTheme == 'beach'
-                    ? Colors.black
+                    ? Colors.brown.shade900
                     : Colors.white,
+                fontWeight: FontWeight.bold,
+                shadows: widget.currentTheme == 'beach'
+                    ? [
+                        Shadow(
+                          offset: const Offset(1, 1),
+                          blurRadius: 2,
+                          color: Colors.white.withOpacity(0.8),
+                        ),
+                      ]
+                    : [
+                        Shadow(
+                          offset: const Offset(1, 1),
+                          blurRadius: 2,
+                          color: Colors.black.withOpacity(0.8),
+                        ),
+                      ],
               ),
             ),
           ),
@@ -598,6 +622,144 @@ class SpaceBackground extends StatelessWidget {
   }
 }
 
+class BeachBackground extends StatelessWidget {
+  const BeachBackground({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Color(0xFFFFE0B2), // Light sandy color
+            Color(0xFFFF8A65), // Warm orange
+            Color(0xFF81C784), // Ocean green
+          ],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          stops: [0.3, 0.7, 1.0],
+        ),
+      ),
+      child: Stack(
+        children: [
+          // Floating sand particles
+          for (int i = 0; i < 30; i++)
+            Positioned(
+              left: Random().nextDouble() * MediaQuery.of(context).size.width,
+              top: Random().nextDouble() * MediaQuery.of(context).size.height,
+              child: AnimatedContainer(
+                duration: Duration(seconds: Random().nextInt(4) + 2),
+                width: Random().nextDouble() * 3 + 1,
+                height: Random().nextDouble() * 3 + 1,
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.6),
+                  shape: BoxShape.circle,
+                ),
+                onEnd: () {
+                  // Restart animation
+                },
+              ),
+            ),
+          // Sun rays effect
+          for (int i = 0; i < 8; i++)
+            Positioned(
+              right: -50 + (i * 10),
+              top: 50 + (i * 15),
+              child: Container(
+                width: 100,
+                height: 2,
+                decoration: BoxDecoration(
+                  color: Colors.yellow.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(1),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+// Theme helper function
+Widget getBackgroundForTheme(String theme) {
+  switch (theme) {
+    case 'beach':
+      return const BeachBackground();
+    case 'space':
+    default:
+      return const SpaceBackground();
+  }
+}
+
+// Theme colors helper
+class ThemeColors {
+  static Color getPrimaryColor(String theme) {
+    switch (theme) {
+      case 'beach':
+        return const Color(0xFFFF8A65);
+      case 'forest':
+        return const Color(0xFF2E7D32);
+      case 'sunset':
+        return const Color(0xFFFF6D00);
+      case 'purple':
+        return const Color(0xFF6A1B9A);
+      case 'dark':
+        return const Color(0xFF121212);
+      case 'space':
+      default:
+        return const Color(0xFF0A0E21);
+    }
+  }
+
+  static Color getSecondaryColor(String theme) {
+    switch (theme) {
+      case 'beach':
+        return const Color(0xFFFFE0B2);
+      case 'forest':
+        return const Color(0xFF4CAF50);
+      case 'sunset':
+        return const Color(0xFFFFC107);
+      case 'purple':
+        return const Color(0xFF9C27B0);
+      case 'dark':
+        return const Color(0xFF424242);
+      case 'space':
+      default:
+        return const Color(0xFF1D1E33);
+    }
+  }
+
+  static Color getTextColor(String theme) {
+    switch (theme) {
+      case 'beach':
+        return Colors.brown.shade800;
+      case 'dark':
+        return Colors.white;
+      case 'space':
+      default:
+        return Colors.white;
+    }
+  }
+
+  static Color getButtonColor(String theme) {
+    switch (theme) {
+      case 'beach':
+        return const Color(0xFFFF7043);
+      case 'forest':
+        return const Color(0xFF66BB6A);
+      case 'sunset':
+        return const Color(0xFFFF9800);
+      case 'purple':
+        return const Color(0xFFBA68C8);
+      case 'dark':
+        return const Color(0xFF757575);
+      case 'space':
+      default:
+        return Colors.blueAccent;
+    }
+  }
+}
+
 class GameButton extends StatelessWidget {
   final String text;
   final VoidCallback? onPressed;
@@ -616,14 +778,14 @@ class GameButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Color backgroundColor = const Color(0xFF1D1E33);
-    Color borderColor = Colors.blueAccent;
-    Color textColor = Colors.white;
+    Color backgroundColor = ThemeColors.getSecondaryColor(currentTheme);
+    Color borderColor = ThemeColors.getButtonColor(currentTheme);
+    Color textColor = ThemeColors.getTextColor(currentTheme);
 
     if (currentTheme == 'beach') {
-      backgroundColor = Colors.orange.withOpacity(0.2);
-      borderColor = Colors.orange;
-      textColor = Colors.black;
+      backgroundColor = const Color(0xFFFFE0B2).withOpacity(0.8);
+      borderColor = const Color(0xFFFF7043);
+      textColor = Colors.brown.shade800;
     }
 
     if (isSelected && isCorrect != null) {
@@ -637,13 +799,12 @@ class GameButton extends StatelessWidget {
     }
 
     return Container(
-      width: MediaQuery.of(context).size.width * 0.9, // Adjust width
+      width: MediaQuery.of(context).size.width * 0.9,
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
           backgroundColor: backgroundColor,
-          padding: const EdgeInsets.symmetric(
-              vertical: 15, horizontal: 20), // Adjust padding
+          padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
             side: BorderSide(color: borderColor, width: 2),
@@ -653,7 +814,7 @@ class GameButton extends StatelessWidget {
         child: Text(
           text,
           style: TextStyle(
-            fontSize: 16, // Adjust font size
+            fontSize: 16,
             color: textColor,
             fontWeight: FontWeight.bold,
           ),
@@ -876,7 +1037,7 @@ class _SignInPageState extends State<SignInPage>
     return Scaffold(
       body: Stack(
         children: [
-          const SpaceBackground(),
+          getBackgroundForTheme('space'),
           SafeArea(
             child: Center(
               child: SingleChildScrollView(
@@ -1281,7 +1442,7 @@ class _SignUpPageState extends State<SignUpPage>
     return Scaffold(
       body: Stack(
         children: [
-          const SpaceBackground(),
+          getBackgroundForTheme('space'),
           SafeArea(
             child: Center(
               child: SingleChildScrollView(
@@ -1609,9 +1770,14 @@ class _MainScreenState extends State<MainScreen> {
         onTap: _onTabTapped,
         currentIndex: _currentIndex,
         type: BottomNavigationBarType.fixed,
-        backgroundColor: const Color(0xFF1D1E33),
-        selectedItemColor: Colors.blueAccent,
-        unselectedItemColor: Colors.white70,
+        backgroundColor: _currentTheme == 'beach'
+            ? ThemeColors.getPrimaryColor('beach')
+            : const Color(0xFF1D1E33),
+        selectedItemColor:
+            _currentTheme == 'beach' ? Colors.white : Colors.blueAccent,
+        unselectedItemColor: _currentTheme == 'beach'
+            ? Colors.white.withOpacity(0.7)
+            : Colors.white70,
         elevation: 20,
         selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
         items: const [
@@ -1770,7 +1936,7 @@ class _LearnTabState extends State<LearnTab>
     return Scaffold(
       body: Stack(
         children: [
-          const SpaceBackground(),
+          getBackgroundForTheme(widget.currentTheme),
           SafeArea(
             child: Column(
               children: [
@@ -2117,7 +2283,7 @@ class _LearnTabState extends State<LearnTab>
       username: widget.username,
       onSetImported: _loadStudySets,
       studySet: {}, // Empty map for browse tab
-      currentTheme: 'default', // Default theme for browse tab
+      currentTheme: widget.currentTheme,
     );
   }
 
@@ -2652,6 +2818,7 @@ class _LearnTabState extends State<LearnTab>
         builder: (context) => StudySetEditScreen(
           studySet: studySet,
           username: widget.username,
+          currentTheme: widget.currentTheme,
           onStudySetUpdated: _loadStudySets,
         ),
       ),
@@ -2784,7 +2951,7 @@ class _ProfileTabState extends State<ProfileTab>
     return Scaffold(
       body: Stack(
         children: [
-          const SpaceBackground(),
+          getBackgroundForTheme(widget.currentTheme),
           SafeArea(
             child: SingleChildScrollView(
               child: Padding(
@@ -3232,7 +3399,7 @@ class StudySetCreationOptionsScreen extends StatelessWidget {
       ),
       body: Stack(
         children: [
-          const SpaceBackground(),
+          getBackgroundForTheme('space'),
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(20),
@@ -3650,7 +3817,7 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
     ScaffoldMessenger.of(this.context).showSnackBar(
       const SnackBar(
         content: Text(
-            'Double Points activated! Next correct answer worth 20 points.'),
+            'Double Points activated! Next correct answer worth 30 points.'),
         backgroundColor: Colors.purple,
       ),
     );
@@ -3674,7 +3841,8 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
     final options = currentQuestion['options'].split('|');
 
     // Create the prompt for AI
-    String prompt = "Question: $questionText\nOptions: ${options.join(', ')}\n\nGive a helpful hint for this question. Only provide the hint, no other text.";
+    String prompt =
+        "Question: $questionText\nOptions: ${options.join(', ')}\n\nGive a helpful hint for this question. Only provide the hint, no other text.";
 
     // Show loading dialog
     showDialog(
@@ -3747,7 +3915,8 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
             responseReceived = true;
             subscription?.cancel();
             Navigator.of(this.context).pop(); // Close loading dialog
-            _showHintDialog("Sorry, I couldn't generate a hint right now. Please try again.");
+            _showHintDialog(
+                "Sorry, I couldn't generate a hint right now. Please try again.");
           }
         }
       });
@@ -3757,13 +3926,14 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
         if (!responseReceived) {
           subscription?.cancel();
           Navigator.of(this.context).pop(); // Close loading dialog
-          _showHintDialog("Sorry, the hint request timed out. Please try again.");
+          _showHintDialog(
+              "Sorry, the hint request timed out. Please try again.");
         }
       });
-
     } catch (e) {
       Navigator.of(this.context).pop(); // Close loading dialog
-      _showHintDialog("Sorry, I couldn't generate a hint right now. Please try again.");
+      _showHintDialog(
+          "Sorry, I couldn't generate a hint right now. Please try again.");
     }
   }
 
@@ -3908,13 +4078,16 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
           _questions[_currentQuestionIndex]['correct_answer']) {
         _correctAnswers++;
         // Award points for correct answer
-        int pointsToAward = _doublePointsActive ? 20 : 10;
+        int pointsToAward = _doublePointsActive ? 30 : 15;
         _updatePoints(pointsToAward);
 
         // Reset double points after use
         if (_doublePointsActive) {
           _doublePointsActive = false;
         }
+      } else {
+        // Deduct points for wrong answer
+        _updatePoints(-5);
       }
     });
   }
@@ -3985,7 +4158,7 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
     return Scaffold(
       body: Stack(
         children: [
-          const SpaceBackground(),
+          getBackgroundForTheme('space'),
           SafeArea(
             child: _isLoading
                 ? const Center(
@@ -5638,7 +5811,11 @@ class _QuizScreenState extends State<QuizScreen> {
 
     if (answer == widget.questions[currentQuestionIndex].correctAnswer) {
       setState(() {
-        score += 10;
+        score += 15;
+      });
+    } else {
+      setState(() {
+        score -= 5;
       });
     }
 
@@ -5735,7 +5912,7 @@ class _QuizScreenState extends State<QuizScreen> {
       ),
       body: Stack(
         children: [
-          const SpaceBackground(),
+          getBackgroundForTheme('space'),
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(24),
@@ -6334,7 +6511,7 @@ class _QuizletImportScreenState extends State<QuizletImportScreen> {
       ),
       body: Stack(
         children: [
-          const SpaceBackground(),
+          getBackgroundForTheme('space'),
           _isLoading
               ? const Center(
                   child: CircularProgressIndicator(
@@ -6784,7 +6961,7 @@ class _SpreadsheetImportScreenState extends State<SpreadsheetImportScreen> {
       ),
       body: Stack(
         children: [
-          const SpaceBackground(),
+          getBackgroundForTheme('space'),
           _isLoading
               ? const Center(
                   child: CircularProgressIndicator(
@@ -7217,7 +7394,7 @@ class _ManualQuestionCreationScreenState
       ),
       body: Stack(
         children: [
-          const SpaceBackground(),
+          getBackgroundForTheme('space'),
           _isLoading
               ? const Center(
                   child: CircularProgressIndicator(
@@ -7599,7 +7776,7 @@ class PracticeTypeChoiceScreen extends StatelessWidget {
       body: Stack(
         children: [
           // Space theme background
-          const SpaceBackground(),
+          getBackgroundForTheme(currentTheme),
           // Additional space elements
           ...List.generate(
             20,

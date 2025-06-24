@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import '../main.dart' show getBackgroundForTheme;
 
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
@@ -7,7 +8,7 @@ import 'package:syncfusion_flutter_pdf/pdf.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
-import 'package:student_learning_app/bloc/chat_bloc.dart';
+import 'package:student_learning_app/ai/bloc/chat_bloc.dart';
 import 'package:student_learning_app/screens/frq_summary_screen.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:student_learning_app/screens/score_summary_screen.dart';
@@ -17,7 +18,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
-import 'package:student_learning_app/models/chat_message_model.dart';
+import 'package:student_learning_app/ai/models/chat_message_model.dart';
 
 // Manual structure for AP Comp Sci 2024
 const List<String> manualQuestions = [
@@ -106,7 +107,7 @@ class _FRQManagerState extends State<FRQManager> {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        const SpaceBackground(),
+        getBackgroundForTheme(widget.currentTheme),
         Scaffold(
           extendBodyBehindAppBar: true,
           backgroundColor: Colors.transparent,
@@ -118,10 +119,13 @@ class _FRQManagerState extends State<FRQManager> {
           ),
           body: Stack(
             children: [
-              const SpaceBackground(),
+              getBackgroundForTheme(widget.currentTheme),
               SafeArea(
                 child: FRQTextDisplayScreen(
-                    year: '2024', frqCount: widget.frqCount),
+                    year: '2024',
+                    frqCount: widget.frqCount,
+                    username: widget.username,
+                    currentTheme: widget.currentTheme),
               ),
             ],
           ),
@@ -350,11 +354,13 @@ class PDFViewerScreen extends StatefulWidget {
   final String filePath;
   final String year;
   final int frqCount;
+  final String currentTheme;
   const PDFViewerScreen(
       {super.key,
       required this.filePath,
       required this.year,
-      required this.frqCount});
+      required this.frqCount,
+      required this.currentTheme});
 
   @override
   State<PDFViewerScreen> createState() => _PDFViewerScreenState();
@@ -521,6 +527,9 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
               MaterialPageRoute(
                 builder: (context) => FrqSummaryScreen(
                   results: results,
+                  username:
+                      '', // PDFViewerScreen is unused, but keeping for compatibility
+                  currentTheme: widget.currentTheme,
                 ),
               ),
             );
@@ -1008,9 +1017,15 @@ class _PDFViewerScreenState extends State<PDFViewerScreen> {
 class FRQTextDisplayScreen extends StatefulWidget {
   final String year;
   final int frqCount;
+  final String username;
+  final String currentTheme;
 
   const FRQTextDisplayScreen(
-      {super.key, required this.year, required this.frqCount});
+      {super.key,
+      required this.year,
+      required this.frqCount,
+      required this.username,
+      required this.currentTheme});
 
   @override
   State<FRQTextDisplayScreen> createState() => _FRQTextDisplayScreenState();
@@ -1613,6 +1628,8 @@ class _FRQTextDisplayScreenState extends State<FRQTextDisplayScreen> {
               MaterialPageRoute(
                 builder: (context) => FrqSummaryScreen(
                   results: results,
+                  username: widget.username,
+                  currentTheme: widget.currentTheme,
                 ),
               ),
             );
@@ -2093,16 +2110,12 @@ class _FRQTextDisplayScreenState extends State<FRQTextDisplayScreen> {
                         Container(
                           decoration: BoxDecoration(
                             gradient: const LinearGradient(
-                              colors: [
-                                Color(0xFF4CAF50),
-                                Color(0xFF45A049)
-                              ],
+                              colors: [Color(0xFF4CAF50), Color(0xFF45A049)],
                             ),
                             borderRadius: BorderRadius.circular(12),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFF4CAF50)
-                                    .withOpacity(0.3),
+                                color: const Color(0xFF4CAF50).withOpacity(0.3),
                                 blurRadius: 8,
                                 offset: const Offset(0, 4),
                               ),

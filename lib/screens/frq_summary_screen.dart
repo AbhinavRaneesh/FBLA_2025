@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../helpers/frq_manager.dart';
+import '../main.dart' show getBackgroundForTheme;
+import '../helpers/database_helper.dart';
 
 // Point values for AP CS A 2024 FRQ questions - matching the FRQ manager
 const Map<String, int> questionPointValues = {
@@ -30,10 +32,89 @@ class FrqGradingResult {
   });
 }
 
-class FrqSummaryScreen extends StatelessWidget {
+class FrqSummaryScreen extends StatefulWidget {
   final List<FrqGradingResult> results;
+  final String username;
+  final String currentTheme;
 
-  const FrqSummaryScreen({Key? key, required this.results}) : super(key: key);
+  const FrqSummaryScreen(
+      {Key? key,
+      required this.results,
+      required this.username,
+      required this.currentTheme})
+      : super(key: key);
+
+  @override
+  State<FrqSummaryScreen> createState() => _FrqSummaryScreenState();
+}
+
+class _FrqSummaryScreenState extends State<FrqSummaryScreen> {
+  final DatabaseHelper _dbHelper = DatabaseHelper();
+  bool _pointsAwarded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _awardShopPoints();
+  }
+
+  Future<void> _awardShopPoints() async {
+    if (_pointsAwarded) return;
+
+    // Calculate total FRQ points earned
+    int totalFrqPoints = 0;
+    for (var result in widget.results) {
+      totalFrqPoints += result.pointsAwarded;
+    }
+
+    // Award 10 shop points for every FRQ point earned
+    int shopPointsToAward = totalFrqPoints * 10;
+
+    if (shopPointsToAward > 0) {
+      try {
+        print(
+            'DEBUG: Awarding $shopPointsToAward shop points for $totalFrqPoints FRQ points to user ${widget.username}');
+
+        // Get current shop points
+        final currentShopPoints =
+            await _dbHelper.getUserPoints(widget.username);
+        final newShopPoints = currentShopPoints + shopPointsToAward;
+
+        // Update shop points in database
+        await _dbHelper.updateUserPoints(widget.username, newShopPoints);
+
+        print(
+            'DEBUG: Successfully awarded shop points. New total: $newShopPoints');
+
+        setState(() {
+          _pointsAwarded = true;
+        });
+
+        // Show success message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.diamond, color: Colors.white),
+                  const SizedBox(width: 12),
+                  Text(
+                      'Earned $shopPointsToAward shop points for your FRQ performance!'),
+                ],
+              ),
+              backgroundColor: const Color(0xFFFFD700),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
+      } catch (e) {
+        print('DEBUG: Error awarding shop points: $e');
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +122,7 @@ class FrqSummaryScreen extends StatelessWidget {
     int totalPoints = 0;
     int maxTotalPoints = 0;
 
-    for (var result in results) {
+    for (var result in widget.results) {
       int maxPoints = questionPointValues[result.subpart] ?? result.maxPoints;
       totalPoints += result.pointsAwarded;
       maxTotalPoints += maxPoints;
@@ -54,7 +135,7 @@ class FrqSummaryScreen extends StatelessWidget {
     int correctCount = 0;
     int partialCount = 0;
 
-    for (var result in results) {
+    for (var result in widget.results) {
       int maxPoints = questionPointValues[result.subpart] ?? result.maxPoints;
       if (result.pointsAwarded == maxPoints) {
         correctCount++;
@@ -92,7 +173,7 @@ class FrqSummaryScreen extends StatelessWidget {
       ),
       body: Stack(
         children: [
-          const SpaceBackground(),
+          getBackgroundForTheme(widget.currentTheme),
           SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(20),
@@ -216,7 +297,7 @@ class FrqSummaryScreen extends StatelessWidget {
                           children: [
                             _buildStatItem(
                               'Questions',
-                              results.length.toString(),
+                              widget.results.length.toString(),
                               Icons.question_answer_outlined,
                               const Color(0xFF4facfe),
                             ),
@@ -239,7 +320,7 @@ class FrqSummaryScreen extends StatelessWidget {
                   ),
 
                   // Results list
-                  if (results.isEmpty)
+                  if (widget.results.isEmpty)
                     Container(
                       padding: const EdgeInsets.all(40),
                       child: Text(
@@ -252,7 +333,7 @@ class FrqSummaryScreen extends StatelessWidget {
                       ),
                     )
                   else
-                    ...results.asMap().entries.map((entry) {
+                    ...widget.results.asMap().entries.map((entry) {
                       final index = entry.key;
                       final result = entry.value;
                       final maxPoints = questionPointValues[result.subpart] ??

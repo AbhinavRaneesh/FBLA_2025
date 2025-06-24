@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:student_learning_app/bloc/chat_bloc.dart';
+import 'package:student_learning_app/ai/bloc/chat_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../models/chat_message_model.dart';
+import '../ai/models/chat_message_model.dart';
 import '../helpers/database_helper.dart';
 import 'package:student_learning_app/screens/browse_sets_screen.dart';
 import 'dart:math';
@@ -10,6 +10,7 @@ import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
+import '../main.dart' show getBackgroundForTheme, ThemeColors;
 
 class HomePage extends StatefulWidget {
   final String username;
@@ -27,8 +28,10 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final TextEditingController followupController = TextEditingController();
-  final ScrollController _scrollController = ScrollController(); // For chat only
-  final TextEditingController _searchController = TextEditingController(); // Add search controller
+  final ScrollController _scrollController =
+      ScrollController(); // For chat only
+  final TextEditingController _searchController =
+      TextEditingController(); // Add search controller
   late final ChatBloc _chatBloc; // Create bloc instance here
   final DatabaseHelper _dbHelper = DatabaseHelper();
 
@@ -137,136 +140,728 @@ class _HomePageState extends State<HomePage> {
     "Agricultural Science",
     "Marine Biology",
     "Robotics"
-
   ];
 
   // Sample questions for each subject
   final Map<String, List<Map<String, dynamic>>> sampleQuestions = {
     "Chemistry": [
-      {"question": "What is the chemical symbol for gold?", "options": ["Au", "Ag", "Fe", "Cu"], "answer": "Au"},
-      {"question": "What is the molecular formula for water?", "options": ["H2O", "CO2", "O2", "N2"], "answer": "H2O"},
-      {"question": "What is the atomic number of carbon?", "options": ["6", "12", "14", "16"], "answer": "6"},
-      {"question": "What type of bond is formed between sodium and chlorine in NaCl?", "options": ["Ionic", "Covalent", "Metallic", "Hydrogen"], "answer": "Ionic"},
-      {"question": "What is the pH of a neutral solution?", "options": ["0", "7", "14", "10"], "answer": "7"},
+      {
+        "question": "What is the chemical symbol for gold?",
+        "options": ["Au", "Ag", "Fe", "Cu"],
+        "answer": "Au"
+      },
+      {
+        "question": "What is the molecular formula for water?",
+        "options": ["H2O", "CO2", "O2", "N2"],
+        "answer": "H2O"
+      },
+      {
+        "question": "What is the atomic number of carbon?",
+        "options": ["6", "12", "14", "16"],
+        "answer": "6"
+      },
+      {
+        "question":
+            "What type of bond is formed between sodium and chlorine in NaCl?",
+        "options": ["Ionic", "Covalent", "Metallic", "Hydrogen"],
+        "answer": "Ionic"
+      },
+      {
+        "question": "What is the pH of a neutral solution?",
+        "options": ["0", "7", "14", "10"],
+        "answer": "7"
+      },
     ],
     "Physics": [
-      {"question": "What is the SI unit of force?", "options": ["Newton", "Joule", "Watt", "Pascal"], "answer": "Newton"},
-      {"question": "What is the speed of light in vacuum?", "options": ["3x10^8 m/s", "2x10^8 m/s", "4x10^8 m/s", "1x10^8 m/s"], "answer": "3x10^8 m/s"},
-      {"question": "What is Newton's first law also known as?", "options": ["Law of Inertia", "Law of Motion", "Law of Action-Reaction", "Law of Acceleration"], "answer": "Law of Inertia"},
-      {"question": "What is the unit of electrical resistance?", "options": ["Ohm", "Volt", "Ampere", "Watt"], "answer": "Ohm"},
-      {"question": "What is the formula for kinetic energy?", "options": ["1/2mv²", "mgh", "Fd", "Pt"], "answer": "1/2mv²"},
+      {
+        "question": "What is the SI unit of force?",
+        "options": ["Newton", "Joule", "Watt", "Pascal"],
+        "answer": "Newton"
+      },
+      {
+        "question": "What is the speed of light in vacuum?",
+        "options": ["3x10^8 m/s", "2x10^8 m/s", "4x10^8 m/s", "1x10^8 m/s"],
+        "answer": "3x10^8 m/s"
+      },
+      {
+        "question": "What is Newton's first law also known as?",
+        "options": [
+          "Law of Inertia",
+          "Law of Motion",
+          "Law of Action-Reaction",
+          "Law of Acceleration"
+        ],
+        "answer": "Law of Inertia"
+      },
+      {
+        "question": "What is the unit of electrical resistance?",
+        "options": ["Ohm", "Volt", "Ampere", "Watt"],
+        "answer": "Ohm"
+      },
+      {
+        "question": "What is the formula for kinetic energy?",
+        "options": ["1/2mv²", "mgh", "Fd", "Pt"],
+        "answer": "1/2mv²"
+      },
     ],
     "Biology": [
-      {"question": "What is the powerhouse of the cell?", "options": ["Mitochondria", "Nucleus", "Ribosome", "Golgi"], "answer": "Mitochondria"},
-      {"question": "What is the process by which plants make food?", "options": ["Photosynthesis", "Respiration", "Digestion", "Excretion"], "answer": "Photosynthesis"},
-      {"question": "What is the largest organ in the human body?", "options": ["Skin", "Liver", "Heart", "Brain"], "answer": "Skin"},
-      {"question": "What are the building blocks of proteins?", "options": ["Amino acids", "Nucleotides", "Fatty acids", "Monosaccharides"], "answer": "Amino acids"},
-      {"question": "What is the study of fossils called?", "options": ["Paleontology", "Archaeology", "Anthropology", "Geology"], "answer": "Paleontology"},
+      {
+        "question": "What is the powerhouse of the cell?",
+        "options": ["Mitochondria", "Nucleus", "Ribosome", "Golgi"],
+        "answer": "Mitochondria"
+      },
+      {
+        "question": "What is the process by which plants make food?",
+        "options": ["Photosynthesis", "Respiration", "Digestion", "Excretion"],
+        "answer": "Photosynthesis"
+      },
+      {
+        "question": "What is the largest organ in the human body?",
+        "options": ["Skin", "Liver", "Heart", "Brain"],
+        "answer": "Skin"
+      },
+      {
+        "question": "What are the building blocks of proteins?",
+        "options": [
+          "Amino acids",
+          "Nucleotides",
+          "Fatty acids",
+          "Monosaccharides"
+        ],
+        "answer": "Amino acids"
+      },
+      {
+        "question": "What is the study of fossils called?",
+        "options": ["Paleontology", "Archaeology", "Anthropology", "Geology"],
+        "answer": "Paleontology"
+      },
     ],
     "Mathematics": [
-      {"question": "What is the value of π (pi) to two decimal places?", "options": ["3.14", "3.41", "3.12", "3.16"], "answer": "3.14"},
-      {"question": "What is the square root of 144?", "options": ["12", "14", "10", "16"], "answer": "12"},
-      {"question": "What is the formula for the area of a circle?", "options": ["πr²", "2πr", "πd", "2πd"], "answer": "πr²"},
-      {"question": "What is the sum of angles in a triangle?", "options": ["180°", "90°", "360°", "270°"], "answer": "180°"},
-      {"question": "What is 2 to the power of 8?", "options": ["256", "128", "512", "64"], "answer": "256"},
+      {
+        "question": "What is the value of π (pi) to two decimal places?",
+        "options": ["3.14", "3.41", "3.12", "3.16"],
+        "answer": "3.14"
+      },
+      {
+        "question": "What is the square root of 144?",
+        "options": ["12", "14", "10", "16"],
+        "answer": "12"
+      },
+      {
+        "question": "What is the formula for the area of a circle?",
+        "options": ["πr²", "2πr", "πd", "2πd"],
+        "answer": "πr²"
+      },
+      {
+        "question": "What is the sum of angles in a triangle?",
+        "options": ["180°", "90°", "360°", "270°"],
+        "answer": "180°"
+      },
+      {
+        "question": "What is 2 to the power of 8?",
+        "options": ["256", "128", "512", "64"],
+        "answer": "256"
+      },
     ],
     "History": [
-      {"question": "In what year did World War II end?", "options": ["1945", "1944", "1946", "1943"], "answer": "1945"},
-      {"question": "Who was the first President of the United States?", "options": ["George Washington", "Thomas Jefferson", "John Adams", "Benjamin Franklin"], "answer": "George Washington"},
-      {"question": "What year did Columbus discover America?", "options": ["1492", "1493", "1491", "1494"], "answer": "1492"},
-      {"question": "Who was the first Emperor of Rome?", "options": ["Augustus", "Julius Caesar", "Nero", "Caligula"], "answer": "Augustus"},
-      {"question": "What year did the French Revolution begin?", "options": ["1789", "1790", "1788", "1791"], "answer": "1789"},
+      {
+        "question": "In what year did World War II end?",
+        "options": ["1945", "1944", "1946", "1943"],
+        "answer": "1945"
+      },
+      {
+        "question": "Who was the first President of the United States?",
+        "options": [
+          "George Washington",
+          "Thomas Jefferson",
+          "John Adams",
+          "Benjamin Franklin"
+        ],
+        "answer": "George Washington"
+      },
+      {
+        "question": "What year did Columbus discover America?",
+        "options": ["1492", "1493", "1491", "1494"],
+        "answer": "1492"
+      },
+      {
+        "question": "Who was the first Emperor of Rome?",
+        "options": ["Augustus", "Julius Caesar", "Nero", "Caligula"],
+        "answer": "Augustus"
+      },
+      {
+        "question": "What year did the French Revolution begin?",
+        "options": ["1789", "1790", "1788", "1791"],
+        "answer": "1789"
+      },
     ],
     "Geography": [
-      {"question": "What is the capital of Australia?", "options": ["Canberra", "Sydney", "Melbourne", "Brisbane"], "answer": "Canberra"},
-      {"question": "What is the largest continent?", "options": ["Asia", "Africa", "North America", "Europe"], "answer": "Asia"},
-      {"question": "What is the longest river in the world?", "options": ["Nile", "Amazon", "Yangtze", "Mississippi"], "answer": "Nile"},
-      {"question": "What is the highest mountain in the world?", "options": ["Mount Everest", "K2", "Kangchenjunga", "Lhotse"], "answer": "Mount Everest"},
-      {"question": "What is the largest ocean?", "options": ["Pacific", "Atlantic", "Indian", "Arctic"], "answer": "Pacific"},
+      {
+        "question": "What is the capital of Australia?",
+        "options": ["Canberra", "Sydney", "Melbourne", "Brisbane"],
+        "answer": "Canberra"
+      },
+      {
+        "question": "What is the largest continent?",
+        "options": ["Asia", "Africa", "North America", "Europe"],
+        "answer": "Asia"
+      },
+      {
+        "question": "What is the longest river in the world?",
+        "options": ["Nile", "Amazon", "Yangtze", "Mississippi"],
+        "answer": "Nile"
+      },
+      {
+        "question": "What is the highest mountain in the world?",
+        "options": ["Mount Everest", "K2", "Kangchenjunga", "Lhotse"],
+        "answer": "Mount Everest"
+      },
+      {
+        "question": "What is the largest ocean?",
+        "options": ["Pacific", "Atlantic", "Indian", "Arctic"],
+        "answer": "Pacific"
+      },
     ],
     "Computer Science": [
-      {"question": "What does CPU stand for?", "options": ["Central Processing Unit", "Computer Personal Unit", "Central Program Utility", "Computer Processing Unit"], "answer": "Central Processing Unit"},
-      {"question": "What is the primary function of RAM?", "options": ["Temporary storage", "Permanent storage", "Processing", "Display"], "answer": "Temporary storage"},
-      {"question": "What programming language was created by Guido van Rossum?", "options": ["Python", "Java", "C++", "JavaScript"], "answer": "Python"},
-      {"question": "What does HTML stand for?", "options": ["HyperText Markup Language", "High Tech Modern Language", "Hyper Transfer Markup Language", "Home Tool Markup Language"], "answer": "HyperText Markup Language"},
-      {"question": "What is the binary representation of decimal 10?", "options": ["1010", "1001", "1100", "1110"], "answer": "1010"},
+      {
+        "question": "What does CPU stand for?",
+        "options": [
+          "Central Processing Unit",
+          "Computer Personal Unit",
+          "Central Program Utility",
+          "Computer Processing Unit"
+        ],
+        "answer": "Central Processing Unit"
+      },
+      {
+        "question": "What is the primary function of RAM?",
+        "options": [
+          "Temporary storage",
+          "Permanent storage",
+          "Processing",
+          "Display"
+        ],
+        "answer": "Temporary storage"
+      },
+      {
+        "question":
+            "What programming language was created by Guido van Rossum?",
+        "options": ["Python", "Java", "C++", "JavaScript"],
+        "answer": "Python"
+      },
+      {
+        "question": "What does HTML stand for?",
+        "options": [
+          "HyperText Markup Language",
+          "High Tech Modern Language",
+          "Hyper Transfer Markup Language",
+          "Home Tool Markup Language"
+        ],
+        "answer": "HyperText Markup Language"
+      },
+      {
+        "question": "What is the binary representation of decimal 10?",
+        "options": ["1010", "1001", "1100", "1110"],
+        "answer": "1010"
+      },
     ],
     "Economics": [
-      {"question": "What is the study of how societies allocate scarce resources?", "options": ["Economics", "Sociology", "Psychology", "Political Science"], "answer": "Economics"},
-      {"question": "What is the law of supply and demand?", "options": ["Price increases with demand", "Price decreases with supply", "Price balances supply and demand", "Price is fixed"], "answer": "Price balances supply and demand"},
-      {"question": "What is GDP?", "options": ["Gross Domestic Product", "General Domestic Price", "Gross Demand Price", "General Demand Product"], "answer": "Gross Domestic Product"},
-      {"question": "What is inflation?", "options": ["Rise in general price level", "Fall in general price level", "No change in prices", "Currency devaluation"], "answer": "Rise in general price level"},
-      {"question": "What is a monopoly?", "options": ["Single seller", "Single buyer", "Many sellers", "Many buyers"], "answer": "Single seller"},
+      {
+        "question":
+            "What is the study of how societies allocate scarce resources?",
+        "options": [
+          "Economics",
+          "Sociology",
+          "Psychology",
+          "Political Science"
+        ],
+        "answer": "Economics"
+      },
+      {
+        "question": "What is the law of supply and demand?",
+        "options": [
+          "Price increases with demand",
+          "Price decreases with supply",
+          "Price balances supply and demand",
+          "Price is fixed"
+        ],
+        "answer": "Price balances supply and demand"
+      },
+      {
+        "question": "What is GDP?",
+        "options": [
+          "Gross Domestic Product",
+          "General Domestic Price",
+          "Gross Demand Price",
+          "General Demand Product"
+        ],
+        "answer": "Gross Domestic Product"
+      },
+      {
+        "question": "What is inflation?",
+        "options": [
+          "Rise in general price level",
+          "Fall in general price level",
+          "No change in prices",
+          "Currency devaluation"
+        ],
+        "answer": "Rise in general price level"
+      },
+      {
+        "question": "What is a monopoly?",
+        "options": [
+          "Single seller",
+          "Single buyer",
+          "Many sellers",
+          "Many buyers"
+        ],
+        "answer": "Single seller"
+      },
     ],
     "Literature": [
-      {"question": "Who wrote 'Romeo and Juliet'?", "options": ["William Shakespeare", "Charles Dickens", "Jane Austen", "Mark Twain"], "answer": "William Shakespeare"},
-      {"question": "What is a sonnet?", "options": ["14-line poem", "10-line poem", "20-line poem", "12-line poem"], "answer": "14-line poem"},
-      {"question": "Who wrote 'Pride and Prejudice'?", "options": ["Jane Austen", "Emily Brontë", "Charlotte Brontë", "Virginia Woolf"], "answer": "Jane Austen"},
-      {"question": "What is alliteration?", "options": ["Repetition of consonant sounds", "Repetition of vowel sounds", "Rhyming words", "Metaphor"], "answer": "Repetition of consonant sounds"},
-      {"question": "Who wrote 'The Great Gatsby'?", "options": ["F. Scott Fitzgerald", "Ernest Hemingway", "John Steinbeck", "William Faulkner"], "answer": "F. Scott Fitzgerald"},
+      {
+        "question": "Who wrote 'Romeo and Juliet'?",
+        "options": [
+          "William Shakespeare",
+          "Charles Dickens",
+          "Jane Austen",
+          "Mark Twain"
+        ],
+        "answer": "William Shakespeare"
+      },
+      {
+        "question": "What is a sonnet?",
+        "options": [
+          "14-line poem",
+          "10-line poem",
+          "20-line poem",
+          "12-line poem"
+        ],
+        "answer": "14-line poem"
+      },
+      {
+        "question": "Who wrote 'Pride and Prejudice'?",
+        "options": [
+          "Jane Austen",
+          "Emily Brontë",
+          "Charlotte Brontë",
+          "Virginia Woolf"
+        ],
+        "answer": "Jane Austen"
+      },
+      {
+        "question": "What is alliteration?",
+        "options": [
+          "Repetition of consonant sounds",
+          "Repetition of vowel sounds",
+          "Rhyming words",
+          "Metaphor"
+        ],
+        "answer": "Repetition of consonant sounds"
+      },
+      {
+        "question": "Who wrote 'The Great Gatsby'?",
+        "options": [
+          "F. Scott Fitzgerald",
+          "Ernest Hemingway",
+          "John Steinbeck",
+          "William Faulkner"
+        ],
+        "answer": "F. Scott Fitzgerald"
+      },
     ],
     "Art": [
-      {"question": "Who painted the Mona Lisa?", "options": ["Leonardo da Vinci", "Michelangelo", "Raphael", "Donatello"], "answer": "Leonardo da Vinci"},
-      {"question": "What is the primary color that is not a primary color?", "options": ["Green", "Red", "Blue", "Yellow"], "answer": "Green"},
-      {"question": "What is chiaroscuro?", "options": ["Light and shadow contrast", "Color mixing", "Perspective", "Texture"], "answer": "Light and shadow contrast"},
-      {"question": "Who painted 'The Starry Night'?", "options": ["Vincent van Gogh", "Pablo Picasso", "Claude Monet", "Salvador Dalí"], "answer": "Vincent van Gogh"},
-      {"question": "What is a fresco?", "options": ["Wall painting on wet plaster", "Oil painting", "Watercolor", "Sculpture"], "answer": "Wall painting on wet plaster"},
+      {
+        "question": "Who painted the Mona Lisa?",
+        "options": [
+          "Leonardo da Vinci",
+          "Michelangelo",
+          "Raphael",
+          "Donatello"
+        ],
+        "answer": "Leonardo da Vinci"
+      },
+      {
+        "question": "What is the primary color that is not a primary color?",
+        "options": ["Green", "Red", "Blue", "Yellow"],
+        "answer": "Green"
+      },
+      {
+        "question": "What is chiaroscuro?",
+        "options": [
+          "Light and shadow contrast",
+          "Color mixing",
+          "Perspective",
+          "Texture"
+        ],
+        "answer": "Light and shadow contrast"
+      },
+      {
+        "question": "Who painted 'The Starry Night'?",
+        "options": [
+          "Vincent van Gogh",
+          "Pablo Picasso",
+          "Claude Monet",
+          "Salvador Dalí"
+        ],
+        "answer": "Vincent van Gogh"
+      },
+      {
+        "question": "What is a fresco?",
+        "options": [
+          "Wall painting on wet plaster",
+          "Oil painting",
+          "Watercolor",
+          "Sculpture"
+        ],
+        "answer": "Wall painting on wet plaster"
+      },
     ],
     "Music": [
-      {"question": "How many notes are in an octave?", "options": ["8", "7", "12", "10"], "answer": "8"},
-      {"question": "What is the time signature 4/4 also known as?", "options": ["Common time", "Waltz time", "March time", "Cut time"], "answer": "Common time"},
-      {"question": "Who composed 'Symphony No. 9'?", "options": ["Ludwig van Beethoven", "Wolfgang Mozart", "Johann Bach", "Franz Schubert"], "answer": "Ludwig van Beethoven"},
-      {"question": "What is a chord?", "options": ["Three or more notes played together", "Two notes played together", "Single note", "Rhythm pattern"], "answer": "Three or more notes played together"},
-      {"question": "What is the Italian term for 'loud'?", "options": ["Forte", "Piano", "Allegro", "Adagio"], "answer": "Forte"},
+      {
+        "question": "How many notes are in an octave?",
+        "options": ["8", "7", "12", "10"],
+        "answer": "8"
+      },
+      {
+        "question": "What is the time signature 4/4 also known as?",
+        "options": ["Common time", "Waltz time", "March time", "Cut time"],
+        "answer": "Common time"
+      },
+      {
+        "question": "Who composed 'Symphony No. 9'?",
+        "options": [
+          "Ludwig van Beethoven",
+          "Wolfgang Mozart",
+          "Johann Bach",
+          "Franz Schubert"
+        ],
+        "answer": "Ludwig van Beethoven"
+      },
+      {
+        "question": "What is a chord?",
+        "options": [
+          "Three or more notes played together",
+          "Two notes played together",
+          "Single note",
+          "Rhythm pattern"
+        ],
+        "answer": "Three or more notes played together"
+      },
+      {
+        "question": "What is the Italian term for 'loud'?",
+        "options": ["Forte", "Piano", "Allegro", "Adagio"],
+        "answer": "Forte"
+      },
     ],
     "Psychology": [
-      {"question": "Who is considered the father of psychoanalysis?", "options": ["Sigmund Freud", "Carl Jung", "B.F. Skinner", "Ivan Pavlov"], "answer": "Sigmund Freud"},
-      {"question": "What is classical conditioning?", "options": ["Learning through association", "Learning through consequences", "Learning through observation", "Learning through insight"], "answer": "Learning through association"},
-      {"question": "What is the study of behavior and mental processes?", "options": ["Psychology", "Sociology", "Anthropology", "Philosophy"], "answer": "Psychology"},
-      {"question": "What is the id?", "options": ["Unconscious desires", "Conscious mind", "Moral conscience", "Reality principle"], "answer": "Unconscious desires"},
-      {"question": "What is cognitive dissonance?", "options": ["Mental discomfort from conflicting beliefs", "Memory loss", "Anxiety disorder", "Depression"], "answer": "Mental discomfort from conflicting beliefs"},
+      {
+        "question": "Who is considered the father of psychoanalysis?",
+        "options": [
+          "Sigmund Freud",
+          "Carl Jung",
+          "B.F. Skinner",
+          "Ivan Pavlov"
+        ],
+        "answer": "Sigmund Freud"
+      },
+      {
+        "question": "What is classical conditioning?",
+        "options": [
+          "Learning through association",
+          "Learning through consequences",
+          "Learning through observation",
+          "Learning through insight"
+        ],
+        "answer": "Learning through association"
+      },
+      {
+        "question": "What is the study of behavior and mental processes?",
+        "options": ["Psychology", "Sociology", "Anthropology", "Philosophy"],
+        "answer": "Psychology"
+      },
+      {
+        "question": "What is the id?",
+        "options": [
+          "Unconscious desires",
+          "Conscious mind",
+          "Moral conscience",
+          "Reality principle"
+        ],
+        "answer": "Unconscious desires"
+      },
+      {
+        "question": "What is cognitive dissonance?",
+        "options": [
+          "Mental discomfort from conflicting beliefs",
+          "Memory loss",
+          "Anxiety disorder",
+          "Depression"
+        ],
+        "answer": "Mental discomfort from conflicting beliefs"
+      },
     ],
     "Sociology": [
-      {"question": "What is the study of human society and social behavior?", "options": ["Sociology", "Psychology", "Anthropology", "Economics"], "answer": "Sociology"},
-      {"question": "What is a social norm?", "options": ["Expected behavior in society", "Law", "Religion", "Custom"], "answer": "Expected behavior in society"},
-      {"question": "What is social stratification?", "options": ["Division of society into classes", "Social mobility", "Social change", "Social interaction"], "answer": "Division of society into classes"},
-      {"question": "What is a primary group?", "options": ["Small, intimate group", "Large organization", "Formal group", "Temporary group"], "answer": "Small, intimate group"},
-      {"question": "What is deviance?", "options": ["Behavior that violates social norms", "Criminal behavior", "Social change", "Social control"], "answer": "Behavior that violates social norms"},
+      {
+        "question": "What is the study of human society and social behavior?",
+        "options": ["Sociology", "Psychology", "Anthropology", "Economics"],
+        "answer": "Sociology"
+      },
+      {
+        "question": "What is a social norm?",
+        "options": [
+          "Expected behavior in society",
+          "Law",
+          "Religion",
+          "Custom"
+        ],
+        "answer": "Expected behavior in society"
+      },
+      {
+        "question": "What is social stratification?",
+        "options": [
+          "Division of society into classes",
+          "Social mobility",
+          "Social change",
+          "Social interaction"
+        ],
+        "answer": "Division of society into classes"
+      },
+      {
+        "question": "What is a primary group?",
+        "options": [
+          "Small, intimate group",
+          "Large organization",
+          "Formal group",
+          "Temporary group"
+        ],
+        "answer": "Small, intimate group"
+      },
+      {
+        "question": "What is deviance?",
+        "options": [
+          "Behavior that violates social norms",
+          "Criminal behavior",
+          "Social change",
+          "Social control"
+        ],
+        "answer": "Behavior that violates social norms"
+      },
     ],
     "Philosophy": [
-      {"question": "Who said 'I think, therefore I am'?", "options": ["René Descartes", "Socrates", "Plato", "Aristotle"], "answer": "René Descartes"},
-      {"question": "What is epistemology?", "options": ["Study of knowledge", "Study of ethics", "Study of reality", "Study of beauty"], "answer": "Study of knowledge"},
-      {"question": "What is the Socratic method?", "options": ["Questioning to stimulate critical thinking", "Lecture method", "Debate method", "Research method"], "answer": "Questioning to stimulate critical thinking"},
-      {"question": "What is utilitarianism?", "options": ["Greatest good for greatest number", "Individual rights", "Duty-based ethics", "Virtue ethics"], "answer": "Greatest good for greatest number"},
-      {"question": "Who wrote 'The Republic'?", "options": ["Plato", "Aristotle", "Socrates", "Descartes"], "answer": "Plato"},
+      {
+        "question": "Who said 'I think, therefore I am'?",
+        "options": ["René Descartes", "Socrates", "Plato", "Aristotle"],
+        "answer": "René Descartes"
+      },
+      {
+        "question": "What is epistemology?",
+        "options": [
+          "Study of knowledge",
+          "Study of ethics",
+          "Study of reality",
+          "Study of beauty"
+        ],
+        "answer": "Study of knowledge"
+      },
+      {
+        "question": "What is the Socratic method?",
+        "options": [
+          "Questioning to stimulate critical thinking",
+          "Lecture method",
+          "Debate method",
+          "Research method"
+        ],
+        "answer": "Questioning to stimulate critical thinking"
+      },
+      {
+        "question": "What is utilitarianism?",
+        "options": [
+          "Greatest good for greatest number",
+          "Individual rights",
+          "Duty-based ethics",
+          "Virtue ethics"
+        ],
+        "answer": "Greatest good for greatest number"
+      },
+      {
+        "question": "Who wrote 'The Republic'?",
+        "options": ["Plato", "Aristotle", "Socrates", "Descartes"],
+        "answer": "Plato"
+      },
     ],
     "Astronomy": [
-      {"question": "What is the closest planet to the Sun?", "options": ["Mercury", "Venus", "Earth", "Mars"], "answer": "Mercury"},
-      {"question": "What is a light year?", "options": ["Distance light travels in one year", "Time light takes to reach Earth", "Speed of light", "Light intensity"], "answer": "Distance light travels in one year"},
-      {"question": "What is the largest planet in our solar system?", "options": ["Jupiter", "Saturn", "Neptune", "Uranus"], "answer": "Jupiter"},
-      {"question": "What is a black hole?", "options": ["Region where gravity is so strong nothing can escape", "Dark star", "Empty space", "Dead star"], "answer": "Region where gravity is so strong nothing can escape"},
-      {"question": "What is the name of our galaxy?", "options": ["Milky Way", "Andromeda", "Triangulum", "Large Magellanic Cloud"], "answer": "Milky Way"},
+      {
+        "question": "What is the closest planet to the Sun?",
+        "options": ["Mercury", "Venus", "Earth", "Mars"],
+        "answer": "Mercury"
+      },
+      {
+        "question": "What is a light year?",
+        "options": [
+          "Distance light travels in one year",
+          "Time light takes to reach Earth",
+          "Speed of light",
+          "Light intensity"
+        ],
+        "answer": "Distance light travels in one year"
+      },
+      {
+        "question": "What is the largest planet in our solar system?",
+        "options": ["Jupiter", "Saturn", "Neptune", "Uranus"],
+        "answer": "Jupiter"
+      },
+      {
+        "question": "What is a black hole?",
+        "options": [
+          "Region where gravity is so strong nothing can escape",
+          "Dark star",
+          "Empty space",
+          "Dead star"
+        ],
+        "answer": "Region where gravity is so strong nothing can escape"
+      },
+      {
+        "question": "What is the name of our galaxy?",
+        "options": [
+          "Milky Way",
+          "Andromeda",
+          "Triangulum",
+          "Large Magellanic Cloud"
+        ],
+        "answer": "Milky Way"
+      },
     ],
     "Geology": [
-      {"question": "What is the hardest mineral on Earth?", "options": ["Diamond", "Quartz", "Topaz", "Corundum"], "answer": "Diamond"},
-      {"question": "What type of rock is formed by heat and pressure?", "options": ["Metamorphic", "Igneous", "Sedimentary", "Volcanic"], "answer": "Metamorphic"},
-      {"question": "What is the center of the Earth called?", "options": ["Core", "Mantle", "Crust", "Lithosphere"], "answer": "Core"},
-      {"question": "What is the study of fossils called?", "options": ["Paleontology", "Archaeology", "Anthropology", "Biology"], "answer": "Paleontology"},
-      {"question": "What is the most abundant element in Earth's crust?", "options": ["Oxygen", "Silicon", "Aluminum", "Iron"], "answer": "Oxygen"},
+      {
+        "question": "What is the hardest mineral on Earth?",
+        "options": ["Diamond", "Quartz", "Topaz", "Corundum"],
+        "answer": "Diamond"
+      },
+      {
+        "question": "What type of rock is formed by heat and pressure?",
+        "options": ["Metamorphic", "Igneous", "Sedimentary", "Volcanic"],
+        "answer": "Metamorphic"
+      },
+      {
+        "question": "What is the center of the Earth called?",
+        "options": ["Core", "Mantle", "Crust", "Lithosphere"],
+        "answer": "Core"
+      },
+      {
+        "question": "What is the study of fossils called?",
+        "options": ["Paleontology", "Archaeology", "Anthropology", "Biology"],
+        "answer": "Paleontology"
+      },
+      {
+        "question": "What is the most abundant element in Earth's crust?",
+        "options": ["Oxygen", "Silicon", "Aluminum", "Iron"],
+        "answer": "Oxygen"
+      },
     ],
     "Environmental Science": [
-      {"question": "What is the main cause of global warming?", "options": ["Greenhouse gases", "Solar radiation", "Volcanic activity", "Ocean currents"], "answer": "Greenhouse gases"},
-      {"question": "What is biodiversity?", "options": ["Variety of life on Earth", "Number of species", "Ecosystem health", "Environmental quality"], "answer": "Variety of life on Earth"},
-      {"question": "What is the ozone layer?", "options": ["Protective layer in atmosphere", "Pollution layer", "Cloud layer", "Wind layer"], "answer": "Protective layer in atmosphere"},
-      {"question": "What is renewable energy?", "options": ["Energy from natural sources", "Fossil fuel energy", "Nuclear energy", "Coal energy"], "answer": "Energy from natural sources"},
-      {"question": "What is deforestation?", "options": ["Clearing of forests", "Planting trees", "Forest management", "Wildlife protection"], "answer": "Clearing of forests"},
+      {
+        "question": "What is the main cause of global warming?",
+        "options": [
+          "Greenhouse gases",
+          "Solar radiation",
+          "Volcanic activity",
+          "Ocean currents"
+        ],
+        "answer": "Greenhouse gases"
+      },
+      {
+        "question": "What is biodiversity?",
+        "options": [
+          "Variety of life on Earth",
+          "Number of species",
+          "Ecosystem health",
+          "Environmental quality"
+        ],
+        "answer": "Variety of life on Earth"
+      },
+      {
+        "question": "What is the ozone layer?",
+        "options": [
+          "Protective layer in atmosphere",
+          "Pollution layer",
+          "Cloud layer",
+          "Wind layer"
+        ],
+        "answer": "Protective layer in atmosphere"
+      },
+      {
+        "question": "What is renewable energy?",
+        "options": [
+          "Energy from natural sources",
+          "Fossil fuel energy",
+          "Nuclear energy",
+          "Coal energy"
+        ],
+        "answer": "Energy from natural sources"
+      },
+      {
+        "question": "What is deforestation?",
+        "options": [
+          "Clearing of forests",
+          "Planting trees",
+          "Forest management",
+          "Wildlife protection"
+        ],
+        "answer": "Clearing of forests"
+      },
     ],
     "Political Science": [
-      {"question": "What is democracy?", "options": ["Government by the people", "Government by one person", "Government by military", "Government by religion"], "answer": "Government by the people"},
-      {"question": "What are the three branches of US government?", "options": ["Executive, Legislative, Judicial", "President, Congress, Senate", "Federal, State, Local", "Democrat, Republican, Independent"], "answer": "Executive, Legislative, Judicial"},
-      {"question": "What is the Bill of Rights?", "options": ["First 10 amendments to Constitution", "Declaration of Independence", "Articles of Confederation", "Federalist Papers"], "answer": "First 10 amendments to Constitution"},
-      {"question": "What is federalism?", "options": ["Division of power between levels of government", "Centralized government", "State government only", "Local government only"], "answer": "Division of power between levels of government"},
-      {"question": "What is the electoral college?", "options": ["System for electing president", "Congressional voting", "State legislature", "Popular vote"], "answer": "System for electing president"},
+      {
+        "question": "What is democracy?",
+        "options": [
+          "Government by the people",
+          "Government by one person",
+          "Government by military",
+          "Government by religion"
+        ],
+        "answer": "Government by the people"
+      },
+      {
+        "question": "What are the three branches of US government?",
+        "options": [
+          "Executive, Legislative, Judicial",
+          "President, Congress, Senate",
+          "Federal, State, Local",
+          "Democrat, Republican, Independent"
+        ],
+        "answer": "Executive, Legislative, Judicial"
+      },
+      {
+        "question": "What is the Bill of Rights?",
+        "options": [
+          "First 10 amendments to Constitution",
+          "Declaration of Independence",
+          "Articles of Confederation",
+          "Federalist Papers"
+        ],
+        "answer": "First 10 amendments to Constitution"
+      },
+      {
+        "question": "What is federalism?",
+        "options": [
+          "Division of power between levels of government",
+          "Centralized government",
+          "State government only",
+          "Local government only"
+        ],
+        "answer": "Division of power between levels of government"
+      },
+      {
+        "question": "What is the electoral college?",
+        "options": [
+          "System for electing president",
+          "Congressional voting",
+          "State legislature",
+          "Popular vote"
+        ],
+        "answer": "System for electing president"
+      },
     ],
   };
 
@@ -277,10 +872,10 @@ class _HomePageState extends State<HomePage> {
     _loadUsername(); // Load username when page initializes
     _loadUserProfileImage(); // Load profile image on init
     _loadUserPowerups(); // Load user powerups
-    
+
     // Initialize filtered subjects
     filteredSubjects = List.from(subjects);
-    
+
     // Add search listener
     _searchController.addListener(_onSearchChanged);
   }
@@ -296,12 +891,13 @@ class _HomePageState extends State<HomePage> {
             .where((subject) => subject.toLowerCase().contains(query))
             .toList();
         isSearching = true;
-        
+
         // Only auto-scroll if we have exactly one match or if the current selection doesn't match the search
         if (filteredSubjects.isNotEmpty) {
           final firstMatch = filteredSubjects.first;
-          final currentMatchesSearch = selectedSubject.toLowerCase().contains(query);
-          
+          final currentMatchesSearch =
+              selectedSubject.toLowerCase().contains(query);
+
           // Only change if we have exactly one match or if current selection doesn't match
           if (filteredSubjects.length == 1 || !currentMatchesSearch) {
             selectedSubject = firstMatch;
@@ -309,7 +905,8 @@ class _HomePageState extends State<HomePage> {
         } else {
           // If no matches found, keep the current selection but ensure it's valid
           if (!subjects.contains(selectedSubject)) {
-            selectedSubject = subjects.isNotEmpty ? subjects.first : "Chemistry";
+            selectedSubject =
+                subjects.isNotEmpty ? subjects.first : "Chemistry";
           }
         }
       }
@@ -388,7 +985,7 @@ class _HomePageState extends State<HomePage> {
   void _showChatModal({String? initialMessage}) {
     // Refresh profile image before showing chat
     _refreshUserProfileImage();
-    
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -480,13 +1077,14 @@ class _HomePageState extends State<HomePage> {
                     ],
                   ),
                 ),
-                
+
                 // Chat Messages
                 Expanded(
                   child: BlocBuilder<ChatBloc, ChatState>(
                     bloc: _chatBloc,
                     builder: (context, state) {
-                      if (state is ChatSuccessState || state is ChatGeneratingState) {
+                      if (state is ChatSuccessState ||
+                          state is ChatGeneratingState) {
                         List<ChatMessageModel> messages = [];
                         if (state is ChatSuccessState) {
                           messages = state.messages;
@@ -508,9 +1106,11 @@ class _HomePageState extends State<HomePage> {
                         return ListView.builder(
                           controller: _scrollController,
                           padding: const EdgeInsets.all(16),
-                          itemCount: messages.length + (_chatBloc.generating ? 1 : 0),
+                          itemCount:
+                              messages.length + (_chatBloc.generating ? 1 : 0),
                           itemBuilder: (context, index) {
-                            if (_chatBloc.generating && index == messages.length) {
+                            if (_chatBloc.generating &&
+                                index == messages.length) {
                               return Container(
                                 height: 54,
                                 width: 54,
@@ -519,7 +1119,7 @@ class _HomePageState extends State<HomePage> {
                             }
                             final message = messages[index];
                             final isUser = message.role == "user";
-                            
+
                             return Padding(
                               padding: const EdgeInsets.only(bottom: 16),
                               child: Row(
@@ -533,12 +1133,16 @@ class _HomePageState extends State<HomePage> {
                                       padding: const EdgeInsets.all(8),
                                       decoration: BoxDecoration(
                                         gradient: const LinearGradient(
-                                          colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+                                          colors: [
+                                            Color(0xFF667eea),
+                                            Color(0xFF764ba2)
+                                          ],
                                         ),
                                         borderRadius: BorderRadius.circular(16),
                                         boxShadow: [
                                           BoxShadow(
-                                            color: const Color(0xFF667eea).withOpacity(0.3),
+                                            color: const Color(0xFF667eea)
+                                                .withOpacity(0.3),
                                             blurRadius: 8,
                                             offset: const Offset(0, 2),
                                           ),
@@ -552,11 +1156,12 @@ class _HomePageState extends State<HomePage> {
                                     ),
                                     const SizedBox(width: 8),
                                   ],
-                                  
                                   Flexible(
                                     child: Container(
                                       constraints: BoxConstraints(
-                                        maxWidth: MediaQuery.of(context).size.width * 0.7,
+                                        maxWidth:
+                                            MediaQuery.of(context).size.width *
+                                                0.7,
                                       ),
                                       padding: const EdgeInsets.all(16),
                                       decoration: BoxDecoration(
@@ -568,20 +1173,23 @@ class _HomePageState extends State<HomePage> {
                                                 ]
                                               : [
                                                   Colors.white.withOpacity(0.1),
-                                                  Colors.white.withOpacity(0.05),
+                                                  Colors.white
+                                                      .withOpacity(0.05),
                                                 ],
                                         ),
                                         borderRadius: BorderRadius.circular(20),
                                         border: Border.all(
                                           color: isUser
-                                              ? const Color(0xFF4facfe).withOpacity(0.3)
+                                              ? const Color(0xFF4facfe)
+                                                  .withOpacity(0.3)
                                               : Colors.white.withOpacity(0.1),
                                           width: 1,
                                         ),
                                         boxShadow: isUser
                                             ? [
                                                 BoxShadow(
-                                                  color: const Color(0xFF4facfe).withOpacity(0.2),
+                                                  color: const Color(0xFF4facfe)
+                                                      .withOpacity(0.2),
                                                   blurRadius: 12,
                                                   offset: const Offset(0, 4),
                                                 ),
@@ -600,34 +1208,43 @@ class _HomePageState extends State<HomePage> {
                                       ),
                                     ),
                                   ),
-                                  
                                   if (isUser) ...[
                                     const SizedBox(width: 8),
                                     CircleAvatar(
                                       radius: 16,
                                       backgroundColor: Colors.transparent,
-                                      backgroundImage: _userProfileImage != null ? FileImage(_userProfileImage!) : null,
+                                      backgroundImage: _userProfileImage != null
+                                          ? FileImage(_userProfileImage!)
+                                          : null,
                                       child: _userProfileImage == null
                                           ? Container(
                                               padding: const EdgeInsets.all(8),
                                               decoration: BoxDecoration(
                                                 gradient: const LinearGradient(
-                                                  colors: [Color(0xFF4facfe), Color(0xFF00f2fe)],
+                                                  colors: [
+                                                    Color(0xFF4facfe),
+                                                    Color(0xFF00f2fe)
+                                                  ],
                                                   begin: Alignment.topLeft,
                                                   end: Alignment.bottomRight,
                                                 ),
-                                                borderRadius: BorderRadius.circular(16),
+                                                borderRadius:
+                                                    BorderRadius.circular(16),
                                                 boxShadow: [
                                                   BoxShadow(
-                                                    color: const Color(0xFF4facfe).withOpacity(0.3),
+                                                    color:
+                                                        const Color(0xFF4facfe)
+                                                            .withOpacity(0.3),
                                                     blurRadius: 8,
                                                     offset: const Offset(0, 2),
                                                   ),
                                                 ],
                                               ),
                                               child: Text(
-                                                widget.username.isNotEmpty 
-                                                    ? widget.username.substring(0, 1).toUpperCase()
+                                                widget.username.isNotEmpty
+                                                    ? widget.username
+                                                        .substring(0, 1)
+                                                        .toUpperCase()
                                                     : 'U',
                                                 style: const TextStyle(
                                                   color: Colors.white,
@@ -701,7 +1318,7 @@ class _HomePageState extends State<HomePage> {
                     },
                   ),
                 ),
-                
+
                 // Input Area
                 Container(
                   padding: const EdgeInsets.all(16),
@@ -764,7 +1381,8 @@ class _HomePageState extends State<HomePage> {
                               followupController.clear();
 
                               // Auto-scroll to bottom when user sends a message
-                              Future.delayed(const Duration(milliseconds: 100), () {
+                              Future.delayed(const Duration(milliseconds: 100),
+                                  () {
                                 if (_scrollController.hasClients) {
                                   _scrollController.animateTo(
                                     _scrollController.position.maxScrollExtent,
@@ -862,19 +1480,24 @@ class _HomePageState extends State<HomePage> {
 
       // If we still have fewer questions than requested, add sample questions
       if (newQuestions.length < numberOfQuestions) {
-        print('Still have fewer questions than requested, adding sample questions');
+        print(
+            'Still have fewer questions than requested, adding sample questions');
         int questionsNeeded = numberOfQuestions - newQuestions.length;
-        
+
         // Get sample questions for the selected subject
-        List<Map<String, dynamic>> subjectSamples = sampleQuestions[selectedSubject] ?? [];
-        
+        List<Map<String, dynamic>> subjectSamples =
+            sampleQuestions[selectedSubject] ?? [];
+
         if (subjectSamples.isNotEmpty) {
           // Shuffle the sample questions to randomize them
-          List<Map<String, dynamic>> shuffledSamples = List.from(subjectSamples);
+          List<Map<String, dynamic>> shuffledSamples =
+              List.from(subjectSamples);
           shuffledSamples.shuffle();
-          
+
           // Add the needed number of sample questions
-          for (int i = 0; i < questionsNeeded && i < shuffledSamples.length; i++) {
+          for (int i = 0;
+              i < questionsNeeded && i < shuffledSamples.length;
+              i++) {
             newQuestions.add(shuffledSamples[i]);
             print('Added sample question: ${shuffledSamples[i]['question']}');
           }
@@ -916,19 +1539,22 @@ class _HomePageState extends State<HomePage> {
       } else {
         // If parsing failed completely, use sample questions
         print('No questions were parsed successfully, using sample questions');
-        List<Map<String, dynamic>> subjectSamples = sampleQuestions[selectedSubject] ?? [];
-        
+        List<Map<String, dynamic>> subjectSamples =
+            sampleQuestions[selectedSubject] ?? [];
+
         if (subjectSamples.isNotEmpty) {
           // Shuffle and take the requested number
-          List<Map<String, dynamic>> shuffledSamples = List.from(subjectSamples);
+          List<Map<String, dynamic>> shuffledSamples =
+              List.from(subjectSamples);
           shuffledSamples.shuffle();
-          
-          int questionsToUse = numberOfQuestions < shuffledSamples.length 
-              ? numberOfQuestions 
+
+          int questionsToUse = numberOfQuestions < shuffledSamples.length
+              ? numberOfQuestions
               : shuffledSamples.length;
-          
-          List<Map<String, dynamic>> finalQuestions = shuffledSamples.sublist(0, questionsToUse);
-          
+
+          List<Map<String, dynamic>> finalQuestions =
+              shuffledSamples.sublist(0, questionsToUse);
+
           setState(() {
             scienceQuestions = finalQuestions;
             answeredCorrectly = List.filled(finalQuestions.length, false);
@@ -939,8 +1565,9 @@ class _HomePageState extends State<HomePage> {
             showQuizArea = true;
             showScoreSummary = false;
           });
-          
-          print('Using ${finalQuestions.length} sample questions for $selectedSubject');
+
+          print(
+              'Using ${finalQuestions.length} sample questions for $selectedSubject');
         } else {
           setState(() {
             isWaitingForQuestions = false;
@@ -948,7 +1575,8 @@ class _HomePageState extends State<HomePage> {
 
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Failed to parse questions and no sample questions available. Please try again.'),
+              content: Text(
+                  'Failed to parse questions and no sample questions available. Please try again.'),
               backgroundColor: Colors.red,
               duration: Duration(seconds: 5),
             ),
@@ -1085,8 +1713,15 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
   void _submitAnswer() async {
     if (selectedAnswer == null) return;
 
+    print('DEBUG: _submitAnswer called with selectedAnswer: $selectedAnswer');
+    print('DEBUG: widget.username: ${widget.username}');
+
     final isCorrect =
         selectedAnswer == scienceQuestions[currentQuestionIndex]["answer"];
+
+    print(
+        'DEBUG: Answer submitted - isCorrect: $isCorrect, selectedAnswer: $selectedAnswer, correctAnswer: ${scienceQuestions[currentQuestionIndex]["answer"]}');
+
     setState(() {
       // Don't clear selectedAnswer - keep it to show wrong answer highlighting
       showAnswer = true;
@@ -1097,38 +1732,59 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
 
     // Handle points for both correct and incorrect answers
     try {
-      final currentPoints = await _dbHelper.getUserPoints(username);
+      print('DEBUG: About to get user points for username: ${widget.username}');
+      final currentPoints = await _dbHelper.getUserPoints(widget.username);
+      print('DEBUG: Current points before update: $currentPoints');
+
       int pointsToAward;
-      
+
       if (isCorrect) {
         // Award points for correct answer
-        pointsToAward = _doublePointsActive ? 30 : 15; // Double points: 30, normal: 15
+        pointsToAward =
+            _doublePointsActive ? 30 : 15; // Double points: 30, normal: 15
+        print(
+            'DEBUG: Correct answer - awarding $pointsToAward points (doublePointsActive: $_doublePointsActive)');
         final newPoints = currentPoints + pointsToAward;
-        await _dbHelper.updateUserPoints(username, newPoints);
-        
+        print('DEBUG: New points after correct answer: $newPoints');
+        print('DEBUG: About to update user points in database');
+        await _dbHelper.updateUserPoints(widget.username, newPoints);
+        print('DEBUG: Database update completed for correct answer');
+
         // Call the callback to update the main app's points display
         if (widget.onPointsUpdated != null) {
+          print(
+              'DEBUG: Calling onPointsUpdated callback with newPoints: $newPoints');
           widget.onPointsUpdated!(newPoints);
+        } else {
+          print('DEBUG: onPointsUpdated callback is null');
         }
-        
+
         // Reset double points after use
         if (_doublePointsActive) {
           _doublePointsActive = false;
         }
-        
       } else {
         // Deduct points for wrong answer
         pointsToAward = -5;
+        print('DEBUG: Wrong answer - deducting ${pointsToAward.abs()} points');
         final newPoints = currentPoints + pointsToAward;
-        await _dbHelper.updateUserPoints(username, newPoints);
-        
+        print('DEBUG: New points after wrong answer: $newPoints');
+        print('DEBUG: About to update user points in database');
+        await _dbHelper.updateUserPoints(widget.username, newPoints);
+        print('DEBUG: Database update completed for wrong answer');
+
         // Call the callback to update the main app's points display
         if (widget.onPointsUpdated != null) {
+          print(
+              'DEBUG: Calling onPointsUpdated callback with newPoints: $newPoints');
           widget.onPointsUpdated!(newPoints);
+        } else {
+          print('DEBUG: onPointsUpdated callback is null');
         }
-        
       }
     } catch (e) {
+      print('DEBUG: Error updating points: $e');
+      print('DEBUG: Error stack trace: ${StackTrace.current}');
       // Show error message if points update fails
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -1141,7 +1797,8 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
           ),
           backgroundColor: Colors.orange.shade600,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           duration: const Duration(seconds: 2),
         ),
       );
@@ -1172,8 +1829,8 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
                     // Find the last message from the AI model
                     final lastMessage = state.messages.lastWhere(
                       (m) => m.role == 'model',
-                      orElse: () =>
-                          ChatMessageModel(role: '', parts: []), // Return empty if not found
+                      orElse: () => ChatMessageModel(
+                          role: '', parts: []), // Return empty if not found
                     );
 
                     if (lastMessage.role.isNotEmpty) {
@@ -1283,7 +1940,7 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
                 ],
               ),
               const SizedBox(height: 20),
-              
+
               // Beautiful Search Bar
               Container(
                 margin: const EdgeInsets.symmetric(horizontal: 10),
@@ -1359,14 +2016,14 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 25),
-              
-              // Enhanced Subject Wheel
+
+              // Subject Selection Grid
               Opacity(
                 opacity: isQuizActive ? 0.5 : 1.0,
                 child: Container(
-                  height: 220,
+                  height: 320,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(20),
                     gradient: LinearGradient(
@@ -1384,26 +2041,20 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(20),
-                    child: HorizontalSubjectWheel(
-                      subjects: filteredSubjects.isEmpty ? subjects : filteredSubjects,
-                      selectedSubject: selectedSubject,
-                      onSubjectSelected: isQuizActive
-                          ? null
-                          : (subject) {
-                              setState(() {
-                                selectedSubject = subject;
-                              });
-                            },
+                    child: _buildSubjectGrid(
+                      filteredSubjects.isEmpty ? subjects : filteredSubjects,
+                      isQuizActive,
                     ),
                   ),
                 ),
               ),
-              
+
               // Search results indicator
               if (isSearching && filteredSubjects.isNotEmpty)
                 Container(
                   margin: const EdgeInsets.only(top: 15),
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                   decoration: BoxDecoration(
                     color: const Color(0xFF4CAF50).withOpacity(0.2),
                     borderRadius: BorderRadius.circular(15),
@@ -1432,11 +2083,12 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
                     ],
                   ),
                 ),
-              
+
               if (isSearching && filteredSubjects.isEmpty)
                 Container(
                   margin: const EdgeInsets.only(top: 15),
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                   decoration: BoxDecoration(
                     color: const Color(0xFFFF6B6B).withOpacity(0.2),
                     borderRadius: BorderRadius.circular(15),
@@ -1674,6 +2326,240 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
     );
   }
 
+  Widget _buildSubjectGrid(List<String> availableSubjects, bool isQuizActive) {
+    final List<Color> _gradients = [
+      const Color(0xFF667eea),
+      const Color(0xFFf093fb),
+      const Color(0xFF4facfe),
+      const Color(0xFF43e97b),
+      const Color(0xFFfa709a),
+      const Color(0xFFa8edea),
+      const Color(0xFFffecd2),
+      const Color(0xFFff9a9e),
+      const Color(0xFF667eea),
+      const Color(0xFFf093fb),
+      const Color(0xFF4facfe),
+      const Color(0xFF43e97b),
+      const Color(0xFFfa709a),
+      const Color(0xFFa8edea),
+      const Color(0xFFffecd2),
+      const Color(0xFFff9a9e),
+      const Color(0xFF667eea),
+    ];
+
+    final List<IconData> _icons = [
+      Icons.science,
+      Icons.rocket_launch,
+      Icons.biotech,
+      Icons.calculate,
+      Icons.history_edu,
+      Icons.public,
+      Icons.computer,
+      Icons.trending_up,
+      Icons.book,
+      Icons.palette,
+      Icons.music_note,
+      Icons.psychology,
+      Icons.people,
+      Icons.lightbulb,
+      Icons.landscape,
+      Icons.eco,
+      Icons.gavel,
+      Icons.business,
+      Icons.school,
+      Icons.architecture,
+      Icons.gavel,
+      Icons.medical_services,
+      Icons.pets,
+      Icons.restaurant,
+      Icons.chat,
+      Icons.security,
+      Icons.public,
+      Icons.agriculture,
+      Icons.waves,
+      Icons.smart_toy,
+    ];
+
+    return Column(
+      children: [
+        // Selected subject indicator
+        if (selectedSubject.isNotEmpty)
+          Container(
+            margin: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  _gradients[
+                      subjects.indexOf(selectedSubject) % _gradients.length],
+                  _gradients[
+                          subjects.indexOf(selectedSubject) % _gradients.length]
+                      .withOpacity(0.7),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(25),
+              boxShadow: [
+                BoxShadow(
+                  color: _gradients[
+                          subjects.indexOf(selectedSubject) % _gradients.length]
+                      .withOpacity(0.3),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  _icons[subjects.indexOf(selectedSubject) % _icons.length],
+                  color: Colors.white,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Selected: $selectedSubject',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+        // Grid of subjects
+        Expanded(
+          child: GridView.builder(
+            padding: const EdgeInsets.all(16),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              childAspectRatio: 1.0,
+            ),
+            itemCount: availableSubjects.length,
+            itemBuilder: (context, index) {
+              final subject = availableSubjects[index];
+              final isSelected = subject == selectedSubject;
+              final gradientIndex =
+                  subjects.indexOf(subject) % _gradients.length;
+              final iconIndex = subjects.indexOf(subject) % _icons.length;
+
+              return GestureDetector(
+                onTap: isQuizActive
+                    ? null
+                    : () {
+                        setState(() {
+                          selectedSubject = subject;
+                        });
+                      },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: isSelected
+                          ? [
+                              _gradients[gradientIndex],
+                              _gradients[gradientIndex].withOpacity(0.8)
+                            ]
+                          : [
+                              Colors.white.withOpacity(0.15),
+                              Colors.white.withOpacity(0.05)
+                            ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: isSelected
+                          ? _gradients[gradientIndex].withOpacity(0.8)
+                          : Colors.white.withOpacity(0.2),
+                      width: isSelected ? 2 : 1,
+                    ),
+                    boxShadow: isSelected
+                        ? [
+                            BoxShadow(
+                              color: _gradients[gradientIndex].withOpacity(0.4),
+                              blurRadius: 15,
+                              offset: const Offset(0, 6),
+                              spreadRadius: 1,
+                            ),
+                          ]
+                        : [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: isSelected
+                              ? Colors.white.withOpacity(0.2)
+                              : Colors.transparent,
+                        ),
+                        child: Icon(
+                          _icons[iconIndex],
+                          color: isSelected
+                              ? Colors.white
+                              : Colors.white.withOpacity(0.8),
+                          size: isSelected ? 28 : 24,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        child: Text(
+                          subject,
+                          style: TextStyle(
+                            color: isSelected
+                                ? Colors.white
+                                : Colors.white.withOpacity(0.9),
+                            fontSize: 11,
+                            fontWeight:
+                                isSelected ? FontWeight.bold : FontWeight.w500,
+                          ),
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (isSelected)
+                        Container(
+                          margin: const EdgeInsets.only(top: 4),
+                          padding: const EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white.withOpacity(0.3),
+                          ),
+                          child: const Icon(
+                            Icons.check,
+                            color: Colors.white,
+                            size: 12,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildQuizArea() {
     print(
         '_buildQuizArea called with ${scienceQuestions.length} questions, current index: $currentQuestionIndex');
@@ -1713,7 +2599,8 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
               onPressed: _returnToHome,
             ),
             // Powerup Buttons (small, in header)
-            if (_userPowerups.isNotEmpty && _userPowerups.values.any((count) => count > 0))
+            if (_userPowerups.isNotEmpty &&
+                _userPowerups.values.any((count) => count > 0))
               Row(
                 children: _powerups.map((powerup) {
                   final powerupId = powerup['id'];
@@ -1730,7 +2617,10 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: canUse
-                                ? [powerup['color'], powerup['color'].withOpacity(0.8)]
+                                ? [
+                                    powerup['color'],
+                                    powerup['color'].withOpacity(0.8)
+                                  ]
                                 : [Colors.grey.shade600, Colors.grey.shade700],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
@@ -1849,12 +2739,12 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
             itemCount: currentQuestion["options"].length,
             itemBuilder: (context, index) {
               final option = currentQuestion["options"][index];
-              
+
               // Skip this option if it's been removed by 50/50 powerup
               if (_fiftyFiftyUsed && _removedOptions.contains(option)) {
                 return const SizedBox.shrink();
               }
-              
+
               final isSelected = selectedAnswer == option;
               final isCorrect =
                   showAnswer && option == currentQuestion["answer"];
@@ -2416,7 +3306,8 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
     final correctAnswer = currentQuestion["answer"];
 
     // Find incorrect options
-    final incorrectOptions = options.where((opt) => opt != correctAnswer).toList();
+    final incorrectOptions =
+        options.where((opt) => opt != correctAnswer).toList();
     incorrectOptions.shuffle();
 
     // Remove 2 incorrect options
@@ -2441,7 +3332,8 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
     });
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Double Points activated! Next correct answer worth 20 points.'),
+        content: Text(
+            'Double Points activated! Next correct answer worth 30 points.'),
         backgroundColor: Colors.purple,
       ),
     );
@@ -2451,10 +3343,11 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
     final currentQuestion = scienceQuestions[currentQuestionIndex];
     final question = currentQuestion["question"];
     final options = List<String>.from(currentQuestion["options"]);
-    
+
     // Create the prompt for AI
-    String prompt = "Question: $question\nOptions: ${options.join(', ')}\n\nGive a helpful hint for this question. Only provide the hint, no other text.";
-    
+    String prompt =
+        "Question: $question\nOptions: ${options.join(', ')}\n\nGive a helpful hint for this question. Only provide the hint, no other text.";
+
     // Show loading dialog
     showDialog(
       context: context,
@@ -2500,17 +3393,17 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
         );
       },
     );
-    
+
     try {
       // Send message to AI
       _chatBloc.add(ChatGenerationNewTextMessageEvent(
         inputMessage: prompt,
       ));
-      
+
       // Wait for the response using a one-time listener
       bool responseReceived = false;
       StreamSubscription<ChatState>? subscription;
-      
+
       subscription = _chatBloc.stream.listen((state) {
         if (!responseReceived) {
           if (state is ChatSuccessState && state.messages.isNotEmpty) {
@@ -2526,23 +3419,25 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
             responseReceived = true;
             subscription?.cancel();
             Navigator.of(context).pop(); // Close loading dialog
-            _showHintDialog("Sorry, I couldn't generate a hint right now. Please try again.");
+            _showHintDialog(
+                "Sorry, I couldn't generate a hint right now. Please try again.");
           }
         }
       });
-      
+
       // Add timeout
       Timer(const Duration(seconds: 30), () {
         if (!responseReceived) {
           subscription?.cancel();
           Navigator.of(context).pop(); // Close loading dialog
-          _showHintDialog("Sorry, the hint request timed out. Please try again.");
+          _showHintDialog(
+              "Sorry, the hint request timed out. Please try again.");
         }
       });
-      
     } catch (e) {
       Navigator.of(context).pop(); // Close loading dialog
-      _showHintDialog("Sorry, I couldn't generate a hint right now. Please try again.");
+      _showHintDialog(
+          "Sorry, I couldn't generate a hint right now. Please try again.");
     }
   }
 
@@ -2600,7 +3495,7 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
                   ],
                 ),
                 const SizedBox(height: 20),
-                
+
                 // Hint content
                 Container(
                   width: double.infinity,
@@ -2624,7 +3519,7 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
                   ),
                 ),
                 const SizedBox(height: 24),
-                
+
                 // Close button
                 SizedBox(
                   width: double.infinity,
@@ -2673,15 +3568,15 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
       // Get current points
       final currentPoints = await _dbHelper.getUserPoints(widget.username);
       final newPoints = currentPoints + 100;
-      
+
       // Update points in database
       await _dbHelper.updateUserPoints(widget.username, newPoints);
-      
+
       // Call the callback to update the main app's points display
       if (widget.onPointsUpdated != null) {
         widget.onPointsUpdated!(newPoints);
       }
-      
+
       // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -2694,7 +3589,8 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
           ),
           backgroundColor: const Color(0xFFFFD700),
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           duration: const Duration(seconds: 3),
         ),
       );
@@ -2711,7 +3607,8 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
           ),
           backgroundColor: Colors.red.shade600,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       );
     }
@@ -2751,345 +3648,6 @@ class SpaceBackground extends StatelessWidget {
                 },
               ),
             ),
-        ],
-      ),
-    );
-  }
-}
-
-class HorizontalSubjectWheel extends StatefulWidget {
-  final List<String> subjects;
-  final String selectedSubject;
-  final Function(String)? onSubjectSelected;
-
-  const HorizontalSubjectWheel({
-    Key? key,
-    required this.subjects,
-    required this.selectedSubject,
-    this.onSubjectSelected,
-  }) : super(key: key);
-
-  @override
-  _HorizontalSubjectWheelState createState() => _HorizontalSubjectWheelState();
-}
-
-class _HorizontalSubjectWheelState extends State<HorizontalSubjectWheel>
-    with TickerProviderStateMixin {
-  late FixedExtentScrollController _scrollController;
-  late AnimationController _animationController;
-  int _selectedIndex = 0;
-  bool _isProgrammaticallyScrolling = false; // Add flag to prevent unnecessary scrolling
-  
-  // For infinite scrolling, we'll repeat the subjects only once
-  static const int _repeatCount = 1; // Repeat subjects only once for cleaner display
-  late List<String> _repeatedSubjects;
-
-  final List<Color> _gradients = [
-    const Color(0xFF667eea),
-    const Color(0xFFf093fb),
-    const Color(0xFF4facfe),
-    const Color(0xFF43e97b),
-    const Color(0xFFfa709a),
-    const Color(0xFFa8edea),
-    const Color(0xFFffecd2),
-    const Color(0xFFff9a9e),
-    const Color(0xFF667eea),
-    const Color(0xFFf093fb),
-    const Color(0xFF4facfe),
-    const Color(0xFF43e97b),
-    const Color(0xFFfa709a),
-    const Color(0xFFa8edea),
-    const Color(0xFFffecd2),
-    const Color(0xFFff9a9e),
-    const Color(0xFF667eea),
-  ];
-
-  final List<IconData> _icons = [
-    Icons.science,
-    Icons.rocket_launch,
-    Icons.biotech,
-    Icons.calculate,
-    Icons.history_edu,
-    Icons.public,
-    Icons.computer,
-    Icons.trending_up,
-    Icons.book,
-    Icons.palette,
-    Icons.music_note,
-    Icons.psychology,
-    Icons.people,
-    Icons.lightbulb,
-    Icons.landscape,
-    Icons.eco,
-    Icons.gavel,
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-    _scrollController = FixedExtentScrollController();
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 400),
-      vsync: this,
-    );
-    
-    // Create repeated subjects list for infinite scrolling
-    _repeatedSubjects = List.generate(_repeatCount, (index) => widget.subjects).expand((subjects) => subjects).toList();
-    
-    _selectedIndex = widget.subjects.indexOf(widget.selectedSubject);
-    if (_selectedIndex == -1 || _selectedIndex >= widget.subjects.length) {
-      _selectedIndex = widget.subjects.isNotEmpty ? 0 : 0;
-    }
-    
-    // Set initial position to the selected subject
-    int initialPosition = _selectedIndex;
-    
-    // Set initial position after the widget is built
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_repeatedSubjects.isNotEmpty && initialPosition < _repeatedSubjects.length) {
-        try {
-          _scrollController.jumpToItem(initialPosition);
-        } catch (e) {
-          // Fallback to first item if there's an error
-          if (_repeatedSubjects.isNotEmpty) {
-            _scrollController.jumpToItem(0);
-          }
-        }
-      }
-    });
-  }
-
-  @override
-  void didUpdateWidget(HorizontalSubjectWheel oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    
-    // Update repeated subjects if the subjects list changed
-    if (oldWidget.subjects != widget.subjects) {
-      _repeatedSubjects = List.generate(_repeatCount, (index) => widget.subjects).expand((subjects) => subjects).toList();
-      
-      // Ensure selected index is valid after subjects change
-      if (_selectedIndex >= widget.subjects.length) {
-        _selectedIndex = widget.subjects.isNotEmpty ? 0 : 0;
-      }
-    }
-    
-    // If selected subject changed and it's not the same as current, scroll to it
-    if (oldWidget.selectedSubject != widget.selectedSubject && 
-        _selectedIndex < widget.subjects.length &&
-        widget.selectedSubject != widget.subjects[_selectedIndex]) {
-      _scrollToSubject(widget.selectedSubject);
-    }
-  }
-
-  void _scrollToSubject(String subject) {
-    final index = widget.subjects.indexOf(subject);
-    if (index != -1 && index != _selectedIndex && index < widget.subjects.length) {
-      _isProgrammaticallyScrolling = true;
-      final targetPosition = index;
-      
-      // Ensure target position is within bounds
-      if (targetPosition >= 0 && targetPosition < _repeatedSubjects.length) {
-        _scrollController.animateToItem(
-          targetPosition,
-          duration: const Duration(milliseconds: 500),
-          curve: Curves.easeInOutCubic,
-        ).then((_) {
-          _isProgrammaticallyScrolling = false;
-        });
-      } else {
-        _isProgrammaticallyScrolling = false;
-      }
-    }
-  }
-
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    _animationController.dispose();
-    super.dispose();
-  }
-
-  void _onSelectedItemChanged(int index) {
-    // Don't trigger if we're programmatically scrolling
-    if (_isProgrammaticallyScrolling) return;
-    
-    // Ensure index is within bounds
-    if (index < 0 || index >= _repeatedSubjects.length) return;
-    
-    // Map the repeated index back to the original subject index
-    int originalIndex = index % widget.subjects.length;
-    
-    // Ensure original index is within bounds
-    if (originalIndex < 0 || originalIndex >= widget.subjects.length) return;
-    
-    setState(() {
-      _selectedIndex = originalIndex;
-    });
-    
-    if (widget.onSubjectSelected != null) {
-      widget.onSubjectSelected!(widget.subjects[originalIndex]);
-    }
-    _animationController.forward(from: 0.0);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 200,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          // Selection indicator with glow - smaller size to match items
-          AnimatedBuilder(
-            animation: _animationController,
-            builder: (context, child) {
-              final gradientIndex = _selectedIndex % _gradients.length;
-              return Container(
-                height: 50,
-                margin: const EdgeInsets.symmetric(horizontal: 25),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(15),
-                  border: Border.all(
-                    color: _gradients[gradientIndex].withOpacity(0.8 + (_animationController.value * 0.2)),
-                    width: 2,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: _gradients[gradientIndex].withOpacity(0.4 + (_animationController.value * 0.3)),
-                      blurRadius: 15 + (_animationController.value * 8),
-                      spreadRadius: 1 + (_animationController.value * 2),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-          // Subject wheel
-          Container(
-            height: 180,
-            child: ListWheelScrollView.useDelegate(
-              controller: _scrollController,
-              itemExtent: 60,
-              diameterRatio: 1.8,
-              perspective: 0.01,
-              physics: widget.onSubjectSelected != null 
-                  ? const FixedExtentScrollPhysics()
-                  : const NeverScrollableScrollPhysics(),
-              onSelectedItemChanged: widget.onSubjectSelected != null ? _onSelectedItemChanged : null,
-              childDelegate: ListWheelChildBuilderDelegate(
-                builder: (context, index) {
-                  if (index >= _repeatedSubjects.length) return Container();
-                  
-                  final subject = _repeatedSubjects[index];
-                  final originalIndex = index % widget.subjects.length;
-                  final isSelected = originalIndex == _selectedIndex;
-                  
-                  // Ensure indices are within bounds
-                  final gradientIndex = originalIndex % _gradients.length;
-                  final iconIndex = originalIndex % _icons.length;
-                  
-                  return AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeOutCubic,
-                    margin: const EdgeInsets.symmetric(horizontal: 25, vertical: 5),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(15),
-                      gradient: LinearGradient(
-                        colors: isSelected
-                            ? [_gradients[gradientIndex], _gradients[gradientIndex].withOpacity(0.7)]
-                            : [Colors.white.withOpacity(0.15), Colors.white.withOpacity(0.05)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      boxShadow: isSelected
-                          ? [
-                              BoxShadow(
-                                color: _gradients[gradientIndex].withOpacity(0.5),
-                                blurRadius: 15,
-                                offset: const Offset(0, 6),
-                                spreadRadius: 1,
-                              ),
-                            ]
-                          : [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
-                                blurRadius: 3,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        AnimatedContainer(
-                          duration: const Duration(milliseconds: 300),
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: isSelected 
-                                ? Colors.white.withOpacity(0.2)
-                                : Colors.transparent,
-                          ),
-                          child: Icon(
-                            _icons[iconIndex],
-                            color: isSelected ? Colors.white : Colors.white.withOpacity(0.6),
-                            size: isSelected ? 30 : 26,
-                          ),
-                        ),
-                        const SizedBox(width: 15),
-                        Expanded(
-                          child: Text(
-                            subject,
-                            style: TextStyle(
-                              color: isSelected ? Colors.white : Colors.white.withOpacity(0.7),
-                              fontSize: isSelected ? 20 : 17,
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                            ),
-                            textAlign: TextAlign.left,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        if (isSelected)
-                          Container(
-                            margin: const EdgeInsets.only(right: 15),
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.white.withOpacity(0.3),
-                            ),
-                            child: Icon(
-                              Icons.check,
-                              color: Colors.white,
-                              size: 16,
-                            ),
-                          ),
-                      ],
-                    ),
-                  );
-                },
-                childCount: _repeatedSubjects.length,
-              ),
-            ),
-          ),
-          // Center line indicators
-          Positioned(
-            top: 70,
-            left: 0,
-            right: 0,
-            child: Container(
-              height: 2,
-              color: _gradients[_selectedIndex % _gradients.length].withOpacity(0.6),
-            ),
-          ),
-          Positioned(
-            bottom: 70,
-            left: 0,
-            right: 0,
-            child: Container(
-              height: 2,
-              color: _gradients[_selectedIndex % _gradients.length].withOpacity(0.6),
-            ),
-          ),
         ],
       ),
     );

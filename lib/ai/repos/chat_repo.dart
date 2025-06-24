@@ -1,7 +1,7 @@
 import 'dart:developer';
 import 'package:dio/dio.dart';
-import 'package:student_learning_app/models/chat_message_model.dart';
-import 'package:student_learning_app/utils/constants.dart';
+import 'package:student_learning_app/ai/models/chat_message_model.dart';
+import 'package:student_learning_app/ai/utils/constants.dart';
 
 class ChatRepo {
   static Future<String> chatTextGenerationRepo(

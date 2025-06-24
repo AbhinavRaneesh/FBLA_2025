@@ -12,13 +12,20 @@ class DatabaseHelper {
   DatabaseHelper._internal();
 
   Future<Database> get database async {
-    if (_database != null) return _database!;
+    if (_database != null) {
+      print('DEBUG: Database already exists, returning existing instance');
+      return _database!;
+    }
+    print('DEBUG: Database does not exist, initializing new database');
     _database = await _initDatabase();
+    print('DEBUG: Database initialization completed');
     return _database!;
   }
 
   Future<Database> _initDatabase() async {
     String path = join(await getDatabasesPath(), 'eduquest.db');
+    print('DEBUG: Database path: $path');
+    print('DEBUG: Database path exists: ${await databaseExists(path)}');
     return await openDatabase(
       path,
       version: 3,
@@ -28,6 +35,8 @@ class DatabaseHelper {
   }
 
   Future<void> _onCreate(Database db, int version) async {
+    print('DEBUG: Creating database tables, version: $version');
+
     // Create users table
     await db.execute('''
       CREATE TABLE users(
@@ -39,6 +48,7 @@ class DatabaseHelper {
         created_at TEXT NOT NULL
       )
     ''');
+    print('DEBUG: Users table created successfully');
 
     // Create study_sets table
     await db.execute('''
@@ -52,6 +62,7 @@ class DatabaseHelper {
         FOREIGN KEY (username) REFERENCES users (username)
       )
     ''');
+    print('DEBUG: Study_sets table created successfully');
 
     // Create study_set_questions table
     await db.execute('''
@@ -64,6 +75,7 @@ class DatabaseHelper {
         FOREIGN KEY (study_set_id) REFERENCES study_sets (id)
       )
     ''');
+    print('DEBUG: Study_set_questions table created successfully');
 
     // User's study sets (for tracking which sets a user has added)
     await db.execute('''
@@ -76,6 +88,7 @@ class DatabaseHelper {
         FOREIGN KEY (study_set_id) REFERENCES study_sets (id) ON DELETE CASCADE
       )
     ''');
+    print('DEBUG: User_study_sets table created successfully');
 
     // Create user_powerups table
     await db.execute('''
@@ -88,17 +101,22 @@ class DatabaseHelper {
         FOREIGN KEY (username) REFERENCES users (username) ON DELETE CASCADE
       )
     ''');
+    print('DEBUG: User_powerups table created successfully');
 
     // Insert default premade study sets
     await _insertPremadeStudySets(db);
+    print('DEBUG: Database creation completed successfully');
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    print('DEBUG: Database upgrade from version $oldVersion to $newVersion');
     if (oldVersion < 2) {
+      print('DEBUG: Upgrading to version 2 - adding new courses');
       // Add new courses to existing database
       await _insertPremadeStudySets(db);
     }
     if (oldVersion < 3) {
+      print('DEBUG: Upgrading to version 3 - adding user_powerups table');
       // Add user_powerups table
       await db.execute('''
         CREATE TABLE user_powerups(
@@ -111,6 +129,7 @@ class DatabaseHelper {
         )
       ''');
     }
+    print('DEBUG: Database upgrade completed');
   }
 
   Future<void> _insertPremadeStudySets(Database db) async {
@@ -166,42 +185,50 @@ class DatabaseHelper {
 
   // User authentication methods
   Future<bool> authenticateUser(String username, String password) async {
+    print('DEBUG: authenticateUser called for username: $username');
     final db = await database;
     final result = await db.query(
       'users',
       where: 'username = ? AND password = ?',
       whereArgs: [username, password],
     );
-    return result.isNotEmpty;
+    final isAuthenticated = result.isNotEmpty;
+    print(
+        'DEBUG: User authentication result: $isAuthenticated for username: $username');
+    return isAuthenticated;
   }
 
   Future<bool> usernameExists(String username) async {
+    print('DEBUG: usernameExists called for username: $username');
     final db = await database;
     final result = await db.query(
       'users',
       where: 'username = ?',
       whereArgs: [username],
     );
-    return result.isNotEmpty;
+    final exists = result.isNotEmpty;
+    print(
+        'DEBUG: Username exists check result: $exists for username: $username');
+    return exists;
   }
 
   Future<bool> addUser(String username, String password) async {
+    print('DEBUG: addUser called for username: $username');
     final db = await database;
     try {
-      await db.insert('users', {
+      final userId = await db.insert('users', {
         'username': username,
         'password': password,
         'points': 0,
         'current_theme': 'space',
         'created_at': DateTime.now().toIso8601String(),
       });
+      print(
+          'DEBUG: User created successfully with ID: $userId, username: $username, initial points: 0');
       return true;
     } catch (e) {
+      print('DEBUG: Error creating user: $e');
       // Log error in debug mode only
-      assert(() {
-        debugPrint('Error adding user: $e');
-        return true;
-      }());
       return false;
     }
   }
@@ -426,24 +453,54 @@ class DatabaseHelper {
 
   // Points and theme methods
   Future<int> getUserPoints(String username) async {
-    final db = await database;
-    final result = await db.query(
-      'users',
-      columns: ['points'],
-      where: 'username = ?',
-      whereArgs: [username],
-    );
-    return result.first['points'] as int;
+    print('DEBUG: getUserPoints called for username: $username');
+    try {
+      final db = await database;
+      final result = await db.query(
+        'users',
+        columns: ['points'],
+        where: 'username = ?',
+        whereArgs: [username],
+      );
+
+      if (result.isEmpty) {
+        print('DEBUG: getUserPoints - No user found for username: $username');
+        return 0;
+      }
+
+      final points = result.first['points'] as int;
+      print('DEBUG: getUserPoints returned: $points for username: $username');
+      return points;
+    } catch (e) {
+      print('DEBUG: getUserPoints error: $e');
+      print('DEBUG: getUserPoints stack trace: ${StackTrace.current}');
+      return 0;
+    }
   }
 
   Future<void> updateUserPoints(String username, int points) async {
-    final db = await database;
-    await db.update(
-      'users',
-      {'points': points},
-      where: 'username = ?',
-      whereArgs: [username],
-    );
+    print(
+        'DEBUG: updateUserPoints called for username: $username with points: $points');
+    try {
+      final db = await database;
+      final result = await db.update(
+        'users',
+        {'points': points},
+        where: 'username = ?',
+        whereArgs: [username],
+      );
+      print(
+          'DEBUG: updateUserPoints completed. Rows affected: $result for username: $username');
+
+      if (result == 0) {
+        print(
+            'DEBUG: updateUserPoints - No rows were updated for username: $username');
+      }
+    } catch (e) {
+      print('DEBUG: updateUserPoints error: $e');
+      print('DEBUG: updateUserPoints stack trace: ${StackTrace.current}');
+      throw e;
+    }
   }
 
   Future<String?> getCurrentTheme(String username) async {

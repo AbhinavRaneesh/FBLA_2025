@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:student_learning_app/helpers/frq_manager.dart';
 import '../helpers/database_helper.dart';
-import '../utils/constants.dart';
+import '../main.dart' show getBackgroundForTheme;
+import '../ai/utils/constants.dart';
 
 class StudySetEditScreen extends StatefulWidget {
   final Map<String, dynamic> studySet;
   final String username;
+  final String currentTheme;
   final VoidCallback onStudySetUpdated;
 
   const StudySetEditScreen({
     super.key,
     required this.studySet,
     required this.username,
+    required this.currentTheme,
     required this.onStudySetUpdated,
   });
 
@@ -24,7 +27,7 @@ class _StudySetEditScreenState extends State<StudySetEditScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
-  
+
   List<Map<String, dynamic>> _questions = [];
   bool _isLoading = true;
   bool _isSaving = false;
@@ -47,7 +50,8 @@ class _StudySetEditScreenState extends State<StudySetEditScreen> {
   Future<void> _loadQuestions() async {
     setState(() => _isLoading = true);
     try {
-      final questions = await _dbHelper.getStudySetQuestions(widget.studySet['id']);
+      final questions =
+          await _dbHelper.getStudySetQuestions(widget.studySet['id']);
       setState(() {
         _questions = questions;
         _isLoading = false;
@@ -65,7 +69,7 @@ class _StudySetEditScreenState extends State<StudySetEditScreen> {
 
   Future<void> _saveStudySet() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
     setState(() => _isSaving = true);
     try {
       await _dbHelper.updateStudySet(
@@ -73,14 +77,14 @@ class _StudySetEditScreenState extends State<StudySetEditScreen> {
         _nameController.text,
         _descriptionController.text,
       );
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Study set updated successfully!'),
           backgroundColor: Colors.green,
         ),
       );
-      
+
       widget.onStudySetUpdated();
       Navigator.pop(context);
     } catch (e) {
@@ -238,7 +242,7 @@ class _StudySetEditScreenState extends State<StudySetEditScreen> {
       ),
       body: Stack(
         children: [
-          const SpaceBackground(),
+          getBackgroundForTheme(widget.currentTheme),
           SafeArea(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
@@ -258,7 +262,10 @@ class _StudySetEditScreenState extends State<StudySetEditScreen> {
                             child: Container(
                               decoration: BoxDecoration(
                                 gradient: const LinearGradient(
-                                  colors: [Color(0xFF2A2D3E), Color(0xFF1D1E33)],
+                                  colors: [
+                                    Color(0xFF2A2D3E),
+                                    Color(0xFF1D1E33)
+                                  ],
                                 ),
                                 borderRadius: BorderRadius.circular(16),
                               ),
@@ -279,13 +286,16 @@ class _StudySetEditScreenState extends State<StudySetEditScreen> {
                                     controller: _nameController,
                                     decoration: const InputDecoration(
                                       labelText: 'Name',
-                                      labelStyle: TextStyle(color: Colors.white70),
+                                      labelStyle:
+                                          TextStyle(color: Colors.white70),
                                       border: OutlineInputBorder(),
                                       enabledBorder: OutlineInputBorder(
-                                        borderSide: BorderSide(color: Colors.white30),
+                                        borderSide:
+                                            BorderSide(color: Colors.white30),
                                       ),
                                       focusedBorder: OutlineInputBorder(
-                                        borderSide: BorderSide(color: Colors.blueAccent),
+                                        borderSide: BorderSide(
+                                            color: Colors.blueAccent),
                                       ),
                                     ),
                                     style: const TextStyle(color: Colors.white),
@@ -301,13 +311,16 @@ class _StudySetEditScreenState extends State<StudySetEditScreen> {
                                     controller: _descriptionController,
                                     decoration: const InputDecoration(
                                       labelText: 'Description',
-                                      labelStyle: TextStyle(color: Colors.white70),
+                                      labelStyle:
+                                          TextStyle(color: Colors.white70),
                                       border: OutlineInputBorder(),
                                       enabledBorder: OutlineInputBorder(
-                                        borderSide: BorderSide(color: Colors.white30),
+                                        borderSide:
+                                            BorderSide(color: Colors.white30),
                                       ),
                                       focusedBorder: OutlineInputBorder(
-                                        borderSide: BorderSide(color: Colors.blueAccent),
+                                        borderSide: BorderSide(
+                                            color: Colors.blueAccent),
                                       ),
                                     ),
                                     style: const TextStyle(color: Colors.white),
@@ -318,7 +331,7 @@ class _StudySetEditScreenState extends State<StudySetEditScreen> {
                             ),
                           ),
                           const SizedBox(height: 24),
-                          
+
                           // Questions Section
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -343,7 +356,7 @@ class _StudySetEditScreenState extends State<StudySetEditScreen> {
                             ],
                           ),
                           const SizedBox(height: 16),
-                          
+
                           // Questions List
                           if (_questions.isEmpty)
                             Card(
@@ -400,7 +413,10 @@ class _StudySetEditScreenState extends State<StudySetEditScreen> {
                                   child: Container(
                                     decoration: BoxDecoration(
                                       gradient: const LinearGradient(
-                                        colors: [Color(0xFF23243a), Color(0xFF16213E)],
+                                        colors: [
+                                          Color(0xFF23243a),
+                                          Color(0xFF16213E)
+                                        ],
                                         begin: Alignment.topLeft,
                                         end: Alignment.bottomRight,
                                       ),
@@ -408,15 +424,18 @@ class _StudySetEditScreenState extends State<StudySetEditScreen> {
                                     ),
                                     padding: const EdgeInsets.all(16),
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Row(
                                           children: [
                                             Container(
                                               padding: const EdgeInsets.all(8),
                                               decoration: BoxDecoration(
-                                                color: Colors.blueAccent.withOpacity(0.2),
-                                                borderRadius: BorderRadius.circular(8),
+                                                color: Colors.blueAccent
+                                                    .withOpacity(0.2),
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
                                               ),
                                               child: Text(
                                                 '${index + 1}',
@@ -429,7 +448,8 @@ class _StudySetEditScreenState extends State<StudySetEditScreen> {
                                             const SizedBox(width: 12),
                                             Expanded(
                                               child: Text(
-                                                question['question_text'] ?? question['question'],
+                                                question['question_text'] ??
+                                                    question['question'],
                                                 style: const TextStyle(
                                                   color: Colors.white,
                                                   fontSize: 16,
@@ -442,7 +462,8 @@ class _StudySetEditScreenState extends State<StudySetEditScreen> {
                                                 if (value == 'edit') {
                                                   _editQuestion(question);
                                                 } else if (value == 'delete') {
-                                                  _deleteQuestion(question['id']);
+                                                  _deleteQuestion(
+                                                      question['id']);
                                                 }
                                               },
                                               itemBuilder: (context) => [
@@ -450,7 +471,8 @@ class _StudySetEditScreenState extends State<StudySetEditScreen> {
                                                   value: 'edit',
                                                   child: Row(
                                                     children: [
-                                                      Icon(Icons.edit, size: 18),
+                                                      Icon(Icons.edit,
+                                                          size: 18),
                                                       SizedBox(width: 8),
                                                       Text('Edit'),
                                                     ],
@@ -460,9 +482,14 @@ class _StudySetEditScreenState extends State<StudySetEditScreen> {
                                                   value: 'delete',
                                                   child: Row(
                                                     children: [
-                                                      Icon(Icons.delete, size: 18, color: Colors.red),
+                                                      Icon(Icons.delete,
+                                                          size: 18,
+                                                          color: Colors.red),
                                                       SizedBox(width: 8),
-                                                      Text('Delete', style: TextStyle(color: Colors.red)),
+                                                      Text('Delete',
+                                                          style: TextStyle(
+                                                              color:
+                                                                  Colors.red)),
                                                     ],
                                                   ),
                                                 ),
@@ -478,7 +505,8 @@ class _StudySetEditScreenState extends State<StudySetEditScreen> {
                                         Text(
                                           'Correct Answer: ${question['correct_answer']}',
                                           style: TextStyle(
-                                            color: Colors.green.withOpacity(0.8),
+                                            color:
+                                                Colors.green.withOpacity(0.8),
                                             fontSize: 14,
                                             fontWeight: FontWeight.w500,
                                           ),
@@ -529,9 +557,11 @@ class _QuestionEditDialogState extends State<QuestionEditDialog> {
   void initState() {
     super.initState();
     if (widget.question != null) {
-      _questionController.text = widget.question!['question_text'] ?? widget.question!['question'] ?? '';
+      _questionController.text = widget.question!['question_text'] ??
+          widget.question!['question'] ??
+          '';
       _correctAnswerController.text = widget.question!['correct_answer'] ?? '';
-      
+
       var optionsRaw = widget.question!['options'] ?? [];
       List<String> options;
       if (optionsRaw is String) {
@@ -668,33 +698,38 @@ class _QuestionEditDialogState extends State<QuestionEditDialog> {
                     const SizedBox(height: 16),
                     const Text(
                       'Options:',
-                      style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold, color: Colors.white),
                     ),
                     const SizedBox(height: 8),
-                    ...List.generate(4, (index) => Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: TextFormField(
-                        controller: _optionControllers[index],
-                        decoration: InputDecoration(
-                          labelText: 'Option ${index + 1}',
-                          border: const OutlineInputBorder(),
-                          labelStyle: const TextStyle(color: Colors.white70),
-                          enabledBorder: const OutlineInputBorder(
-                            borderSide: BorderSide(color: Colors.white30),
-                          ),
-                          focusedBorder: const OutlineInputBorder(
-                            borderSide: BorderSide(color: Colors.white),
-                          ),
-                        ),
-                        style: const TextStyle(color: Colors.white),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter option ${index + 1}';
-                          }
-                          return null;
-                        },
-                      ),
-                    )),
+                    ...List.generate(
+                        4,
+                        (index) => Padding(
+                              padding: const EdgeInsets.only(bottom: 8),
+                              child: TextFormField(
+                                controller: _optionControllers[index],
+                                decoration: InputDecoration(
+                                  labelText: 'Option ${index + 1}',
+                                  border: const OutlineInputBorder(),
+                                  labelStyle:
+                                      const TextStyle(color: Colors.white70),
+                                  enabledBorder: const OutlineInputBorder(
+                                    borderSide:
+                                        BorderSide(color: Colors.white30),
+                                  ),
+                                  focusedBorder: const OutlineInputBorder(
+                                    borderSide: BorderSide(color: Colors.white),
+                                  ),
+                                ),
+                                style: const TextStyle(color: Colors.white),
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Please enter option ${index + 1}';
+                                  }
+                                  return null;
+                                },
+                              ),
+                            )),
                   ],
                 ),
               ),
@@ -704,7 +739,8 @@ class _QuestionEditDialogState extends State<QuestionEditDialog> {
               children: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancel', style: TextStyle(color: Colors.white)),
+                  child: const Text('Cancel',
+                      style: TextStyle(color: Colors.white)),
                 ),
                 const SizedBox(width: 8),
                 ElevatedButton(
@@ -724,4 +760,4 @@ class _QuestionEditDialogState extends State<QuestionEditDialog> {
       ),
     );
   }
-} 
+}

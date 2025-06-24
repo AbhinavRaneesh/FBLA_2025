@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:student_learning_app/models/chat_message_model.dart';
-import 'package:student_learning_app/repos/chat_repo.dart';
+import 'package:student_learning_app/ai/models/chat_message_model.dart';
+import 'package:student_learning_app/ai/repos/chat_repo.dart';
 import 'package:meta/meta.dart';
 
 part 'chat_event.dart';
