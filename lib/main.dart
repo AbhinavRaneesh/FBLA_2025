@@ -28,6 +28,8 @@ import 'package:student_learning_app/ai/models/chat_message_model.dart';
 import 'screens/browse_sets_screen.dart';
 import 'helpers/frq_manager.dart';
 import 'screens/study_set_edit_screen.dart';
+import 'screens/modes/lightning_mode_screen.dart';
+import 'screens/modes/puzzle_quest_screen.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:lottie/lottie.dart';
 import 'package:student_learning_app/screens/shop_tab.dart';
@@ -628,53 +630,26 @@ class BeachBackground extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: double.infinity,
+      height: double.infinity,
       decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Color(0xFFFFE0B2), // Light sandy color
-            Color(0xFFFF8A65), // Warm orange
-            Color(0xFF81C784), // Ocean green
-          ],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          stops: [0.3, 0.7, 1.0],
+        image: DecorationImage(
+          image: AssetImage('assets/images/beach.jpg'),
+          fit: BoxFit.cover,
         ),
       ),
-      child: Stack(
-        children: [
-          // Floating sand particles
-          for (int i = 0; i < 30; i++)
-            Positioned(
-              left: Random().nextDouble() * MediaQuery.of(context).size.width,
-              top: Random().nextDouble() * MediaQuery.of(context).size.height,
-              child: AnimatedContainer(
-                duration: Duration(seconds: Random().nextInt(4) + 2),
-                width: Random().nextDouble() * 3 + 1,
-                height: Random().nextDouble() * 3 + 1,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.6),
-                  shape: BoxShape.circle,
-                ),
-                onEnd: () {
-                  // Restart animation
-                },
-              ),
-            ),
-          // Sun rays effect
-          for (int i = 0; i < 8; i++)
-            Positioned(
-              right: -50 + (i * 10),
-              top: 50 + (i * 15),
-              child: Container(
-                width: 100,
-                height: 2,
-                decoration: BoxDecoration(
-                  color: Colors.yellow.withOpacity(0.3),
-                  borderRadius: BorderRadius.circular(1),
-                ),
-              ),
-            ),
-        ],
+      child: Container(
+        // Optional overlay for better text readability
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Colors.transparent,
+              Colors.black.withOpacity(0.1),
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
       ),
     );
   }
@@ -696,7 +671,7 @@ class ThemeColors {
   static Color getPrimaryColor(String theme) {
     switch (theme) {
       case 'beach':
-        return const Color(0xFFFF8A65);
+        return const Color(0xFF4DD0E1); // Turquoise from ocean
       case 'forest':
         return const Color(0xFF2E7D32);
       case 'sunset':
@@ -714,7 +689,7 @@ class ThemeColors {
   static Color getSecondaryColor(String theme) {
     switch (theme) {
       case 'beach':
-        return const Color(0xFFFFE0B2);
+        return const Color(0xFFF5E6D3); // Sandy beige
       case 'forest':
         return const Color(0xFF4CAF50);
       case 'sunset':
@@ -732,7 +707,7 @@ class ThemeColors {
   static Color getTextColor(String theme) {
     switch (theme) {
       case 'beach':
-        return Colors.brown.shade800;
+        return const Color(0xFF2E2E2E); // Dark gray for readability
       case 'dark':
         return Colors.white;
       case 'space':
@@ -744,7 +719,7 @@ class ThemeColors {
   static Color getButtonColor(String theme) {
     switch (theme) {
       case 'beach':
-        return const Color(0xFFFF7043);
+        return const Color(0xFF26C6DA); // Bright turquoise
       case 'forest':
         return const Color(0xFF66BB6A);
       case 'sunset':
@@ -756,6 +731,91 @@ class ThemeColors {
       case 'space':
       default:
         return Colors.blueAccent;
+    }
+  }
+
+  // Additional colors for beach theme
+  static Color getCardColor(String theme) {
+    switch (theme) {
+      case 'beach':
+        return const Color(0xFFF5F5DC)
+            .withOpacity(0.9); // Beige/cream card background
+      case 'space':
+      default:
+        return Colors.white.withOpacity(0.1); // Dark cards for space
+    }
+  }
+
+  // Beach card gradient
+  static LinearGradient getBeachCardGradient() {
+    return LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [
+        const Color(0xFFF5F5DC).withOpacity(0.95), // Light beige
+        const Color(0xFFE6D3A3).withOpacity(0.9), // Warm sand
+      ],
+    );
+  }
+
+  static Color getAccentColor(String theme) {
+    switch (theme) {
+      case 'beach':
+        return const Color(0xFFFF8A65); // Coral from tropical flowers
+      case 'space':
+      default:
+        return Colors.blueAccent;
+    }
+  }
+
+  static Color getTropicalGreen(String theme) {
+    switch (theme) {
+      case 'beach':
+        return const Color(0xFF4CAF50); // Tropical green from palm leaves
+      case 'space':
+      default:
+        return const Color(0xFF81C784);
+    }
+  }
+
+  // Beach-appropriate gradients
+  static List<Color> getBeachGradient1() {
+    return [const Color(0xFF4DD0E1), const Color(0xFF26C6DA)]; // Ocean blues
+  }
+
+  static List<Color> getBeachGradient2() {
+    return [
+      const Color(0xFF4CAF50),
+      const Color(0xFF66BB6A)
+    ]; // Tropical greens
+  }
+
+  static List<Color> getBeachGradient3() {
+    return [const Color(0xFFFF8A65), const Color(0xFFFFAB91)]; // Coral tones
+  }
+
+  static List<Color> getBeachGradient4() {
+    return [const Color(0xFFFFD54F), const Color(0xFFFFE082)]; // Sandy yellows
+  }
+
+  static List<Color> getBeachGradient5() {
+    return [const Color(0xFF81C784), const Color(0xFFA5D6A7)]; // Palm greens
+  }
+
+  // Get appropriate gradient for beach theme
+  static List<Color> getBeachGradientForIndex(int index) {
+    switch (index % 5) {
+      case 0:
+        return getBeachGradient1();
+      case 1:
+        return getBeachGradient2();
+      case 2:
+        return getBeachGradient3();
+      case 3:
+        return getBeachGradient4();
+      case 4:
+      default:
+        return getBeachGradient5();
     }
   }
 }
@@ -778,23 +838,27 @@ class GameButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Color backgroundColor = ThemeColors.getSecondaryColor(currentTheme);
+    Color backgroundColor = ThemeColors.getCardColor(currentTheme);
     Color borderColor = ThemeColors.getButtonColor(currentTheme);
     Color textColor = ThemeColors.getTextColor(currentTheme);
 
     if (currentTheme == 'beach') {
-      backgroundColor = const Color(0xFFFFE0B2).withOpacity(0.8);
-      borderColor = const Color(0xFFFF7043);
-      textColor = Colors.brown.shade800;
+      backgroundColor = Colors.white.withOpacity(0.9);
+      borderColor = ThemeColors.getButtonColor('beach');
+      textColor = ThemeColors.getTextColor('beach');
     }
 
     if (isSelected && isCorrect != null) {
-      backgroundColor = isCorrect! ? Colors.green : Colors.red;
-      borderColor = isCorrect! ? Colors.green : Colors.red;
-      textColor = Colors.white;
+      backgroundColor = isCorrect!
+          ? ThemeColors.getTropicalGreen(currentTheme)
+          : ThemeColors.getAccentColor(currentTheme);
+      borderColor = isCorrect!
+          ? ThemeColors.getTropicalGreen(currentTheme)
+          : ThemeColors.getAccentColor(currentTheme);
+      textColor = currentTheme == 'beach' ? Colors.white : Colors.white;
     } else if (isCorrect == true) {
-      backgroundColor = Colors.green;
-      borderColor = Colors.green;
+      backgroundColor = ThemeColors.getTropicalGreen(currentTheme);
+      borderColor = ThemeColors.getTropicalGreen(currentTheme);
       textColor = Colors.white;
     }
 
@@ -843,6 +907,7 @@ class _SignInPageState extends State<SignInPage>
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
   bool _isLoading = false;
+  String _currentTheme = 'space';
 
   @override
   void initState() {
@@ -850,6 +915,7 @@ class _SignInPageState extends State<SignInPage>
     _usernameController.addListener(_updateFormState);
     _passwordController.addListener(_updateFormState);
     _loadSavedCredentials();
+    _loadSavedTheme();
 
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 1500),
@@ -882,6 +948,13 @@ class _SignInPageState extends State<SignInPage>
       _usernameController.text = prefs.getString('saved_username') ?? '';
       _passwordController.text = prefs.getString('saved_password') ?? '';
       _rememberAccount = prefs.getBool('remember_account') ?? false;
+    });
+  }
+
+  Future<void> _loadSavedTheme() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _currentTheme = prefs.getString('current_theme') ?? 'space';
     });
   }
 
@@ -1037,7 +1110,7 @@ class _SignInPageState extends State<SignInPage>
     return Scaffold(
       body: Stack(
         children: [
-          getBackgroundForTheme('space'),
+          getBackgroundForTheme(_currentTheme),
           SafeArea(
             child: Center(
               child: SingleChildScrollView(
@@ -1324,12 +1397,14 @@ class _SignUpPageState extends State<SignUpPage>
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
+  String _currentTheme = 'space';
 
   @override
   void initState() {
     super.initState();
     _usernameController.addListener(_updateFormState);
     _passwordController.addListener(_updateFormState);
+    _loadSavedTheme();
 
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 1500),
@@ -1370,6 +1445,13 @@ class _SignUpPageState extends State<SignUpPage>
     setState(() {
       _isFormValid = _usernameController.text.isNotEmpty &&
           _passwordController.text.isNotEmpty;
+    });
+  }
+
+  Future<void> _loadSavedTheme() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _currentTheme = prefs.getString('current_theme') ?? 'space';
     });
   }
 
@@ -1442,7 +1524,7 @@ class _SignUpPageState extends State<SignUpPage>
     return Scaffold(
       body: Stack(
         children: [
-          getBackgroundForTheme('space'),
+          getBackgroundForTheme(_currentTheme),
           SafeArea(
             child: Center(
               child: SingleChildScrollView(
@@ -1771,12 +1853,12 @@ class _MainScreenState extends State<MainScreen> {
         currentIndex: _currentIndex,
         type: BottomNavigationBarType.fixed,
         backgroundColor: _currentTheme == 'beach'
-            ? ThemeColors.getPrimaryColor('beach')
+            ? ThemeColors.getPrimaryColor('beach').withOpacity(0.95)
             : const Color(0xFF1D1E33),
         selectedItemColor:
             _currentTheme == 'beach' ? Colors.white : Colors.blueAccent,
         unselectedItemColor: _currentTheme == 'beach'
-            ? Colors.white.withOpacity(0.7)
+            ? Colors.white.withOpacity(0.8)
             : Colors.white70,
         elevation: 20,
         selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
@@ -1809,15 +1891,24 @@ class _MainScreenState extends State<MainScreen> {
                 children: [
                   Container(
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF667eea), Color(0xFF764ba2)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
+                      gradient: _currentTheme == 'beach'
+                          ? LinearGradient(
+                              colors: ThemeColors.getBeachGradient2(),
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            )
+                          : const LinearGradient(
+                              colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
                       borderRadius: BorderRadius.circular(30),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF667eea).withOpacity(0.3),
+                          color: _currentTheme == 'beach'
+                              ? ThemeColors.getBeachGradient2()[0]
+                                  .withOpacity(0.3)
+                              : const Color(0xFF667eea).withOpacity(0.3),
                           blurRadius: 20,
                           offset: const Offset(0, 10),
                         ),
@@ -1831,6 +1922,7 @@ class _MainScreenState extends State<MainScreen> {
                             builder: (context) => StudySetCreationOptionsScreen(
                               username: widget.username,
                               onStudySetCreated: _loadStudySets,
+                              currentTheme: _currentTheme,
                             ),
                           ),
                         );
@@ -2116,14 +2208,17 @@ class _LearnTabState extends State<LearnTab>
               ),
               child: Container(
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      const Color(0xFF2A2D3E).withOpacity(0.9),
-                      const Color(0xFF1D1E33),
-                    ],
-                  ),
+                  gradient: widget.currentTheme == 'beach'
+                      ? ThemeColors.getBeachCardGradient()
+                      : LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            const Color(0xFF2A2D3E).withOpacity(0.9),
+                            const Color(0xFF1D1E33),
+                          ],
+                        ),
+                  borderRadius: BorderRadius.circular(20),
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(20),
@@ -2152,17 +2247,22 @@ class _LearnTabState extends State<LearnTab>
                               children: [
                                 Text(
                                   studySet['name'],
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 20,
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.white,
+                                    color: widget.currentTheme == 'beach'
+                                        ? ThemeColors.getTextColor('beach')
+                                        : Colors.white,
                                   ),
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
                                   studySet['description'] ?? '',
                                   style: TextStyle(
-                                    color: Colors.white.withOpacity(0.7),
+                                    color: widget.currentTheme == 'beach'
+                                        ? ThemeColors.getTextColor('beach')
+                                            .withOpacity(0.7)
+                                        : Colors.white.withOpacity(0.7),
                                     fontSize: 14,
                                   ),
                                 ),
@@ -2170,7 +2270,10 @@ class _LearnTabState extends State<LearnTab>
                                 Text(
                                   '$questionCount question${questionCount == 1 ? '' : 's'}',
                                   style: TextStyle(
-                                    color: Colors.white.withOpacity(0.8),
+                                    color: widget.currentTheme == 'beach'
+                                        ? ThemeColors.getTextColor('beach')
+                                            .withOpacity(0.8)
+                                        : Colors.white.withOpacity(0.8),
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -2254,7 +2357,10 @@ class _LearnTabState extends State<LearnTab>
                             icon: const Icon(Icons.play_arrow, size: 18),
                             label: const Text('Practice'),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green.withOpacity(0.8),
+                              backgroundColor: widget.currentTheme == 'beach'
+                                  ? ThemeColors.getTropicalGreen('beach')
+                                      .withOpacity(0.8)
+                                  : Colors.green.withOpacity(0.8),
                               foregroundColor: Colors.white,
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 20,
@@ -2290,6 +2396,7 @@ class _LearnTabState extends State<LearnTab>
   Widget _buildQuickPlayTab() {
     return HomePage(
       username: widget.username,
+      currentTheme: widget.currentTheme,
       onPointsUpdated: (newPoints) {
         widget.onPointsUpdated(newPoints);
       },
@@ -3374,11 +3481,13 @@ class _ProfileTabState extends State<ProfileTab>
 class StudySetCreationOptionsScreen extends StatelessWidget {
   final String username;
   final VoidCallback onStudySetCreated;
+  final String currentTheme;
 
   const StudySetCreationOptionsScreen({
     super.key,
     required this.username,
     required this.onStudySetCreated,
+    required this.currentTheme,
   });
 
   @override
@@ -3399,7 +3508,7 @@ class StudySetCreationOptionsScreen extends StatelessWidget {
       ),
       body: Stack(
         children: [
-          getBackgroundForTheme('space'),
+          getBackgroundForTheme(currentTheme),
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(20),
@@ -3438,6 +3547,7 @@ class StudySetCreationOptionsScreen extends StatelessWidget {
                               builder: (context) => QuizletImportScreen(
                                 username: username,
                                 onStudySetCreated: onStudySetCreated,
+                                currentTheme: currentTheme,
                               ),
                             ),
                           ),
@@ -3455,6 +3565,7 @@ class StudySetCreationOptionsScreen extends StatelessWidget {
                               builder: (context) => SpreadsheetImportScreen(
                                 username: username,
                                 onStudySetCreated: onStudySetCreated,
+                                currentTheme: currentTheme,
                               ),
                             ),
                           ),
@@ -3473,6 +3584,7 @@ class StudySetCreationOptionsScreen extends StatelessWidget {
                                   ManualQuestionCreationScreen(
                                 username: username,
                                 onStudySetCreated: onStudySetCreated,
+                                currentTheme: currentTheme,
                               ),
                             ),
                           ),
@@ -3595,6 +3707,7 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
   String _errorMessage = '';
   String _selectedMode = '';
   bool _showModeSelection = true;
+  bool _showGameModeSelection = false;
   bool _showQuizArea = false;
   bool _showScoreSummary = false;
   bool _showChat = false;
@@ -4055,19 +4168,446 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
       return;
     }
 
-    setState(() {
-      _showModeSelection = false;
-      _showQuizArea = true;
-      _showScoreSummary = false;
-      _currentQuestionIndex = 0;
-      _correctAnswers = 0;
-      // Reset powerup states for new session
-      _skipUsed = false;
-      _fiftyFiftyUsed = false;
-      _doublePointsActive = false;
-      _extraTimeUsed = false;
-      _removedOptions = [];
-    });
+    // Handle different game modes
+    switch (_selectedMode) {
+      case 'classic':
+        // Standard quiz mode
+        setState(() {
+          _showModeSelection = false;
+          _showQuizArea = true;
+          _showScoreSummary = false;
+          _currentQuestionIndex = 0;
+          _correctAnswers = 0;
+          // Reset powerup states for new session
+          _skipUsed = false;
+          _fiftyFiftyUsed = false;
+          _doublePointsActive = false;
+          _extraTimeUsed = false;
+          _removedOptions = [];
+        });
+        break;
+      case 'timed':
+        // Navigate to Lightning Mode screen
+        _startLightningMode(context);
+        break;
+
+      case 'puzzle':
+        _startPuzzleQuest(context);
+        break;
+
+      case 'memory':
+        _startMemoryMaster(context);
+        break;
+
+      case 'survival':
+        _startSurvivalMode(context);
+        break;
+
+      case 'treasure':
+        _startTreasureHunt(context);
+        break;
+
+      default:
+        setState(() {
+          _showModeSelection = false;
+          _showQuizArea = true;
+          _showScoreSummary = false;
+          _currentQuestionIndex = 0;
+          _correctAnswers = 0;
+          // Reset powerup states for new session
+          _skipUsed = false;
+          _fiftyFiftyUsed = false;
+          _doublePointsActive = false;
+          _extraTimeUsed = false;
+          _removedOptions = [];
+        });
+    }
+  }
+
+  List<Color> _getGradientForMode(String mode) {
+    switch (mode) {
+      case 'classic':
+        return widget.currentTheme == 'beach'
+            ? ThemeColors.getBeachGradient1()
+            : [Color(0xFF667eea), Color(0xFF764ba2)];
+      case 'timed':
+        return widget.currentTheme == 'beach'
+            ? ThemeColors.getBeachGradient3()
+            : [Color(0xFFf093fb), Color(0xFFf5576c)];
+      case 'puzzle':
+        return widget.currentTheme == 'beach'
+            ? ThemeColors.getBeachGradient4()
+            : [Color(0xFF4facfe), Color(0xFF00f2fe)];
+      case 'memory':
+        return widget.currentTheme == 'beach'
+            ? ThemeColors.getBeachGradient5()
+            : [Color(0xFF11998e), Color(0xFF38ef7d)];
+      case 'survival':
+        return widget.currentTheme == 'beach'
+            ? [ThemeColors.getBeachGradient3()[0], Color(0xFFFF6B6B)]
+            : [Color(0xFFff6b6b), Color(0xFFee5a6f)];
+      case 'treasure':
+        return widget.currentTheme == 'beach'
+            ? [Color(0xFFFFD700), ThemeColors.getBeachGradient4()[1]]
+            : [Color(0xFFffd700), Color(0xFFffed4e)];
+      default:
+        return [Colors.grey, Colors.grey.shade600];
+    }
+  }
+
+  IconData _getIconForMode(String mode) {
+    switch (mode) {
+      case 'classic':
+        return Icons.school;
+      case 'timed':
+        return Icons.flash_on;
+      case 'puzzle':
+        return Icons.extension;
+      case 'memory':
+        return Icons.psychology;
+      case 'survival':
+        return Icons.favorite;
+      case 'treasure':
+        return Icons.diamond;
+      default:
+        return Icons.help_outline;
+    }
+  }
+
+  String _getTitleForMode(String mode) {
+    switch (mode) {
+      case 'classic':
+        return 'Classic Mode';
+      case 'timed':
+        return 'Lightning Mode';
+      case 'puzzle':
+        return 'Puzzle Quest';
+      case 'memory':
+        return 'Memory Master';
+      case 'survival':
+        return 'Survival Mode';
+      case 'treasure':
+        return 'Treasure Hunt';
+      default:
+        return 'Unknown Mode';
+    }
+  }
+
+  String _getDescriptionForMode(String mode) {
+    switch (mode) {
+      case 'classic':
+        return 'Take your time and learn';
+      case 'timed':
+        return 'Race against time';
+      case 'puzzle':
+        return 'Solve puzzles first';
+      case 'memory':
+        return 'Match questions & answers';
+      case 'survival':
+        return '3 strikes and you\'re out!';
+      case 'treasure':
+        return 'Find hidden treasures';
+      default:
+        return 'Select a game mode';
+    }
+  }
+
+  void _startPuzzleQuest(BuildContext context) {
+    _showGameModeDialog(
+      context,
+      'Puzzle Quest',
+      'Solve word puzzles and riddles to unlock quiz questions! Each correct puzzle reveals the next question.',
+      Icons.extension,
+      () {
+        // Convert Map<String, dynamic> questions to List<Question> objects
+        List<quiz.Question> questionObjects = _questions.map((q) {
+          return quiz.Question(
+            questionText: q['question_text'] ?? '',
+            options: (q['options'] ?? '').toString().split('|'),
+            correctAnswer: q['correct_answer'] ?? '',
+          );
+        }).toList();
+
+        // Navigate to Puzzle Quest screen
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => PuzzleQuestScreen(
+              questions: questionObjects,
+              currentTheme: widget.currentTheme,
+              userPowerups: _userPowerups,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _startMemoryMaster(BuildContext context) {
+    _showGameModeDialog(
+      context,
+      'Memory Master',
+      'Test your memory! Questions and answers will be shown briefly, then you must match them correctly.',
+      Icons.psychology,
+      () {
+        setState(() {
+          _showModeSelection = false;
+          _showQuizArea = true;
+          _showScoreSummary = false;
+          _currentQuestionIndex = 0;
+          _correctAnswers = 0;
+          _skipUsed = false;
+          _fiftyFiftyUsed = false;
+          _doublePointsActive = false;
+          _extraTimeUsed = false;
+          _removedOptions = [];
+        });
+      },
+    );
+  }
+
+  void _startSurvivalMode(BuildContext context) {
+    _showGameModeDialog(
+      context,
+      'Survival Mode',
+      'You have 3 lives! Each wrong answer costs a life. How long can you survive?',
+      Icons.favorite,
+      () {
+        setState(() {
+          _showModeSelection = false;
+          _showQuizArea = true;
+          _showScoreSummary = false;
+          _currentQuestionIndex = 0;
+          _correctAnswers = 0;
+          _skipUsed = false;
+          _fiftyFiftyUsed = false;
+          _doublePointsActive = false;
+          _extraTimeUsed = false;
+          _removedOptions = [];
+        });
+      },
+    );
+  }
+
+  void _startTreasureHunt(BuildContext context) {
+    _showGameModeDialog(
+      context,
+      'Treasure Hunt',
+      'Find hidden treasures by answering questions correctly! Collect gems and unlock special rewards.',
+      Icons.diamond,
+      () {
+        setState(() {
+          _showModeSelection = false;
+          _showQuizArea = true;
+          _showScoreSummary = false;
+          _currentQuestionIndex = 0;
+          _correctAnswers = 0;
+          _skipUsed = false;
+          _fiftyFiftyUsed = false;
+          _doublePointsActive = false;
+          _extraTimeUsed = false;
+          _removedOptions = [];
+        });
+      },
+    );
+  }
+
+  void _startLightningMode(BuildContext context) {
+    // Convert Map<String, dynamic> questions to List<Question> objects
+    List<quiz.Question> questionObjects = _questions.map((q) {
+      return quiz.Question(
+        questionText: q['question_text'] ?? '',
+        options: (q['options'] ?? '').toString().split('|'),
+        correctAnswer: q['correct_answer'] ?? '',
+      );
+    }).toList();
+
+    // Navigate to Lightning Mode screen
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => LightningModeScreen(
+          questions: questionObjects,
+          currentTheme: widget.currentTheme,
+          userPowerups: _userPowerups,
+        ),
+      ),
+    );
+  }
+
+  void _showGameModeDialog(BuildContext context, String title,
+      String description, IconData icon, VoidCallback onStart) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: widget.currentTheme == 'beach'
+                ? BoxDecoration(
+                    gradient: ThemeColors.getBeachCardGradient(),
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(
+                      color: Colors.black.withOpacity(0.1),
+                      width: 1,
+                    ),
+                  )
+                : BoxDecoration(
+                    gradient: const LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Color(0xFF2A2D3E),
+                        Color(0xFF1D1E33),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.3),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                  ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: widget.currentTheme == 'beach'
+                          ? ThemeColors.getBeachGradient1()
+                          : [Colors.blueAccent, Colors.blue],
+                    ),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    icon,
+                    size: 48,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: widget.currentTheme == 'beach'
+                        ? ThemeColors.getTextColor('beach')
+                        : Colors.white,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  description,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: widget.currentTheme == 'beach'
+                        ? ThemeColors.getTextColor('beach').withOpacity(0.8)
+                        : Colors.white.withOpacity(0.8),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 32),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: widget.currentTheme == 'beach'
+                              ? LinearGradient(
+                                  colors: [
+                                    Colors.grey.shade400,
+                                    Colors.grey.shade600,
+                                  ],
+                                )
+                              : const LinearGradient(
+                                  colors: [
+                                    Color(0xFF6C7B7F),
+                                    Color(0xFF9CA3AF),
+                                  ],
+                                ),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: ElevatedButton.icon(
+                          onPressed: () => Navigator.of(context).pop(),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            shadowColor: Colors.transparent,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                          icon:
+                              const Icon(Icons.arrow_back, color: Colors.white),
+                          label: const Text(
+                            'Back',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: widget.currentTheme == 'beach'
+                              ? LinearGradient(
+                                  colors: ThemeColors.getBeachGradient2(),
+                                )
+                              : const LinearGradient(
+                                  colors: [
+                                    Color(0xFF4facfe),
+                                    Color(0xFF00f2fe),
+                                  ],
+                                ),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                            onStart();
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            shadowColor: Colors.transparent,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                          icon:
+                              const Icon(Icons.play_arrow, color: Colors.white),
+                          label: const Text(
+                            'Start',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   void _checkAnswer(String selectedAnswer) {
@@ -4158,7 +4698,7 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
     return Scaffold(
       body: Stack(
         children: [
-          getBackgroundForTheme('space'),
+          getBackgroundForTheme(widget.currentTheme),
           SafeArea(
             child: _isLoading
                 ? const Center(
@@ -4338,42 +4878,445 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                                   ),
                                 ),
                                 const SizedBox(height: 24),
-                                _buildEnhancedModeCard(
-                                  'classic',
-                                  'Classic Mode',
-                                  'Take your time and learn at your own pace',
-                                  Icons.school,
-                                  const LinearGradient(
-                                    colors: [
-                                      Color(0xFF667eea),
-                                      Color(0xFF764ba2)
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(height: 16),
-                                _buildEnhancedModeCard(
-                                  'timed',
-                                  'Lightning Mode',
-                                  'Race against time for maximum challenge',
-                                  Icons.flash_on,
-                                  const LinearGradient(
-                                    colors: [
-                                      Color(0xFFf093fb),
-                                      Color(0xFFf5576c)
+                                // Selected Game Mode Box with Extension
+                                AnimatedContainer(
+                                  duration: const Duration(milliseconds: 300),
+                                  padding: const EdgeInsets.all(20),
+                                  decoration: widget.currentTheme == 'beach'
+                                      ? BoxDecoration(
+                                          gradient: ThemeColors
+                                              .getBeachCardGradient(),
+                                          borderRadius:
+                                              BorderRadius.circular(20),
+                                          border: Border.all(
+                                            color:
+                                                Colors.black.withOpacity(0.1),
+                                            width: 1,
+                                          ),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color:
+                                                  Colors.black.withOpacity(0.1),
+                                              blurRadius: _showGameModeSelection
+                                                  ? 20
+                                                  : 10,
+                                              offset: const Offset(0, 5),
+                                            ),
+                                          ],
+                                        )
+                                      : BoxDecoration(
+                                          gradient: LinearGradient(
+                                            colors: [
+                                              Colors.white.withOpacity(0.15),
+                                              Colors.white.withOpacity(0.05),
+                                            ],
+                                          ),
+                                          borderRadius:
+                                              BorderRadius.circular(20),
+                                          border: Border.all(
+                                            color:
+                                                Colors.white.withOpacity(0.2),
+                                            width: 1,
+                                          ),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color:
+                                                  Colors.white.withOpacity(0.1),
+                                              blurRadius: _showGameModeSelection
+                                                  ? 20
+                                                  : 10,
+                                              offset: const Offset(0, 5),
+                                            ),
+                                          ],
+                                        ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.all(8),
+                                            decoration: BoxDecoration(
+                                              color: Colors.blueAccent
+                                                  .withOpacity(0.2),
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                            child: const Icon(
+                                              Icons.games,
+                                              color: Colors.blueAccent,
+                                              size: 20,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 12),
+                                          Text(
+                                            _showGameModeSelection
+                                                ? 'Game Modes'
+                                                : 'Selected Game Mode',
+                                            style: TextStyle(
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.bold,
+                                              color: widget.currentTheme ==
+                                                      'beach'
+                                                  ? ThemeColors.getTextColor(
+                                                      'beach')
+                                                  : Colors.white,
+                                            ),
+                                          ),
+                                          if (_showGameModeSelection) ...[
+                                            const Spacer(),
+                                            Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                horizontal: 12,
+                                                vertical: 6,
+                                              ),
+                                              decoration: BoxDecoration(
+                                                gradient: LinearGradient(
+                                                  colors: widget.currentTheme ==
+                                                          'beach'
+                                                      ? [
+                                                          const Color(
+                                                              0xFF4DD0E1),
+                                                          const Color(
+                                                              0xFF26C6DA)
+                                                        ]
+                                                      : [
+                                                          Colors.amber,
+                                                          Colors.orange
+                                                        ],
+                                                ),
+                                                borderRadius:
+                                                    BorderRadius.circular(15),
+                                              ),
+                                              child: const Text(
+                                                '6 Modes',
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ],
+                                      ),
+                                      const SizedBox(height: 16),
+                                      Material(
+                                        color: Colors.transparent,
+                                        child: InkWell(
+                                          borderRadius:
+                                              BorderRadius.circular(20),
+                                          onTap: () {
+                                            setState(() {
+                                              _showGameModeSelection =
+                                                  !_showGameModeSelection;
+                                            });
+                                          },
+                                          child: AnimatedContainer(
+                                            duration: const Duration(
+                                                milliseconds: 250),
+                                            padding: const EdgeInsets.all(20),
+                                            decoration: BoxDecoration(
+                                              gradient: _selectedMode.isNotEmpty
+                                                  ? LinearGradient(
+                                                      colors:
+                                                          _getGradientForMode(
+                                                              _selectedMode),
+                                                      begin: Alignment.topLeft,
+                                                      end:
+                                                          Alignment.bottomRight,
+                                                    )
+                                                  : widget.currentTheme ==
+                                                          'beach'
+                                                      ? LinearGradient(
+                                                          colors: [
+                                                            ThemeColors.getBeachGradient1()[
+                                                                    0]
+                                                                .withOpacity(
+                                                                    0.3),
+                                                            ThemeColors.getBeachGradient1()[
+                                                                    1]
+                                                                .withOpacity(
+                                                                    0.1),
+                                                          ],
+                                                        )
+                                                      : LinearGradient(
+                                                          colors: [
+                                                            Colors.blueAccent
+                                                                .withOpacity(
+                                                                    0.2),
+                                                            Colors.indigo
+                                                                .withOpacity(
+                                                                    0.1),
+                                                          ],
+                                                        ),
+                                              borderRadius:
+                                                  BorderRadius.circular(20),
+                                              border: Border.all(
+                                                color: _selectedMode.isNotEmpty
+                                                    ? Colors.white
+                                                        .withOpacity(0.4)
+                                                    : Colors.white
+                                                        .withOpacity(0.2),
+                                                width: 2,
+                                              ),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: _selectedMode
+                                                          .isNotEmpty
+                                                      ? _getGradientForMode(
+                                                              _selectedMode)[0]
+                                                          .withOpacity(0.2)
+                                                      : Colors.blueAccent
+                                                          .withOpacity(0.1),
+                                                  blurRadius: 12,
+                                                  offset: const Offset(0, 6),
+                                                ),
+                                              ],
+                                            ),
+                                            child: Row(
+                                              children: [
+                                                AnimatedContainer(
+                                                  duration: const Duration(
+                                                      milliseconds: 250),
+                                                  padding:
+                                                      const EdgeInsets.all(16),
+                                                  decoration: BoxDecoration(
+                                                    gradient: LinearGradient(
+                                                      colors: _selectedMode
+                                                              .isNotEmpty
+                                                          ? [
+                                                              Colors.white
+                                                                  .withOpacity(
+                                                                      0.3),
+                                                              Colors.white
+                                                                  .withOpacity(
+                                                                      0.1),
+                                                            ]
+                                                          : [
+                                                              Colors.white
+                                                                  .withOpacity(
+                                                                      0.2),
+                                                              Colors.white
+                                                                  .withOpacity(
+                                                                      0.05),
+                                                            ],
+                                                    ),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            16),
+                                                    boxShadow: [
+                                                      BoxShadow(
+                                                        color: Colors.black
+                                                            .withOpacity(0.1),
+                                                        blurRadius: 8,
+                                                        offset:
+                                                            const Offset(0, 4),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  child: Icon(
+                                                    _getIconForMode(
+                                                        _selectedMode),
+                                                    color: Colors.white,
+                                                    size: 28,
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 20),
+                                                Expanded(
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      Text(
+                                                        _selectedMode.isEmpty
+                                                            ? 'Choose Your Game Mode'
+                                                            : _getTitleForMode(
+                                                                _selectedMode),
+                                                        style: const TextStyle(
+                                                          fontSize: 18,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          color: Colors.white,
+                                                          letterSpacing: 0.5,
+                                                        ),
+                                                      ),
+                                                      const SizedBox(height: 6),
+                                                      Text(
+                                                        _selectedMode.isEmpty
+                                                            ? 'Tap to explore different learning styles'
+                                                            : _getDescriptionForMode(
+                                                                _selectedMode),
+                                                        style: TextStyle(
+                                                          fontSize: 14,
+                                                          color: Colors.white
+                                                              .withOpacity(0.9),
+                                                          fontWeight:
+                                                              FontWeight.w500,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 12),
+                                                AnimatedRotation(
+                                                  duration: const Duration(
+                                                      milliseconds: 250),
+                                                  turns: _showGameModeSelection
+                                                      ? 0.5
+                                                      : 0,
+                                                  child: Container(
+                                                    padding:
+                                                        const EdgeInsets.all(8),
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.white
+                                                          .withOpacity(0.2),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              10),
+                                                    ),
+                                                    child: const Icon(
+                                                      Icons
+                                                          .keyboard_arrow_down_rounded,
+                                                      color: Colors.white,
+                                                      size: 24,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      if (_showGameModeSelection) ...[
+                                        const SizedBox(height: 20),
+                                        GridView.count(
+                                          shrinkWrap: true,
+                                          physics:
+                                              const NeverScrollableScrollPhysics(),
+                                          crossAxisCount: 2,
+                                          crossAxisSpacing: 12,
+                                          mainAxisSpacing: 12,
+                                          childAspectRatio: 1.1,
+                                          children: [
+                                            _buildCompactModeCard(
+                                              'classic',
+                                              'Classic Mode',
+                                              'Take your time and learn',
+                                              Icons.school,
+                                              widget.currentTheme == 'beach'
+                                                  ? ThemeColors
+                                                      .getBeachGradient1()
+                                                  : [
+                                                      Color(0xFF667eea),
+                                                      Color(0xFF764ba2)
+                                                    ],
+                                            ),
+                                            _buildCompactModeCard(
+                                              'timed',
+                                              'Lightning Mode',
+                                              'Race against time',
+                                              Icons.flash_on,
+                                              widget.currentTheme == 'beach'
+                                                  ? ThemeColors
+                                                      .getBeachGradient3()
+                                                  : [
+                                                      Color(0xFFf093fb),
+                                                      Color(0xFFf5576c)
+                                                    ],
+                                            ),
+                                            _buildCompactModeCard(
+                                              'puzzle',
+                                              'Puzzle Quest',
+                                              'Solve puzzles first',
+                                              Icons.extension,
+                                              widget.currentTheme == 'beach'
+                                                  ? ThemeColors
+                                                      .getBeachGradient4()
+                                                  : [
+                                                      Color(0xFF4facfe),
+                                                      Color(0xFF00f2fe)
+                                                    ],
+                                            ),
+                                            _buildCompactModeCard(
+                                              'memory',
+                                              'Memory Master',
+                                              'Match questions & answers',
+                                              Icons.psychology,
+                                              widget.currentTheme == 'beach'
+                                                  ? ThemeColors
+                                                      .getBeachGradient5()
+                                                  : [
+                                                      Color(0xFF11998e),
+                                                      Color(0xFF38ef7d)
+                                                    ],
+                                            ),
+                                            _buildCompactModeCard(
+                                              'survival',
+                                              'Survival Mode',
+                                              '3 strikes and you\'re out!',
+                                              Icons.favorite,
+                                              widget.currentTheme == 'beach'
+                                                  ? [
+                                                      ThemeColors
+                                                          .getBeachGradient3()[0],
+                                                      Color(0xFFFF6B6B)
+                                                    ]
+                                                  : [
+                                                      Color(0xFFff6b6b),
+                                                      Color(0xFFee5a6f)
+                                                    ],
+                                            ),
+                                            _buildCompactModeCard(
+                                              'treasure',
+                                              'Treasure Hunt',
+                                              'Find hidden treasures',
+                                              Icons.diamond,
+                                              widget.currentTheme == 'beach'
+                                                  ? [
+                                                      Color(0xFFFFD700),
+                                                      ThemeColors
+                                                          .getBeachGradient4()[1]
+                                                    ]
+                                                  : [
+                                                      Color(0xFFffd700),
+                                                      Color(0xFFffed4e)
+                                                    ],
+                                            ),
+                                          ],
+                                        ),
+                                      ],
                                     ],
                                   ),
                                 ),
                                 const SizedBox(height: 32),
                                 Container(
                                   padding: const EdgeInsets.all(24),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(20),
-                                    border: Border.all(
-                                      color: Colors.white.withOpacity(0.2),
-                                      width: 1,
-                                    ),
-                                  ),
+                                  decoration: widget.currentTheme == 'beach'
+                                      ? BoxDecoration(
+                                          gradient: ThemeColors
+                                              .getBeachCardGradient(),
+                                          borderRadius:
+                                              BorderRadius.circular(20),
+                                          border: Border.all(
+                                            color:
+                                                Colors.black.withOpacity(0.1),
+                                            width: 1,
+                                          ),
+                                        )
+                                      : BoxDecoration(
+                                          color: Colors.white.withOpacity(0.1),
+                                          borderRadius:
+                                              BorderRadius.circular(20),
+                                          border: Border.all(
+                                            color:
+                                                Colors.white.withOpacity(0.2),
+                                            width: 1,
+                                          ),
+                                        ),
                                   child: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
@@ -4395,12 +5338,16 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                                             ),
                                           ),
                                           const SizedBox(width: 12),
-                                          const Text(
+                                          Text(
                                             'Question Count',
                                             style: TextStyle(
                                               fontSize: 20,
                                               fontWeight: FontWeight.bold,
-                                              color: Colors.white,
+                                              color: widget.currentTheme ==
+                                                      'beach'
+                                                  ? ThemeColors.getTextColor(
+                                                      'beach')
+                                                  : Colors.white,
                                             ),
                                           ),
                                         ],
@@ -4420,10 +5367,14 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                                           ),
                                           child: Text(
                                             '$_questionCount Questions',
-                                            style: const TextStyle(
+                                            style: TextStyle(
                                               fontSize: 24,
                                               fontWeight: FontWeight.bold,
-                                              color: Colors.white,
+                                              color: widget.currentTheme ==
+                                                      'beach'
+                                                  ? ThemeColors.getTextColor(
+                                                      'beach')
+                                                  : Colors.white,
                                             ),
                                           ),
                                         ),
@@ -4475,19 +5426,29 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                                   width: double.infinity,
                                   height: 60,
                                   decoration: BoxDecoration(
-                                    gradient: const LinearGradient(
-                                      colors: [
-                                        Color(0xFF4facfe),
-                                        Color(0xFF00f2fe)
-                                      ],
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                    ),
+                                    gradient: widget.currentTheme == 'beach'
+                                        ? LinearGradient(
+                                            colors:
+                                                ThemeColors.getBeachGradient2(),
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                          )
+                                        : const LinearGradient(
+                                            colors: [
+                                              Color(0xFF4facfe),
+                                              Color(0xFF00f2fe)
+                                            ],
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                          ),
                                     borderRadius: BorderRadius.circular(16),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: const Color(0xFF4facfe)
-                                            .withOpacity(0.4),
+                                        color: widget.currentTheme == 'beach'
+                                            ? ThemeColors.getBeachGradient2()[0]
+                                                .withOpacity(0.4)
+                                            : const Color(0xFF4facfe)
+                                                .withOpacity(0.4),
                                         blurRadius: 20,
                                         offset: const Offset(0, 10),
                                       ),
@@ -4617,20 +5578,34 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                                       Container(
                                         width: double.infinity,
                                         decoration: BoxDecoration(
-                                          gradient: const LinearGradient(
-                                            colors: [
-                                              Color(0xFF667eea),
-                                              Color(0xFF764ba2)
-                                            ],
-                                            begin: Alignment.topLeft,
-                                            end: Alignment.bottomRight,
-                                          ),
+                                          gradient: widget.currentTheme ==
+                                                  'beach'
+                                              ? LinearGradient(
+                                                  colors: ThemeColors
+                                                      .getBeachGradient1(),
+                                                  begin: Alignment.topLeft,
+                                                  end: Alignment.bottomRight,
+                                                )
+                                              : const LinearGradient(
+                                                  colors: [
+                                                    Color(0xFF667eea),
+                                                    Color(0xFF764ba2)
+                                                  ],
+                                                  begin: Alignment.topLeft,
+                                                  end: Alignment.bottomRight,
+                                                ),
                                           borderRadius:
                                               BorderRadius.circular(16),
                                           boxShadow: [
                                             BoxShadow(
-                                              color: const Color(0xFF667eea)
-                                                  .withOpacity(0.3),
+                                              color: widget.currentTheme ==
+                                                      'beach'
+                                                  ? ThemeColors
+                                                              .getBeachGradient1()[
+                                                          0]
+                                                      .withOpacity(0.3)
+                                                  : const Color(0xFF667eea)
+                                                      .withOpacity(0.3),
                                               blurRadius: 12,
                                               offset: const Offset(0, 6),
                                             ),
@@ -4686,20 +5661,34 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                                       Container(
                                         width: double.infinity,
                                         decoration: BoxDecoration(
-                                          gradient: const LinearGradient(
-                                            colors: [
-                                              Color(0xFF11998e),
-                                              Color(0xFF38ef7d)
-                                            ],
-                                            begin: Alignment.topLeft,
-                                            end: Alignment.bottomRight,
-                                          ),
+                                          gradient: widget.currentTheme ==
+                                                  'beach'
+                                              ? LinearGradient(
+                                                  colors: ThemeColors
+                                                      .getBeachGradient2(),
+                                                  begin: Alignment.topLeft,
+                                                  end: Alignment.bottomRight,
+                                                )
+                                              : const LinearGradient(
+                                                  colors: [
+                                                    Color(0xFF11998e),
+                                                    Color(0xFF38ef7d)
+                                                  ],
+                                                  begin: Alignment.topLeft,
+                                                  end: Alignment.bottomRight,
+                                                ),
                                           borderRadius:
                                               BorderRadius.circular(16),
                                           boxShadow: [
                                             BoxShadow(
-                                              color: const Color(0xFF11998e)
-                                                  .withOpacity(0.3),
+                                              color: widget.currentTheme ==
+                                                      'beach'
+                                                  ? ThemeColors
+                                                              .getBeachGradient2()[
+                                                          0]
+                                                      .withOpacity(0.3)
+                                                  : const Color(0xFF11998e)
+                                                      .withOpacity(0.3),
                                               blurRadius: 12,
                                               offset: const Offset(0, 6),
                                             ),
@@ -4989,6 +5978,135 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
     );
   }
 
+  Widget _buildCompactModeCard(
+    String mode,
+    String title,
+    String subtitle,
+    IconData icon,
+    List<Color> gradientColors,
+  ) {
+    final isSelected = _selectedMode == mode;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedMode = mode;
+        });
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          gradient: isSelected
+              ? LinearGradient(
+                  colors: gradientColors,
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                )
+              : widget.currentTheme == 'beach'
+                  ? ThemeColors.getBeachCardGradient()
+                  : LinearGradient(
+                      colors: [
+                        Colors.white.withOpacity(0.1),
+                        Colors.white.withOpacity(0.05),
+                      ],
+                    ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: gradientColors.first.withOpacity(0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 6),
+                  ),
+                ]
+              : [
+                  BoxShadow(
+                    color: Colors.white.withOpacity(0.08),
+                    blurRadius: 4,
+                    spreadRadius: 1,
+                  ),
+                ],
+          border: Border.all(
+            color: isSelected
+                ? Colors.white.withOpacity(0.3)
+                : Colors.white.withOpacity(0.1),
+            width: 1.5,
+          ),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(isSelected ? 0.2 : 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                icon,
+                color: Colors.white,
+                size: 24,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+                color: isSelected
+                    ? Colors.white
+                    : widget.currentTheme == 'beach'
+                        ? ThemeColors.getTextColor('beach')
+                        : Colors.white,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 4),
+            Flexible(
+              child: Text(
+                subtitle,
+                style: TextStyle(
+                  fontSize: 10,
+                  color: isSelected
+                      ? Colors.white.withOpacity(0.8)
+                      : widget.currentTheme == 'beach'
+                          ? ThemeColors.getTextColor('beach').withOpacity(0.7)
+                          : Colors.white.withOpacity(0.7),
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Container(
+              width: 16,
+              height: 16,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.5),
+                  width: 1.5,
+                ),
+                color: isSelected ? Colors.white : Colors.transparent,
+              ),
+              child: isSelected
+                  ? Icon(
+                      Icons.check,
+                      color: gradientColors.first,
+                      size: 10,
+                    )
+                  : null,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildEnhancedModeCard(
     String mode,
     String title,
@@ -5007,8 +6125,16 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          gradient: isSelected ? gradient : null,
-          color: isSelected ? null : Colors.white.withOpacity(0.1),
+          gradient: isSelected
+              ? gradient
+              : widget.currentTheme == 'beach'
+                  ? ThemeColors.getBeachCardGradient()
+                  : null,
+          color: isSelected
+              ? null
+              : widget.currentTheme == 'beach'
+                  ? null
+                  : Colors.white.withOpacity(0.1),
           borderRadius: BorderRadius.circular(20),
           boxShadow: isSelected
               ? [
@@ -5047,10 +6173,14 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: isSelected
+                          ? Colors.white
+                          : widget.currentTheme == 'beach'
+                              ? ThemeColors.getTextColor('beach')
+                              : Colors.white,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -5058,7 +6188,12 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                     subtitle,
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.white.withOpacity(0.8),
+                      color: isSelected
+                          ? Colors.white.withOpacity(0.8)
+                          : widget.currentTheme == 'beach'
+                              ? ThemeColors.getTextColor('beach')
+                                  .withOpacity(0.7)
+                              : Colors.white.withOpacity(0.8),
                     ),
                   ),
                 ],
@@ -5233,15 +6368,17 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                     horizontal: 24,
                     vertical: 20), // Increased horizontal padding
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      const Color(0xFF2A2D3E),
-                      const Color(0xFF1D1E33),
-                      const Color(0xFF16213E).withOpacity(0.9),
-                    ],
-                  ),
+                  gradient: widget.currentTheme == 'beach'
+                      ? ThemeColors.getBeachCardGradient()
+                      : LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            const Color(0xFF2A2D3E),
+                            const Color(0xFF1D1E33),
+                            const Color(0xFF16213E).withOpacity(0.9),
+                          ],
+                        ),
                   borderRadius: BorderRadius.circular(24), // Reduced from 28
                   border: Border.all(
                     color: Colors.white.withOpacity(0.10),
@@ -5251,8 +6388,10 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                 child: Center(
                   child: Text(
                     _questions[_currentQuestionIndex]['question_text'],
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: widget.currentTheme == 'beach'
+                          ? ThemeColors.getTextColor('beach')
+                          : Colors.white,
                       fontSize: 24, // Reduced from 26
                       fontWeight: FontWeight.bold,
                       height: 1.4, // Reduced from 1.5
@@ -5287,16 +6426,26 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
               curve: Curves.easeInOut,
               decoration: BoxDecoration(
                 gradient: cor
-                    ? const LinearGradient(
-                        colors: [Color(0xFF43e97b), Color(0xFF38f9d7)])
+                    ? LinearGradient(
+                        colors: widget.currentTheme == 'beach'
+                            ? ThemeColors.getBeachGradient2()
+                            : [Color(0xFF43e97b), Color(0xFF38f9d7)])
                     : wrg
-                        ? const LinearGradient(
-                            colors: [Color(0xFFf5576c), Color(0xFFf093fb)])
+                        ? LinearGradient(
+                            colors: widget.currentTheme == 'beach'
+                                ? ThemeColors.getBeachGradient3()
+                                : [Color(0xFFf5576c), Color(0xFFf093fb)])
                         : sel
-                            ? const LinearGradient(
-                                colors: [Color(0xFF4facfe), Color(0xFF00f2fe)])
-                            : const LinearGradient(
-                                colors: [Color(0xFF23243a), Color(0xFF23243a)]),
+                            ? LinearGradient(
+                                colors: widget.currentTheme == 'beach'
+                                    ? ThemeColors.getBeachGradient1()
+                                    : [Color(0xFF4facfe), Color(0xFF00f2fe)])
+                            : widget.currentTheme == 'beach'
+                                ? ThemeColors.getBeachCardGradient()
+                                : LinearGradient(colors: [
+                                    Color(0xFF23243a),
+                                    Color(0xFF23243a)
+                                  ]),
                 borderRadius: BorderRadius.circular(16), // Reduced from 18
                 boxShadow: sel
                     ? [
@@ -5328,8 +6477,12 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                     child: Center(
                       child: Text(
                         opt,
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: (cor || wrg || sel)
+                              ? Colors.white
+                              : widget.currentTheme == 'beach'
+                                  ? ThemeColors.getTextColor('beach')
+                                  : Colors.white,
                           fontSize: 18, // Reduced from 20
                           fontWeight: FontWeight.w600, // Reduced from w700
                           letterSpacing: 0.1, // Reduced from 0.2
@@ -5356,11 +6509,17 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                   child: Container(
                     height: 52, // Reduced from 56
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF667eea), Color(0xFF764ba2)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
+                      gradient: widget.currentTheme == 'beach'
+                          ? LinearGradient(
+                              colors: ThemeColors.getBeachGradient3(),
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            )
+                          : const LinearGradient(
+                              colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
                       borderRadius:
                           BorderRadius.circular(26), // Reduced from 28
                       boxShadow: [
@@ -5403,11 +6562,17 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                   child: Container(
                     height: 52, // Reduced from 56
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF4facfe), Color(0xFF00f2fe)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
+                      gradient: widget.currentTheme == 'beach'
+                          ? LinearGradient(
+                              colors: ThemeColors.getBeachGradient1(),
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            )
+                          : const LinearGradient(
+                              colors: [Color(0xFF4facfe), Color(0xFF00f2fe)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
                       borderRadius:
                           BorderRadius.circular(26), // Reduced from 28
                       boxShadow: [
@@ -5912,7 +7077,7 @@ class _QuizScreenState extends State<QuizScreen> {
       ),
       body: Stack(
         children: [
-          getBackgroundForTheme('space'),
+          getBackgroundForTheme(widget.currentTheme),
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(24),
@@ -6114,11 +7279,13 @@ class _QuizScreenState extends State<QuizScreen> {
 class QuizletImportScreen extends StatefulWidget {
   final String username;
   final VoidCallback onStudySetCreated;
+  final String currentTheme;
 
   const QuizletImportScreen({
     super.key,
     required this.username,
     required this.onStudySetCreated,
+    required this.currentTheme,
   });
 
   @override
@@ -6511,7 +7678,7 @@ class _QuizletImportScreenState extends State<QuizletImportScreen> {
       ),
       body: Stack(
         children: [
-          getBackgroundForTheme('space'),
+          getBackgroundForTheme(widget.currentTheme),
           _isLoading
               ? const Center(
                   child: CircularProgressIndicator(
@@ -6729,11 +7896,13 @@ class _QuizletImportScreenState extends State<QuizletImportScreen> {
 class SpreadsheetImportScreen extends StatefulWidget {
   final String username;
   final VoidCallback onStudySetCreated;
+  final String currentTheme;
 
   const SpreadsheetImportScreen({
     super.key,
     required this.username,
     required this.onStudySetCreated,
+    required this.currentTheme,
   });
 
   @override
@@ -6961,7 +8130,7 @@ class _SpreadsheetImportScreenState extends State<SpreadsheetImportScreen> {
       ),
       body: Stack(
         children: [
-          getBackgroundForTheme('space'),
+          getBackgroundForTheme(widget.currentTheme),
           _isLoading
               ? const Center(
                   child: CircularProgressIndicator(
@@ -7207,11 +8376,13 @@ class _SpreadsheetImportScreenState extends State<SpreadsheetImportScreen> {
 class ManualQuestionCreationScreen extends StatefulWidget {
   final String username;
   final VoidCallback onStudySetCreated;
+  final String currentTheme;
 
   const ManualQuestionCreationScreen({
     super.key,
     required this.username,
     required this.onStudySetCreated,
+    required this.currentTheme,
   });
 
   @override
@@ -7394,7 +8565,7 @@ class _ManualQuestionCreationScreenState
       ),
       body: Stack(
         children: [
-          getBackgroundForTheme('space'),
+          getBackgroundForTheme(widget.currentTheme),
           _isLoading
               ? const Center(
                   child: CircularProgressIndicator(

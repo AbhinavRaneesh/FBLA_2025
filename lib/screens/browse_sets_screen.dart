@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../helpers/frq_manager.dart' as frq;
-import '../main.dart' show getBackgroundForTheme;
+import '../main.dart' show getBackgroundForTheme, ThemeColors;
 import '../helpers/database_helper.dart';
 import '../data/premade_study_sets.dart';
 import '../main.dart' as main;
@@ -3217,43 +3217,6 @@ class _MCQManagerState extends State<MCQManager> {
 
   Widget _buildSubjectSelectionScreen() {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        toolbarHeight: 60,
-        title: const Text(
-          'Browse Sets',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh, color: Colors.white),
-            onPressed: () async {
-              try {
-                await _dbHelper.refreshPremadeSets();
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Study sets refreshed successfully'),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-                }
-              } catch (e) {
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Error refreshing sets: $e'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              }
-            },
-            tooltip: 'Refresh Study Sets',
-          ),
-        ],
-      ),
       body: Stack(
         children: [
           getBackgroundForTheme(widget.currentTheme),
@@ -4138,12 +4101,16 @@ class _MCQManagerState extends State<MCQManager> {
                           child: Container(
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(20),
-                              gradient: LinearGradient(
-                                colors: [
-                                  Colors.blue[600]!,
-                                  Colors.blue[400]!,
-                                ],
-                              ),
+                              gradient: widget.currentTheme == 'beach'
+                                  ? LinearGradient(
+                                      colors: ThemeColors.getBeachGradient1(),
+                                    )
+                                  : LinearGradient(
+                                      colors: [
+                                        Colors.blue[600]!,
+                                        Colors.blue[400]!,
+                                      ],
+                                    ),
                               boxShadow: [
                                 BoxShadow(
                                   color: Colors.blue.withOpacity(0.4),
@@ -4229,12 +4196,16 @@ class _MCQManagerState extends State<MCQManager> {
                           child: Container(
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(20),
-                              gradient: LinearGradient(
-                                colors: [
-                                  Colors.green[600]!,
-                                  Colors.green[400]!,
-                                ],
-                              ),
+                              gradient: widget.currentTheme == 'beach'
+                                  ? LinearGradient(
+                                      colors: ThemeColors.getBeachGradient2(),
+                                    )
+                                  : LinearGradient(
+                                      colors: [
+                                        Colors.green[600]!,
+                                        Colors.green[400]!,
+                                      ],
+                                    ),
                               boxShadow: [
                                 BoxShadow(
                                   color: Colors.green.withOpacity(0.4),

@@ -14,11 +14,13 @@ import '../main.dart' show getBackgroundForTheme, ThemeColors;
 
 class HomePage extends StatefulWidget {
   final String username;
+  final String currentTheme;
   final Function(int)? onPointsUpdated; // Add callback for points updates
 
   const HomePage({
     super.key,
     required this.username,
+    required this.currentTheme,
     this.onPointsUpdated, // Add this parameter
   });
 
@@ -1816,7 +1818,7 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
         backgroundColor: Colors.transparent,
         body: Stack(
           children: [
-            const SpaceBackground(),
+            getBackgroundForTheme(widget.currentTheme),
             SafeArea(
               child: BlocListener<ChatBloc, ChatState>(
                 bloc: _chatBloc,
@@ -2462,14 +2464,22 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: isSelected
-                          ? [
-                              _gradients[gradientIndex],
-                              _gradients[gradientIndex].withOpacity(0.8)
-                            ]
-                          : [
-                              Colors.white.withOpacity(0.15),
-                              Colors.white.withOpacity(0.05)
-                            ],
+                          ? widget.currentTheme == 'beach'
+                              ? ThemeColors.getBeachGradientForIndex(
+                                  gradientIndex)
+                              : [
+                                  _gradients[gradientIndex],
+                                  _gradients[gradientIndex].withOpacity(0.8)
+                                ]
+                          : widget.currentTheme == 'beach'
+                              ? [
+                                  Colors.white.withOpacity(0.9),
+                                  Colors.white.withOpacity(0.8)
+                                ]
+                              : [
+                                  Colors.white.withOpacity(0.15),
+                                  Colors.white.withOpacity(0.05)
+                                ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
@@ -2513,7 +2523,9 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
                           _icons[iconIndex],
                           color: isSelected
                               ? Colors.white
-                              : Colors.white.withOpacity(0.8),
+                              : widget.currentTheme == 'beach'
+                                  ? ThemeColors.getTextColor('beach')
+                                  : Colors.white.withOpacity(0.8),
                           size: isSelected ? 28 : 24,
                         ),
                       ),
@@ -2525,7 +2537,9 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
                           style: TextStyle(
                             color: isSelected
                                 ? Colors.white
-                                : Colors.white.withOpacity(0.9),
+                                : widget.currentTheme == 'beach'
+                                    ? ThemeColors.getTextColor('beach')
+                                    : Colors.white.withOpacity(0.9),
                             fontSize: 11,
                             fontWeight:
                                 isSelected ? FontWeight.bold : FontWeight.w500,
@@ -2708,22 +2722,33 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
         // Question
         Container(
           padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.05),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: Colors.white.withOpacity(0.1),
-              width: 1,
-            ),
-          ),
+          decoration: widget.currentTheme == 'beach'
+              ? BoxDecoration(
+                  gradient: ThemeColors.getBeachCardGradient(),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: Colors.black.withOpacity(0.1),
+                    width: 1,
+                  ),
+                )
+              : BoxDecoration(
+                  color: Colors.white.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.1),
+                    width: 1,
+                  ),
+                ),
           child: Column(
             children: [
               Text(
                 currentQuestion["question"]!,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  color: widget.currentTheme == 'beach'
+                      ? ThemeColors.getTextColor('beach')
+                      : Colors.white,
                   height: 1.4,
                 ),
                 textAlign: TextAlign.center,
@@ -2757,12 +2782,24 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
                   height: 48,
                   decoration: BoxDecoration(
                     color: isCorrect
-                        ? Colors.green.withOpacity(0.2)
+                        ? widget.currentTheme == 'beach'
+                            ? ThemeColors.getBeachGradient2()[0]
+                                .withOpacity(0.3)
+                            : Colors.green.withOpacity(0.2)
                         : isWrong
-                            ? Colors.red.withOpacity(0.2)
+                            ? widget.currentTheme == 'beach'
+                                ? ThemeColors.getBeachGradient3()[0]
+                                    .withOpacity(0.3)
+                                : Colors.red.withOpacity(0.2)
                             : isSelected
-                                ? Colors.blueAccent.withOpacity(0.15)
-                                : Colors.white.withOpacity(0.04),
+                                ? widget.currentTheme == 'beach'
+                                    ? ThemeColors.getBeachGradient1()[0]
+                                        .withOpacity(0.3)
+                                    : Colors.blueAccent.withOpacity(0.15)
+                                : widget.currentTheme == 'beach'
+                                    ? ThemeColors.getBeachCardGradient()
+                                        .colors[0]
+                                    : Colors.white.withOpacity(0.04),
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
                       color: isCorrect
@@ -2786,7 +2823,11 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
                       option,
                       style: TextStyle(
                         fontSize: 15,
-                        color: Colors.white,
+                        color: (isCorrect || isWrong || isSelected)
+                            ? Colors.white
+                            : widget.currentTheme == 'beach'
+                                ? ThemeColors.getTextColor('beach')
+                                : Colors.white,
                         fontWeight:
                             isSelected ? FontWeight.bold : FontWeight.normal,
                       ),
@@ -2827,11 +2868,17 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
             width: double.infinity,
             height: 60,
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF667eea), Color(0xFF764ba2)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+              gradient: widget.currentTheme == 'beach'
+                  ? LinearGradient(
+                      colors: ThemeColors.getBeachGradient1(),
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    )
+                  : const LinearGradient(
+                      colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
               borderRadius: BorderRadius.circular(30),
               boxShadow: [
                 BoxShadow(
@@ -2870,11 +2917,17 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
                   width: double.infinity,
                   height: 50,
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF667eea), Color(0xFF764ba2)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
+                    gradient: widget.currentTheme == 'beach'
+                        ? LinearGradient(
+                            colors: ThemeColors.getBeachGradient3(),
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          )
+                        : const LinearGradient(
+                            colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
                     borderRadius: BorderRadius.circular(25),
                     boxShadow: [
                       BoxShadow(
@@ -2920,8 +2973,12 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: currentQuestionIndex + 1 == scienceQuestions.length
-                        ? [Color(0xFF56ab2f), Color(0xFFa8e6cf)]
-                        : [Color(0xFF4facfe), Color(0xFF00f2fe)],
+                        ? widget.currentTheme == 'beach'
+                            ? ThemeColors.getBeachGradient2()
+                            : [Color(0xFF56ab2f), Color(0xFFa8e6cf)]
+                        : widget.currentTheme == 'beach'
+                            ? ThemeColors.getBeachGradient1()
+                            : [Color(0xFF4facfe), Color(0xFF00f2fe)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),

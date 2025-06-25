@@ -1645,7 +1645,7 @@ class _FRQTextDisplayScreenState extends State<FRQTextDisplayScreen> {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        const SpaceBackground(),
+        getBackgroundForTheme(widget.currentTheme),
         Scaffold(
           backgroundColor: Colors.transparent,
           body: Column(
