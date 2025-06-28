@@ -11,6 +11,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import '../main.dart' show getBackgroundForTheme, ThemeColors;
+import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
 
 class HomePage extends StatefulWidget {
   final String username;
@@ -53,7 +55,7 @@ class _HomePageState extends State<HomePage> {
       false; // New variable to control score summary visibility
   bool isQuizActive = false; // New variable to track if quiz is active
   String selectedSubject = "Linguistics";
-  int numberOfQuestions = 10; // New variable for question count
+  int numberOfQuestions = 5; // New variable for question count
   File? _userProfileImage; // Add profile image state
 
   // Search functionality
@@ -1363,6 +1365,8 @@ class _HomePageState extends State<HomePage> {
                         decoration: BoxDecoration(
                           gradient: const LinearGradient(
                             colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
                           ),
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
@@ -2139,11 +2143,15 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
                       onPressed: isQuizActive
                           ? null
                           : () {
-                              if (numberOfQuestions > 5) {
-                                setState(() {
+                              setState(() {
+                                if (numberOfQuestions == 5) {
+                                  numberOfQuestions = 3;
+                                } else if (numberOfQuestions > 10) {
                                   numberOfQuestions -= 5;
-                                });
-                              }
+                                } else if (numberOfQuestions == 10) {
+                                  numberOfQuestions = 5;
+                                }
+                              });
                             },
                       icon: Icon(Icons.remove_circle,
                           color: isQuizActive
@@ -2174,11 +2182,15 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
                       onPressed: isQuizActive
                           ? null
                           : () {
-                              if (numberOfQuestions < 200) {
-                                setState(() {
+                              setState(() {
+                                if (numberOfQuestions == 3) {
+                                  numberOfQuestions = 5;
+                                } else if (numberOfQuestions == 5) {
+                                  numberOfQuestions = 10;
+                                } else if (numberOfQuestions < 200) {
                                   numberOfQuestions += 5;
-                                });
-                              }
+                                }
+                              });
                             },
                       icon: Icon(Icons.add_circle,
                           color: isQuizActive
@@ -2349,38 +2361,93 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
       const Color(0xFF667eea),
     ];
 
-    final List<IconData> _icons = [
-      Icons.science,
-      Icons.rocket_launch,
-      Icons.biotech,
-      Icons.calculate,
-      Icons.history_edu,
-      Icons.public,
-      Icons.computer,
-      Icons.trending_up,
-      Icons.book,
-      Icons.palette,
-      Icons.music_note,
-      Icons.psychology,
-      Icons.people,
-      Icons.lightbulb,
-      Icons.landscape,
-      Icons.eco,
-      Icons.gavel,
-      Icons.business,
-      Icons.school,
-      Icons.architecture,
-      Icons.gavel,
-      Icons.medical_services,
-      Icons.pets,
-      Icons.restaurant,
-      Icons.chat,
-      Icons.security,
-      Icons.public,
-      Icons.agriculture,
-      Icons.waves,
-      Icons.smart_toy,
-    ];
+    // Function to get appropriate icon for each subject
+    IconData _getIconForSubject(String subject) {
+      switch (subject) {
+        case "Chemistry":
+          return Icons.science;
+        case "Physics":
+          return Icons.bolt;
+        case "Biology":
+          return Icons.biotech;
+        case "Mathematics":
+          return Icons.calculate;
+        case "History":
+          return Icons.history_edu;
+        case "Geography":
+          return Icons.public;
+        case "Computer Science":
+          return Icons.computer;
+        case "Economics":
+          return Icons.trending_up;
+        case "Literature":
+          return Icons.book;
+        case "Art":
+          return Icons.palette;
+        case "Music":
+          return Icons.music_note;
+        case "Psychology":
+          return Icons.psychology;
+        case "Sociology":
+          return Icons.people;
+        case "Philosophy":
+          return Icons.lightbulb;
+        case "Astronomy":
+          return Icons.stars;
+        case "Geology":
+          return Icons.landscape;
+        case "Environmental Science":
+          return Icons.eco;
+        case "Political Science":
+          return Icons.gavel;
+        case "Anthropology":
+          return Icons.diversity_1;
+        case "Linguistics":
+          return Icons.translate;
+        case "Engineering":
+          return Icons.engineering;
+        case "Ethics":
+          return Icons.balance;
+        case "Statistics":
+          return Icons.bar_chart;
+        case "Media Studies":
+          return Icons.tv;
+        case "Theater":
+          return Icons.theater_comedy;
+        case "Architecture":
+          return Icons.architecture;
+        case "Law":
+          return Icons.gavel;
+        case "Business Studies":
+          return Icons.business;
+        case "Education":
+          return Icons.school;
+        case "Archaeology":
+          return Icons.search;
+        case "Religious Studies":
+          return Icons.church;
+        case "Health Sciences":
+          return Icons.medical_services;
+        case "Veterinary Science":
+          return Icons.pets;
+        case "Nutrition":
+          return Icons.restaurant;
+        case "Communication Studies":
+          return Icons.chat;
+        case "Criminology":
+          return Icons.security;
+        case "Cultural Studies":
+          return Icons.public;
+        case "Agricultural Science":
+          return Icons.agriculture;
+        case "Marine Biology":
+          return Icons.waves;
+        case "Robotics":
+          return Icons.smart_toy;
+        default:
+          return Icons.school;
+      }
+    }
 
     return Column(
       children: [
@@ -2416,17 +2483,21 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  _icons[subjects.indexOf(selectedSubject) % _icons.length],
+                  _getIconForSubject(selectedSubject),
                   color: Colors.white,
                   size: 20,
                 ),
                 const SizedBox(width: 8),
-                Text(
-                  'Selected: $selectedSubject',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                Flexible(
+                  child: Text(
+                    'Selected: $selectedSubject',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
                   ),
                 ),
               ],
@@ -2441,7 +2512,7 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
               crossAxisCount: 3,
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
-              childAspectRatio: 1.0,
+              childAspectRatio: 0.85,
             ),
             itemCount: availableSubjects.length,
             itemBuilder: (context, index) {
@@ -2449,7 +2520,7 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
               final isSelected = subject == selectedSubject;
               final gradientIndex =
                   subjects.indexOf(subject) % _gradients.length;
-              final iconIndex = subjects.indexOf(subject) % _icons.length;
+              final subjectIcon = _getIconForSubject(subject);
 
               return GestureDetector(
                 onTap: isQuizActive
@@ -2507,63 +2578,88 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
                             ),
                           ],
                   ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: isSelected
-                              ? Colors.white.withOpacity(0.2)
-                              : Colors.transparent,
-                        ),
-                        child: Icon(
-                          _icons[iconIndex],
-                          color: isSelected
-                              ? Colors.white
-                              : widget.currentTheme == 'beach'
-                                  ? ThemeColors.getTextColor('beach')
-                                  : Colors.white.withOpacity(0.8),
-                          size: isSelected ? 28 : 24,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        child: Text(
-                          subject,
-                          style: TextStyle(
-                            color: isSelected
-                                ? Colors.white
-                                : widget.currentTheme == 'beach'
-                                    ? ThemeColors.getTextColor('beach')
-                                    : Colors.white.withOpacity(0.9),
-                            fontSize: 11,
-                            fontWeight:
-                                isSelected ? FontWeight.bold : FontWeight.w500,
-                          ),
-                          textAlign: TextAlign.center,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      if (isSelected)
-                        Container(
-                          margin: const EdgeInsets.only(top: 4),
-                          padding: const EdgeInsets.all(2),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.white.withOpacity(0.3),
-                          ),
-                          child: const Icon(
-                            Icons.check,
-                            color: Colors.white,
-                            size: 12,
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Icon section with consistent sizing
+                        SizedBox(
+                          height: 48,
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 300),
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: isSelected
+                                  ? Colors.white.withOpacity(0.2)
+                                  : Colors.transparent,
+                            ),
+                            child: Icon(
+                              subjectIcon,
+                              color: isSelected
+                                  ? Colors.white
+                                  : widget.currentTheme == 'beach'
+                                      ? ThemeColors.getTextColor('beach')
+                                      : Colors.white.withOpacity(0.8),
+                              size: 26, // Fixed size to prevent layout shifts
+                            ),
                           ),
                         ),
-                    ],
+
+                        // Text section with proper constraints
+                        Expanded(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 2),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  subject,
+                                  style: TextStyle(
+                                    color: isSelected
+                                        ? Colors.white
+                                        : widget.currentTheme == 'beach'
+                                            ? ThemeColors.getTextColor('beach')
+                                            : Colors.white.withOpacity(0.9),
+                                    fontSize: 10,
+                                    fontWeight: isSelected
+                                        ? FontWeight.bold
+                                        : FontWeight.w500,
+                                    height: 1.2,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+
+                                // Check mark with fixed positioning
+                                SizedBox(
+                                  height: 16,
+                                  child: isSelected
+                                      ? Container(
+                                          margin: const EdgeInsets.only(top: 2),
+                                          padding: const EdgeInsets.all(2),
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color:
+                                                Colors.white.withOpacity(0.3),
+                                          ),
+                                          child: const Icon(
+                                            Icons.check,
+                                            color: Colors.white,
+                                            size: 10,
+                                          ),
+                                        )
+                                      : null,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               );
@@ -2910,7 +3006,7 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
         else if (showAnswer)
           Column(
             children: [
-              // Ask AI for Help Button
+              // Ask QuestAI for Help Button
               Padding(
                 padding: const EdgeInsets.only(top: 24),
                 child: Container(
@@ -2948,7 +3044,7 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
                     },
                     icon: const Icon(Icons.psychology, color: Colors.white),
                     label: const Text(
-                      "Ask AI for Help",
+                      "Ask QuestAI for Help",
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -3134,6 +3230,51 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
             ),
             const SizedBox(height: 40),
 
+            // Share Button
+            Container(
+              width: double.infinity,
+              height: 45,
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF4facfe), Color(0xFF00f2fe)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(22.5),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF4facfe).withOpacity(0.3),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: ElevatedButton.icon(
+                onPressed: _shareResults,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  shadowColor: Colors.transparent,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(22.5),
+                  ),
+                ),
+                icon: const Icon(
+                  Icons.share,
+                  color: Colors.white,
+                  size: 18,
+                ),
+                label: const Text(
+                  "Share Results",
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+
             // Action Buttons
             Row(
               children: [
@@ -3220,6 +3361,19 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
         ),
       ),
     );
+  }
+
+  void _shareResults() {
+    int correctAnswers = answeredCorrectly.where((correct) => correct).length;
+    double accuracy = (correctAnswers / scienceQuestions.length) * 100;
+
+    String shareText =
+        "🎯 Just completed a ${selectedSubject} quiz on EduQuest!\n"
+        "📊 Score: $correctAnswers/${scienceQuestions.length}\n"
+        "📈 Accuracy: ${accuracy.toStringAsFixed(1)}%\n"
+        "🔥 Challenge yourself with EduQuest and test your knowledge!";
+
+    Share.share(shareText);
   }
 
   Widget _buildChatMessages(

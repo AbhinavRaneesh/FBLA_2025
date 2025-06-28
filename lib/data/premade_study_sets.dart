@@ -130,7 +130,8 @@ class PremadeStudySetsRepository {
           correctAnswer: 'x³/3 + C',
         ),
         Question(
-          questionText: 'What is the limit of (1 + 1/n)^n as n approaches infinity?',
+          questionText:
+              'What is the limit of (1 + 1/n)^n as n approaches infinity?',
           options: ['e', '1', '0', 'infinity'],
           correctAnswer: 'e',
         ),
@@ -239,7 +240,8 @@ class PremadeStudySetsRepository {
             'If aₙ alternates in sign, then Σaₙ converges',
             'If aₙ > 0 and decreasing, then Σaₙ converges'
           ],
-          correctAnswer: 'If aₙ > 0, aₙ₊₁ ≤ aₙ, and lim aₙ = 0, then Σ(-1)ⁿaₙ converges',
+          correctAnswer:
+              'If aₙ > 0, aₙ₊₁ ≤ aₙ, and lim aₙ = 0, then Σ(-1)ⁿaₙ converges',
         ),
         Question(
           questionText: 'What is the integral test?',
@@ -249,7 +251,8 @@ class PremadeStudySetsRepository {
             'If ∫f(x)dx converges, then Σf(n) converges',
             'If f(x) is continuous, then Σf(n) converges'
           ],
-          correctAnswer: 'If f(x) is positive, continuous, and decreasing, then Σf(n) converges if and only if ∫f(x)dx converges',
+          correctAnswer:
+              'If f(x) is positive, continuous, and decreasing, then Σf(n) converges if and only if ∫f(x)dx converges',
         ),
         Question(
           questionText: 'What is the comparison test?',
@@ -269,7 +272,8 @@ class PremadeStudySetsRepository {
             'If aₙ/bₙ approaches infinity, then Σaₙ diverges',
             'If aₙ and bₙ are similar, then they have the same convergence'
           ],
-          correctAnswer: 'If lim(aₙ/bₙ) = c > 0, then Σaₙ and Σbₙ both converge or both diverge',
+          correctAnswer:
+              'If lim(aₙ/bₙ) = c > 0, then Σaₙ and Σbₙ both converge or both diverge',
         ),
         Question(
           questionText: 'What is the root test?',
@@ -282,7 +286,8 @@ class PremadeStudySetsRepository {
           correctAnswer: 'If limⁿ√|aₙ| < 1, the series converges absolutely',
         ),
         Question(
-          questionText: 'What is the formula for the surface area of revolution?',
+          questionText:
+              'What is the formula for the surface area of revolution?',
           options: [
             'S = 2π∫y√(1 + (dy/dx)²)dx',
             'S = π∫y²dx',
@@ -293,12 +298,7 @@ class PremadeStudySetsRepository {
         ),
         Question(
           questionText: 'What is the formula for the volume of revolution?',
-          options: [
-            'V = π∫y²dx',
-            'V = 2π∫y²dx',
-            'V = π∫ydx',
-            'V = 2π∫ydx'
-          ],
+          options: ['V = π∫y²dx', 'V = 2π∫y²dx', 'V = π∫ydx', 'V = 2π∫ydx'],
           correctAnswer: 'V = π∫y²dx',
         ),
         Question(
@@ -322,7 +322,8 @@ class PremadeStudySetsRepository {
           correctAnswer: 'L = ∫√((dx/dt)² + (dy/dt)²)dt',
         ),
         Question(
-          questionText: 'What is the formula for the area between polar curves?',
+          questionText:
+              'What is the formula for the area between polar curves?',
           options: [
             'A = 1/2∫(r₁² - r₂²)dθ',
             'A = ∫(r₁ - r₂)dθ',
@@ -448,7 +449,8 @@ class PremadeStudySetsRepository {
             'The probability of accepting a true null hypothesis',
             'The probability of accepting a false null hypothesis'
           ],
-          correctAnswer: 'The probability of correctly rejecting a false null hypothesis',
+          correctAnswer:
+              'The probability of correctly rejecting a false null hypothesis',
         ),
         Question(
           questionText: 'What is the formula for the z-score?',
@@ -468,7 +470,8 @@ class PremadeStudySetsRepository {
             'In a normal distribution, 68% of data falls within 2σ, 95% within 3σ, 99.7% within 4σ',
             'In any distribution, 68% of data falls within 2σ, 95% within 3σ, 99.7% within 4σ'
           ],
-          correctAnswer: 'In a normal distribution, 68% of data falls within 1σ, 95% within 2σ, 99.7% within 3σ',
+          correctAnswer:
+              'In a normal distribution, 68% of data falls within 1σ, 95% within 2σ, 99.7% within 3σ',
         ),
         Question(
           questionText: 'What is the correlation coefficient r?',
@@ -478,7 +481,8 @@ class PremadeStudySetsRepository {
             'A measure of the strength of any relationship between variables',
             'A measure of the slope of the regression line'
           ],
-          correctAnswer: 'A measure of linear association between two variables, ranging from -1 to 1',
+          correctAnswer:
+              'A measure of linear association between two variables, ranging from -1 to 1',
         ),
         Question(
           questionText: 'What is the coefficient of determination R²?',
@@ -488,7 +492,8 @@ class PremadeStudySetsRepository {
             'The slope of the regression line',
             'The y-intercept of the regression line'
           ],
-          correctAnswer: 'The proportion of variance in the dependent variable explained by the independent variable',
+          correctAnswer:
+              'The proportion of variance in the dependent variable explained by the independent variable',
         ),
         Question(
           questionText: 'What is a residual?',
@@ -508,7 +513,8 @@ class PremadeStudySetsRepository {
             'Testing for correlation between variables',
             'Testing for normality of data'
           ],
-          correctAnswer: 'Testing for independence between categorical variables',
+          correctAnswer:
+              'Testing for independence between categorical variables',
         ),
         Question(
           questionText: 'What is the t-test used for?',
@@ -518,7 +524,8 @@ class PremadeStudySetsRepository {
             'Testing for correlation',
             'Testing for independence'
           ],
-          correctAnswer: 'Comparing means when population standard deviation is unknown',
+          correctAnswer:
+              'Comparing means when population standard deviation is unknown',
         ),
         Question(
           questionText: 'What is the p-value?',
@@ -528,7 +535,8 @@ class PremadeStudySetsRepository {
             'The probability that the alternative hypothesis is true',
             'The significance level of the test'
           ],
-          correctAnswer: 'The probability of obtaining a test statistic as extreme as or more extreme than the observed value, assuming the null hypothesis is true',
+          correctAnswer:
+              'The probability of obtaining a test statistic as extreme as or more extreme than the observed value, assuming the null hypothesis is true',
         ),
         Question(
           questionText: 'What is the significance level α?',
@@ -538,17 +546,20 @@ class PremadeStudySetsRepository {
             'The p-value threshold for rejecting the null hypothesis',
             'The confidence level of the test'
           ],
-          correctAnswer: 'The probability of rejecting a true null hypothesis (Type I error rate)',
+          correctAnswer:
+              'The probability of rejecting a true null hypothesis (Type I error rate)',
         ),
         Question(
-          questionText: 'What is the difference between one-tailed and two-tailed tests?',
+          questionText:
+              'What is the difference between one-tailed and two-tailed tests?',
           options: [
             'One-tailed tests look for differences in one direction, two-tailed tests look for differences in either direction',
             'One-tailed tests are more powerful than two-tailed tests',
             'Two-tailed tests are always preferred over one-tailed tests',
             'One-tailed tests are used for means, two-tailed tests for proportions'
           ],
-          correctAnswer: 'One-tailed tests look for differences in one direction, two-tailed tests look for differences in either direction',
+          correctAnswer:
+              'One-tailed tests look for differences in one direction, two-tailed tests look for differences in either direction',
         ),
         Question(
           questionText: 'What is the standard deviation?',
@@ -578,7 +589,8 @@ class PremadeStudySetsRepository {
             'The average of all values',
             'The difference between the maximum and minimum values'
           ],
-          correctAnswer: 'The middle value when data is ordered from least to greatest',
+          correctAnswer:
+              'The middle value when data is ordered from least to greatest',
         ),
         Question(
           questionText: 'What is the mode?',
@@ -654,10 +666,12 @@ class PremadeStudySetsRepository {
             'An object in motion stays in motion unless acted upon by an external force',
             'Energy cannot be created or destroyed'
           ],
-          correctAnswer: 'For every action there is an equal and opposite reaction',
+          correctAnswer:
+              'For every action there is an equal and opposite reaction',
         ),
         Question(
-          questionText: 'What is the formula for gravitational potential energy?',
+          questionText:
+              'What is the formula for gravitational potential energy?',
           options: ['PE = mgh', 'PE = 1/2mv²', 'PE = Fd', 'PE = ma'],
           correctAnswer: 'PE = mgh',
         ),
@@ -689,7 +703,8 @@ class PremadeStudySetsRepository {
             'Momentum always increases',
             'Momentum always decreases'
           ],
-          correctAnswer: 'Total momentum of a system remains constant if no external forces act on it',
+          correctAnswer:
+              'Total momentum of a system remains constant if no external forces act on it',
         ),
         Question(
           questionText: 'What is the formula for acceleration?',
@@ -713,7 +728,12 @@ class PremadeStudySetsRepository {
         ),
         Question(
           questionText: 'What is the formula for displacement?',
-          options: ['Δd = d_final - d_initial', 'Δd = v/t', 'Δd = a/t', 'Δd = F/m'],
+          options: [
+            'Δd = d_final - d_initial',
+            'Δd = v/t',
+            'Δd = a/t',
+            'Δd = F/m'
+          ],
           correctAnswer: 'Δd = d_final - d_initial',
         ),
         Question(
@@ -723,12 +743,22 @@ class PremadeStudySetsRepository {
         ),
         Question(
           questionText: 'What is the formula for average speed?',
-          options: ['v_avg = total distance/total time', 'v_avg = Δv/Δt', 'v_avg = a/t', 'v_avg = F/m'],
+          options: [
+            'v_avg = total distance/total time',
+            'v_avg = Δv/Δt',
+            'v_avg = a/t',
+            'v_avg = F/m'
+          ],
           correctAnswer: 'v_avg = total distance/total time',
         ),
         Question(
           questionText: 'What is the formula for average velocity?',
-          options: ['v_avg = Δd/Δt', 'v_avg = total distance/total time', 'v_avg = a/t', 'v_avg = F/m'],
+          options: [
+            'v_avg = Δd/Δt',
+            'v_avg = total distance/total time',
+            'v_avg = a/t',
+            'v_avg = F/m'
+          ],
           correctAnswer: 'v_avg = Δd/Δt',
         ),
       ],
@@ -807,7 +837,12 @@ class PremadeStudySetsRepository {
         ),
         Question(
           questionText: 'What is the SI unit of electric field?',
-          options: ['N/C (Newtons per Coulomb)', 'V/m (Volts per meter)', 'A/m (Amperes per meter)', 'T (Tesla)'],
+          options: [
+            'N/C (Newtons per Coulomb)',
+            'V/m (Volts per meter)',
+            'A/m (Amperes per meter)',
+            'T (Tesla)'
+          ],
           correctAnswer: 'N/C (Newtons per Coulomb)',
         ),
         Question(
@@ -1045,12 +1080,7 @@ class PremadeStudySetsRepository {
         ),
         Question(
           questionText: 'What is the formula for osmotic pressure?',
-          options: [
-            'π = MRT',
-            'π = P/RT',
-            'π = n/V',
-            'π = mRT'
-          ],
+          options: ['π = MRT', 'π = P/RT', 'π = n/V', 'π = mRT'],
           correctAnswer: 'π = MRT',
         ),
         Question(
@@ -1146,10 +1176,12 @@ class PremadeStudySetsRepository {
             'The real part of the number',
             'The imaginary part of the number'
           ],
-          correctAnswer: 'The angle with the positive real axis in the complex plane',
+          correctAnswer:
+              'The angle with the positive real axis in the complex plane',
         ),
         Question(
-          questionText: 'What is the formula for the modulus of a complex number z = a + bi?',
+          questionText:
+              'What is the formula for the modulus of a complex number z = a + bi?',
           options: [
             '|z| = √(a² + b²)',
             '|z| = a + b',
@@ -1169,7 +1201,8 @@ class PremadeStudySetsRepository {
           correctAnswer: 'e^(iθ) = cos θ + i sin θ',
         ),
         Question(
-          questionText: 'What is the formula for the nth term of an arithmetic sequence?',
+          questionText:
+              'What is the formula for the nth term of an arithmetic sequence?',
           options: [
             'aₙ = a₁ + (n-1)d',
             'aₙ = a₁rⁿ⁻¹',
@@ -1179,7 +1212,8 @@ class PremadeStudySetsRepository {
           correctAnswer: 'aₙ = a₁ + (n-1)d',
         ),
         Question(
-          questionText: 'What is the sum of the first n terms of an arithmetic sequence?',
+          questionText:
+              'What is the sum of the first n terms of an arithmetic sequence?',
           options: [
             'Sₙ = n(a₁ + aₙ)/2',
             'Sₙ = n(a₁ + d)/2',
@@ -1189,7 +1223,8 @@ class PremadeStudySetsRepository {
           correctAnswer: 'Sₙ = n(a₁ + aₙ)/2',
         ),
         Question(
-          questionText: 'What is the sum of the first n terms of a geometric sequence?',
+          questionText:
+              'What is the sum of the first n terms of a geometric sequence?',
           options: [
             'Sₙ = a₁(1-rⁿ)/(1-r)',
             'Sₙ = n(a₁ + aₙ)/2',
@@ -1226,7 +1261,8 @@ class PremadeStudySetsRepository {
             'A method to solve equations',
             'A method to find limits'
           ],
-          correctAnswer: 'A method of mathematical proof that proves a statement for all natural numbers',
+          correctAnswer:
+              'A method of mathematical proof that proves a statement for all natural numbers',
         ),
         Question(
           questionText: 'What is the principle of mathematical induction?',
@@ -1236,7 +1272,8 @@ class PremadeStudySetsRepository {
             'If a statement is true for n=k, then it is true for n=k+1',
             'If a statement is true for some numbers, then it is true for all numbers'
           ],
-          correctAnswer: 'If a statement is true for n=1 and if it being true for n=k implies it is true for n=k+1, then it is true for all natural numbers',
+          correctAnswer:
+              'If a statement is true for n=1 and if it being true for n=k implies it is true for n=k+1, then it is true for all natural numbers',
         ),
         Question(
           questionText: 'What is a vector in mathematics?',
@@ -1256,7 +1293,8 @@ class PremadeStudySetsRepository {
             'The sum of their magnitudes',
             'The difference of their magnitudes'
           ],
-          correctAnswer: 'A scalar quantity equal to the product of their magnitudes and the cosine of the angle between them',
+          correctAnswer:
+              'A scalar quantity equal to the product of their magnitudes and the cosine of the angle between them',
         ),
         Question(
           questionText: 'What is the cross product of two vectors?',
@@ -1266,7 +1304,8 @@ class PremadeStudySetsRepository {
             'A vector quantity parallel to both vectors',
             'A scalar quantity equal to the sum of their magnitudes'
           ],
-          correctAnswer: 'A vector quantity perpendicular to both vectors with magnitude equal to the product of their magnitudes and the sine of the angle between them',
+          correctAnswer:
+              'A vector quantity perpendicular to both vectors with magnitude equal to the product of their magnitudes and the sine of the angle between them',
         ),
         Question(
           questionText: 'What is a matrix?',
@@ -1276,7 +1315,8 @@ class PremadeStudySetsRepository {
             'A vector',
             'A function'
           ],
-          correctAnswer: 'A rectangular array of numbers, symbols, or expressions arranged in rows and columns',
+          correctAnswer:
+              'A rectangular array of numbers, symbols, or expressions arranged in rows and columns',
         ),
         Question(
           questionText: 'What is the determinant of a 2x2 matrix?',
@@ -1356,22 +1396,13 @@ class PremadeStudySetsRepository {
         ),
         Question(
           questionText: 'What is the formula for relativistic time dilation?',
-          options: [
-            'Δt = γΔt₀',
-            'Δt = Δt₀/γ',
-            'Δt = Δt₀ + γ',
-            'Δt = Δt₀ - γ'
-          ],
+          options: ['Δt = γΔt₀', 'Δt = Δt₀/γ', 'Δt = Δt₀ + γ', 'Δt = Δt₀ - γ'],
           correctAnswer: 'Δt = γΔt₀',
         ),
         Question(
-          questionText: 'What is the formula for relativistic length contraction?',
-          options: [
-            'L = L₀/γ',
-            'L = γL₀',
-            'L = L₀ + γ',
-            'L = L₀ - γ'
-          ],
+          questionText:
+              'What is the formula for relativistic length contraction?',
+          options: ['L = L₀/γ', 'L = γL₀', 'L = L₀ + γ', 'L = L₀ - γ'],
           correctAnswer: 'L = L₀/γ',
         ),
         Question(
@@ -1382,7 +1413,8 @@ class PremadeStudySetsRepository {
             'Reflection of light from a metal surface',
             'Transmission of light through a metal'
           ],
-          correctAnswer: 'Emission of electrons when light shines on a metal surface',
+          correctAnswer:
+              'Emission of electrons when light shines on a metal surface',
         ),
         Question(
           questionText: 'What is the work function?',
@@ -1392,7 +1424,8 @@ class PremadeStudySetsRepository {
             'The kinetic energy of an emitted electron',
             'The potential energy of an electron'
           ],
-          correctAnswer: 'The minimum energy required to remove an electron from a metal surface',
+          correctAnswer:
+              'The minimum energy required to remove an electron from a metal surface',
         ),
         Question(
           questionText: 'What is the formula for the energy of a photon?',
@@ -1420,24 +1453,22 @@ class PremadeStudySetsRepository {
           correctAnswer: 'c = 3.00 × 10⁸ m/s',
         ),
         Question(
-          questionText: 'What is the formula for the kinetic energy of a relativistic particle?',
-          options: [
-            'KE = (γ - 1)mc²',
-            'KE = γmc²',
-            'KE = 1/2γmv²',
-            'KE = mc²'
-          ],
+          questionText:
+              'What is the formula for the kinetic energy of a relativistic particle?',
+          options: ['KE = (γ - 1)mc²', 'KE = γmc²', 'KE = 1/2γmv²', 'KE = mc²'],
           correctAnswer: 'KE = (γ - 1)mc²',
         ),
         Question(
-          questionText: 'What is the principle of superposition in quantum mechanics?',
+          questionText:
+              'What is the principle of superposition in quantum mechanics?',
           options: [
             'A quantum system can exist in multiple states simultaneously',
             'Quantum particles can only exist in one state at a time',
             'Quantum states are always definite',
             'Quantum particles cannot be in superposition'
           ],
-          correctAnswer: 'A quantum system can exist in multiple states simultaneously',
+          correctAnswer:
+              'A quantum system can exist in multiple states simultaneously',
         ),
         Question(
           questionText: 'What is the Schrödinger equation?',
@@ -1447,7 +1478,8 @@ class PremadeStudySetsRepository {
             'An equation for thermodynamics',
             'An equation for electromagnetism'
           ],
-          correctAnswer: 'A fundamental equation describing how quantum systems evolve over time',
+          correctAnswer:
+              'A fundamental equation describing how quantum systems evolve over time',
         ),
         Question(
           questionText: 'What is the Pauli exclusion principle?',
@@ -1457,26 +1489,18 @@ class PremadeStudySetsRepository {
             'Only bosons can occupy the same quantum state',
             'Particles can share quantum states freely'
           ],
-          correctAnswer: 'No two identical fermions can occupy the same quantum state simultaneously',
+          correctAnswer:
+              'No two identical fermions can occupy the same quantum state simultaneously',
         ),
         Question(
           questionText: 'What is the formula for the Compton wavelength?',
-          options: [
-            'λ_c = h/(mc)',
-            'λ_c = h/m',
-            'λ_c = mc/h',
-            'λ_c = hc/m'
-          ],
+          options: ['λ_c = h/(mc)', 'λ_c = h/m', 'λ_c = mc/h', 'λ_c = hc/m'],
           correctAnswer: 'λ_c = h/(mc)',
         ),
         Question(
-          questionText: 'What is the uncertainty principle for energy and time?',
-          options: [
-            'ΔEΔt ≥ ℏ/2',
-            'ΔEΔt ≤ ℏ/2',
-            'ΔEΔt = ℏ/2',
-            'ΔEΔt = 0'
-          ],
+          questionText:
+              'What is the uncertainty principle for energy and time?',
+          options: ['ΔEΔt ≥ ℏ/2', 'ΔEΔt ≤ ℏ/2', 'ΔEΔt = ℏ/2', 'ΔEΔt = 0'],
           correctAnswer: 'ΔEΔt ≥ ℏ/2',
         ),
       ],
@@ -1554,7 +1578,8 @@ class PremadeStudySetsRepository {
             'In substitution reactions, the leaving group is replaced by the nucleophile',
             'In oxidation reactions, the most oxidized product is formed'
           ],
-          correctAnswer: 'In addition reactions, the hydrogen atom adds to the carbon with more hydrogen atoms',
+          correctAnswer:
+              'In addition reactions, the hydrogen atom adds to the carbon with more hydrogen atoms',
         ),
         Question(
           questionText: 'What is Zaitsev\'s rule?',
@@ -1564,7 +1589,8 @@ class PremadeStudySetsRepository {
             'In substitution reactions, the major product is the more substituted compound',
             'In oxidation reactions, the major product is the most oxidized compound'
           ],
-          correctAnswer: 'In elimination reactions, the major product is the more substituted alkene',
+          correctAnswer:
+              'In elimination reactions, the major product is the more substituted alkene',
         ),
         Question(
           questionText: 'What is the difference between cis and trans isomers?',
@@ -1574,7 +1600,8 @@ class PremadeStudySetsRepository {
             'Cis is more stable than trans',
             'Cis is less stable than trans'
           ],
-          correctAnswer: 'Cis has substituents on the same side, trans has substituents on opposite sides',
+          correctAnswer:
+              'Cis has substituents on the same side, trans has substituents on opposite sides',
         ),
         Question(
           questionText: 'What is the difference between E and Z isomers?',
@@ -1584,7 +1611,8 @@ class PremadeStudySetsRepository {
             'E is more stable than Z',
             'E is less stable than Z'
           ],
-          correctAnswer: 'E has higher priority groups on opposite sides, Z has higher priority groups on the same side',
+          correctAnswer:
+              'E has higher priority groups on opposite sides, Z has higher priority groups on the same side',
         ),
         Question(
           questionText: 'What is the Cahn-Ingold-Prelog priority system?',
@@ -1594,17 +1622,20 @@ class PremadeStudySetsRepository {
             'A system for determining reaction mechanisms',
             'A system for calculating molecular weights'
           ],
-          correctAnswer: 'A system for assigning priorities to substituents based on atomic number',
+          correctAnswer:
+              'A system for assigning priorities to substituents based on atomic number',
         ),
         Question(
-          questionText: 'What is the difference between a chiral and achiral molecule?',
+          questionText:
+              'What is the difference between a chiral and achiral molecule?',
           options: [
             'A chiral molecule is not superimposable on its mirror image, an achiral molecule is',
             'A chiral molecule is superimposable on its mirror image, an achiral molecule is not',
             'A chiral molecule has a plane of symmetry, an achiral molecule does not',
             'A chiral molecule has no plane of symmetry, an achiral molecule has one'
           ],
-          correctAnswer: 'A chiral molecule is not superimposable on its mirror image, an achiral molecule is',
+          correctAnswer:
+              'A chiral molecule is not superimposable on its mirror image, an achiral molecule is',
         ),
         Question(
           questionText: 'What is an enantiomer?',
@@ -1614,7 +1645,8 @@ class PremadeStudySetsRepository {
             'A pair of molecules that are constitutional isomers',
             'A pair of molecules that are diastereomers'
           ],
-          correctAnswer: 'A pair of molecules that are non-superimposable mirror images of each other',
+          correctAnswer:
+              'A pair of molecules that are non-superimposable mirror images of each other',
         ),
         Question(
           questionText: 'What is a diastereomer?',
@@ -1624,7 +1656,8 @@ class PremadeStudySetsRepository {
             'Constitutional isomers',
             'Identical molecules'
           ],
-          correctAnswer: 'Stereoisomers that are not mirror images of each other',
+          correctAnswer:
+              'Stereoisomers that are not mirror images of each other',
         ),
         Question(
           questionText: 'What is optical activity?',
@@ -1634,7 +1667,8 @@ class PremadeStudySetsRepository {
             'The ability of a compound to emit light',
             'The ability of a compound to reflect light'
           ],
-          correctAnswer: 'The ability of a compound to rotate plane-polarized light',
+          correctAnswer:
+              'The ability of a compound to rotate plane-polarized light',
         ),
         Question(
           questionText: 'What is specific rotation?',
@@ -1644,7 +1678,8 @@ class PremadeStudySetsRepository {
             'The rotation of plane-polarized light per unit mass',
             'The rotation of plane-polarized light per unit volume'
           ],
-          correctAnswer: 'The rotation of plane-polarized light per unit concentration and path length',
+          correctAnswer:
+              'The rotation of plane-polarized light per unit concentration and path length',
         ),
         Question(
           questionText: 'What is a racemic mixture?',
@@ -1657,24 +1692,28 @@ class PremadeStudySetsRepository {
           correctAnswer: 'A 1:1 mixture of enantiomers',
         ),
         Question(
-          questionText: 'What is the difference between a meso compound and a racemic mixture?',
+          questionText:
+              'What is the difference between a meso compound and a racemic mixture?',
           options: [
             'A meso compound is achiral despite having chiral centers, a racemic mixture contains equal amounts of enantiomers',
             'A meso compound is chiral, a racemic mixture is achiral',
             'A meso compound has no chiral centers, a racemic mixture has chiral centers',
             'A meso compound is optically active, a racemic mixture is not'
           ],
-          correctAnswer: 'A meso compound is achiral despite having chiral centers, a racemic mixture contains equal amounts of enantiomers',
+          correctAnswer:
+              'A meso compound is achiral despite having chiral centers, a racemic mixture contains equal amounts of enantiomers',
         ),
         Question(
-          questionText: 'What is the difference between a Fischer projection and a Haworth projection?',
+          questionText:
+              'What is the difference between a Fischer projection and a Haworth projection?',
           options: [
             'Fischer projection shows linear structure, Haworth projection shows cyclic structure',
             'Fischer projection shows cyclic structure, Haworth projection shows linear structure',
             'Fischer projection is for carbohydrates only, Haworth projection is for all compounds',
             'Fischer projection is for all compounds, Haworth projection is for carbohydrates only'
           ],
-          correctAnswer: 'Fischer projection shows linear structure, Haworth projection shows cyclic structure',
+          correctAnswer:
+              'Fischer projection shows linear structure, Haworth projection shows cyclic structure',
         ),
         Question(
           questionText: 'What is the difference between α and β anomers?',
@@ -1684,17 +1723,20 @@ class PremadeStudySetsRepository {
             'α is more stable than β',
             'α is less stable than β'
           ],
-          correctAnswer: 'α has the OH group below the ring, β has the OH group above the ring',
+          correctAnswer:
+              'α has the OH group below the ring, β has the OH group above the ring',
         ),
         Question(
-          questionText: 'What is the difference between a reducing and non-reducing sugar?',
+          questionText:
+              'What is the difference between a reducing and non-reducing sugar?',
           options: [
             'A reducing sugar has a free aldehyde or ketone group, a non-reducing sugar does not',
             'A reducing sugar has no free aldehyde or ketone group, a non-reducing sugar does',
             'A reducing sugar is always a monosaccharide, a non-reducing sugar is always a disaccharide',
             'A reducing sugar is always a disaccharide, a non-reducing sugar is always a monosaccharide'
           ],
-          correctAnswer: 'A reducing sugar has a free aldehyde or ketone group, a non-reducing sugar does not',
+          correctAnswer:
+              'A reducing sugar has a free aldehyde or ketone group, a non-reducing sugar does not',
         ),
       ],
     ),
@@ -1768,7 +1810,8 @@ class PremadeStudySetsRepository {
             'The technique of hiding implementation details',
             'The method of organizing code into packages'
           ],
-          correctAnswer: 'The bundling of data and methods that operate on that data within a single unit',
+          correctAnswer:
+              'The bundling of data and methods that operate on that data within a single unit',
         ),
         Question(
           questionText: 'What is abstraction in Java?',
@@ -1778,7 +1821,8 @@ class PremadeStudySetsRepository {
             'The technique of bundling data and methods',
             'The method of organizing code into packages'
           ],
-          correctAnswer: 'The process of hiding complex implementation details and showing only necessary features',
+          correctAnswer:
+              'The process of hiding complex implementation details and showing only necessary features',
         ),
         Question(
           questionText: 'What is method overriding in Java?',
@@ -1788,7 +1832,8 @@ class PremadeStudySetsRepository {
             'Calling a method from another class',
             'Defining a method in an interface'
           ],
-          correctAnswer: 'Providing a specific implementation of a method in a subclass that is already defined in the parent class',
+          correctAnswer:
+              'Providing a specific implementation of a method in a subclass that is already defined in the parent class',
         ),
         Question(
           questionText: 'What is method overloading in Java?',
@@ -1798,7 +1843,8 @@ class PremadeStudySetsRepository {
             'Calling a method from another class',
             'Defining a method in an interface'
           ],
-          correctAnswer: 'Having multiple methods with the same name but different parameters in the same class',
+          correctAnswer:
+              'Having multiple methods with the same name but different parameters in the same class',
         ),
         Question(
           questionText: 'What is a constructor in Java?',
@@ -1808,17 +1854,20 @@ class PremadeStudySetsRepository {
             'A method that takes parameters',
             'A method that is called when an object is destroyed'
           ],
-          correctAnswer: 'A special method that is called when an object is created',
+          correctAnswer:
+              'A special method that is called when an object is created',
         ),
         Question(
-          questionText: 'What is the difference between public, private, and protected access modifiers?',
+          questionText:
+              'What is the difference between public, private, and protected access modifiers?',
           options: [
             'Public: accessible everywhere, Private: accessible only within the class, Protected: accessible within package and subclasses',
             'Public: accessible only within the class, Private: accessible everywhere, Protected: accessible within package only',
             'Public: accessible within package only, Private: accessible everywhere, Protected: accessible within class only',
             'Public: accessible within class only, Private: accessible within package, Protected: accessible everywhere'
           ],
-          correctAnswer: 'Public: accessible everywhere, Private: accessible only within the class, Protected: accessible within package and subclasses',
+          correctAnswer:
+              'Public: accessible everywhere, Private: accessible only within the class, Protected: accessible within package and subclasses',
         ),
         Question(
           questionText: 'What is a static method in Java?',
@@ -1828,80 +1877,96 @@ class PremadeStudySetsRepository {
             'A method that is called automatically',
             'A method that returns a static value'
           ],
-          correctAnswer: 'A method that belongs to the class rather than an instance of the class',
+          correctAnswer:
+              'A method that belongs to the class rather than an instance of the class',
         ),
         Question(
-          questionText: 'What is the difference between a primitive type and a reference type in Java?',
+          questionText:
+              'What is the difference between a primitive type and a reference type in Java?',
           options: [
             'Primitive types store values directly, reference types store references to objects',
             'Primitive types are objects, reference types are not',
             'Primitive types can be null, reference types cannot',
             'Primitive types are always larger than reference types'
           ],
-          correctAnswer: 'Primitive types store values directly, reference types store references to objects',
+          correctAnswer:
+              'Primitive types store values directly, reference types store references to objects',
         ),
         Question(
-          questionText: 'What is the difference between a HashMap and a TreeMap?',
+          questionText:
+              'What is the difference between a HashMap and a TreeMap?',
           options: [
             'HashMap has O(1) average time complexity, TreeMap maintains sorted order with O(log n) operations',
             'HashMap maintains sorted order, TreeMap has O(1) average time complexity',
             'HashMap can only store strings, TreeMap can store any type',
             'HashMap is slower than TreeMap'
           ],
-          correctAnswer: 'HashMap has O(1) average time complexity, TreeMap maintains sorted order with O(log n) operations',
+          correctAnswer:
+              'HashMap has O(1) average time complexity, TreeMap maintains sorted order with O(log n) operations',
         ),
         Question(
-          questionText: 'What is the difference between a HashSet and a TreeSet?',
+          questionText:
+              'What is the difference between a HashSet and a TreeSet?',
           options: [
             'HashSet has O(1) average time complexity, TreeSet maintains sorted order with O(log n) operations',
             'HashSet maintains sorted order, TreeSet has O(1) average time complexity',
             'HashSet can only store integers, TreeSet can store any type',
             'HashSet is slower than TreeSet'
           ],
-          correctAnswer: 'HashSet has O(1) average time complexity, TreeSet maintains sorted order with O(log n) operations',
+          correctAnswer:
+              'HashSet has O(1) average time complexity, TreeSet maintains sorted order with O(log n) operations',
         ),
         Question(
-          questionText: 'What is the difference between checked and unchecked exceptions?',
+          questionText:
+              'What is the difference between checked and unchecked exceptions?',
           options: [
             'Checked exceptions must be handled or declared, unchecked exceptions do not',
             'Checked exceptions are runtime exceptions, unchecked exceptions are compile-time exceptions',
             'Checked exceptions are always fatal, unchecked exceptions are not',
             'Checked exceptions can be ignored, unchecked exceptions cannot'
           ],
-          correctAnswer: 'Checked exceptions must be handled or declared, unchecked exceptions do not',
+          correctAnswer:
+              'Checked exceptions must be handled or declared, unchecked exceptions do not',
         ),
         Question(
-          questionText: 'What is the difference between a final class and a final method?',
+          questionText:
+              'What is the difference between a final class and a final method?',
           options: [
             'Final class cannot be inherited, final method cannot be overridden',
             'Final class cannot be overridden, final method cannot be inherited',
             'Final class is immutable, final method is static',
             'Final class is abstract, final method is concrete'
           ],
-          correctAnswer: 'Final class cannot be inherited, final method cannot be overridden',
+          correctAnswer:
+              'Final class cannot be inherited, final method cannot be overridden',
         ),
         Question(
-          questionText: 'What is the difference between an abstract class and an interface?',
+          questionText:
+              'What is the difference between an abstract class and an interface?',
           options: [
             'Abstract class can have constructors and instance variables, interface cannot',
             'Interface can have constructors and instance variables, abstract class cannot',
             'Abstract class can only have abstract methods, interface can have concrete methods',
             'Interface can only have static methods, abstract class can have instance methods'
           ],
-          correctAnswer: 'Abstract class can have constructors and instance variables, interface cannot',
+          correctAnswer:
+              'Abstract class can have constructors and instance variables, interface cannot',
         ),
         Question(
-          questionText: 'What is the difference between a shallow copy and a deep copy?',
+          questionText:
+              'What is the difference between a shallow copy and a deep copy?',
           options: [
             'Shallow copy copies references, deep copy copies the actual objects',
             'Shallow copy copies the actual objects, deep copy copies references',
             'Shallow copy is faster, deep copy is slower',
             'Shallow copy is for primitives, deep copy is for objects'
           ],
-          correctAnswer: 'Shallow copy copies references, deep copy copies the actual objects',
+          correctAnswer:
+              'Shallow copy copies references, deep copy copies the actual objects',
         ),
         Question(
-          questionText: 'What is the difference between a StringBuilder and a String?',
+          questionText:
+              'What is the difference between a StringBuilder and a String?',
           options: [
             'StringBuilder is mutable, String is immutable',
             'StringBuilder is immutable, String is mutable',
@@ -1921,17 +1986,32 @@ class PremadeStudySetsRepository {
       questions: [
         Question(
           questionText: 'What is the primary purpose of an algorithm?',
-          options: ['To solve problems', 'To create programs', 'To store data', 'To display graphics'],
+          options: [
+            'To solve problems',
+            'To create programs',
+            'To store data',
+            'To display graphics'
+          ],
           correctAnswer: 'To solve problems',
         ),
         Question(
           questionText: 'Which of the following is an example of abstraction?',
-          options: ['Using a car without knowing how the engine works', 'Writing code', 'Debugging', 'Testing'],
+          options: [
+            'Using a car without knowing how the engine works',
+            'Writing code',
+            'Debugging',
+            'Testing'
+          ],
           correctAnswer: 'Using a car without knowing how the engine works',
         ),
         Question(
           questionText: 'What does HTTP stand for?',
-          options: ['HyperText Transfer Protocol', 'High Tech Transfer Process', 'Home Transfer Protocol', 'Hyper Transfer Process'],
+          options: [
+            'HyperText Transfer Protocol',
+            'High Tech Transfer Process',
+            'Home Transfer Protocol',
+            'Hyper Transfer Process'
+          ],
           correctAnswer: 'HyperText Transfer Protocol',
         ),
         Question(
@@ -1941,7 +2021,12 @@ class PremadeStudySetsRepository {
         ),
         Question(
           questionText: 'What is the purpose of a firewall?',
-          options: ['To speed up internet', 'To protect against unauthorized access', 'To store data', 'To create backups'],
+          options: [
+            'To speed up internet',
+            'To protect against unauthorized access',
+            'To store data',
+            'To create backups'
+          ],
           correctAnswer: 'To protect against unauthorized access',
         ),
         Question(
@@ -1952,7 +2037,8 @@ class PremadeStudySetsRepository {
             'A method to debug code',
             'A technique to optimize algorithms'
           ],
-          correctAnswer: 'A problem-solving process that includes decomposition, pattern recognition, abstraction, and algorithm design',
+          correctAnswer:
+              'A problem-solving process that includes decomposition, pattern recognition, abstraction, and algorithm design',
         ),
         Question(
           questionText: 'What is decomposition in computational thinking?',
@@ -1962,27 +2048,32 @@ class PremadeStudySetsRepository {
             'Analyzing the efficiency of an algorithm',
             'Testing a program for bugs'
           ],
-          correctAnswer: 'Breaking down a complex problem into smaller, manageable parts',
+          correctAnswer:
+              'Breaking down a complex problem into smaller, manageable parts',
         ),
         Question(
-          questionText: 'What is pattern recognition in computational thinking?',
+          questionText:
+              'What is pattern recognition in computational thinking?',
           options: [
             'Identifying similarities and differences in problems to make connections',
             'Finding bugs in code',
             'Optimizing algorithm performance',
             'Writing documentation'
           ],
-          correctAnswer: 'Identifying similarities and differences in problems to make connections',
+          correctAnswer:
+              'Identifying similarities and differences in problems to make connections',
         ),
         Question(
-          questionText: 'What is the difference between the internet and the World Wide Web?',
+          questionText:
+              'What is the difference between the internet and the World Wide Web?',
           options: [
             'The internet is the infrastructure, the World Wide Web is a service that runs on it',
             'The World Wide Web is the infrastructure, the internet is a service that runs on it',
             'They are exactly the same thing',
             'The internet is for email, the World Wide Web is for websites'
           ],
-          correctAnswer: 'The internet is the infrastructure, the World Wide Web is a service that runs on it',
+          correctAnswer:
+              'The internet is the infrastructure, the World Wide Web is a service that runs on it',
         ),
         Question(
           questionText: 'What is the purpose of DNS (Domain Name System)?',
@@ -1995,14 +2086,16 @@ class PremadeStudySetsRepository {
           correctAnswer: 'To translate domain names into IP addresses',
         ),
         Question(
-          questionText: 'What is the difference between symmetric and asymmetric encryption?',
+          questionText:
+              'What is the difference between symmetric and asymmetric encryption?',
           options: [
             'Symmetric uses the same key for encryption and decryption, asymmetric uses different keys',
             'Symmetric uses different keys for encryption and decryption, asymmetric uses the same key',
             'Symmetric is faster, asymmetric is slower',
             'Symmetric is for text, asymmetric is for images'
           ],
-          correctAnswer: 'Symmetric uses the same key for encryption and decryption, asymmetric uses different keys',
+          correctAnswer:
+              'Symmetric uses the same key for encryption and decryption, asymmetric uses different keys',
         ),
         Question(
           questionText: 'What is the purpose of a digital certificate?',
@@ -2015,14 +2108,16 @@ class PremadeStudySetsRepository {
           correctAnswer: 'To verify the identity of a website or organization',
         ),
         Question(
-          questionText: 'What is the difference between lossy and lossless compression?',
+          questionText:
+              'What is the difference between lossy and lossless compression?',
           options: [
             'Lossy compression permanently removes data, lossless compression preserves all data',
             'Lossless compression permanently removes data, lossy compression preserves all data',
             'Lossy compression is faster, lossless compression is slower',
             'Lossy compression is for images, lossless compression is for text'
           ],
-          correctAnswer: 'Lossy compression permanently removes data, lossless compression preserves all data',
+          correctAnswer:
+              'Lossy compression permanently removes data, lossless compression preserves all data',
         ),
         Question(
           questionText: 'What is the purpose of a database?',
@@ -2032,37 +2127,44 @@ class PremadeStudySetsRepository {
             'To encrypt information',
             'To connect to the internet'
           ],
-          correctAnswer: 'To store and organize large amounts of data efficiently',
+          correctAnswer:
+              'To store and organize large amounts of data efficiently',
         ),
         Question(
-          questionText: 'What is the difference between a relational and non-relational database?',
+          questionText:
+              'What is the difference between a relational and non-relational database?',
           options: [
             'Relational databases use tables with relationships, non-relational databases use other structures',
             'Non-relational databases use tables with relationships, relational databases use other structures',
             'Relational databases are faster, non-relational databases are slower',
             'Relational databases are for small data, non-relational databases are for large data'
           ],
-          correctAnswer: 'Relational databases use tables with relationships, non-relational databases use other structures',
+          correctAnswer:
+              'Relational databases use tables with relationships, non-relational databases use other structures',
         ),
         Question(
-          questionText: 'What is the purpose of an API (Application Programming Interface)?',
+          questionText:
+              'What is the purpose of an API (Application Programming Interface)?',
           options: [
             'To allow different software applications to communicate with each other',
             'To create user interfaces',
             'To store data',
             'To encrypt information'
           ],
-          correctAnswer: 'To allow different software applications to communicate with each other',
+          correctAnswer:
+              'To allow different software applications to communicate with each other',
         ),
         Question(
-          questionText: 'What is the difference between open source and proprietary software?',
+          questionText:
+              'What is the difference between open source and proprietary software?',
           options: [
             'Open source code is publicly available, proprietary code is privately owned',
             'Proprietary code is publicly available, open source code is privately owned',
             'Open source software is free, proprietary software costs money',
             'Open source software is slower, proprietary software is faster'
           ],
-          correctAnswer: 'Open source code is publicly available, proprietary code is privately owned',
+          correctAnswer:
+              'Open source code is publicly available, proprietary code is privately owned',
         ),
         Question(
           questionText: 'What is the purpose of version control?',
@@ -2082,7 +2184,8 @@ class PremadeStudySetsRepository {
             'A client is always a computer, a server is always a program',
             'A client is always a program, a server is always a computer'
           ],
-          correctAnswer: 'A client requests services, a server provides services',
+          correctAnswer:
+              'A client requests services, a server provides services',
         ),
         Question(
           questionText: 'What is the purpose of a cache?',
@@ -2092,7 +2195,8 @@ class PremadeStudySetsRepository {
             'To compress files',
             'To create backups'
           ],
-          correctAnswer: 'To store frequently accessed data for faster retrieval',
+          correctAnswer:
+              'To store frequently accessed data for faster retrieval',
         ),
       ],
     ),
@@ -2105,12 +2209,22 @@ class PremadeStudySetsRepository {
       questions: [
         Question(
           questionText: 'What is biodiversity?',
-          options: ['Variety of life on Earth', 'Number of species', 'Genetic diversity', 'All of the above'],
+          options: [
+            'Variety of life on Earth',
+            'Number of species',
+            'Genetic diversity',
+            'All of the above'
+          ],
           correctAnswer: 'All of the above',
         ),
         Question(
           questionText: 'What is the greenhouse effect?',
-          options: ['Trapping of heat by atmospheric gases', 'Cooling of the Earth', 'Ozone depletion', 'Acid rain'],
+          options: [
+            'Trapping of heat by atmospheric gases',
+            'Cooling of the Earth',
+            'Ozone depletion',
+            'Acid rain'
+          ],
           correctAnswer: 'Trapping of heat by atmospheric gases',
         ),
         Question(
@@ -2121,11 +2235,17 @@ class PremadeStudySetsRepository {
             'Environmental protection only',
             'Social equality only'
           ],
-          correctAnswer: 'Development that meets present needs without compromising future generations',
+          correctAnswer:
+              'Development that meets present needs without compromising future generations',
         ),
         Question(
           questionText: 'What is the primary cause of climate change?',
-          options: ['Human activities', 'Natural cycles', 'Solar radiation', 'Volcanic eruptions'],
+          options: [
+            'Human activities',
+            'Natural cycles',
+            'Solar radiation',
+            'Volcanic eruptions'
+          ],
           correctAnswer: 'Human activities',
         ),
         Question(
@@ -2156,7 +2276,8 @@ class PremadeStudySetsRepository {
             'The formation of nitrates',
             'The decomposition of organic matter'
           ],
-          correctAnswer: 'The movement of nitrogen through the Earth\'s systems',
+          correctAnswer:
+              'The movement of nitrogen through the Earth\'s systems',
         ),
         Question(
           questionText: 'What is the water cycle?',
@@ -2166,7 +2287,8 @@ class PremadeStudySetsRepository {
             'The formation of clouds',
             'The flow of rivers'
           ],
-          correctAnswer: 'The continuous movement of water on, above, and below the Earth\'s surface',
+          correctAnswer:
+              'The continuous movement of water on, above, and below the Earth\'s surface',
         ),
         Question(
           questionText: 'What is the phosphorus cycle?',
@@ -2176,7 +2298,8 @@ class PremadeStudySetsRepository {
             'The weathering of rocks',
             'The uptake by plants'
           ],
-          correctAnswer: 'The movement of phosphorus through the Earth\'s systems',
+          correctAnswer:
+              'The movement of phosphorus through the Earth\'s systems',
         ),
         Question(
           questionText: 'What is the sulfur cycle?',
@@ -2196,7 +2319,8 @@ class PremadeStudySetsRepository {
             'Rain during thunderstorms',
             'Rain in polluted areas'
           ],
-          correctAnswer: 'Rain with a pH below 5.6 due to atmospheric pollution',
+          correctAnswer:
+              'Rain with a pH below 5.6 due to atmospheric pollution',
         ),
         Question(
           questionText: 'What is ozone depletion?',
@@ -2216,7 +2340,8 @@ class PremadeStudySetsRepository {
             'The formation of oxygen in water',
             'The process of water purification'
           ],
-          correctAnswer: 'The excessive growth of algae due to nutrient enrichment',
+          correctAnswer:
+              'The excessive growth of algae due to nutrient enrichment',
         ),
         Question(
           questionText: 'What is biomagnification?',
@@ -2226,7 +2351,8 @@ class PremadeStudySetsRepository {
             'The increase in population size',
             'The growth of microorganisms'
           ],
-          correctAnswer: 'The increase in concentration of toxins as they move up the food chain',
+          correctAnswer:
+              'The increase in concentration of toxins as they move up the food chain',
         ),
         Question(
           questionText: 'What is habitat fragmentation?',
@@ -2236,7 +2362,8 @@ class PremadeStudySetsRepository {
             'The creation of new habitats',
             'The movement of species between habitats'
           ],
-          correctAnswer: 'The breaking up of large habitats into smaller, isolated patches',
+          correctAnswer:
+              'The breaking up of large habitats into smaller, isolated patches',
         ),
         Question(
           questionText: 'What is invasive species?',
@@ -2246,7 +2373,8 @@ class PremadeStudySetsRepository {
             'Species that are endangered',
             'Species that are beneficial to the environment'
           ],
-          correctAnswer: 'Non-native species that cause harm to the environment',
+          correctAnswer:
+              'Non-native species that cause harm to the environment',
         ),
         Question(
           questionText: 'What is the tragedy of the commons?',
@@ -2256,7 +2384,8 @@ class PremadeStudySetsRepository {
             'The conservation of natural resources',
             'The management of public lands'
           ],
-          correctAnswer: 'The overuse of shared resources due to individual self-interest',
+          correctAnswer:
+              'The overuse of shared resources due to individual self-interest',
         ),
         Question(
           questionText: 'What is carrying capacity?',
@@ -2266,7 +2395,8 @@ class PremadeStudySetsRepository {
             'The minimum population size needed for survival',
             'The rate of population growth'
           ],
-          correctAnswer: 'The maximum population size an environment can sustain',
+          correctAnswer:
+              'The maximum population size an environment can sustain',
         ),
         Question(
           questionText: 'What is ecological footprint?',
@@ -2276,7 +2406,8 @@ class PremadeStudySetsRepository {
             'The area of land used for agriculture',
             'The amount of waste produced'
           ],
-          correctAnswer: 'The amount of land and resources needed to support a population',
+          correctAnswer:
+              'The amount of land and resources needed to support a population',
         ),
         Question(
           questionText: 'What is renewable energy?',
@@ -2324,7 +2455,12 @@ class PremadeStudySetsRepository {
         ),
         Question(
           questionText: 'Factor: x² + 5x + 6',
-          options: ['(x + 2)(x + 3)', '(x + 1)(x + 6)', '(x + 2)(x + 4)', '(x + 3)(x + 3)'],
+          options: [
+            '(x + 2)(x + 3)',
+            '(x + 1)(x + 6)',
+            '(x + 2)(x + 4)',
+            '(x + 3)(x + 3)'
+          ],
           correctAnswer: '(x + 2)(x + 3)',
         ),
         Question(
@@ -2339,7 +2475,12 @@ class PremadeStudySetsRepository {
         ),
         Question(
           questionText: 'Solve the system: 2x + y = 5, x - y = 1',
-          options: ['x = 2, y = 1', 'x = 1, y = 2', 'x = 3, y = -1', 'x = 2, y = 3'],
+          options: [
+            'x = 2, y = 1',
+            'x = 1, y = 2',
+            'x = 3, y = -1',
+            'x = 2, y = 3'
+          ],
           correctAnswer: 'x = 2, y = 1',
         ),
         Question(
@@ -2369,16 +2510,27 @@ class PremadeStudySetsRepository {
         ),
         Question(
           questionText: 'Factor: x² - 9',
-          options: ['(x + 3)(x - 3)', '(x + 9)(x - 9)', '(x + 3)(x + 3)', '(x - 3)(x - 3)'],
+          options: [
+            '(x + 3)(x - 3)',
+            '(x + 9)(x - 9)',
+            '(x + 3)(x + 3)',
+            '(x - 3)(x - 3)'
+          ],
           correctAnswer: '(x + 3)(x - 3)',
         ),
         Question(
           questionText: 'Solve: 2x + 3y = 12, 3x - y = 5',
-          options: ['x = 3, y = 2', 'x = 2, y = 3', 'x = 4, y = 1', 'x = 1, y = 4'],
+          options: [
+            'x = 3, y = 2',
+            'x = 2, y = 3',
+            'x = 4, y = 1',
+            'x = 1, y = 4'
+          ],
           correctAnswer: 'x = 3, y = 2',
         ),
         Question(
-          questionText: 'What is the equation of a line with slope 2 passing through (1, 3)?',
+          questionText:
+              'What is the equation of a line with slope 2 passing through (1, 3)?',
           options: ['y = 2x + 1', 'y = 2x - 1', 'y = 2x + 3', 'y = 2x - 3'],
           correctAnswer: 'y = 2x + 1',
         ),
@@ -2408,7 +2560,8 @@ class PremadeStudySetsRepository {
     // Algebra 2
     PremadeStudySet(
       name: 'Algebra 2',
-      description: 'Advanced algebraic concepts including functions and complex numbers',
+      description:
+          'Advanced algebraic concepts including functions and complex numbers',
       subject: 'Math',
       questions: [
         Question(
@@ -2433,7 +2586,12 @@ class PremadeStudySetsRepository {
         ),
         Question(
           questionText: 'What is the inverse of f(x) = 2x + 3?',
-          options: ['f⁻¹(x) = (x - 3)/2', 'f⁻¹(x) = (x + 3)/2', 'f⁻¹(x) = 2x - 3', 'f⁻¹(x) = x/2 - 3'],
+          options: [
+            'f⁻¹(x) = (x - 3)/2',
+            'f⁻¹(x) = (x + 3)/2',
+            'f⁻¹(x) = 2x - 3',
+            'f⁻¹(x) = x/2 - 3'
+          ],
           correctAnswer: 'f⁻¹(x) = (x - 3)/2',
         ),
         Question(
@@ -2443,7 +2601,12 @@ class PremadeStudySetsRepository {
         ),
         Question(
           questionText: 'What is the vertex form of y = x² - 6x + 5?',
-          options: ['y = (x - 3)² - 4', 'y = (x - 3)² + 4', 'y = (x + 3)² - 4', 'y = (x + 3)² + 4'],
+          options: [
+            'y = (x - 3)² - 4',
+            'y = (x - 3)² + 4',
+            'y = (x + 3)² - 4',
+            'y = (x + 3)² + 4'
+          ],
           correctAnswer: 'y = (x - 3)² - 4',
         ),
         Question(
@@ -2463,7 +2626,12 @@ class PremadeStudySetsRepository {
         ),
         Question(
           questionText: 'Factor: x³ - 8',
-          options: ['(x - 2)(x² + 2x + 4)', '(x - 2)(x² - 2x + 4)', '(x + 2)(x² - 2x + 4)', '(x - 2)³'],
+          options: [
+            '(x - 2)(x² + 2x + 4)',
+            '(x - 2)(x² - 2x + 4)',
+            '(x + 2)(x² - 2x + 4)',
+            '(x - 2)³'
+          ],
           correctAnswer: '(x - 2)(x² + 2x + 4)',
         ),
         Question(
@@ -2477,7 +2645,8 @@ class PremadeStudySetsRepository {
           correctAnswer: 'x = 4',
         ),
         Question(
-          questionText: 'What is the horizontal asymptote of f(x) = (2x + 1)/(x - 3)?',
+          questionText:
+              'What is the horizontal asymptote of f(x) = (2x + 1)/(x - 3)?',
           options: ['y = 2', 'y = 0', 'y = 1', 'y = 3'],
           correctAnswer: 'y = 2',
         ),
@@ -2498,17 +2667,33 @@ class PremadeStudySetsRepository {
         ),
         Question(
           questionText: 'Solve: x² + 2x + 5 = 0',
-          options: ['x = -1 ± 2i', 'x = -1 ± √5', 'x = -2 ± i', 'No real solutions'],
+          options: [
+            'x = -1 ± 2i',
+            'x = -1 ± √5',
+            'x = -2 ± i',
+            'No real solutions'
+          ],
           correctAnswer: 'x = -1 ± 2i',
         ),
         Question(
           questionText: 'What is the end behavior of f(x) = x³ - 2x?',
-          options: ['As x → ∞, f(x) → ∞; As x → -∞, f(x) → -∞', 'As x → ∞, f(x) → -∞; As x → -∞, f(x) → ∞', 'As x → ∞, f(x) → 0; As x → -∞, f(x) → 0', 'As x → ∞, f(x) → 2; As x → -∞, f(x) → 2'],
+          options: [
+            'As x → ∞, f(x) → ∞; As x → -∞, f(x) → -∞',
+            'As x → ∞, f(x) → -∞; As x → -∞, f(x) → ∞',
+            'As x → ∞, f(x) → 0; As x → -∞, f(x) → 0',
+            'As x → ∞, f(x) → 2; As x → -∞, f(x) → 2'
+          ],
           correctAnswer: 'As x → ∞, f(x) → ∞; As x → -∞, f(x) → -∞',
         ),
         Question(
-          questionText: 'What is the composition f(g(x)) if f(x) = x² and g(x) = x + 1?',
-          options: ['f(g(x)) = (x + 1)²', 'f(g(x)) = x² + 1', 'f(g(x)) = x² + 2x + 1', 'f(g(x)) = x + 1'],
+          questionText:
+              'What is the composition f(g(x)) if f(x) = x² and g(x) = x + 1?',
+          options: [
+            'f(g(x)) = (x + 1)²',
+            'f(g(x)) = x² + 1',
+            'f(g(x)) = x² + 2x + 1',
+            'f(g(x)) = x + 1'
+          ],
           correctAnswer: 'f(g(x)) = (x + 1)²',
         ),
         Question(
@@ -2522,7 +2707,8 @@ class PremadeStudySetsRepository {
     // Algebra 3
     PremadeStudySet(
       name: 'Algebra 3',
-      description: 'Advanced topics including matrices, sequences, and complex analysis',
+      description:
+          'Advanced topics including matrices, sequences, and complex analysis',
       subject: 'Math',
       questions: [
         Question(
@@ -2532,46 +2718,69 @@ class PremadeStudySetsRepository {
         ),
         Question(
           questionText: 'What is the inverse of [[1, 2], [3, 4]]?',
-          options: ['[[-2, 1], [1.5, -0.5]]', '[[2, -1], [-3, 1]]', '[[4, -2], [-3, 1]]', '[[-2, 1], [3, -1]]'],
+          options: [
+            '[[-2, 1], [1.5, -0.5]]',
+            '[[2, -1], [-3, 1]]',
+            '[[4, -2], [-3, 1]]',
+            '[[-2, 1], [3, -1]]'
+          ],
           correctAnswer: '[[-2, 1], [1.5, -0.5]]',
         ),
         Question(
-          questionText: 'What is the sum of the arithmetic sequence 2, 5, 8, 11, 14?',
+          questionText:
+              'What is the sum of the arithmetic sequence 2, 5, 8, 11, 14?',
           options: ['40', '35', '45', '50'],
           correctAnswer: '40',
         ),
         Question(
-          questionText: 'What is the common ratio of the geometric sequence 3, 6, 12, 24?',
+          questionText:
+              'What is the common ratio of the geometric sequence 3, 6, 12, 24?',
           options: ['2', '3', '1.5', '4'],
           correctAnswer: '2',
         ),
         Question(
-          questionText: 'What is the sum of the infinite geometric series 1 + 1/2 + 1/4 + 1/8 + ...?',
+          questionText:
+              'What is the sum of the infinite geometric series 1 + 1/2 + 1/4 + 1/8 + ...?',
           options: ['2', '1', '1.5', '∞'],
           correctAnswer: '2',
         ),
         Question(
-          questionText: 'What is the nth term of the arithmetic sequence with a₁ = 3 and d = 4?',
+          questionText:
+              'What is the nth term of the arithmetic sequence with a₁ = 3 and d = 4?',
           options: ['aₙ = 4n - 1', 'aₙ = 3n + 4', 'aₙ = 4n + 3', 'aₙ = 3n - 1'],
           correctAnswer: 'aₙ = 4n - 1',
         ),
         Question(
-          questionText: 'What is the nth term of the geometric sequence with a₁ = 2 and r = 3?',
+          questionText:
+              'What is the nth term of the geometric sequence with a₁ = 2 and r = 3?',
           options: ['aₙ = 2(3)ⁿ⁻¹', 'aₙ = 3(2)ⁿ⁻¹', 'aₙ = 2ⁿ⁻¹', 'aₙ = 3ⁿ⁻¹'],
           correctAnswer: 'aₙ = 2(3)ⁿ⁻¹',
         ),
         Question(
-          questionText: 'What is the sum of the first n terms of an arithmetic sequence?',
-          options: ['Sₙ = n(a₁ + aₙ)/2', 'Sₙ = n(a₁ + d)/2', 'Sₙ = a₁(1 - rⁿ)/(1 - r)', 'Sₙ = n(a₁ + d(n-1))/2'],
+          questionText:
+              'What is the sum of the first n terms of an arithmetic sequence?',
+          options: [
+            'Sₙ = n(a₁ + aₙ)/2',
+            'Sₙ = n(a₁ + d)/2',
+            'Sₙ = a₁(1 - rⁿ)/(1 - r)',
+            'Sₙ = n(a₁ + d(n-1))/2'
+          ],
           correctAnswer: 'Sₙ = n(a₁ + aₙ)/2',
         ),
         Question(
-          questionText: 'What is the sum of the first n terms of a geometric sequence?',
-          options: ['Sₙ = a₁(1 - rⁿ)/(1 - r)', 'Sₙ = n(a₁ + aₙ)/2', 'Sₙ = a₁rⁿ⁻¹', 'Sₙ = a₁/(1 - r)'],
+          questionText:
+              'What is the sum of the first n terms of a geometric sequence?',
+          options: [
+            'Sₙ = a₁(1 - rⁿ)/(1 - r)',
+            'Sₙ = n(a₁ + aₙ)/2',
+            'Sₙ = a₁rⁿ⁻¹',
+            'Sₙ = a₁/(1 - r)'
+          ],
           correctAnswer: 'Sₙ = a₁(1 - rⁿ)/(1 - r)',
         ),
         Question(
-          questionText: 'What is the limit of (1 + 1/n)ⁿ as n approaches infinity?',
+          questionText:
+              'What is the limit of (1 + 1/n)ⁿ as n approaches infinity?',
           options: ['e', '1', '0', '∞'],
           correctAnswer: 'e',
         ),
@@ -2587,7 +2796,12 @@ class PremadeStudySetsRepository {
         ),
         Question(
           questionText: 'What is the binomial expansion of (x + y)³?',
-          options: ['x³ + 3x²y + 3xy² + y³', 'x³ + y³', 'x³ + 3xy + y³', 'x³ + 3x²y + y³'],
+          options: [
+            'x³ + 3x²y + 3xy² + y³',
+            'x³ + y³',
+            'x³ + 3xy + y³',
+            'x³ + 3x²y + y³'
+          ],
           correctAnswer: 'x³ + 3x²y + 3xy² + y³',
         ),
         Question(
@@ -2616,7 +2830,8 @@ class PremadeStudySetsRepository {
           correctAnswer: '3.5',
         ),
         Question(
-          questionText: 'What is the standard deviation of the numbers 1, 2, 3, 4, 5?',
+          questionText:
+              'What is the standard deviation of the numbers 1, 2, 3, 4, 5?',
           options: ['√2', '2', '√3', '1.5'],
           correctAnswer: '√2',
         ),
@@ -2631,8 +2846,14 @@ class PremadeStudySetsRepository {
           correctAnswer: '-1 to 1',
         ),
         Question(
-          questionText: 'What is the equation of a circle with center (2, 3) and radius 4?',
-          options: ['(x - 2)² + (y - 3)² = 16', '(x + 2)² + (y + 3)² = 16', '(x - 2)² + (y - 3)² = 4', '(x + 2)² + (y + 3)² = 4'],
+          questionText:
+              'What is the equation of a circle with center (2, 3) and radius 4?',
+          options: [
+            '(x - 2)² + (y - 3)² = 16',
+            '(x + 2)² + (y + 3)² = 16',
+            '(x - 2)² + (y - 3)² = 4',
+            '(x + 2)² + (y + 3)² = 4'
+          ],
           correctAnswer: '(x - 2)² + (y - 3)² = 16',
         ),
       ],
@@ -2641,17 +2862,29 @@ class PremadeStudySetsRepository {
     // AP Biology
     PremadeStudySet(
       name: 'AP Biology',
-      description: 'Comprehensive coverage of biological concepts and processes',
+      description:
+          'Comprehensive coverage of biological concepts and processes',
       subject: 'Science',
       questions: [
         Question(
           questionText: 'What is the primary function of mitochondria?',
-          options: ['Cellular respiration', 'Protein synthesis', 'DNA replication', 'Cell division'],
+          options: [
+            'Cellular respiration',
+            'Protein synthesis',
+            'DNA replication',
+            'Cell division'
+          ],
           correctAnswer: 'Cellular respiration',
         ),
         Question(
-          questionText: 'What is the process by which plants convert light energy into chemical energy?',
-          options: ['Photosynthesis', 'Cellular respiration', 'Fermentation', 'Glycolysis'],
+          questionText:
+              'What is the process by which plants convert light energy into chemical energy?',
+          options: [
+            'Photosynthesis',
+            'Cellular respiration',
+            'Fermentation',
+            'Glycolysis'
+          ],
           correctAnswer: 'Photosynthesis',
         ),
         Question(
@@ -2661,92 +2894,178 @@ class PremadeStudySetsRepository {
         ),
         Question(
           questionText: 'What is the function of ribosomes?',
-          options: ['Protein synthesis', 'Energy production', 'DNA replication', 'Cell movement'],
+          options: [
+            'Protein synthesis',
+            'Energy production',
+            'DNA replication',
+            'Cell movement'
+          ],
           correctAnswer: 'Protein synthesis',
         ),
         Question(
-          questionText: 'What is the process of cell division that produces gametes?',
+          questionText:
+              'What is the process of cell division that produces gametes?',
           options: ['Meiosis', 'Mitosis', 'Binary fission', 'Budding'],
           correctAnswer: 'Meiosis',
         ),
         Question(
           questionText: 'What is the role of enzymes in biological reactions?',
-          options: ['Speed up reactions', 'Slow down reactions', 'Stop reactions', 'Reverse reactions'],
+          options: [
+            'Speed up reactions',
+            'Slow down reactions',
+            'Stop reactions',
+            'Reverse reactions'
+          ],
           correctAnswer: 'Speed up reactions',
         ),
         Question(
           questionText: 'What is the function of the cell membrane?',
-          options: ['Regulate what enters and exits the cell', 'Produce energy', 'Store genetic material', 'Synthesize proteins'],
+          options: [
+            'Regulate what enters and exits the cell',
+            'Produce energy',
+            'Store genetic material',
+            'Synthesize proteins'
+          ],
           correctAnswer: 'Regulate what enters and exits the cell',
         ),
         Question(
           questionText: 'What is the process of natural selection?',
-          options: ['Survival of the fittest', 'Random genetic changes', 'Artificial breeding', 'Environmental adaptation'],
+          options: [
+            'Survival of the fittest',
+            'Random genetic changes',
+            'Artificial breeding',
+            'Environmental adaptation'
+          ],
           correctAnswer: 'Survival of the fittest',
         ),
         Question(
           questionText: 'What is the function of chloroplasts?',
-          options: ['Photosynthesis', 'Cellular respiration', 'Protein synthesis', 'Cell division'],
+          options: [
+            'Photosynthesis',
+            'Cellular respiration',
+            'Protein synthesis',
+            'Cell division'
+          ],
           correctAnswer: 'Photosynthesis',
         ),
         Question(
           questionText: 'What is the role of DNA polymerase?',
-          options: ['DNA replication', 'Protein synthesis', 'Cell division', 'Energy production'],
+          options: [
+            'DNA replication',
+            'Protein synthesis',
+            'Cell division',
+            'Energy production'
+          ],
           correctAnswer: 'DNA replication',
         ),
         Question(
           questionText: 'What is the process of transcription?',
-          options: ['DNA to RNA', 'RNA to protein', 'DNA to protein', 'RNA to DNA'],
+          options: [
+            'DNA to RNA',
+            'RNA to protein',
+            'DNA to protein',
+            'RNA to DNA'
+          ],
           correctAnswer: 'DNA to RNA',
         ),
         Question(
           questionText: 'What is the process of translation?',
-          options: ['RNA to protein', 'DNA to RNA', 'DNA to protein', 'Protein to RNA'],
+          options: [
+            'RNA to protein',
+            'DNA to RNA',
+            'DNA to protein',
+            'Protein to RNA'
+          ],
           correctAnswer: 'RNA to protein',
         ),
         Question(
           questionText: 'What is the function of the nucleus?',
-          options: ['Store genetic material', 'Produce energy', 'Synthesize proteins', 'Regulate cell processes'],
+          options: [
+            'Store genetic material',
+            'Produce energy',
+            'Synthesize proteins',
+            'Regulate cell processes'
+          ],
           correctAnswer: 'Store genetic material',
         ),
         Question(
           questionText: 'What is the role of ATP in cells?',
-          options: ['Energy currency', 'Genetic material', 'Structural component', 'Enzyme'],
+          options: [
+            'Energy currency',
+            'Genetic material',
+            'Structural component',
+            'Enzyme'
+          ],
           correctAnswer: 'Energy currency',
         ),
         Question(
           questionText: 'What is the process of osmosis?',
-          options: ['Water movement across membranes', 'Ion movement', 'Protein transport', 'Energy production'],
+          options: [
+            'Water movement across membranes',
+            'Ion movement',
+            'Protein transport',
+            'Energy production'
+          ],
           correctAnswer: 'Water movement across membranes',
         ),
         Question(
           questionText: 'What is the function of the Golgi apparatus?',
-          options: ['Package and modify proteins', 'Produce energy', 'Store genetic material', 'Break down waste'],
+          options: [
+            'Package and modify proteins',
+            'Produce energy',
+            'Store genetic material',
+            'Break down waste'
+          ],
           correctAnswer: 'Package and modify proteins',
         ),
         Question(
           questionText: 'What is the role of lysosomes?',
-          options: ['Break down waste and cellular debris', 'Produce energy', 'Synthesize proteins', 'Store genetic material'],
+          options: [
+            'Break down waste and cellular debris',
+            'Produce energy',
+            'Synthesize proteins',
+            'Store genetic material'
+          ],
           correctAnswer: 'Break down waste and cellular debris',
         ),
         Question(
           questionText: 'What is the process of diffusion?',
-          options: ['Movement from high to low concentration', 'Movement from low to high concentration', 'Active transport', 'Energy production'],
+          options: [
+            'Movement from high to low concentration',
+            'Movement from low to high concentration',
+            'Active transport',
+            'Energy production'
+          ],
           correctAnswer: 'Movement from high to low concentration',
         ),
         Question(
           questionText: 'What is the function of the endoplasmic reticulum?',
-          options: ['Protein and lipid synthesis', 'Energy production', 'DNA replication', 'Cell division'],
+          options: [
+            'Protein and lipid synthesis',
+            'Energy production',
+            'DNA replication',
+            'Cell division'
+          ],
           correctAnswer: 'Protein and lipid synthesis',
         ),
         Question(
           questionText: 'What is the role of centrioles?',
-          options: ['Cell division', 'Energy production', 'Protein synthesis', 'DNA replication'],
+          options: [
+            'Cell division',
+            'Energy production',
+            'Protein synthesis',
+            'DNA replication'
+          ],
           correctAnswer: 'Cell division',
         ),
         Question(
           questionText: 'What is the process of binary fission?',
-          options: ['Asexual reproduction in bacteria', 'Sexual reproduction', 'Cell differentiation', 'Protein synthesis'],
+          options: [
+            'Asexual reproduction in bacteria',
+            'Sexual reproduction',
+            'Cell differentiation',
+            'Protein synthesis'
+          ],
           correctAnswer: 'Asexual reproduction in bacteria',
         ),
       ],
@@ -2755,7 +3074,8 @@ class PremadeStudySetsRepository {
     // AP Physics C: Mechanics
     PremadeStudySet(
       name: 'AP Physics C: Mechanics',
-      description: 'Advanced mechanics including kinematics, dynamics, and energy',
+      description:
+          'Advanced mechanics including kinematics, dynamics, and energy',
       subject: 'Science',
       questions: [
         Question(
@@ -2765,8 +3085,14 @@ class PremadeStudySetsRepository {
         ),
         Question(
           questionText: 'What is Newton\'s First Law?',
-          options: ['An object at rest stays at rest unless acted upon by a net force', 'Force equals mass times acceleration', 'For every action there is an equal and opposite reaction', 'Energy cannot be created or destroyed'],
-          correctAnswer: 'An object at rest stays at rest unless acted upon by a net force',
+          options: [
+            'An object at rest stays at rest unless acted upon by a net force',
+            'Force equals mass times acceleration',
+            'For every action there is an equal and opposite reaction',
+            'Energy cannot be created or destroyed'
+          ],
+          correctAnswer:
+              'An object at rest stays at rest unless acted upon by a net force',
         ),
         Question(
           questionText: 'What is Newton\'s Second Law?',
@@ -2775,8 +3101,14 @@ class PremadeStudySetsRepository {
         ),
         Question(
           questionText: 'What is Newton\'s Third Law?',
-          options: ['For every action there is an equal and opposite reaction', 'Force equals mass times acceleration', 'An object at rest stays at rest', 'Energy is conserved'],
-          correctAnswer: 'For every action there is an equal and opposite reaction',
+          options: [
+            'For every action there is an equal and opposite reaction',
+            'Force equals mass times acceleration',
+            'An object at rest stays at rest',
+            'Energy is conserved'
+          ],
+          correctAnswer:
+              'For every action there is an equal and opposite reaction',
         ),
         Question(
           questionText: 'What is the formula for kinetic energy?',
@@ -2784,7 +3116,8 @@ class PremadeStudySetsRepository {
           correctAnswer: 'KE = ½mv²',
         ),
         Question(
-          questionText: 'What is the formula for gravitational potential energy?',
+          questionText:
+              'What is the formula for gravitational potential energy?',
           options: ['PE = mgh', 'PE = ½mv²', 'PE = kx²', 'PE = mv'],
           correctAnswer: 'PE = mgh',
         ),
@@ -2805,7 +3138,12 @@ class PremadeStudySetsRepository {
         ),
         Question(
           questionText: 'What is the law of conservation of momentum?',
-          options: ['Total momentum is constant in a closed system', 'Momentum increases with time', 'Momentum decreases with time', 'Momentum equals force times time'],
+          options: [
+            'Total momentum is constant in a closed system',
+            'Momentum increases with time',
+            'Momentum decreases with time',
+            'Momentum equals force times time'
+          ],
           correctAnswer: 'Total momentum is constant in a closed system',
         ),
         Question(
@@ -2840,8 +3178,14 @@ class PremadeStudySetsRepository {
         ),
         Question(
           questionText: 'What is the law of conservation of angular momentum?',
-          options: ['Total angular momentum is constant in a closed system', 'Angular momentum increases with time', 'Angular momentum decreases with time', 'Angular momentum equals torque times time'],
-          correctAnswer: 'Total angular momentum is constant in a closed system',
+          options: [
+            'Total angular momentum is constant in a closed system',
+            'Angular momentum increases with time',
+            'Angular momentum decreases with time',
+            'Angular momentum equals torque times time'
+          ],
+          correctAnswer:
+              'Total angular momentum is constant in a closed system',
         ),
         Question(
           questionText: 'What is the formula for simple harmonic motion?',
@@ -2849,13 +3193,25 @@ class PremadeStudySetsRepository {
           correctAnswer: 'x = A cos(ωt + φ)',
         ),
         Question(
-          questionText: 'What is the formula for the period of a simple pendulum?',
-          options: ['T = 2π√(L/g)', 'T = 2π√(m/k)', 'T = 2π√(I/mgd)', 'T = 2π/ω'],
+          questionText:
+              'What is the formula for the period of a simple pendulum?',
+          options: [
+            'T = 2π√(L/g)',
+            'T = 2π√(m/k)',
+            'T = 2π√(I/mgd)',
+            'T = 2π/ω'
+          ],
           correctAnswer: 'T = 2π√(L/g)',
         ),
         Question(
-          questionText: 'What is the formula for the period of a mass-spring system?',
-          options: ['T = 2π√(m/k)', 'T = 2π√(L/g)', 'T = 2π√(I/mgd)', 'T = 2π/ω'],
+          questionText:
+              'What is the formula for the period of a mass-spring system?',
+          options: [
+            'T = 2π√(m/k)',
+            'T = 2π√(L/g)',
+            'T = 2π√(I/mgd)',
+            'T = 2π/ω'
+          ],
           correctAnswer: 'T = 2π√(m/k)',
         ),
         Question(
@@ -2874,8 +3230,14 @@ class PremadeStudySetsRepository {
           correctAnswer: 'v = √(GM/r)',
         ),
         Question(
-          questionText: 'What is the formula for the period of an orbiting satellite?',
-          options: ['T = 2π√(r³/GM)', 'T = 2π√(r/GM)', 'T = 2π√(r²/GM)', 'T = 2π√(r/G)'],
+          questionText:
+              'What is the formula for the period of an orbiting satellite?',
+          options: [
+            'T = 2π√(r³/GM)',
+            'T = 2π√(r/GM)',
+            'T = 2π√(r²/GM)',
+            'T = 2π√(r/G)'
+          ],
           correctAnswer: 'T = 2π√(r³/GM)',
         ),
         Question(
@@ -2910,7 +3272,12 @@ class PremadeStudySetsRepository {
         ),
         Question(
           questionText: 'What is the formula for the center of mass?',
-          options: ['x_cm = Σmx/Σm', 'x_cm = Σm/Σx', 'x_cm = Σx/m', 'x_cm = m/Σx'],
+          options: [
+            'x_cm = Σmx/Σm',
+            'x_cm = Σm/Σx',
+            'x_cm = Σx/m',
+            'x_cm = m/Σx'
+          ],
           correctAnswer: 'x_cm = Σmx/Σm',
         ),
         Question(
@@ -2929,107 +3296,212 @@ class PremadeStudySetsRepository {
       questions: [
         Question(
           questionText: 'What is a metaphor?',
-          options: ['A direct comparison without using "like" or "as"', 'A comparison using "like" or "as"', 'A word that imitates a sound', 'A reference to another work'],
+          options: [
+            'A direct comparison without using "like" or "as"',
+            'A comparison using "like" or "as"',
+            'A word that imitates a sound',
+            'A reference to another work'
+          ],
           correctAnswer: 'A direct comparison without using "like" or "as"',
         ),
         Question(
           questionText: 'What is dramatic irony?',
-          options: ['When the audience knows something characters don\'t', 'When a character says the opposite of what they mean', 'When events turn out differently than expected', 'When a character makes a mistake'],
+          options: [
+            'When the audience knows something characters don\'t',
+            'When a character says the opposite of what they mean',
+            'When events turn out differently than expected',
+            'When a character makes a mistake'
+          ],
           correctAnswer: 'When the audience knows something characters don\'t',
         ),
         Question(
           questionText: 'What is a soliloquy?',
-          options: ['A speech given by a character alone on stage', 'A conversation between two characters', 'A speech to the audience', 'A monologue in a play'],
+          options: [
+            'A speech given by a character alone on stage',
+            'A conversation between two characters',
+            'A speech to the audience',
+            'A monologue in a play'
+          ],
           correctAnswer: 'A speech given by a character alone on stage',
         ),
         Question(
           questionText: 'What is alliteration?',
-          options: ['Repetition of initial consonant sounds', 'Repetition of vowel sounds', 'Repetition of end sounds', 'Repetition of words'],
+          options: [
+            'Repetition of initial consonant sounds',
+            'Repetition of vowel sounds',
+            'Repetition of end sounds',
+            'Repetition of words'
+          ],
           correctAnswer: 'Repetition of initial consonant sounds',
         ),
         Question(
           questionText: 'What is a sonnet?',
-          options: ['A 14-line poem with specific rhyme scheme', 'A poem with no rhyme scheme', 'A long narrative poem', 'A short humorous poem'],
+          options: [
+            'A 14-line poem with specific rhyme scheme',
+            'A poem with no rhyme scheme',
+            'A long narrative poem',
+            'A short humorous poem'
+          ],
           correctAnswer: 'A 14-line poem with specific rhyme scheme',
         ),
         Question(
           questionText: 'What is foreshadowing?',
-          options: ['Hints about future events', 'Flashbacks to past events', 'Character development', 'Setting description'],
+          options: [
+            'Hints about future events',
+            'Flashbacks to past events',
+            'Character development',
+            'Setting description'
+          ],
           correctAnswer: 'Hints about future events',
         ),
         Question(
           questionText: 'What is a tragic hero?',
-          options: ['A protagonist with a fatal flaw', 'A villain who dies', 'A comic character', 'A minor character'],
+          options: [
+            'A protagonist with a fatal flaw',
+            'A villain who dies',
+            'A comic character',
+            'A minor character'
+          ],
           correctAnswer: 'A protagonist with a fatal flaw',
         ),
         Question(
           questionText: 'What is an allusion?',
-          options: ['A reference to another work or event', 'A direct quote', 'A character name', 'A setting description'],
+          options: [
+            'A reference to another work or event',
+            'A direct quote',
+            'A character name',
+            'A setting description'
+          ],
           correctAnswer: 'A reference to another work or event',
         ),
         Question(
           questionText: 'What is iambic pentameter?',
-          options: ['A meter with 5 iambs per line', 'A meter with 4 iambs per line', 'A meter with 6 iambs per line', 'A meter with 3 iambs per line'],
+          options: [
+            'A meter with 5 iambs per line',
+            'A meter with 4 iambs per line',
+            'A meter with 6 iambs per line',
+            'A meter with 3 iambs per line'
+          ],
           correctAnswer: 'A meter with 5 iambs per line',
         ),
         Question(
           questionText: 'What is a foil character?',
-          options: ['A character who contrasts with the protagonist', 'A character who helps the protagonist', 'A character who opposes the protagonist', 'A character who narrates the story'],
+          options: [
+            'A character who contrasts with the protagonist',
+            'A character who helps the protagonist',
+            'A character who opposes the protagonist',
+            'A character who narrates the story'
+          ],
           correctAnswer: 'A character who contrasts with the protagonist',
         ),
         Question(
           questionText: 'What is situational irony?',
-          options: ['When events turn out differently than expected', 'When a character says the opposite of what they mean', 'When the audience knows something characters don\'t', 'When a character makes a mistake'],
+          options: [
+            'When events turn out differently than expected',
+            'When a character says the opposite of what they mean',
+            'When the audience knows something characters don\'t',
+            'When a character makes a mistake'
+          ],
           correctAnswer: 'When events turn out differently than expected',
         ),
         Question(
           questionText: 'What is a symbol?',
-          options: ['An object that represents something else', 'A character who represents an idea', 'A setting that represents a theme', 'A plot device'],
+          options: [
+            'An object that represents something else',
+            'A character who represents an idea',
+            'A setting that represents a theme',
+            'A plot device'
+          ],
           correctAnswer: 'An object that represents something else',
         ),
         Question(
           questionText: 'What is a theme?',
-          options: ['The central message or meaning', 'The main plot', 'The setting', 'The characters'],
+          options: [
+            'The central message or meaning',
+            'The main plot',
+            'The setting',
+            'The characters'
+          ],
           correctAnswer: 'The central message or meaning',
         ),
         Question(
           questionText: 'What is personification?',
-          options: ['Giving human qualities to non-human things', 'Comparing two things using "like" or "as"', 'Using words that imitate sounds', 'Repeating consonant sounds'],
+          options: [
+            'Giving human qualities to non-human things',
+            'Comparing two things using "like" or "as"',
+            'Using words that imitate sounds',
+            'Repeating consonant sounds'
+          ],
           correctAnswer: 'Giving human qualities to non-human things',
         ),
         Question(
           questionText: 'What is a round character?',
-          options: ['A complex, well-developed character', 'A simple, flat character', 'A minor character', 'A static character'],
+          options: [
+            'A complex, well-developed character',
+            'A simple, flat character',
+            'A minor character',
+            'A static character'
+          ],
           correctAnswer: 'A complex, well-developed character',
         ),
         Question(
           questionText: 'What is verbal irony?',
-          options: ['When a character says the opposite of what they mean', 'When events turn out differently than expected', 'When the audience knows something characters don\'t', 'When a character makes a mistake'],
+          options: [
+            'When a character says the opposite of what they mean',
+            'When events turn out differently than expected',
+            'When the audience knows something characters don\'t',
+            'When a character makes a mistake'
+          ],
           correctAnswer: 'When a character says the opposite of what they mean',
         ),
         Question(
           questionText: 'What is a simile?',
-          options: ['A comparison using "like" or "as"', 'A direct comparison', 'A word that imitates a sound', 'A reference to another work'],
+          options: [
+            'A comparison using "like" or "as"',
+            'A direct comparison',
+            'A word that imitates a sound',
+            'A reference to another work'
+          ],
           correctAnswer: 'A comparison using "like" or "as"',
         ),
         Question(
           questionText: 'What is onomatopoeia?',
-          options: ['Words that imitate sounds', 'Repetition of consonant sounds', 'Repetition of vowel sounds', 'Words that mean the opposite'],
+          options: [
+            'Words that imitate sounds',
+            'Repetition of consonant sounds',
+            'Repetition of vowel sounds',
+            'Words that mean the opposite'
+          ],
           correctAnswer: 'Words that imitate sounds',
         ),
         Question(
           questionText: 'What is a static character?',
-          options: ['A character who doesn\'t change', 'A character who changes a lot', 'A minor character', 'A flat character'],
+          options: [
+            'A character who doesn\'t change',
+            'A character who changes a lot',
+            'A minor character',
+            'A flat character'
+          ],
           correctAnswer: 'A character who doesn\'t change',
         ),
         Question(
           questionText: 'What is a dynamic character?',
-          options: ['A character who changes throughout the story', 'A character who stays the same', 'A minor character', 'A flat character'],
+          options: [
+            'A character who changes throughout the story',
+            'A character who stays the same',
+            'A minor character',
+            'A flat character'
+          ],
           correctAnswer: 'A character who changes throughout the story',
         ),
         Question(
           questionText: 'What is hyperbole?',
-          options: ['Deliberate exaggeration', 'Understatement', 'Irony', 'Metaphor'],
+          options: [
+            'Deliberate exaggeration',
+            'Understatement',
+            'Irony',
+            'Metaphor'
+          ],
           correctAnswer: 'Deliberate exaggeration',
         ),
       ],
@@ -3038,112 +3510,217 @@ class PremadeStudySetsRepository {
     // AP US History
     PremadeStudySet(
       name: 'AP US History',
-      description: 'Comprehensive coverage of American history from pre-colonial to modern times',
+      description:
+          'Comprehensive coverage of American history from pre-colonial to modern times',
       subject: 'History',
       questions: [
         Question(
-          questionText: 'What was the first permanent English settlement in North America?',
+          questionText:
+              'What was the first permanent English settlement in North America?',
           options: ['Jamestown', 'Plymouth', 'Roanoke', 'St. Augustine'],
           correctAnswer: 'Jamestown',
         ),
         Question(
-          questionText: 'What document declared American independence from Britain?',
-          options: ['Declaration of Independence', 'Constitution', 'Articles of Confederation', 'Bill of Rights'],
+          questionText:
+              'What document declared American independence from Britain?',
+          options: [
+            'Declaration of Independence',
+            'Constitution',
+            'Articles of Confederation',
+            'Bill of Rights'
+          ],
           correctAnswer: 'Declaration of Independence',
         ),
         Question(
           questionText: 'Who was the first President of the United States?',
-          options: ['George Washington', 'John Adams', 'Thomas Jefferson', 'Benjamin Franklin'],
+          options: [
+            'George Washington',
+            'John Adams',
+            'Thomas Jefferson',
+            'Benjamin Franklin'
+          ],
           correctAnswer: 'George Washington',
         ),
         Question(
           questionText: 'What was the Louisiana Purchase?',
-          options: ['Land acquisition from France in 1803', 'Land acquisition from Spain', 'Land acquisition from Mexico', 'Land acquisition from Britain'],
+          options: [
+            'Land acquisition from France in 1803',
+            'Land acquisition from Spain',
+            'Land acquisition from Mexico',
+            'Land acquisition from Britain'
+          ],
           correctAnswer: 'Land acquisition from France in 1803',
         ),
         Question(
           questionText: 'What was the Civil War fought over?',
-          options: ['Slavery and states\' rights', 'Taxation', 'Trade disputes', 'Territorial expansion'],
+          options: [
+            'Slavery and states\' rights',
+            'Taxation',
+            'Trade disputes',
+            'Territorial expansion'
+          ],
           correctAnswer: 'Slavery and states\' rights',
         ),
         Question(
           questionText: 'Who was the President during the Civil War?',
-          options: ['Abraham Lincoln', 'Jefferson Davis', 'Andrew Johnson', 'Ulysses S. Grant'],
+          options: [
+            'Abraham Lincoln',
+            'Jefferson Davis',
+            'Andrew Johnson',
+            'Ulysses S. Grant'
+          ],
           correctAnswer: 'Abraham Lincoln',
         ),
         Question(
           questionText: 'What was the Emancipation Proclamation?',
-          options: ['Lincoln\'s order freeing slaves in Confederate states', 'A constitutional amendment', 'A state law', 'A court decision'],
-          correctAnswer: 'Lincoln\'s order freeing slaves in Confederate states',
+          options: [
+            'Lincoln\'s order freeing slaves in Confederate states',
+            'A constitutional amendment',
+            'A state law',
+            'A court decision'
+          ],
+          correctAnswer:
+              'Lincoln\'s order freeing slaves in Confederate states',
         ),
         Question(
           questionText: 'What was the Industrial Revolution?',
-          options: ['Period of rapid industrialization and urbanization', 'Agricultural revolution', 'Political revolution', 'Social revolution'],
+          options: [
+            'Period of rapid industrialization and urbanization',
+            'Agricultural revolution',
+            'Political revolution',
+            'Social revolution'
+          ],
           correctAnswer: 'Period of rapid industrialization and urbanization',
         ),
         Question(
           questionText: 'What was the Progressive Era?',
-          options: ['Period of social and political reform', 'Period of economic growth', 'Period of war', 'Period of isolationism'],
+          options: [
+            'Period of social and political reform',
+            'Period of economic growth',
+            'Period of war',
+            'Period of isolationism'
+          ],
           correctAnswer: 'Period of social and political reform',
         ),
         Question(
           questionText: 'What was the Great Depression?',
-          options: ['Severe economic downturn in the 1930s', 'Period of war', 'Period of prosperity', 'Period of reform'],
+          options: [
+            'Severe economic downturn in the 1930s',
+            'Period of war',
+            'Period of prosperity',
+            'Period of reform'
+          ],
           correctAnswer: 'Severe economic downturn in the 1930s',
         ),
         Question(
-          questionText: 'Who was President during the Great Depression and World War II?',
-          options: ['Franklin D. Roosevelt', 'Herbert Hoover', 'Harry Truman', 'Dwight Eisenhower'],
+          questionText:
+              'Who was President during the Great Depression and World War II?',
+          options: [
+            'Franklin D. Roosevelt',
+            'Herbert Hoover',
+            'Harry Truman',
+            'Dwight Eisenhower'
+          ],
           correctAnswer: 'Franklin D. Roosevelt',
         ),
         Question(
           questionText: 'What was the New Deal?',
-          options: ['FDR\'s program to combat the Great Depression', 'A foreign policy program', 'A military program', 'A social program'],
+          options: [
+            'FDR\'s program to combat the Great Depression',
+            'A foreign policy program',
+            'A military program',
+            'A social program'
+          ],
           correctAnswer: 'FDR\'s program to combat the Great Depression',
         ),
         Question(
           questionText: 'What was the Cold War?',
-          options: ['Period of tension between US and Soviet Union', 'A hot war', 'A trade war', 'A civil war'],
+          options: [
+            'Period of tension between US and Soviet Union',
+            'A hot war',
+            'A trade war',
+            'A civil war'
+          ],
           correctAnswer: 'Period of tension between US and Soviet Union',
         ),
         Question(
           questionText: 'What was the Civil Rights Movement?',
-          options: ['Movement for racial equality', 'Movement for women\'s rights', 'Movement for labor rights', 'Movement for environmental rights'],
+          options: [
+            'Movement for racial equality',
+            'Movement for women\'s rights',
+            'Movement for labor rights',
+            'Movement for environmental rights'
+          ],
           correctAnswer: 'Movement for racial equality',
         ),
         Question(
           questionText: 'Who was Martin Luther King Jr.?',
-          options: ['Civil rights leader', 'President', 'Supreme Court Justice', 'Senator'],
+          options: [
+            'Civil rights leader',
+            'President',
+            'Supreme Court Justice',
+            'Senator'
+          ],
           correctAnswer: 'Civil rights leader',
         ),
         Question(
           questionText: 'What was the Vietnam War?',
-          options: ['Conflict in Southeast Asia', 'Conflict in Europe', 'Conflict in Africa', 'Conflict in Latin America'],
+          options: [
+            'Conflict in Southeast Asia',
+            'Conflict in Europe',
+            'Conflict in Africa',
+            'Conflict in Latin America'
+          ],
           correctAnswer: 'Conflict in Southeast Asia',
         ),
         Question(
           questionText: 'What was Watergate?',
-          options: ['Political scandal that led to Nixon\'s resignation', 'A foreign policy crisis', 'An economic crisis', 'A social movement'],
+          options: [
+            'Political scandal that led to Nixon\'s resignation',
+            'A foreign policy crisis',
+            'An economic crisis',
+            'A social movement'
+          ],
           correctAnswer: 'Political scandal that led to Nixon\'s resignation',
         ),
         Question(
           questionText: 'What was the Reagan Revolution?',
-          options: ['Conservative political movement', 'Liberal political movement', 'Economic policy', 'Foreign policy'],
+          options: [
+            'Conservative political movement',
+            'Liberal political movement',
+            'Economic policy',
+            'Foreign policy'
+          ],
           correctAnswer: 'Conservative political movement',
         ),
         Question(
           questionText: 'What was the fall of the Berlin Wall?',
-          options: ['Symbolic end of the Cold War', 'Beginning of World War II', 'End of Vietnam War', 'Start of Korean War'],
+          options: [
+            'Symbolic end of the Cold War',
+            'Beginning of World War II',
+            'End of Vietnam War',
+            'Start of Korean War'
+          ],
           correctAnswer: 'Symbolic end of the Cold War',
         ),
         Question(
           questionText: 'What was 9/11?',
-          options: ['Terrorist attacks on September 11, 2001', 'A natural disaster', 'An economic crisis', 'A political scandal'],
+          options: [
+            'Terrorist attacks on September 11, 2001',
+            'A natural disaster',
+            'An economic crisis',
+            'A political scandal'
+          ],
           correctAnswer: 'Terrorist attacks on September 11, 2001',
         ),
         Question(
           questionText: 'What was the Great Recession?',
-          options: ['Economic crisis of 2008', 'Political crisis', 'Social crisis', 'Environmental crisis'],
+          options: [
+            'Economic crisis of 2008',
+            'Political crisis',
+            'Social crisis',
+            'Environmental crisis'
+          ],
           correctAnswer: 'Economic crisis of 2008',
         ),
       ],
@@ -3152,112 +3729,218 @@ class PremadeStudySetsRepository {
     // IB Biology HL
     PremadeStudySet(
       name: 'IB Biology HL',
-      description: 'Higher level biology with advanced concepts and experimental design',
+      description:
+          'Higher level biology with advanced concepts and experimental design',
       subject: 'Science',
       questions: [
         Question(
           questionText: 'What is the structure of DNA?',
-          options: ['Double helix', 'Single strand', 'Triple helix', 'Circular'],
+          options: [
+            'Double helix',
+            'Single strand',
+            'Triple helix',
+            'Circular'
+          ],
           correctAnswer: 'Double helix',
         ),
         Question(
           questionText: 'What are the four nitrogenous bases in DNA?',
-          options: ['Adenine, Thymine, Guanine, Cytosine', 'Adenine, Uracil, Guanine, Cytosine', 'Adenine, Thymine, Guanine, Uracil', 'Adenine, Cytosine, Guanine, Uracil'],
+          options: [
+            'Adenine, Thymine, Guanine, Cytosine',
+            'Adenine, Uracil, Guanine, Cytosine',
+            'Adenine, Thymine, Guanine, Uracil',
+            'Adenine, Cytosine, Guanine, Uracil'
+          ],
           correctAnswer: 'Adenine, Thymine, Guanine, Cytosine',
         ),
         Question(
           questionText: 'What is the function of mRNA?',
-          options: ['Carry genetic information from DNA to ribosomes', 'Store genetic information', 'Catalyze reactions', 'Provide structural support'],
+          options: [
+            'Carry genetic information from DNA to ribosomes',
+            'Store genetic information',
+            'Catalyze reactions',
+            'Provide structural support'
+          ],
           correctAnswer: 'Carry genetic information from DNA to ribosomes',
         ),
         Question(
           questionText: 'What is the process of protein synthesis called?',
-          options: ['Translation', 'Transcription', 'Replication', 'Transformation'],
+          options: [
+            'Translation',
+            'Transcription',
+            'Replication',
+            'Transformation'
+          ],
           correctAnswer: 'Translation',
         ),
         Question(
           questionText: 'What is the role of tRNA?',
-          options: ['Carry amino acids to ribosomes', 'Carry genetic information', 'Catalyze reactions', 'Store genetic information'],
+          options: [
+            'Carry amino acids to ribosomes',
+            'Carry genetic information',
+            'Catalyze reactions',
+            'Store genetic information'
+          ],
           correctAnswer: 'Carry amino acids to ribosomes',
         ),
         Question(
           questionText: 'What is the function of enzymes?',
-          options: ['Speed up chemical reactions', 'Slow down reactions', 'Stop reactions', 'Reverse reactions'],
+          options: [
+            'Speed up chemical reactions',
+            'Slow down reactions',
+            'Stop reactions',
+            'Reverse reactions'
+          ],
           correctAnswer: 'Speed up chemical reactions',
         ),
         Question(
           questionText: 'What is the active site of an enzyme?',
-          options: ['Where the substrate binds', 'Where the product forms', 'Where the enzyme is made', 'Where the enzyme is destroyed'],
+          options: [
+            'Where the substrate binds',
+            'Where the product forms',
+            'Where the enzyme is made',
+            'Where the enzyme is destroyed'
+          ],
           correctAnswer: 'Where the substrate binds',
         ),
         Question(
           questionText: 'What is the lock and key model?',
-          options: ['Enzyme-substrate specificity', 'DNA replication', 'Protein synthesis', 'Cell division'],
+          options: [
+            'Enzyme-substrate specificity',
+            'DNA replication',
+            'Protein synthesis',
+            'Cell division'
+          ],
           correctAnswer: 'Enzyme-substrate specificity',
         ),
         Question(
           questionText: 'What is the induced fit model?',
-          options: ['Enzyme changes shape to fit substrate', 'Substrate changes shape', 'Enzyme and substrate are rigid', 'No shape changes occur'],
+          options: [
+            'Enzyme changes shape to fit substrate',
+            'Substrate changes shape',
+            'Enzyme and substrate are rigid',
+            'No shape changes occur'
+          ],
           correctAnswer: 'Enzyme changes shape to fit substrate',
         ),
         Question(
           questionText: 'What is the function of ATP?',
-          options: ['Energy currency of the cell', 'Genetic material', 'Structural component', 'Enzyme'],
+          options: [
+            'Energy currency of the cell',
+            'Genetic material',
+            'Structural component',
+            'Enzyme'
+          ],
           correctAnswer: 'Energy currency of the cell',
         ),
         Question(
           questionText: 'What is glycolysis?',
-          options: ['Breakdown of glucose to pyruvate', 'Breakdown of pyruvate', 'Synthesis of glucose', 'Breakdown of fatty acids'],
+          options: [
+            'Breakdown of glucose to pyruvate',
+            'Breakdown of pyruvate',
+            'Synthesis of glucose',
+            'Breakdown of fatty acids'
+          ],
           correctAnswer: 'Breakdown of glucose to pyruvate',
         ),
         Question(
           questionText: 'What is the Krebs cycle?',
-          options: ['Series of reactions in mitochondria', 'Series of reactions in cytoplasm', 'Series of reactions in nucleus', 'Series of reactions in ribosomes'],
+          options: [
+            'Series of reactions in mitochondria',
+            'Series of reactions in cytoplasm',
+            'Series of reactions in nucleus',
+            'Series of reactions in ribosomes'
+          ],
           correctAnswer: 'Series of reactions in mitochondria',
         ),
         Question(
           questionText: 'What is oxidative phosphorylation?',
-          options: ['ATP synthesis using electron transport chain', 'ATP synthesis in glycolysis', 'ATP synthesis in Krebs cycle', 'ATP synthesis in fermentation'],
+          options: [
+            'ATP synthesis using electron transport chain',
+            'ATP synthesis in glycolysis',
+            'ATP synthesis in Krebs cycle',
+            'ATP synthesis in fermentation'
+          ],
           correctAnswer: 'ATP synthesis using electron transport chain',
         ),
         Question(
           questionText: 'What is the function of chloroplasts?',
-          options: ['Photosynthesis', 'Cellular respiration', 'Protein synthesis', 'Cell division'],
+          options: [
+            'Photosynthesis',
+            'Cellular respiration',
+            'Protein synthesis',
+            'Cell division'
+          ],
           correctAnswer: 'Photosynthesis',
         ),
         Question(
           questionText: 'What is the light-dependent reaction?',
-          options: ['First stage of photosynthesis', 'Second stage of photosynthesis', 'Third stage of photosynthesis', 'Fourth stage of photosynthesis'],
+          options: [
+            'First stage of photosynthesis',
+            'Second stage of photosynthesis',
+            'Third stage of photosynthesis',
+            'Fourth stage of photosynthesis'
+          ],
           correctAnswer: 'First stage of photosynthesis',
         ),
         Question(
           questionText: 'What is the Calvin cycle?',
-          options: ['Carbon fixation in photosynthesis', 'Light absorption', 'Oxygen production', 'Glucose breakdown'],
+          options: [
+            'Carbon fixation in photosynthesis',
+            'Light absorption',
+            'Oxygen production',
+            'Glucose breakdown'
+          ],
           correctAnswer: 'Carbon fixation in photosynthesis',
         ),
         Question(
           questionText: 'What is the function of stomata?',
-          options: ['Gas exchange in plants', 'Water absorption', 'Nutrient transport', 'Structural support'],
+          options: [
+            'Gas exchange in plants',
+            'Water absorption',
+            'Nutrient transport',
+            'Structural support'
+          ],
           correctAnswer: 'Gas exchange in plants',
         ),
         Question(
           questionText: 'What is the function of xylem?',
-          options: ['Water transport in plants', 'Sugar transport in plants', 'Gas exchange in plants', 'Nutrient storage in plants'],
+          options: [
+            'Water transport in plants',
+            'Sugar transport in plants',
+            'Gas exchange in plants',
+            'Nutrient storage in plants'
+          ],
           correctAnswer: 'Water transport in plants',
         ),
         Question(
           questionText: 'What is the function of phloem?',
-          options: ['Sugar transport in plants', 'Water transport in plants', 'Gas exchange in plants', 'Nutrient storage in plants'],
+          options: [
+            'Sugar transport in plants',
+            'Water transport in plants',
+            'Gas exchange in plants',
+            'Nutrient storage in plants'
+          ],
           correctAnswer: 'Sugar transport in plants',
         ),
         Question(
           questionText: 'What is the function of roots?',
-          options: ['Water and nutrient absorption', 'Photosynthesis', 'Gas exchange', 'Reproduction'],
+          options: [
+            'Water and nutrient absorption',
+            'Photosynthesis',
+            'Gas exchange',
+            'Reproduction'
+          ],
           correctAnswer: 'Water and nutrient absorption',
         ),
         Question(
           questionText: 'What is the function of leaves?',
-          options: ['Photosynthesis', 'Water absorption', 'Nutrient storage', 'Structural support'],
+          options: [
+            'Photosynthesis',
+            'Water absorption',
+            'Nutrient storage',
+            'Structural support'
+          ],
           correctAnswer: 'Photosynthesis',
         ),
       ],
@@ -3276,102 +3959,202 @@ class PremadeStudySetsRepository {
         ),
         Question(
           questionText: 'What was the Code of Hammurabi?',
-          options: ['First written law code', 'Religious text', 'Trade agreement', 'Peace treaty'],
+          options: [
+            'First written law code',
+            'Religious text',
+            'Trade agreement',
+            'Peace treaty'
+          ],
           correctAnswer: 'First written law code',
         ),
         Question(
           questionText: 'What was the Silk Road?',
-          options: ['Trade route connecting East and West', 'Military road', 'Religious pilgrimage route', 'Migration route'],
+          options: [
+            'Trade route connecting East and West',
+            'Military road',
+            'Religious pilgrimage route',
+            'Migration route'
+          ],
           correctAnswer: 'Trade route connecting East and West',
         ),
         Question(
           questionText: 'What was the Roman Empire?',
-          options: ['Ancient Mediterranean empire', 'Asian empire', 'African empire', 'American empire'],
+          options: [
+            'Ancient Mediterranean empire',
+            'Asian empire',
+            'African empire',
+            'American empire'
+          ],
           correctAnswer: 'Ancient Mediterranean empire',
         ),
         Question(
           questionText: 'What was the Byzantine Empire?',
-          options: ['Eastern continuation of Roman Empire', 'Western continuation of Roman Empire', 'New empire', 'Religious state'],
+          options: [
+            'Eastern continuation of Roman Empire',
+            'Western continuation of Roman Empire',
+            'New empire',
+            'Religious state'
+          ],
           correctAnswer: 'Eastern continuation of Roman Empire',
         ),
         Question(
           questionText: 'What was the Islamic Golden Age?',
-          options: ['Period of cultural and scientific advancement', 'Period of war', 'Period of decline', 'Period of isolation'],
+          options: [
+            'Period of cultural and scientific advancement',
+            'Period of war',
+            'Period of decline',
+            'Period of isolation'
+          ],
           correctAnswer: 'Period of cultural and scientific advancement',
         ),
         Question(
           questionText: 'What was the Mongol Empire?',
-          options: ['Largest contiguous land empire', 'Maritime empire', 'Religious empire', 'Trade empire'],
+          options: [
+            'Largest contiguous land empire',
+            'Maritime empire',
+            'Religious empire',
+            'Trade empire'
+          ],
           correctAnswer: 'Largest contiguous land empire',
         ),
         Question(
           questionText: 'What was the Renaissance?',
-          options: ['Period of cultural rebirth in Europe', 'Period of war', 'Period of decline', 'Period of isolation'],
+          options: [
+            'Period of cultural rebirth in Europe',
+            'Period of war',
+            'Period of decline',
+            'Period of isolation'
+          ],
           correctAnswer: 'Period of cultural rebirth in Europe',
         ),
         Question(
           questionText: 'What was the Age of Exploration?',
-          options: ['Period of European overseas expansion', 'Period of Asian expansion', 'Period of African expansion', 'Period of American expansion'],
+          options: [
+            'Period of European overseas expansion',
+            'Period of Asian expansion',
+            'Period of African expansion',
+            'Period of American expansion'
+          ],
           correctAnswer: 'Period of European overseas expansion',
         ),
         Question(
           questionText: 'What was the Columbian Exchange?',
-          options: ['Exchange of goods between Old and New Worlds', 'Trade agreement', 'Peace treaty', 'Religious conversion'],
+          options: [
+            'Exchange of goods between Old and New Worlds',
+            'Trade agreement',
+            'Peace treaty',
+            'Religious conversion'
+          ],
           correctAnswer: 'Exchange of goods between Old and New Worlds',
         ),
         Question(
           questionText: 'What was the Industrial Revolution?',
-          options: ['Period of industrialization and urbanization', 'Agricultural revolution', 'Political revolution', 'Social revolution'],
+          options: [
+            'Period of industrialization and urbanization',
+            'Agricultural revolution',
+            'Political revolution',
+            'Social revolution'
+          ],
           correctAnswer: 'Period of industrialization and urbanization',
         ),
         Question(
           questionText: 'What was the French Revolution?',
-          options: ['Revolution that overthrew monarchy', 'Industrial revolution', 'Agricultural revolution', 'Scientific revolution'],
+          options: [
+            'Revolution that overthrew monarchy',
+            'Industrial revolution',
+            'Agricultural revolution',
+            'Scientific revolution'
+          ],
           correctAnswer: 'Revolution that overthrew monarchy',
         ),
         Question(
           questionText: 'What was the American Revolution?',
-          options: ['Colonial rebellion against Britain', 'Civil war', 'Trade war', 'Religious war'],
+          options: [
+            'Colonial rebellion against Britain',
+            'Civil war',
+            'Trade war',
+            'Religious war'
+          ],
           correctAnswer: 'Colonial rebellion against Britain',
         ),
         Question(
           questionText: 'What was the Scramble for Africa?',
-          options: ['European colonization of Africa', 'African colonization of Europe', 'Trade between Africa and Europe', 'War in Africa'],
+          options: [
+            'European colonization of Africa',
+            'African colonization of Europe',
+            'Trade between Africa and Europe',
+            'War in Africa'
+          ],
           correctAnswer: 'European colonization of Africa',
         ),
         Question(
           questionText: 'What was World War I?',
-          options: ['Global conflict 1914-1918', 'Regional conflict', 'Civil war', 'Trade war'],
+          options: [
+            'Global conflict 1914-1918',
+            'Regional conflict',
+            'Civil war',
+            'Trade war'
+          ],
           correctAnswer: 'Global conflict 1914-1918',
         ),
         Question(
           questionText: 'What was the Russian Revolution?',
-          options: ['Overthrow of tsarist regime', 'Industrial revolution', 'Agricultural revolution', 'Scientific revolution'],
+          options: [
+            'Overthrow of tsarist regime',
+            'Industrial revolution',
+            'Agricultural revolution',
+            'Scientific revolution'
+          ],
           correctAnswer: 'Overthrow of tsarist regime',
         ),
         Question(
           questionText: 'What was the Great Depression?',
-          options: ['Global economic crisis', 'Regional crisis', 'Political crisis', 'Social crisis'],
+          options: [
+            'Global economic crisis',
+            'Regional crisis',
+            'Political crisis',
+            'Social crisis'
+          ],
           correctAnswer: 'Global economic crisis',
         ),
         Question(
           questionText: 'What was World War II?',
-          options: ['Global conflict 1939-1945', 'Regional conflict', 'Civil war', 'Trade war'],
+          options: [
+            'Global conflict 1939-1945',
+            'Regional conflict',
+            'Civil war',
+            'Trade war'
+          ],
           correctAnswer: 'Global conflict 1939-1945',
         ),
         Question(
           questionText: 'What was the Cold War?',
-          options: ['Tension between US and Soviet Union', 'Hot war', 'Trade war', 'Civil war'],
+          options: [
+            'Tension between US and Soviet Union',
+            'Hot war',
+            'Trade war',
+            'Civil war'
+          ],
           correctAnswer: 'Tension between US and Soviet Union',
         ),
         Question(
           questionText: 'What was decolonization?',
-          options: ['End of European colonial empires', 'Start of new empires', 'Trade agreements', 'Peace treaties'],
+          options: [
+            'End of European colonial empires',
+            'Start of new empires',
+            'Trade agreements',
+            'Peace treaties'
+          ],
           correctAnswer: 'End of European colonial empires',
         ),
         Question(
           questionText: 'What was globalization?',
-          options: ['Increasing interconnectedness of world', 'Isolation of nations', 'Trade barriers', 'Political division'],
+          options: [
+            'Increasing interconnectedness of world',
+            'Isolation of nations',
+            'Trade barriers',
+            'Political division'
+          ],
           correctAnswer: 'Increasing interconnectedness of world',
         ),
       ],
@@ -3380,67 +4163,128 @@ class PremadeStudySetsRepository {
     // IB Economics HL
     PremadeStudySet(
       name: 'IB Economics HL',
-      description: 'Higher level economics with microeconomics, macroeconomics, and international trade',
+      description:
+          'Higher level economics with microeconomics, macroeconomics, and international trade',
       subject: 'Social Studies',
       questions: [
         Question(
           questionText: 'What is the law of demand?',
-          options: ['As price increases, quantity demanded decreases', 'As price decreases, quantity demanded decreases', 'As price increases, quantity demanded increases', 'Price and quantity demanded are unrelated'],
+          options: [
+            'As price increases, quantity demanded decreases',
+            'As price decreases, quantity demanded decreases',
+            'As price increases, quantity demanded increases',
+            'Price and quantity demanded are unrelated'
+          ],
           correctAnswer: 'As price increases, quantity demanded decreases',
         ),
         Question(
           questionText: 'What is the law of supply?',
-          options: ['As price increases, quantity supplied increases', 'As price decreases, quantity supplied increases', 'As price increases, quantity supplied decreases', 'Price and quantity supplied are unrelated'],
+          options: [
+            'As price increases, quantity supplied increases',
+            'As price decreases, quantity supplied increases',
+            'As price increases, quantity supplied decreases',
+            'Price and quantity supplied are unrelated'
+          ],
           correctAnswer: 'As price increases, quantity supplied increases',
         ),
         Question(
           questionText: 'What is equilibrium price?',
-          options: ['Price where supply equals demand', 'Highest possible price', 'Lowest possible price', 'Average of all prices'],
+          options: [
+            'Price where supply equals demand',
+            'Highest possible price',
+            'Lowest possible price',
+            'Average of all prices'
+          ],
           correctAnswer: 'Price where supply equals demand',
         ),
         Question(
           questionText: 'What is elasticity of demand?',
-          options: ['Responsiveness of quantity demanded to price changes', 'Responsiveness of quantity supplied to price changes', 'Total revenue', 'Market price'],
+          options: [
+            'Responsiveness of quantity demanded to price changes',
+            'Responsiveness of quantity supplied to price changes',
+            'Total revenue',
+            'Market price'
+          ],
           correctAnswer: 'Responsiveness of quantity demanded to price changes',
         ),
         Question(
           questionText: 'What is a monopoly?',
-          options: ['Single seller in a market', 'Single buyer in a market', 'Many sellers in a market', 'Many buyers in a market'],
+          options: [
+            'Single seller in a market',
+            'Single buyer in a market',
+            'Many sellers in a market',
+            'Many buyers in a market'
+          ],
           correctAnswer: 'Single seller in a market',
         ),
         Question(
           questionText: 'What is perfect competition?',
-          options: ['Many buyers and sellers with identical products', 'Single seller', 'Few sellers', 'No competition'],
+          options: [
+            'Many buyers and sellers with identical products',
+            'Single seller',
+            'Few sellers',
+            'No competition'
+          ],
           correctAnswer: 'Many buyers and sellers with identical products',
         ),
         Question(
           questionText: 'What is GDP?',
-          options: ['Total value of goods and services produced', 'Total income', 'Total spending', 'Total savings'],
+          options: [
+            'Total value of goods and services produced',
+            'Total income',
+            'Total spending',
+            'Total savings'
+          ],
           correctAnswer: 'Total value of goods and services produced',
         ),
         Question(
           questionText: 'What is inflation?',
-          options: ['General increase in price level', 'General decrease in price level', 'Increase in GDP', 'Decrease in GDP'],
+          options: [
+            'General increase in price level',
+            'General decrease in price level',
+            'Increase in GDP',
+            'Decrease in GDP'
+          ],
           correctAnswer: 'General increase in price level',
         ),
         Question(
           questionText: 'What is unemployment?',
-          options: ['People without jobs who are seeking work', 'All people without jobs', 'People who don\'t want to work', 'People who are retired'],
+          options: [
+            'People without jobs who are seeking work',
+            'All people without jobs',
+            'People who don\'t want to work',
+            'People who are retired'
+          ],
           correctAnswer: 'People without jobs who are seeking work',
         ),
         Question(
           questionText: 'What is fiscal policy?',
-          options: ['Government spending and taxation', 'Central bank policy', 'Trade policy', 'Monetary policy'],
+          options: [
+            'Government spending and taxation',
+            'Central bank policy',
+            'Trade policy',
+            'Monetary policy'
+          ],
           correctAnswer: 'Government spending and taxation',
         ),
         Question(
           questionText: 'What is monetary policy?',
-          options: ['Central bank control of money supply', 'Government spending', 'Taxation', 'Trade policy'],
+          options: [
+            'Central bank control of money supply',
+            'Government spending',
+            'Taxation',
+            'Trade policy'
+          ],
           correctAnswer: 'Central bank control of money supply',
         ),
         Question(
           questionText: 'What is comparative advantage?',
-          options: ['Ability to produce at lower opportunity cost', 'Ability to produce more efficiently', 'Ability to produce everything', 'Ability to trade'],
+          options: [
+            'Ability to produce at lower opportunity cost',
+            'Ability to produce more efficiently',
+            'Ability to produce everything',
+            'Ability to trade'
+          ],
           correctAnswer: 'Ability to produce at lower opportunity cost',
         ),
         Question(
@@ -3450,43 +4294,85 @@ class PremadeStudySetsRepository {
         ),
         Question(
           questionText: 'What is a quota?',
-          options: ['Limit on quantity of imports', 'Limit on quantity of exports', 'Tax on trade', 'Subsidy'],
+          options: [
+            'Limit on quantity of imports',
+            'Limit on quantity of exports',
+            'Tax on trade',
+            'Subsidy'
+          ],
           correctAnswer: 'Limit on quantity of imports',
         ),
         Question(
           questionText: 'What is opportunity cost?',
-          options: ['Value of next best alternative', 'Total cost', 'Fixed cost', 'Variable cost'],
+          options: [
+            'Value of next best alternative',
+            'Total cost',
+            'Fixed cost',
+            'Variable cost'
+          ],
           correctAnswer: 'Value of next best alternative',
         ),
         Question(
           questionText: 'What is marginal cost?',
-          options: ['Cost of producing one more unit', 'Total cost', 'Average cost', 'Fixed cost'],
+          options: [
+            'Cost of producing one more unit',
+            'Total cost',
+            'Average cost',
+            'Fixed cost'
+          ],
           correctAnswer: 'Cost of producing one more unit',
         ),
         Question(
           questionText: 'What is marginal revenue?',
-          options: ['Revenue from selling one more unit', 'Total revenue', 'Average revenue', 'Fixed revenue'],
+          options: [
+            'Revenue from selling one more unit',
+            'Total revenue',
+            'Average revenue',
+            'Fixed revenue'
+          ],
           correctAnswer: 'Revenue from selling one more unit',
         ),
         Question(
           questionText: 'What is a public good?',
-          options: ['Non-excludable and non-rivalrous', 'Excludable and rivalrous', 'Private good', 'Common resource'],
+          options: [
+            'Non-excludable and non-rivalrous',
+            'Excludable and rivalrous',
+            'Private good',
+            'Common resource'
+          ],
           correctAnswer: 'Non-excludable and non-rivalrous',
         ),
         Question(
           questionText: 'What is an externality?',
-          options: ['Cost or benefit affecting third parties', 'Internal cost', 'Private cost', 'Social cost'],
+          options: [
+            'Cost or benefit affecting third parties',
+            'Internal cost',
+            'Private cost',
+            'Social cost'
+          ],
           correctAnswer: 'Cost or benefit affecting third parties',
         ),
         Question(
           questionText: 'What is the multiplier effect?',
-          options: ['Initial spending leads to larger total increase in GDP', 'Initial spending leads to smaller total increase', 'No change in GDP', 'Decrease in GDP'],
-          correctAnswer: 'Initial spending leads to larger total increase in GDP',
+          options: [
+            'Initial spending leads to larger total increase in GDP',
+            'Initial spending leads to smaller total increase',
+            'No change in GDP',
+            'Decrease in GDP'
+          ],
+          correctAnswer:
+              'Initial spending leads to larger total increase in GDP',
         ),
         Question(
           questionText: 'What is the Phillips curve?',
-          options: ['Inverse relationship between unemployment and inflation', 'Direct relationship between unemployment and inflation', 'No relationship', 'Complex relationship'],
-          correctAnswer: 'Inverse relationship between unemployment and inflation',
+          options: [
+            'Inverse relationship between unemployment and inflation',
+            'Direct relationship between unemployment and inflation',
+            'No relationship',
+            'Complex relationship'
+          ],
+          correctAnswer:
+              'Inverse relationship between unemployment and inflation',
         ),
       ],
     ),
@@ -3499,107 +4385,212 @@ class PremadeStudySetsRepository {
       questions: [
         Question(
           questionText: 'What is a literary device?',
-          options: ['Technique used by authors to convey meaning', 'Type of book', 'Writing style', 'Character type'],
+          options: [
+            'Technique used by authors to convey meaning',
+            'Type of book',
+            'Writing style',
+            'Character type'
+          ],
           correctAnswer: 'Technique used by authors to convey meaning',
         ),
         Question(
           questionText: 'What is imagery?',
-          options: ['Vivid descriptive language', 'Character dialogue', 'Plot summary', 'Setting description'],
+          options: [
+            'Vivid descriptive language',
+            'Character dialogue',
+            'Plot summary',
+            'Setting description'
+          ],
           correctAnswer: 'Vivid descriptive language',
         ),
         Question(
           questionText: 'What is symbolism?',
-          options: ['Use of objects to represent ideas', 'Character development', 'Plot structure', 'Setting details'],
+          options: [
+            'Use of objects to represent ideas',
+            'Character development',
+            'Plot structure',
+            'Setting details'
+          ],
           correctAnswer: 'Use of objects to represent ideas',
         ),
         Question(
           questionText: 'What is irony?',
-          options: ['Contrast between expectation and reality', 'Humor', 'Sarcasm', 'Metaphor'],
+          options: [
+            'Contrast between expectation and reality',
+            'Humor',
+            'Sarcasm',
+            'Metaphor'
+          ],
           correctAnswer: 'Contrast between expectation and reality',
         ),
         Question(
           questionText: 'What is a motif?',
-          options: ['Recurring theme or element', 'Character type', 'Plot device', 'Setting detail'],
+          options: [
+            'Recurring theme or element',
+            'Character type',
+            'Plot device',
+            'Setting detail'
+          ],
           correctAnswer: 'Recurring theme or element',
         ),
         Question(
           questionText: 'What is a paradox?',
-          options: ['Contradictory statement that reveals truth', 'Simple contradiction', 'Metaphor', 'Simile'],
+          options: [
+            'Contradictory statement that reveals truth',
+            'Simple contradiction',
+            'Metaphor',
+            'Simile'
+          ],
           correctAnswer: 'Contradictory statement that reveals truth',
         ),
         Question(
           questionText: 'What is an oxymoron?',
-          options: ['Contradictory terms combined', 'Similar terms combined', 'Opposite terms separated', 'Unrelated terms'],
+          options: [
+            'Contradictory terms combined',
+            'Similar terms combined',
+            'Opposite terms separated',
+            'Unrelated terms'
+          ],
           correctAnswer: 'Contradictory terms combined',
         ),
         Question(
           questionText: 'What is a soliloquy?',
-          options: ['Speech by character alone on stage', 'Dialogue between characters', 'Narration', 'Monologue'],
+          options: [
+            'Speech by character alone on stage',
+            'Dialogue between characters',
+            'Narration',
+            'Monologue'
+          ],
           correctAnswer: 'Speech by character alone on stage',
         ),
         Question(
           questionText: 'What is dramatic irony?',
-          options: ['Audience knows something characters don\'t', 'Character knows something audience doesn\'t', 'No one knows anything', 'Everyone knows everything'],
+          options: [
+            'Audience knows something characters don\'t',
+            'Character knows something audience doesn\'t',
+            'No one knows anything',
+            'Everyone knows everything'
+          ],
           correctAnswer: 'Audience knows something characters don\'t',
         ),
         Question(
           questionText: 'What is a tragic hero?',
-          options: ['Protagonist with fatal flaw', 'Antagonist', 'Minor character', 'Comic character'],
+          options: [
+            'Protagonist with fatal flaw',
+            'Antagonist',
+            'Minor character',
+            'Comic character'
+          ],
           correctAnswer: 'Protagonist with fatal flaw',
         ),
         Question(
           questionText: 'What is catharsis?',
-          options: ['Emotional release through art', 'Character development', 'Plot resolution', 'Theme expression'],
+          options: [
+            'Emotional release through art',
+            'Character development',
+            'Plot resolution',
+            'Theme expression'
+          ],
           correctAnswer: 'Emotional release through art',
         ),
         Question(
           questionText: 'What is a foil character?',
-          options: ['Character who contrasts with protagonist', 'Character who helps protagonist', 'Character who opposes protagonist', 'Minor character'],
+          options: [
+            'Character who contrasts with protagonist',
+            'Character who helps protagonist',
+            'Character who opposes protagonist',
+            'Minor character'
+          ],
           correctAnswer: 'Character who contrasts with protagonist',
         ),
         Question(
           questionText: 'What is an unreliable narrator?',
-          options: ['Narrator whose credibility is compromised', 'Third-person narrator', 'Omniscient narrator', 'Reliable narrator'],
+          options: [
+            'Narrator whose credibility is compromised',
+            'Third-person narrator',
+            'Omniscient narrator',
+            'Reliable narrator'
+          ],
           correctAnswer: 'Narrator whose credibility is compromised',
         ),
         Question(
           questionText: 'What is stream of consciousness?',
-          options: ['Narrative technique showing thoughts and feelings', 'Dialogue technique', 'Plot technique', 'Setting technique'],
+          options: [
+            'Narrative technique showing thoughts and feelings',
+            'Dialogue technique',
+            'Plot technique',
+            'Setting technique'
+          ],
           correctAnswer: 'Narrative technique showing thoughts and feelings',
         ),
         Question(
           questionText: 'What is a bildungsroman?',
-          options: ['Coming-of-age novel', 'Romance novel', 'Mystery novel', 'Science fiction novel'],
+          options: [
+            'Coming-of-age novel',
+            'Romance novel',
+            'Mystery novel',
+            'Science fiction novel'
+          ],
           correctAnswer: 'Coming-of-age novel',
         ),
         Question(
           questionText: 'What is an epistolary novel?',
-          options: ['Novel written in letters or documents', 'Novel written in verse', 'Novel written in dialogue', 'Novel written in third person'],
+          options: [
+            'Novel written in letters or documents',
+            'Novel written in verse',
+            'Novel written in dialogue',
+            'Novel written in third person'
+          ],
           correctAnswer: 'Novel written in letters or documents',
         ),
         Question(
           questionText: 'What is a frame narrative?',
-          options: ['Story within a story', 'Multiple stories', 'Single story', 'No story'],
+          options: [
+            'Story within a story',
+            'Multiple stories',
+            'Single story',
+            'No story'
+          ],
           correctAnswer: 'Story within a story',
         ),
         Question(
           questionText: 'What is an antihero?',
-          options: ['Protagonist lacking heroic qualities', 'Antagonist', 'Minor character', 'Heroic character'],
+          options: [
+            'Protagonist lacking heroic qualities',
+            'Antagonist',
+            'Minor character',
+            'Heroic character'
+          ],
           correctAnswer: 'Protagonist lacking heroic qualities',
         ),
         Question(
           questionText: 'What is a deus ex machina?',
-          options: ['Unexpected solution to plot problem', 'Character development', 'Setting description', 'Theme expression'],
+          options: [
+            'Unexpected solution to plot problem',
+            'Character development',
+            'Setting description',
+            'Theme expression'
+          ],
           correctAnswer: 'Unexpected solution to plot problem',
         ),
         Question(
           questionText: 'What is an allegory?',
-          options: ['Story with symbolic meaning', 'Simple story', 'Complex story', 'Realistic story'],
+          options: [
+            'Story with symbolic meaning',
+            'Simple story',
+            'Complex story',
+            'Realistic story'
+          ],
           correctAnswer: 'Story with symbolic meaning',
         ),
         Question(
           questionText: 'What is a pastiche?',
-          options: ['Work imitating another\'s style', 'Original work', 'Parody', 'Satire'],
+          options: [
+            'Work imitating another\'s style',
+            'Original work',
+            'Parody',
+            'Satire'
+          ],
           correctAnswer: 'Work imitating another\'s style',
         ),
       ],
@@ -3608,112 +4599,218 @@ class PremadeStudySetsRepository {
     // IB History HL
     PremadeStudySet(
       name: 'IB History HL',
-      description: 'Higher level history with in-depth analysis of historical events and themes',
+      description:
+          'Higher level history with in-depth analysis of historical events and themes',
       subject: 'History',
       questions: [
         Question(
           questionText: 'What is historiography?',
-          options: ['Study of historical writing and methodology', 'Study of ancient history', 'Study of modern history', 'Study of world history'],
+          options: [
+            'Study of historical writing and methodology',
+            'Study of ancient history',
+            'Study of modern history',
+            'Study of world history'
+          ],
           correctAnswer: 'Study of historical writing and methodology',
         ),
         Question(
           questionText: 'What is a primary source?',
-          options: ['First-hand account of historical event', 'Second-hand account', 'Modern interpretation', 'Historical textbook'],
+          options: [
+            'First-hand account of historical event',
+            'Second-hand account',
+            'Modern interpretation',
+            'Historical textbook'
+          ],
           correctAnswer: 'First-hand account of historical event',
         ),
         Question(
           questionText: 'What is a secondary source?',
-          options: ['Interpretation of primary sources', 'First-hand account', 'Original document', 'Artifact'],
+          options: [
+            'Interpretation of primary sources',
+            'First-hand account',
+            'Original document',
+            'Artifact'
+          ],
           correctAnswer: 'Interpretation of primary sources',
         ),
         Question(
           questionText: 'What is causation in history?',
-          options: ['Relationship between cause and effect', 'Chronological order', 'Historical significance', 'Historical perspective'],
+          options: [
+            'Relationship between cause and effect',
+            'Chronological order',
+            'Historical significance',
+            'Historical perspective'
+          ],
           correctAnswer: 'Relationship between cause and effect',
         ),
         Question(
           questionText: 'What is historical significance?',
-          options: ['Importance of historical event or person', 'Chronological order', 'Geographic location', 'Personal opinion'],
+          options: [
+            'Importance of historical event or person',
+            'Chronological order',
+            'Geographic location',
+            'Personal opinion'
+          ],
           correctAnswer: 'Importance of historical event or person',
         ),
         Question(
           questionText: 'What is historical perspective?',
-          options: ['Viewpoint shaped by time and place', 'Modern viewpoint', 'Personal opinion', 'Factual account'],
+          options: [
+            'Viewpoint shaped by time and place',
+            'Modern viewpoint',
+            'Personal opinion',
+            'Factual account'
+          ],
           correctAnswer: 'Viewpoint shaped by time and place',
         ),
         Question(
           questionText: 'What is bias in historical sources?',
-          options: ['Prejudice or partiality', 'Factual information', 'Objective analysis', 'Neutral viewpoint'],
+          options: [
+            'Prejudice or partiality',
+            'Factual information',
+            'Objective analysis',
+            'Neutral viewpoint'
+          ],
           correctAnswer: 'Prejudice or partiality',
         ),
         Question(
           questionText: 'What is historical context?',
-          options: ['Circumstances surrounding historical event', 'Modern interpretation', 'Personal opinion', 'Factual account'],
+          options: [
+            'Circumstances surrounding historical event',
+            'Modern interpretation',
+            'Personal opinion',
+            'Factual account'
+          ],
           correctAnswer: 'Circumstances surrounding historical event',
         ),
         Question(
           questionText: 'What is a historical argument?',
-          options: ['Claim supported by evidence', 'Personal opinion', 'Factual statement', 'Modern interpretation'],
+          options: [
+            'Claim supported by evidence',
+            'Personal opinion',
+            'Factual statement',
+            'Modern interpretation'
+          ],
           correctAnswer: 'Claim supported by evidence',
         ),
         Question(
           questionText: 'What is historical evidence?',
-          options: ['Information supporting historical claim', 'Personal opinion', 'Modern interpretation', 'Factual statement'],
+          options: [
+            'Information supporting historical claim',
+            'Personal opinion',
+            'Modern interpretation',
+            'Factual statement'
+          ],
           correctAnswer: 'Information supporting historical claim',
         ),
         Question(
           questionText: 'What is a historical thesis?',
-          options: ['Main argument of historical work', 'Supporting evidence', 'Background information', 'Conclusion'],
+          options: [
+            'Main argument of historical work',
+            'Supporting evidence',
+            'Background information',
+            'Conclusion'
+          ],
           correctAnswer: 'Main argument of historical work',
         ),
         Question(
           questionText: 'What is historical methodology?',
-          options: ['Methods used to study history', 'Historical facts', 'Personal opinions', 'Modern interpretations'],
+          options: [
+            'Methods used to study history',
+            'Historical facts',
+            'Personal opinions',
+            'Modern interpretations'
+          ],
           correctAnswer: 'Methods used to study history',
         ),
         Question(
           questionText: 'What is historical interpretation?',
-          options: ['Understanding of historical event', 'Factual account', 'Personal opinion', 'Modern viewpoint'],
+          options: [
+            'Understanding of historical event',
+            'Factual account',
+            'Personal opinion',
+            'Modern viewpoint'
+          ],
           correctAnswer: 'Understanding of historical event',
         ),
         Question(
           questionText: 'What is historical change?',
-          options: ['Transformation over time', 'Continuity', 'Stability', 'Permanence'],
+          options: [
+            'Transformation over time',
+            'Continuity',
+            'Stability',
+            'Permanence'
+          ],
           correctAnswer: 'Transformation over time',
         ),
         Question(
           questionText: 'What is historical continuity?',
-          options: ['Persistence over time', 'Change', 'Transformation', 'Revolution'],
+          options: [
+            'Persistence over time',
+            'Change',
+            'Transformation',
+            'Revolution'
+          ],
           correctAnswer: 'Persistence over time',
         ),
         Question(
           questionText: 'What is a historical period?',
-          options: ['Distinct time period with common characteristics', 'Random time span', 'Modern era', 'Ancient era'],
+          options: [
+            'Distinct time period with common characteristics',
+            'Random time span',
+            'Modern era',
+            'Ancient era'
+          ],
           correctAnswer: 'Distinct time period with common characteristics',
         ),
         Question(
           questionText: 'What is historical causation?',
-          options: ['Why events happen', 'When events happen', 'Where events happen', 'How events happen'],
+          options: [
+            'Why events happen',
+            'When events happen',
+            'Where events happen',
+            'How events happen'
+          ],
           correctAnswer: 'Why events happen',
         ),
         Question(
           questionText: 'What is historical consequence?',
-          options: ['Result of historical event', 'Cause of historical event', 'Background of historical event', 'Context of historical event'],
+          options: [
+            'Result of historical event',
+            'Cause of historical event',
+            'Background of historical event',
+            'Context of historical event'
+          ],
           correctAnswer: 'Result of historical event',
         ),
         Question(
           questionText: 'What is historical significance?',
-          options: ['Importance of historical event', 'Chronological order', 'Geographic location', 'Personal opinion'],
+          options: [
+            'Importance of historical event',
+            'Chronological order',
+            'Geographic location',
+            'Personal opinion'
+          ],
           correctAnswer: 'Importance of historical event',
         ),
         Question(
           questionText: 'What is historical perspective?',
-          options: ['Viewpoint shaped by time and place', 'Modern viewpoint', 'Personal opinion', 'Factual account'],
+          options: [
+            'Viewpoint shaped by time and place',
+            'Modern viewpoint',
+            'Personal opinion',
+            'Factual account'
+          ],
           correctAnswer: 'Viewpoint shaped by time and place',
         ),
         Question(
           questionText: 'What is historical empathy?',
-          options: ['Understanding historical actors\' viewpoints', 'Modern judgment', 'Personal opinion', 'Factual analysis'],
+          options: [
+            'Understanding historical actors\' viewpoints',
+            'Modern judgment',
+            'Personal opinion',
+            'Factual analysis'
+          ],
           correctAnswer: 'Understanding historical actors\' viewpoints',
         ),
       ],
@@ -3722,117 +4819,230 @@ class PremadeStudySetsRepository {
     // IB Psychology HL
     PremadeStudySet(
       name: 'IB Psychology HL',
-      description: 'Higher level psychology with biological, cognitive, and sociocultural approaches',
+      description:
+          'Higher level psychology with biological, cognitive, and sociocultural approaches',
       subject: 'Science',
       questions: [
         Question(
           questionText: 'What is classical conditioning?',
-          options: ['Learning through association', 'Learning through consequences', 'Learning through observation', 'Learning through insight'],
+          options: [
+            'Learning through association',
+            'Learning through consequences',
+            'Learning through observation',
+            'Learning through insight'
+          ],
           correctAnswer: 'Learning through association',
         ),
         Question(
           questionText: 'What is operant conditioning?',
-          options: ['Learning through consequences', 'Learning through association', 'Learning through observation', 'Learning through insight'],
+          options: [
+            'Learning through consequences',
+            'Learning through association',
+            'Learning through observation',
+            'Learning through insight'
+          ],
           correctAnswer: 'Learning through consequences',
         ),
         Question(
           questionText: 'What is social learning theory?',
-          options: ['Learning through observation and imitation', 'Learning through consequences', 'Learning through association', 'Learning through insight'],
+          options: [
+            'Learning through observation and imitation',
+            'Learning through consequences',
+            'Learning through association',
+            'Learning through insight'
+          ],
           correctAnswer: 'Learning through observation and imitation',
         ),
         Question(
           questionText: 'What is cognitive psychology?',
-          options: ['Study of mental processes', 'Study of behavior', 'Study of emotions', 'Study of personality'],
+          options: [
+            'Study of mental processes',
+            'Study of behavior',
+            'Study of emotions',
+            'Study of personality'
+          ],
           correctAnswer: 'Study of mental processes',
         ),
         Question(
           questionText: 'What is biological psychology?',
-          options: ['Study of brain and behavior', 'Study of mental processes', 'Study of social behavior', 'Study of personality'],
+          options: [
+            'Study of brain and behavior',
+            'Study of mental processes',
+            'Study of social behavior',
+            'Study of personality'
+          ],
           correctAnswer: 'Study of brain and behavior',
         ),
         Question(
           questionText: 'What is sociocultural psychology?',
-          options: ['Study of social and cultural influences', 'Study of individual behavior', 'Study of mental processes', 'Study of brain function'],
+          options: [
+            'Study of social and cultural influences',
+            'Study of individual behavior',
+            'Study of mental processes',
+            'Study of brain function'
+          ],
           correctAnswer: 'Study of social and cultural influences',
         ),
         Question(
           questionText: 'What is memory?',
-          options: ['Process of encoding, storing, and retrieving information', 'Process of learning', 'Process of thinking', 'Process of feeling'],
-          correctAnswer: 'Process of encoding, storing, and retrieving information',
+          options: [
+            'Process of encoding, storing, and retrieving information',
+            'Process of learning',
+            'Process of thinking',
+            'Process of feeling'
+          ],
+          correctAnswer:
+              'Process of encoding, storing, and retrieving information',
         ),
         Question(
           questionText: 'What is attention?',
-          options: ['Focusing on specific stimuli', 'Remembering information', 'Learning new skills', 'Processing emotions'],
+          options: [
+            'Focusing on specific stimuli',
+            'Remembering information',
+            'Learning new skills',
+            'Processing emotions'
+          ],
           correctAnswer: 'Focusing on specific stimuli',
         ),
         Question(
           questionText: 'What is perception?',
-          options: ['Interpretation of sensory information', 'Receiving sensory information', 'Processing information', 'Storing information'],
+          options: [
+            'Interpretation of sensory information',
+            'Receiving sensory information',
+            'Processing information',
+            'Storing information'
+          ],
           correctAnswer: 'Interpretation of sensory information',
         ),
         Question(
           questionText: 'What is motivation?',
-          options: ['Drive to achieve goals', 'Emotional state', 'Cognitive process', 'Behavioral response'],
+          options: [
+            'Drive to achieve goals',
+            'Emotional state',
+            'Cognitive process',
+            'Behavioral response'
+          ],
           correctAnswer: 'Drive to achieve goals',
         ),
         Question(
           questionText: 'What is emotion?',
-          options: ['Complex psychological and physiological state', 'Simple feeling', 'Cognitive process', 'Behavioral response'],
+          options: [
+            'Complex psychological and physiological state',
+            'Simple feeling',
+            'Cognitive process',
+            'Behavioral response'
+          ],
           correctAnswer: 'Complex psychological and physiological state',
         ),
         Question(
           questionText: 'What is personality?',
-          options: ['Enduring patterns of thoughts, feelings, and behaviors', 'Temporary mood', 'Cognitive ability', 'Social skill'],
-          correctAnswer: 'Enduring patterns of thoughts, feelings, and behaviors',
+          options: [
+            'Enduring patterns of thoughts, feelings, and behaviors',
+            'Temporary mood',
+            'Cognitive ability',
+            'Social skill'
+          ],
+          correctAnswer:
+              'Enduring patterns of thoughts, feelings, and behaviors',
         ),
         Question(
           questionText: 'What is intelligence?',
-          options: ['Ability to learn, reason, and solve problems', 'Academic achievement', 'Memory capacity', 'Social skill'],
+          options: [
+            'Ability to learn, reason, and solve problems',
+            'Academic achievement',
+            'Memory capacity',
+            'Social skill'
+          ],
           correctAnswer: 'Ability to learn, reason, and solve problems',
         ),
         Question(
           questionText: 'What is development?',
-          options: ['Changes over the lifespan', 'Growth in childhood', 'Learning in adulthood', 'Aging process'],
+          options: [
+            'Changes over the lifespan',
+            'Growth in childhood',
+            'Learning in adulthood',
+            'Aging process'
+          ],
           correctAnswer: 'Changes over the lifespan',
         ),
         Question(
           questionText: 'What is social psychology?',
-          options: ['Study of how people influence each other', 'Study of individual behavior', 'Study of mental processes', 'Study of brain function'],
+          options: [
+            'Study of how people influence each other',
+            'Study of individual behavior',
+            'Study of mental processes',
+            'Study of brain function'
+          ],
           correctAnswer: 'Study of how people influence each other',
         ),
         Question(
           questionText: 'What is abnormal psychology?',
-          options: ['Study of psychological disorders', 'Study of normal behavior', 'Study of mental processes', 'Study of personality'],
+          options: [
+            'Study of psychological disorders',
+            'Study of normal behavior',
+            'Study of mental processes',
+            'Study of personality'
+          ],
           correctAnswer: 'Study of psychological disorders',
         ),
         Question(
           questionText: 'What is therapy?',
-          options: ['Treatment for psychological problems', 'Medical treatment', 'Educational program', 'Social activity'],
+          options: [
+            'Treatment for psychological problems',
+            'Medical treatment',
+            'Educational program',
+            'Social activity'
+          ],
           correctAnswer: 'Treatment for psychological problems',
         ),
         Question(
           questionText: 'What is research methodology?',
-          options: ['Methods used to study psychology', 'Psychological theories', 'Treatment approaches', 'Assessment tools'],
+          options: [
+            'Methods used to study psychology',
+            'Psychological theories',
+            'Treatment approaches',
+            'Assessment tools'
+          ],
           correctAnswer: 'Methods used to study psychology',
         ),
         Question(
           questionText: 'What is ethics in psychology?',
-          options: ['Moral principles guiding research and practice', 'Research methods', 'Treatment approaches', 'Assessment tools'],
+          options: [
+            'Moral principles guiding research and practice',
+            'Research methods',
+            'Treatment approaches',
+            'Assessment tools'
+          ],
           correctAnswer: 'Moral principles guiding research and practice',
         ),
         Question(
           questionText: 'What is the scientific method?',
-          options: ['Systematic approach to research', 'Psychological theory', 'Treatment approach', 'Assessment tool'],
+          options: [
+            'Systematic approach to research',
+            'Psychological theory',
+            'Treatment approach',
+            'Assessment tool'
+          ],
           correctAnswer: 'Systematic approach to research',
         ),
         Question(
           questionText: 'What is validity in research?',
-          options: ['Accuracy of measurement', 'Consistency of measurement', 'Sample size', 'Research design'],
+          options: [
+            'Accuracy of measurement',
+            'Consistency of measurement',
+            'Sample size',
+            'Research design'
+          ],
           correctAnswer: 'Accuracy of measurement',
         ),
         Question(
           questionText: 'What is reliability in research?',
-          options: ['Consistency of measurement', 'Accuracy of measurement', 'Sample size', 'Research design'],
+          options: [
+            'Consistency of measurement',
+            'Accuracy of measurement',
+            'Sample size',
+            'Research design'
+          ],
           correctAnswer: 'Consistency of measurement',
         ),
       ],

@@ -1,5 +1,5 @@
 import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart';
+import 'package:path/path.dart' as path;
 import 'package:flutter/foundation.dart';
 import '../data/premade_study_sets.dart';
 
@@ -23,15 +23,35 @@ class DatabaseHelper {
   }
 
   Future<Database> _initDatabase() async {
-    String path = join(await getDatabasesPath(), 'eduquest.db');
-    print('DEBUG: Database path: $path');
-    print('DEBUG: Database path exists: ${await databaseExists(path)}');
-    return await openDatabase(
-      path,
-      version: 3,
-      onCreate: _onCreate,
-      onUpgrade: _onUpgrade,
-    );
+    String pathStr = path.join(await getDatabasesPath(), 'eduquest.db');
+    print('DEBUG: Database path: $pathStr');
+    print('DEBUG: Database path exists: ${await databaseExists(pathStr)}');
+
+    try {
+      return await openDatabase(
+        pathStr,
+        version: 4,
+        onCreate: _onCreate,
+        onUpgrade: _onUpgrade,
+      );
+    } catch (e) {
+      print('DEBUG: Error opening database: $e');
+      print('DEBUG: Attempting to delete and recreate database...');
+
+      // Delete the corrupted database
+      if (await databaseExists(pathStr)) {
+        await deleteDatabase(pathStr);
+        print('DEBUG: Corrupted database deleted');
+      }
+
+      // Try to open again, which will trigger onCreate
+      return await openDatabase(
+        pathStr,
+        version: 4,
+        onCreate: _onCreate,
+        onUpgrade: _onUpgrade,
+      );
+    }
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -103,6 +123,19 @@ class DatabaseHelper {
     ''');
     print('DEBUG: User_powerups table created successfully');
 
+    // Create user_purchased_themes table
+    await db.execute('''
+      CREATE TABLE user_purchased_themes(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT NOT NULL,
+        theme_name TEXT NOT NULL,
+        purchased_at TEXT NOT NULL,
+        UNIQUE(username, theme_name),
+        FOREIGN KEY (username) REFERENCES users (username) ON DELETE CASCADE
+      )
+    ''');
+    print('DEBUG: User_purchased_themes table created successfully');
+
     // Insert default premade study sets
     await _insertPremadeStudySets(db);
     print('DEBUG: Database creation completed successfully');
@@ -128,6 +161,50 @@ class DatabaseHelper {
           FOREIGN KEY (username) REFERENCES users (username) ON DELETE CASCADE
         )
       ''');
+    }
+    if (oldVersion < 4) {
+      print(
+          'DEBUG: Upgrading to version 4 - adding user_purchased_themes table');
+      try {
+        // Add user_purchased_themes table
+        await db.execute('''
+          CREATE TABLE IF NOT EXISTS user_purchased_themes(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT NOT NULL,
+            theme_name TEXT NOT NULL,
+            purchased_at TEXT NOT NULL,
+            UNIQUE(username, theme_name),
+            FOREIGN KEY (username) REFERENCES users (username) ON DELETE CASCADE
+          )
+        ''');
+        print('DEBUG: user_purchased_themes table created successfully');
+
+        // Migrate existing users: give them ownership of their current theme if it's not free
+        final users = await db.query('users');
+        for (var user in users) {
+          final username = user['username'] as String;
+          final currentTheme = user['current_theme'] as String;
+
+          // If current theme is not 'space' (the free theme), mark it as purchased
+          if (currentTheme != 'space') {
+            try {
+              await db.insert('user_purchased_themes', {
+                'username': username,
+                'theme_name': currentTheme,
+                'purchased_at': DateTime.now().toIso8601String(),
+              });
+              print(
+                  'DEBUG: Migrated theme ownership for user $username: $currentTheme');
+            } catch (e) {
+              print(
+                  'DEBUG: Failed to migrate theme for user $username: $e (possibly already exists)');
+            }
+          }
+        }
+      } catch (e) {
+        print('DEBUG: Error during database upgrade to version 4: $e');
+        // Continue execution - the _ensureThemeTableExists method will handle missing table
+      }
     }
     print('DEBUG: Database upgrade completed');
   }
@@ -476,6 +553,28 @@ class DatabaseHelper {
       print('DEBUG: getUserPoints stack trace: ${StackTrace.current}');
       return 0;
     }
+
+    // Emergency database reset method
+    Future<void> resetDatabase() async {
+      print('DEBUG: Resetting database...');
+      try {
+        String pathStr = path.join(await getDatabasesPath(), 'eduquest.db');
+        if (await databaseExists(pathStr)) {
+          await deleteDatabase(pathStr);
+          print('DEBUG: Database deleted successfully');
+        }
+
+        // Clear the cached database instance
+        _database = null;
+
+        // Reinitialize the database
+        await database;
+        print('DEBUG: Database reset and reinitialized successfully');
+      } catch (e) {
+        print('DEBUG: Error during database reset: $e');
+        rethrow;
+      }
+    }
   }
 
   Future<void> updateUserPoints(String username, int points) async {
@@ -524,26 +623,121 @@ class DatabaseHelper {
     );
   }
 
-  Future<void> purchaseTheme(String username, String theme) async {
+  Future<bool> userOwnsTheme(String username, String theme) async {
     final db = await database;
-    final result = await db.query(
-      'users',
-      columns: ['current_theme'],
-      where: 'username = ?',
-      whereArgs: [username],
-    );
 
-    final currentTheme = result.first['current_theme'] as String;
-    if (currentTheme == theme) {
-      throw Exception('You already have this theme');
+    // Space theme is free for everyone
+    if (theme == 'space') {
+      return true;
     }
 
-    await db.update(
-      'users',
-      {'current_theme': theme},
-      where: 'username = ?',
-      whereArgs: [username],
-    );
+    try {
+      await _ensureThemeTableExists(db);
+
+      final result = await db.query(
+        'user_purchased_themes',
+        where: 'username = ? AND theme_name = ?',
+        whereArgs: [username, theme],
+      );
+
+      return result.isNotEmpty;
+    } catch (e) {
+      print('DEBUG: Error in userOwnsTheme: $e');
+      return false; // If there's an error, assume user doesn't own theme
+    }
+  }
+
+  Future<List<String>> getUserOwnedThemes(String username) async {
+    final db = await database;
+
+    try {
+      await _ensureThemeTableExists(db);
+
+      final result = await db.query(
+        'user_purchased_themes',
+        where: 'username = ?',
+        whereArgs: [username],
+      );
+
+      List<String> ownedThemes = ['space']; // Space is always owned
+
+      for (var row in result) {
+        ownedThemes.add(row['theme_name'] as String);
+      }
+
+      return ownedThemes;
+    } catch (e) {
+      print('DEBUG: Error in getUserOwnedThemes: $e');
+      return [
+        'space'
+      ]; // Return just the default space theme if there's an error
+    }
+  }
+
+  Future<void> purchaseTheme(String username, String theme) async {
+    print('DEBUG: purchaseTheme called for user: $username, theme: $theme');
+    final db = await database;
+
+    try {
+      // Ensure the table exists first
+      await _ensureThemeTableExists(db);
+
+      // Check if user already owns this theme
+      final existingPurchase = await db.query(
+        'user_purchased_themes',
+        where: 'username = ? AND theme_name = ?',
+        whereArgs: [username, theme],
+      );
+
+      if (existingPurchase.isNotEmpty) {
+        print('DEBUG: User $username already owns theme $theme');
+        throw Exception('You already own this theme');
+      }
+
+      // Record the theme purchase
+      await db.insert('user_purchased_themes', {
+        'username': username,
+        'theme_name': theme,
+        'purchased_at': DateTime.now().toIso8601String(),
+      });
+      print('DEBUG: Theme purchase recorded for user $username, theme $theme');
+
+      // Set as current theme
+      await db.update(
+        'users',
+        {'current_theme': theme},
+        where: 'username = ?',
+        whereArgs: [username],
+      );
+      print('DEBUG: Current theme updated for user $username to $theme');
+    } catch (e) {
+      print('DEBUG: Error in purchaseTheme: $e');
+      print('DEBUG: Stack trace: ${StackTrace.current}');
+      rethrow;
+    }
+  }
+
+  Future<void> _ensureThemeTableExists(Database db) async {
+    try {
+      // Try to query the table to see if it exists
+      await db.rawQuery('SELECT 1 FROM user_purchased_themes LIMIT 1');
+      print('DEBUG: user_purchased_themes table exists');
+    } catch (e) {
+      print(
+          'DEBUG: user_purchased_themes table does not exist, creating it...');
+      // Create the table if it doesn't exist
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS user_purchased_themes(
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          username TEXT NOT NULL,
+          theme_name TEXT NOT NULL,
+          purchased_at TEXT NOT NULL,
+          UNIQUE(username, theme_name),
+          FOREIGN KEY (username) REFERENCES users (username) ON DELETE CASCADE
+        )
+      ''');
+      print('DEBUG: user_purchased_themes table created successfully');
+    }
   }
 
   Future<void> importPremadeSet(String username, int studySetId) async {

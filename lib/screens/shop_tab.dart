@@ -28,6 +28,7 @@ class _ShopTabState extends State<ShopTab>
   final DatabaseHelper _dbHelper = DatabaseHelper();
   late TabController _tabController;
   Map<String, int> _userPowerups = {};
+  List<String> _ownedThemes = [];
 
   @override
   bool get wantKeepAlive => true;
@@ -37,6 +38,14 @@ class _ShopTabState extends State<ShopTab>
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     _loadUserPowerups();
+    _loadOwnedThemes();
+  }
+
+  Future<void> _loadOwnedThemes() async {
+    final ownedThemes = await _dbHelper.getUserOwnedThemes(widget.username);
+    setState(() {
+      _ownedThemes = ownedThemes;
+    });
   }
 
   @override
@@ -310,6 +319,7 @@ class _ShopTabState extends State<ShopTab>
           final theme = _themes[index];
           final canAfford = widget.userPoints >= (theme['price'] as int);
           final isEquipped = widget.currentTheme == theme['name'].toLowerCase();
+          final isOwned = _ownedThemes.contains(theme['name'].toLowerCase());
 
           return Container(
             decoration: BoxDecoration(
@@ -445,25 +455,31 @@ class _ShopTabState extends State<ShopTab>
                               width: double.infinity,
                               padding: const EdgeInsets.symmetric(vertical: 10),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
+                                color: Colors.green.withOpacity(0.2),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                  color: Colors.white.withOpacity(0.3),
-                                  width: 1,
+                                  color: Colors.green,
+                                  width: 2,
                                 ),
                               ),
-                              child: const Text(
-                                'CURRENTLY ACTIVE',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 0.8,
-                                ),
+                              child: const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.check, color: Colors.green),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'EQUIPPED',
+                                    style: TextStyle(
+                                      color: Colors.green,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 0.8,
+                                    ),
+                                  ),
+                                ],
                               ),
                             )
-                          else if (theme['price'] == 0)
+                          else if (isOwned)
                             SizedBox(
                               width: double.infinity,
                               child: ElevatedButton(
@@ -552,7 +568,7 @@ class _ShopTabState extends State<ShopTab>
           crossAxisCount: 2,
           crossAxisSpacing: 16,
           mainAxisSpacing: 16,
-          childAspectRatio: 0.8,
+          childAspectRatio: 0.8, // Same as themes tab
         ),
         itemCount: _powerups.length,
         itemBuilder: (BuildContext context, int index) {
@@ -600,163 +616,135 @@ class _ShopTabState extends State<ShopTab>
                 ),
                 child: Stack(
                   children: [
-                    if (userCount > 0)
-                      Positioned(
-                        top: 12,
-                        right: 12,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.9),
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.2),
-                                blurRadius: 4,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.inventory,
-                                color: powerup['color'],
-                                size: 14,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                '$userCount',
-                                style: TextStyle(
-                                  color: powerup['color'],
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
                     Padding(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(10),
                       child: Column(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Column(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(14),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.2),
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                child: Icon(
-                                  powerup['icon'],
-                                  size: 28,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              const SizedBox(height: 10),
-                              Text(
-                                powerup['name'],
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                  letterSpacing: 0.5,
-                                ),
-                                textAlign: TextAlign.center,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
+                          // Fixed top section - optimized for space
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Icon(
+                              powerup['icon'],
+                              size: 20,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            powerup['name'],
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              letterSpacing: 0.5,
+                            ),
+                            textAlign: TextAlign.center,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 1),
+
+                          // Flexible middle section
+                          Expanded(
+                            child: Container(
+                              alignment: Alignment.center,
+                              child: Text(
                                 powerup['description'],
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
-                                  fontSize: 12,
+                                  fontSize: 11,
                                   color: Colors.white.withOpacity(0.9),
-                                  height: 1.3,
+                                  height: 1.1,
                                   fontWeight: FontWeight.w400,
                                 ),
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                               ),
-                            ],
+                            ),
                           ),
-                          const SizedBox(height: 8),
-                          Column(
-                            children: [
-                              if (userCount > 0)
-                                Container(
-                                  width: double.infinity,
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 6),
-                                  margin: const EdgeInsets.only(bottom: 6),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.2),
-                                    borderRadius: BorderRadius.circular(10),
-                                    border: Border.all(
-                                      color: Colors.white.withOpacity(0.3),
-                                      width: 1,
+
+                          // Fixed bottom section with optimized height
+                          SizedBox(
+                            height: userCount > 0
+                                ? 54
+                                : 32, // Optimized heights for bigger fonts
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                if (userCount > 0)
+                                  Container(
+                                    width: double.infinity,
+                                    padding:
+                                        const EdgeInsets.symmetric(vertical: 1),
+                                    margin: const EdgeInsets.only(bottom: 2),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.2),
+                                      borderRadius: BorderRadius.circular(5),
+                                      border: Border.all(
+                                        color: Colors.white.withOpacity(0.3),
+                                        width: 1,
+                                      ),
                                     ),
-                                  ),
-                                  child: Text(
-                                    'Owned: $userCount',
-                                    textAlign: TextAlign.center,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 0.5,
-                                    ),
-                                  ),
-                                ),
-                              SizedBox(
-                                width: double.infinity,
-                                child: ElevatedButton(
-                                  onPressed: canAfford
-                                      ? () => _purchasePowerup(powerup)
-                                      : null,
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: canAfford
-                                        ? powerup['color'].withOpacity(0.15)
-                                        : Colors.grey.shade600.withOpacity(0.8),
-                                    foregroundColor: Colors.white,
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 10),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    elevation: 0,
-                                  ),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      const Icon(
-                                        Icons.diamond,
-                                        size: 16,
+                                    child: Text(
+                                      'Owned: $userCount',
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(
                                         color: Colors.white,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                        letterSpacing: 0.5,
                                       ),
-                                      const SizedBox(width: 6),
-                                      Text(
-                                        '${powerup['price']}',
-                                        style: const TextStyle(
+                                    ),
+                                  ),
+                                SizedBox(
+                                  width: double.infinity,
+                                  height: 32,
+                                  child: ElevatedButton(
+                                    onPressed: canAfford
+                                        ? () => _purchasePowerup(powerup)
+                                        : null,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: canAfford
+                                          ? powerup['color'].withOpacity(0.15)
+                                          : Colors.grey.shade600
+                                              .withOpacity(0.8),
+                                      foregroundColor: Colors.white,
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 4),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      elevation: 0,
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        const Icon(
+                                          Icons.diamond,
+                                          size: 12,
                                           color: Colors.white,
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.bold,
-                                          letterSpacing: 0.5,
                                         ),
-                                      ),
-                                    ],
+                                        const SizedBox(width: 3),
+                                        Text(
+                                          '${powerup['price']}',
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.bold,
+                                            letterSpacing: 0.5,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ],
                       ),
@@ -799,6 +787,7 @@ class _ShopTabState extends State<ShopTab>
 
       widget.onPointsUpdated(newPoints);
       widget.onThemeChanged(theme['name'].toLowerCase());
+      await _loadOwnedThemes(); // Refresh owned themes
 
       ScaffoldMessenger.of(this.context).showSnackBar(
         SnackBar(

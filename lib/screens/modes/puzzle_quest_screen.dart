@@ -35,6 +35,8 @@ class _PuzzleQuestScreenState extends State<PuzzleQuestScreen>
   String _puzzleAnswer = '';
   List<String> _puzzlePieces = [];
   List<bool> _piecePositions = [];
+  List<String> _builtWord = [];
+  List<String> _availableLetters = [];
 
   // Animations
   late AnimationController _puzzleAnimationController;
@@ -89,127 +91,161 @@ class _PuzzleQuestScreenState extends State<PuzzleQuestScreen>
   }
 
   void _generatePuzzle() {
-    // Generate different types of puzzles based on question index
+    final question = widget.questions[_currentQuestionIndex];
+
+    // Generate educational puzzles based on question content
     final puzzleTypes = [
-      'word_scramble',
-      'pattern_matching',
-      'math_sequence',
-      'riddle',
-      'code_breaking'
+      'concept_builder',
+      'word_association',
+      'definition_match',
+      'fill_blanks',
+      'concept_map'
     ];
 
     final puzzleType = puzzleTypes[_currentQuestionIndex % puzzleTypes.length];
 
     switch (puzzleType) {
-      case 'word_scramble':
-        _generateWordScramble();
+      case 'concept_builder':
+        _generateConceptBuilder(question);
         break;
-      case 'pattern_matching':
-        _generatePatternPuzzle();
+      case 'word_association':
+        _generateWordAssociation(question);
         break;
-      case 'math_sequence':
-        _generateMathSequence();
+      case 'definition_match':
+        _generateDefinitionMatch(question);
         break;
-      case 'riddle':
-        _generateRiddle();
+      case 'fill_blanks':
+        _generateFillBlanks(question);
         break;
-      case 'code_breaking':
-        _generateCodeBreaking();
+      case 'concept_map':
+        _generateConceptMap(question);
         break;
     }
 
     _puzzleAnimationController.forward();
   }
 
-  void _generateWordScramble() {
-    final words = [
-      'KNOWLEDGE',
-      'LEARNING',
-      'EDUCATION',
-      'STUDY',
-      'WISDOM',
-      'DISCOVER'
-    ];
-    final word = words[Random().nextInt(words.length)];
-    _puzzleAnswer = word;
+  void _generateConceptBuilder(Question question) {
+    // Extract key terms from the question and correct answer
+    final keyTerms = _extractKeyTerms(question);
+    final targetConcept =
+        keyTerms.isNotEmpty ? keyTerms.first : question.correctAnswer;
 
-    final letters = word.split('');
+    _puzzleAnswer = targetConcept.toUpperCase();
+    final letters = _puzzleAnswer.split('');
     letters.shuffle();
     _puzzlePieces = letters;
+    _availableLetters = List.from(letters);
+    _builtWord = [];
     _piecePositions = List.filled(letters.length, false);
 
     _currentPuzzle =
-        "Unscramble the letters to form a word related to learning:";
+        "Build the key concept from this question by unscrambling the letters:";
   }
 
-  void _generatePatternPuzzle() {
-    final patterns = [
-      {'pattern': '2, 4, 6, 8, ?', 'answer': '10'},
-      {'pattern': '1, 4, 9, 16, ?', 'answer': '25'},
-      {'pattern': 'A, C, E, G, ?', 'answer': 'I'},
-      {'pattern': '3, 6, 12, 24, ?', 'answer': '48'},
-    ];
+  List<String> _extractKeyTerms(Question question) {
+    // Extract important terms from question text and correct answer
+    final allText = '${question.questionText} ${question.correctAnswer}';
+    final words = allText
+        .split(RegExp(r'[^\w]+'))
+        .where((word) => word.length > 4 && !_isCommonWord(word))
+        .toList();
+    return words.take(3).toList();
+  }
 
-    final puzzle = patterns[Random().nextInt(patterns.length)];
-    _currentPuzzle = "Complete the pattern: ${puzzle['pattern']!}";
-    _puzzleAnswer = puzzle['answer']!;
+  bool _isCommonWord(String word) {
+    final commonWords = {
+      'what',
+      'which',
+      'when',
+      'where',
+      'this',
+      'that',
+      'with',
+      'from',
+      'they',
+      'have',
+      'will',
+      'been',
+      'said',
+      'each',
+      'their'
+    };
+    return commonWords.contains(word.toLowerCase());
+  }
+
+  void _generateWordAssociation(Question question) {
+    // Create word association puzzle using question content
+    final keyWords = _extractKeyTerms(question);
+    final correctAnswer = question.correctAnswer;
+
+    _currentPuzzle =
+        "Which concept is most associated with: ${question.questionText.split('?')[0]}?";
+    _puzzleAnswer = correctAnswer;
     _puzzlePieces = [];
+    _availableLetters = [];
+    _builtWord = [];
     _piecePositions = [];
   }
 
-  void _generateMathSequence() {
-    final sequences = [
-      {'sequence': '2 + 3 × 4 = ?', 'answer': '14'},
-      {'sequence': '√64 + 2³ = ?', 'answer': '16'},
-      {'sequence': '15 ÷ 3 + 7 = ?', 'answer': '12'},
-      {'sequence': '4! ÷ 6 = ?', 'answer': '4'},
-    ];
+  void _generateDefinitionMatch(Question question) {
+    // Create a definition matching puzzle
+    final definitionHint = _extractDefinitionFromQuestion(question);
 
-    final puzzle = sequences[Random().nextInt(sequences.length)];
-    _currentPuzzle = "Solve the equation: ${puzzle['sequence']!}";
-    _puzzleAnswer = puzzle['answer']!;
+    _currentPuzzle = "Match the definition: $definitionHint";
+    _puzzleAnswer = question.correctAnswer;
     _puzzlePieces = [];
+    _availableLetters = [];
+    _builtWord = [];
     _piecePositions = [];
   }
 
-  void _generateRiddle() {
-    final riddles = [
-      {
-        'riddle':
-            'I have keys but no locks. I have space but no room. You can enter but not go inside. What am I?',
-        'answer': 'KEYBOARD'
-      },
-      {
-        'riddle': 'The more you take, the more you leave behind. What am I?',
-        'answer': 'FOOTSTEPS'
-      },
-      {
-        'riddle': 'I speak without a mouth and hear without ears. What am I?',
-        'answer': 'ECHO'
-      },
-      {'riddle': 'What gets wet while drying?', 'answer': 'TOWEL'},
-    ];
+  void _generateFillBlanks(Question question) {
+    // Create fill-in-the-blanks from question text
+    final questionText = question.questionText;
+    final correctAnswer = question.correctAnswer;
 
-    final puzzle = riddles[Random().nextInt(riddles.length)];
-    _currentPuzzle = puzzle['riddle']!;
-    _puzzleAnswer = puzzle['answer']!;
+    // Remove key words to create blanks
+    String puzzleText = questionText;
+    final keyTerms = _extractKeyTerms(question);
+
+    for (final term in keyTerms.take(1)) {
+      puzzleText =
+          puzzleText.replaceAll(RegExp(term, caseSensitive: false), '____');
+    }
+
+    _currentPuzzle = "Fill in the blank: $puzzleText";
+    _puzzleAnswer =
+        keyTerms.isNotEmpty ? keyTerms.first.toUpperCase() : correctAnswer;
     _puzzlePieces = [];
+    _availableLetters = [];
+    _builtWord = [];
     _piecePositions = [];
   }
 
-  void _generateCodeBreaking() {
-    final codes = [
-      {'code': 'A=1, B=2, C=3... What is 8-5-12-12-15?', 'answer': 'HELLO'},
-      {'code': 'Each letter moves 1 position: IFMMP', 'answer': 'HELLO'},
-      {'code': 'Reverse: OLLEH', 'answer': 'HELLO'},
-      {'code': 'Binary: 01001000 01001001 = ?', 'answer': 'HI'},
-    ];
+  void _generateConceptMap(Question question) {
+    // Create concept mapping puzzle
+    final concepts = question.options.take(3).toList();
+    concepts.shuffle();
 
-    final puzzle = codes[Random().nextInt(codes.length)];
-    _currentPuzzle = "Break the code: ${puzzle['code']!}";
-    _puzzleAnswer = puzzle['answer']!;
+    _currentPuzzle = "Which concept best answers: ${question.questionText}";
+    _puzzleAnswer = question.correctAnswer;
     _puzzlePieces = [];
+    _availableLetters = [];
+    _builtWord = [];
     _piecePositions = [];
+  }
+
+  String _extractDefinitionFromQuestion(Question question) {
+    final questionText = question.questionText.toLowerCase();
+    if (questionText.contains('what is') || questionText.contains('define')) {
+      return "This concept is described in the question above";
+    } else if (questionText.contains('which') ||
+        questionText.contains('select')) {
+      return "Choose the correct option for the given scenario";
+    } else {
+      return "Based on the question context, identify the key concept";
+    }
   }
 
   @override
@@ -293,13 +329,15 @@ class _PuzzleQuestScreenState extends State<PuzzleQuestScreen>
       children: [
         _buildHeader(),
         Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
             child: Column(
               children: [
                 _buildPuzzleCard(),
-                const SizedBox(height: 30),
-                _buildPuzzleInterface(),
+                const SizedBox(height: 18),
+                Expanded(
+                  child: _buildPuzzleInterface(),
+                ),
               ],
             ),
           ),
@@ -310,37 +348,39 @@ class _PuzzleQuestScreenState extends State<PuzzleQuestScreen>
 
   Widget _buildHeader() {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
       child: Row(
         children: [
           Container(
             decoration: BoxDecoration(
               color: Colors.white.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(8),
             ),
             child: IconButton(
-              icon:
-                  const Icon(Icons.arrow_back_ios_rounded, color: Colors.white),
+              icon: const Icon(Icons.arrow_back_ios_rounded,
+                  color: Colors.white, size: 20),
               onPressed: () => Navigator.pop(context),
+              padding: const EdgeInsets.all(8),
+              constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
             ),
           ),
           Expanded(
             child: Center(
               child: Container(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: widget.currentTheme == 'beach'
                         ? [const Color(0xFF4DD0E1), const Color(0xFF26C6DA)]
                         : [const Color(0xFF667eea), const Color(0xFF764ba2)],
                   ),
-                  borderRadius: BorderRadius.circular(25),
+                  borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF667eea).withOpacity(0.3),
-                      blurRadius: 12,
-                      offset: const Offset(0, 6),
+                      color: const Color(0xFF667eea).withOpacity(0.2),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
                     ),
                   ],
                 ),
@@ -349,7 +389,7 @@ class _PuzzleQuestScreenState extends State<PuzzleQuestScreen>
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
-                    fontSize: 16,
+                    fontSize: 14,
                     letterSpacing: 0.5,
                   ),
                 ),
@@ -357,24 +397,24 @@ class _PuzzleQuestScreenState extends State<PuzzleQuestScreen>
             ),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
                 colors: [Color(0xFFFFD700), Color(0xFFFF8F00)],
               ),
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(16),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.diamond, color: Colors.white, size: 16),
-                const SizedBox(width: 4),
+                const Icon(Icons.diamond, color: Colors.white, size: 14),
+                const SizedBox(width: 3),
                 Text(
                   '$_currentPoints',
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
-                    fontSize: 14,
+                    fontSize: 12,
                   ),
                 ),
               ],
@@ -393,7 +433,7 @@ class _PuzzleQuestScreenState extends State<PuzzleQuestScreen>
           scale: _puzzleAnimation.value,
           child: Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               gradient: widget.currentTheme == 'beach'
                   ? LinearGradient(
@@ -409,59 +449,57 @@ class _PuzzleQuestScreenState extends State<PuzzleQuestScreen>
                         const Color(0xFF16213E).withOpacity(0.9),
                       ],
                     ),
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: Colors.white.withOpacity(0.2),
-                width: 2,
+                width: 1,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF4facfe).withOpacity(0.3),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
+                  color: const Color(0xFF4facfe).withOpacity(0.2),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
                 ),
               ],
             ),
-            child: Column(
+            child: Row(
               children: [
                 Icon(
                   Icons.extension,
-                  size: 48,
+                  size: 36,
                   color: widget.currentTheme == 'beach'
                       ? const Color(0xFF4DD0E1)
                       : Colors.white,
                 ),
-                const SizedBox(height: 16),
-                Text(
-                  'Solve the Puzzle to Unlock the Question!',
-                  style: TextStyle(
-                    color: widget.currentTheme == 'beach'
-                        ? const Color(0xFF2E2E2E)
-                        : Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 20),
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: widget.currentTheme == 'beach'
-                        ? Colors.white.withOpacity(0.8)
-                        : Colors.black.withOpacity(0.3),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Text(
-                    _currentPuzzle,
-                    style: TextStyle(
-                      color: widget.currentTheme == 'beach'
-                          ? const Color(0xFF2E2E2E)
-                          : Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    textAlign: TextAlign.center,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Learning Challenge',
+                        style: TextStyle(
+                          color: widget.currentTheme == 'beach'
+                              ? const Color(0xFF2E2E2E)
+                              : Colors.white,
+                          fontSize: 17,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        _currentPuzzle,
+                        style: TextStyle(
+                          color: widget.currentTheme == 'beach'
+                              ? const Color(0xFF2E2E2E).withOpacity(0.8)
+                              : Colors.white.withOpacity(0.9),
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -481,54 +519,94 @@ class _PuzzleQuestScreenState extends State<PuzzleQuestScreen>
   }
 
   Widget _buildWordScrambleInterface() {
+    final question = widget.questions[_currentQuestionIndex];
+
     return Column(
       children: [
+        // Compact Learning Context
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(12),
+          margin: const EdgeInsets.only(bottom: 12),
+          decoration: BoxDecoration(
+            color: widget.currentTheme == 'beach'
+                ? const Color(0xFF4DD0E1).withOpacity(0.15)
+                : const Color(0xFF4facfe).withOpacity(0.15),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                Icons.school,
+                color: widget.currentTheme == 'beach'
+                    ? const Color(0xFF4DD0E1)
+                    : const Color(0xFF4facfe),
+                size: 16,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  question.questionText,
+                  style: TextStyle(
+                    color: widget.currentTheme == 'beach'
+                        ? const Color(0xFF2E2E2E).withOpacity(0.8)
+                        : Colors.white.withOpacity(0.8),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ),
         Text(
-          'Drag letters to form the word:',
+          'Drag letters to build the concept:',
           style: TextStyle(
             color: widget.currentTheme == 'beach'
                 ? const Color(0xFF2E2E2E)
                 : Colors.white,
-            fontSize: 16,
+            fontSize: 15,
             fontWeight: FontWeight.bold,
           ),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 14),
         Wrap(
           spacing: 8,
           runSpacing: 8,
-          children: List.generate(_puzzlePieces.length, (index) {
+          children: _availableLetters.map((letter) {
             return Draggable<String>(
-              data: _puzzlePieces[index],
+              data: letter,
               feedback: Container(
-                width: 50,
-                height: 50,
+                width: 48,
+                height: 48,
                 decoration: BoxDecoration(
                   color: Colors.blue.withOpacity(0.8),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Center(
                   child: Text(
-                    _puzzlePieces[index],
+                    letter,
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 20,
+                      fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
               ),
               childWhenDragging: Container(
-                width: 50,
-                height: 50,
+                width: 48,
+                height: 48,
                 decoration: BoxDecoration(
                   color: Colors.grey.withOpacity(0.3),
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
               child: Container(
-                width: 50,
-                height: 50,
+                width: 48,
+                height: 48,
                 decoration: BoxDecoration(
                   gradient: widget.currentTheme == 'beach'
                       ? LinearGradient(colors: [
@@ -543,55 +621,189 @@ class _PuzzleQuestScreenState extends State<PuzzleQuestScreen>
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withOpacity(0.2),
-                      blurRadius: 4,
+                      blurRadius: 3,
                       offset: const Offset(0, 2),
                     ),
                   ],
                 ),
                 child: Center(
                   child: Text(
-                    _puzzlePieces[index],
+                    letter,
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 20,
+                      fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
               ),
             );
-          }),
+          }).toList(),
         ),
-        const SizedBox(height: 30),
+        const SizedBox(height: 18),
+        // Built word display area
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(12),
+          margin: const EdgeInsets.only(bottom: 12),
+          decoration: BoxDecoration(
+            color: widget.currentTheme == 'beach'
+                ? Colors.white.withOpacity(0.9)
+                : Colors.black.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: _builtWord.isNotEmpty
+                  ? (widget.currentTheme == 'beach'
+                      ? const Color(0xFF4DD0E1)
+                      : const Color(0xFF4facfe))
+                  : Colors.white.withOpacity(0.3),
+              width: 1,
+            ),
+          ),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Your Word:',
+                    style: TextStyle(
+                      color: widget.currentTheme == 'beach'
+                          ? const Color(0xFF2E2E2E)
+                          : Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  if (_builtWord.isNotEmpty)
+                    TextButton.icon(
+                      onPressed: () {
+                        setState(() {
+                          _availableLetters = List.from(_puzzlePieces);
+                          _builtWord = [];
+                        });
+                      },
+                      icon: const Icon(Icons.refresh, size: 14),
+                      label: const Text('Clear'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: widget.currentTheme == 'beach'
+                            ? const Color(0xFF4DD0E1)
+                            : const Color(0xFF4facfe),
+                        minimumSize: Size.zero,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                        textStyle: const TextStyle(fontSize: 10),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (_builtWord.isEmpty)
+                    Text(
+                      '_ ' * _puzzleAnswer.length,
+                      style: TextStyle(
+                        color: widget.currentTheme == 'beach'
+                            ? const Color(0xFF2E2E2E).withOpacity(0.5)
+                            : Colors.white.withOpacity(0.5),
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 3,
+                      ),
+                    )
+                  else
+                    ..._builtWord
+                        .map((letter) => Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 2),
+                              child: Container(
+                                width: 36,
+                                height: 36,
+                                decoration: BoxDecoration(
+                                  gradient: widget.currentTheme == 'beach'
+                                      ? LinearGradient(colors: [
+                                          const Color(0xFF4DD0E1),
+                                          const Color(0xFF26C6DA)
+                                        ])
+                                      : LinearGradient(colors: [
+                                          const Color(0xFF4facfe),
+                                          const Color(0xFF00f2fe)
+                                        ]),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    letter,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ))
+                        .toList(),
+                ],
+              ),
+            ],
+          ),
+        ),
+
         DragTarget<String>(
           onAccept: (data) => _checkWordScramble(data),
           builder: (context, candidateData, rejectedData) {
             return Container(
               width: double.infinity,
-              height: 80,
+              height: 52,
               decoration: BoxDecoration(
                 border: Border.all(
-                  color: Colors.white.withOpacity(0.5),
-                  width: 2,
+                  color: candidateData.isNotEmpty
+                      ? Colors.green
+                      : (widget.currentTheme == 'beach'
+                          ? const Color(0xFF4DD0E1).withOpacity(0.5)
+                          : Colors.white.withOpacity(0.5)),
+                  width: 1,
                   style: BorderStyle.solid,
                 ),
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(12),
                 color: candidateData.isNotEmpty
                     ? Colors.green.withOpacity(0.2)
                     : Colors.transparent,
               ),
               child: Center(
-                child: Text(
-                  candidateData.isNotEmpty
-                      ? 'Drop here!'
-                      : 'Drop letters here to form the word',
-                  style: TextStyle(
-                    color: widget.currentTheme == 'beach'
-                        ? const Color(0xFF2E2E2E)
-                        : Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      candidateData.isNotEmpty
+                          ? Icons.add_circle
+                          : Icons.touch_app,
+                      color: candidateData.isNotEmpty
+                          ? Colors.green
+                          : (widget.currentTheme == 'beach'
+                              ? const Color(0xFF4DD0E1)
+                              : Colors.white),
+                      size: 22,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      candidateData.isNotEmpty
+                          ? 'Drop to add!'
+                          : 'Drag letters here',
+                      style: TextStyle(
+                        color: candidateData.isNotEmpty
+                            ? Colors.green
+                            : (widget.currentTheme == 'beach'
+                                ? const Color(0xFF2E2E2E)
+                                : Colors.white),
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             );
@@ -603,18 +815,57 @@ class _PuzzleQuestScreenState extends State<PuzzleQuestScreen>
 
   Widget _buildTextInputInterface() {
     final TextEditingController controller = TextEditingController();
+    final question = widget.questions[_currentQuestionIndex];
 
     return Column(
       children: [
+        // Compact Learning Hint
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(12),
+          margin: const EdgeInsets.only(bottom: 12),
+          decoration: BoxDecoration(
+            color: widget.currentTheme == 'beach'
+                ? const Color(0xFF4DD0E1).withOpacity(0.15)
+                : const Color(0xFF4facfe).withOpacity(0.15),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                Icons.lightbulb_outline,
+                color: widget.currentTheme == 'beach'
+                    ? const Color(0xFF4DD0E1)
+                    : const Color(0xFF4facfe),
+                size: 16,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Context: ${question.questionText}',
+                  style: TextStyle(
+                    color: widget.currentTheme == 'beach'
+                        ? const Color(0xFF2E2E2E).withOpacity(0.8)
+                        : Colors.white.withOpacity(0.8),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ),
         Container(
           decoration: BoxDecoration(
             color: widget.currentTheme == 'beach'
                 ? Colors.white.withOpacity(0.9)
                 : Colors.white.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: Colors.white.withOpacity(0.3),
-              width: 2,
+              width: 1,
             ),
           ),
           child: TextField(
@@ -623,56 +874,64 @@ class _PuzzleQuestScreenState extends State<PuzzleQuestScreen>
               color: widget.currentTheme == 'beach'
                   ? const Color(0xFF2E2E2E)
                   : Colors.white,
-              fontSize: 18,
+              fontSize: 17,
               fontWeight: FontWeight.w600,
             ),
             decoration: InputDecoration(
-              hintText: 'Enter your answer...',
+              hintText: 'Type your answer here...',
               hintStyle: TextStyle(
                 color: widget.currentTheme == 'beach'
                     ? const Color(0xFF2E2E2E).withOpacity(0.6)
                     : Colors.white.withOpacity(0.6),
               ),
               border: InputBorder.none,
-              contentPadding: const EdgeInsets.all(20),
+              contentPadding: const EdgeInsets.all(16),
+              prefixIcon: Icon(
+                Icons.edit,
+                color: widget.currentTheme == 'beach'
+                    ? const Color(0xFF4DD0E1)
+                    : const Color(0xFF4facfe),
+                size: 20,
+              ),
             ),
             textAlign: TextAlign.center,
             textCapitalization: TextCapitalization.characters,
           ),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 16),
         Container(
           width: double.infinity,
-          height: 56,
+          height: 52,
           decoration: BoxDecoration(
             gradient: widget.currentTheme == 'beach'
                 ? LinearGradient(
                     colors: [const Color(0xFF4CAF50), const Color(0xFF2E7D32)])
                 : LinearGradient(
                     colors: [const Color(0xFF4facfe), const Color(0xFF00f2fe)]),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF4facfe).withOpacity(0.3),
-                blurRadius: 12,
-                offset: const Offset(0, 6),
+                color: const Color(0xFF4facfe).withOpacity(0.2),
+                blurRadius: 8,
+                offset: const Offset(0, 3),
               ),
             ],
           ),
-          child: ElevatedButton(
+          child: ElevatedButton.icon(
             onPressed: () => _checkTextAnswer(controller.text),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.transparent,
               shadowColor: Colors.transparent,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(12),
               ),
             ),
-            child: const Text(
+            icon: const Icon(Icons.send, color: Colors.white, size: 18),
+            label: const Text(
               'Submit Answer',
               style: TextStyle(
                 color: Colors.white,
-                fontSize: 18,
+                fontSize: 16,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -683,8 +942,49 @@ class _PuzzleQuestScreenState extends State<PuzzleQuestScreen>
   }
 
   void _checkWordScramble(String letter) {
-    // Simple implementation - in a real game you'd have more complex logic
     HapticFeedback.lightImpact();
+
+    setState(() {
+      // Add letter to built word
+      _builtWord.add(letter);
+
+      // Remove letter from available letters (only remove the first occurrence)
+      final index = _availableLetters.indexOf(letter);
+      if (index != -1) {
+        _availableLetters.removeAt(index);
+      }
+    });
+
+    // Check if word is complete and correct
+    if (_builtWord.length == _puzzleAnswer.length) {
+      final builtWordString = _builtWord.join('');
+      if (builtWordString.toUpperCase() == _puzzleAnswer.toUpperCase()) {
+        Future.delayed(const Duration(milliseconds: 500), () {
+          _solvePuzzle();
+        });
+      } else {
+        // Word is wrong, give feedback and reset
+        HapticFeedback.heavyImpact();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Not quite right! Try again.'),
+            backgroundColor: Colors.orange,
+            behavior: SnackBarBehavior.floating,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+
+        // Reset after a short delay
+        Future.delayed(const Duration(seconds: 2), () {
+          setState(() {
+            _availableLetters = List.from(_puzzlePieces);
+            _builtWord = [];
+          });
+        });
+      }
+    }
   }
 
   void _checkTextAnswer(String answer) {
@@ -756,29 +1056,91 @@ class _PuzzleQuestScreenState extends State<PuzzleQuestScreen>
                               ),
                             ],
                           ),
-                          child: Row(
+                          child: Column(
                             children: [
-                              const Icon(Icons.check_circle,
-                                  color: Colors.white, size: 32),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text(
-                                      'Puzzle Solved!',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                              Row(
+                                children: [
+                                  const Icon(Icons.psychology,
+                                      color: Colors.white, size: 32),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        const Text(
+                                          'Concept Mastered!',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        Text(
+                                          'Great thinking! You\'ve unlocked deeper learning',
+                                          style: TextStyle(
+                                            color:
+                                                Colors.white.withOpacity(0.9),
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                    Text(
-                                      'Question unlocked! +20 bonus points',
-                                      style: TextStyle(
-                                        color: Colors.white.withOpacity(0.9),
-                                        fontSize: 14,
-                                      ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    Column(
+                                      children: [
+                                        const Icon(Icons.diamond,
+                                            color: Colors.white, size: 20),
+                                        Text(
+                                          '+20 Points',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    Column(
+                                      children: [
+                                        const Icon(Icons.trending_up,
+                                            color: Colors.white, size: 20),
+                                        Text(
+                                          'Level Up',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    Column(
+                                      children: [
+                                        const Icon(Icons.lightbulb,
+                                            color: Colors.white, size: 20),
+                                        Text(
+                                          'Knowledge+',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
@@ -1161,7 +1523,7 @@ class _PuzzleQuestScreenState extends State<PuzzleQuestScreen>
             ),
             const SizedBox(height: 24),
             Text(
-              'Puzzle Quest Complete!',
+              'Learning Quest Complete!',
               style: TextStyle(
                 color: widget.currentTheme == 'beach'
                     ? const Color(0xFF2E2E2E)
@@ -1171,15 +1533,30 @@ class _PuzzleQuestScreenState extends State<PuzzleQuestScreen>
               ),
               textAlign: TextAlign.center,
             ),
+            const SizedBox(height: 8),
+            Text(
+              'You\'ve mastered ${widget.questions.length} educational challenges!',
+              style: TextStyle(
+                color: widget.currentTheme == 'beach'
+                    ? const Color(0xFF2E2E2E).withOpacity(0.8)
+                    : Colors.white.withOpacity(0.8),
+                fontSize: 16,
+                fontStyle: FontStyle.italic,
+              ),
+              textAlign: TextAlign.center,
+            ),
             const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _buildStatCard('Score',
-                    '$_correctAnswers/${widget.questions.length}', Icons.quiz),
-                _buildStatCard('Accuracy', '$accuracy%', Icons.track_changes),
                 _buildStatCard(
-                    'Puzzles', '${widget.questions.length}', Icons.extension),
+                    'Mastered',
+                    '$_correctAnswers/${widget.questions.length}',
+                    Icons.psychology),
+                _buildStatCard(
+                    'Learning Rate', '$accuracy%', Icons.trending_up),
+                _buildStatCard(
+                    'Challenges', '${widget.questions.length}', Icons.school),
               ],
             ),
             const SizedBox(height: 20),

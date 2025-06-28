@@ -3050,59 +3050,6 @@ class _MCQManagerState extends State<MCQManager> {
         },
       ],
     },
-    {
-      'name': 'Algebra 3',
-      'color': [Color(0xFF4facfe), Color(0xFF00f2fe)],
-      'icon': Icons.trending_up,
-      'description': 'Pre-Calculus & Advanced Functions',
-      'questions': [
-        {
-          'question': 'What is the period of f(x) = sin(2x)?',
-          'options': ['π', '2π', 'π/2', '4π'],
-          'correct': 0,
-          'explanation':
-              'For sin(bx), the period is 2π/b. Here b = 2, so period = 2π/2 = π.',
-        },
-        {
-          'question': 'Find the asymptotes of f(x) = (x + 2)/(x - 3)',
-          'options': [
-            'x = 3, y = 1',
-            'x = -2, y = 1',
-            'x = 3, y = 0',
-            'x = -2, y = 0'
-          ],
-          'correct': 0,
-          'explanation':
-              'Vertical asymptote: x - 3 = 0, so x = 3. Horizontal asymptote: degree of numerator = degree of denominator, so y = 1/1 = 1.',
-        },
-        {
-          'question': 'What is the amplitude of f(x) = 3cos(x)?',
-          'options': ['3', '1', '6', '2'],
-          'correct': 0,
-          'explanation':
-              'For acos(x), the amplitude is |a|. Here a = 3, so amplitude = 3.',
-        },
-        {
-          'question': 'Solve: e^(2x) = 16',
-          'options': ['x = ln(4)', 'x = 2ln(4)', 'x = ln(16)', 'x = 4'],
-          'correct': 0,
-          'explanation':
-              'Take natural log of both sides: 2x = ln(16). Since 16 = 4², ln(16) = ln(4²) = 2ln(4). So 2x = 2ln(4), therefore x = ln(4).',
-        },
-        {
-          'question': 'What is the phase shift of f(x) = sin(x - π/4)?',
-          'options': [
-            'π/4 to the right',
-            'π/4 to the left',
-            'π/2 to the right',
-            'π/2 to the left'
-          ],
-          'correct': 0,
-          'explanation':
-              'For sin(x - c), the phase shift is c units to the right. Here c = π/4, so the phase shift is π/4 to the right.',
-        },
-      ],
-    },
   ];
 
   @override
@@ -3234,13 +3181,24 @@ class _MCQManagerState extends State<MCQManager> {
                         _searchQuery = value;
                       });
                     },
-                    style: const TextStyle(color: Colors.white),
+                    style: TextStyle(
+                      color: widget.currentTheme == 'beach'
+                          ? ThemeColors.getTextColor('beach')
+                          : Colors.white,
+                    ),
                     decoration: InputDecoration(
                       hintText: 'Search sets...',
-                      hintStyle:
-                          TextStyle(color: Colors.white.withOpacity(0.6)),
-                      prefixIcon: Icon(Icons.search,
-                          color: Colors.white.withOpacity(0.6)),
+                      hintStyle: TextStyle(
+                        color: widget.currentTheme == 'beach'
+                            ? ThemeColors.getTextColor('beach').withOpacity(0.6)
+                            : Colors.white.withOpacity(0.6),
+                      ),
+                      prefixIcon: Icon(
+                        Icons.search,
+                        color: widget.currentTheme == 'beach'
+                            ? ThemeColors.getTextColor('beach').withOpacity(0.6)
+                            : Colors.white.withOpacity(0.6),
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(25),
                         borderSide:
@@ -3342,10 +3300,16 @@ class _MCQManagerState extends State<MCQManager> {
                   const SizedBox(height: 12),
                   Text(
                     apClass['name'],
-                    style: const TextStyle(
-                      fontSize: 16,
+                    style: TextStyle(
+                      fontSize:
+                          (apClass['name'] == 'AP Environmental Science' ||
+                                  apClass['name'] == 'AP Physics C: Mechanics')
+                              ? 12
+                              : 16,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: widget.currentTheme == 'beach'
+                          ? ThemeColors.getTextColor('beach')
+                          : Colors.white,
                     ),
                     textAlign: TextAlign.center,
                     maxLines: 2,
@@ -3356,7 +3320,9 @@ class _MCQManagerState extends State<MCQManager> {
                     apClass['description'],
                     style: TextStyle(
                       fontSize: 12,
-                      color: Colors.white.withOpacity(0.9),
+                      color: widget.currentTheme == 'beach'
+                          ? ThemeColors.getTextColor('beach').withOpacity(0.9)
+                          : Colors.white.withOpacity(0.9),
                     ),
                     textAlign: TextAlign.center,
                     maxLines: 2,
@@ -3374,10 +3340,12 @@ class _MCQManagerState extends State<MCQManager> {
                       apClass['name'] == 'AP Computer Science A'
                           ? '20 MCQs + 4 FRQs'
                           : '20 Questions',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: widget.currentTheme == 'beach'
+                            ? ThemeColors.getTextColor('beach')
+                            : Colors.white,
                       ),
                     ),
                   ),
@@ -4066,12 +4034,14 @@ class _MCQManagerState extends State<MCQManager> {
                             width: 1,
                           ),
                         ),
-                        child: const Text(
+                        child: Text(
                           'Choose Your Practice Mode',
                           style: TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            color: widget.currentTheme == 'beach'
+                                ? ThemeColors.getTextColor('beach')
+                                : Colors.white,
                             letterSpacing: 1.2,
                           ),
                           textAlign: TextAlign.center,
@@ -4135,7 +4105,7 @@ class _MCQManagerState extends State<MCQManager> {
                                   ),
                                 ),
                                 const SizedBox(width: 15),
-                                const Column(
+                                Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
@@ -4230,7 +4200,7 @@ class _MCQManagerState extends State<MCQManager> {
                                   ),
                                 ),
                                 const SizedBox(width: 15),
-                                const Column(
+                                Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
