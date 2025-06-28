@@ -34,6 +34,15 @@ import 'package:image_picker/image_picker.dart';
 import 'package:lottie/lottie.dart';
 import 'package:student_learning_app/screens/shop_tab.dart';
 
+/**
+ * Main entry point for the EduQuest learning application.
+ * 
+ * This function initializes the Flutter framework, sets the preferred device
+ * orientations to portrait mode, and launches the main application.
+ * 
+ * The application is designed as an educational game platform that combines
+ * learning with interactive gameplay elements.
+ */
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setPreferredOrientations([
@@ -43,9 +52,35 @@ void main() {
   runApp(const StudentLearningApp());
 }
 
+/**
+ * The main application widget for EduQuest.
+ * 
+ * This class defines the root MaterialApp widget that configures the overall
+ * theme, navigation, and initial screen of the application. It sets up a dark
+ * theme with custom colors and typography suitable for an educational gaming
+ * environment.
+ * 
+ * The app uses a custom color scheme with a dark background (#0A0E21) and
+ * white text for optimal readability and modern aesthetics.
+ */
 class StudentLearningApp extends StatelessWidget {
+  /**
+   * Creates a new StudentLearningApp instance.
+   * 
+   * @param key The widget key for this StatelessWidget
+   */
   const StudentLearningApp({super.key});
 
+  /**
+   * Builds the main application widget tree.
+   * 
+   * This method creates the MaterialApp with custom theme configuration,
+   * sets the home screen to the SplashScreen, and configures various
+   * visual properties like button styles and text themes.
+   * 
+   * @param context The build context for this widget
+   * @return A MaterialApp widget configured for the EduQuest application
+   */
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -76,19 +111,50 @@ class StudentLearningApp extends StatelessWidget {
   }
 }
 
+/**
+ * A splash screen widget that displays the EduQuest logo and branding.
+ * 
+ * This widget shows an animated splash screen with the application logo,
+ * title, and tagline when the app first launches. It uses fade and scale
+ * animations to create an engaging introduction experience.
+ * 
+ * After a 3-second delay, it automatically navigates to the SignInPage.
+ */
 class SplashScreen extends StatefulWidget {
+  /**
+   * Creates a new SplashScreen instance.
+   * 
+   * @param key The widget key for this StatefulWidget
+   */
   const SplashScreen({super.key});
 
   @override
   _SplashScreenState createState() => _SplashScreenState();
 }
 
+/**
+ * The state class for the SplashScreen widget.
+ * 
+ * This class manages the animation controller and timer for the splash screen.
+ * It handles the fade and scale animations for the logo and text elements,
+ * and controls the automatic navigation to the sign-in page after the delay.
+ */
 class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
+  /** Animation controller for managing splash screen animations */
   late AnimationController _controller;
+  /** Fade animation for smooth opacity transitions */
   late Animation<double> _fadeAnimation;
+  /** Scale animation for logo and text scaling effects */
   late Animation<double> _scaleAnimation;
 
+  /**
+   * Initializes the splash screen state.
+   * 
+   * This method sets up the animation controller with a 2-second duration
+   * and configures fade and scale animations. It also starts a timer to
+   * automatically navigate to the sign-in page after 3 seconds.
+   */
   @override
   void initState() {
     super.initState();
@@ -135,12 +201,25 @@ class _SplashScreenState extends State<SplashScreen>
     });
   }
 
+  /**
+   * Disposes of the animation controller to prevent memory leaks.
+   */
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
   }
 
+  /**
+   * Builds the splash screen UI.
+   * 
+   * This method creates a centered layout with the EduQuest logo, title,
+   * and tagline. The elements are animated using the configured fade and
+   * scale animations for a polished appearance.
+   * 
+   * @param context The build context for this widget
+   * @return A Scaffold widget containing the animated splash screen content
+   */
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -188,11 +267,41 @@ class _SplashScreenState extends State<SplashScreen>
   }
 }
 
+/**
+ * A Flappy Bird-style game screen that integrates educational questions.
+ * 
+ * This widget implements a simplified Flappy Bird game where players control
+ * a bird character that must navigate through obstacles. The game periodically
+ * pauses to present educational questions to the player, combining entertainment
+ * with learning.
+ * 
+ * The game features:
+ * - Physics-based bird movement with gravity and jumping
+ * - Randomly generated obstacles with varying heights
+ * - Score tracking based on obstacles passed
+ * - Educational question integration every 5 points
+ * - Collision detection and game over handling
+ * 
+ * @param username The current user's username for personalization
+ * @param currentTheme The current visual theme of the application
+ * @param questions A list of educational questions to present during gameplay
+ */
 class FlappyBirdGameScreen extends StatefulWidget {
+  /** The current user's username */
   final String username;
+  /** The current visual theme of the application */
   final String currentTheme;
+  /** List of educational questions for the game */
   final List<quiz.Question> questions;
 
+  /**
+   * Creates a new FlappyBirdGameScreen instance.
+   * 
+   * @param key The widget key for this StatefulWidget
+   * @param username The current user's username
+   * @param currentTheme The current visual theme
+   * @param questions The list of educational questions
+   */
   const FlappyBirdGameScreen({
     super.key,
     required this.username,
@@ -204,30 +313,47 @@ class FlappyBirdGameScreen extends StatefulWidget {
   _FlappyBirdGameScreenState createState() => _FlappyBirdGameScreenState();
 }
 
+/**
+ * The state class for the FlappyBirdGameScreen widget.
+ * 
+ * This class manages the game logic, including bird physics, obstacle generation,
+ * collision detection, scoring, and question presentation. It handles the game
+ * loop using a Timer and manages the game state transitions.
+ */
 class _FlappyBirdGameScreenState extends State<FlappyBirdGameScreen> {
-  double birdY = 0.4; // Initial vertical position of the bird (0 to 1)
-  double birdVelocity = 0.0; // Vertical velocity of the bird
-  double gravity = 0.0003; // Further reduced gravity for even slower fall
-  double jumpStrength =
-      -0.01; // Even smaller jump strength for minimal vertical movement
-  List<double> obstacleX = [1.0, 2.0, 3.0]; // Initial X positions of obstacles
-  List<double> obstacleHeights = [
-    0.3,
-    0.4,
-    0.5
-  ]; // Random heights for obstacles
-  double obstacleWidth = 0.2; // Width of the obstacles
-  double obstacleGap = 0.3; // Gap between top and bottom obstacles
-  int score = 0; // Player's score
-  bool isGameOver = false; // Whether the game is over
-  Timer? gameTimer; // Timer for game updates
-  int currentQuestionIndex = 0; // Current question index
-  bool isPausedForQuestion = false; // Whether the game is paused for a question
-  Random random = Random(); // Random number generator
+  /** Current vertical position of the bird (0 to 1) */
+  double birdY = 0.4;
+  /** Current vertical velocity of the bird */
+  double birdVelocity = 0.0;
+  /** Gravity constant affecting bird movement */
+  double gravity = 0.0003;
+  /** Jump strength when player taps */
+  double jumpStrength = -0.01;
+  /** X positions of obstacles on screen */
+  List<double> obstacleX = [1.0, 2.0, 3.0];
+  /** Heights of obstacles (randomly generated) */
+  List<double> obstacleHeights = [0.3, 0.4, 0.5];
+  /** Width of obstacles */
+  double obstacleWidth = 0.2;
+  /** Gap between top and bottom obstacles */
+  double obstacleGap = 0.3;
+  /** Current player score */
+  int score = 0;
+  /** Whether the game has ended */
+  bool isGameOver = false;
+  /** Timer for the game loop */
+  Timer? gameTimer;
+  /** Index of the current question */
+  int currentQuestionIndex = 0;
+  /** Whether the game is paused for a question */
+  bool isPausedForQuestion = false;
+  /** Random number generator for obstacle generation */
+  Random random = Random();
 
-  // Define minimum and maximum distance between obstacles
-  final double minObstacleDistance = 1.0; // Minimum distance between obstacles
-  final double maxObstacleDistance = 1.5; // Maximum distance between obstacles
+  /** Minimum distance between obstacles */
+  final double minObstacleDistance = 1.0;
+  /** Maximum distance between obstacles */
+  final double maxObstacleDistance = 1.5;
 
   @override
   void initState() {

@@ -3,14 +3,57 @@ import 'package:path/path.dart' as path;
 import 'package:flutter/foundation.dart';
 import '../data/premade_study_sets.dart';
 
+/**
+ * A singleton database helper class for managing the EduQuest application's SQLite database.
+ * 
+ * This class provides a centralized interface for all database operations including
+ * user management, study set storage, powerup tracking, and theme purchases. It uses
+ * the singleton pattern to ensure only one database instance exists throughout the
+ * application lifecycle.
+ * 
+ * The database schema includes the following tables:
+ * - users: Stores user account information and preferences
+ * - study_sets: Contains study set metadata
+ * - study_set_questions: Stores individual questions within study sets
+ * - user_study_sets: Tracks which study sets each user has access to
+ * - user_powerups: Manages user-owned powerup items
+ * - user_purchased_themes: Tracks theme purchases for each user
+ * 
+ * Features:
+ * - Automatic database initialization and migration
+ * - Error handling with database corruption recovery
+ * - Premade study set population
+ * - User authentication and profile management
+ * - Study set CRUD operations
+ * - Powerup and theme purchase tracking
+ */
 class DatabaseHelper {
+  /** Singleton instance of the DatabaseHelper */
   static final DatabaseHelper _instance = DatabaseHelper._internal();
+  /** The SQLite database instance */
   static Database? _database;
 
+  /**
+   * Factory constructor that returns the singleton instance.
+   * 
+   * @return The singleton DatabaseHelper instance
+   */
   factory DatabaseHelper() => _instance;
 
+  /**
+   * Private constructor for singleton pattern implementation.
+   */
   DatabaseHelper._internal();
 
+  /**
+   * Gets the database instance, initializing it if necessary.
+   * 
+   * This method implements lazy initialization of the database. If the database
+   * doesn't exist, it will be created with the proper schema and populated with
+   * initial data.
+   * 
+   * @return A Future that completes with the database instance
+   */
   Future<Database> get database async {
     if (_database != null) {
       print('DEBUG: Database already exists, returning existing instance');
@@ -22,6 +65,15 @@ class DatabaseHelper {
     return _database!;
   }
 
+  /**
+   * Initializes the SQLite database with proper error handling.
+   * 
+   * This method creates the database file and handles potential corruption
+   * by deleting and recreating the database if necessary. It sets up the
+   * database with version 4 and configures onCreate and onUpgrade callbacks.
+   * 
+   * @return A Future that completes with the initialized database
+   */
   Future<Database> _initDatabase() async {
     String pathStr = path.join(await getDatabasesPath(), 'eduquest.db');
     print('DEBUG: Database path: $pathStr');
@@ -54,6 +106,16 @@ class DatabaseHelper {
     }
   }
 
+  /**
+   * Creates the initial database schema and populates it with default data.
+   * 
+   * This method is called when the database is first created. It creates all
+   * necessary tables with proper relationships and constraints, then populates
+   * the database with premade study sets.
+   * 
+   * @param db The database instance to create tables in
+   * @param version The database version being created
+   */
   Future<void> _onCreate(Database db, int version) async {
     print('DEBUG: Creating database tables, version: $version');
 
@@ -141,6 +203,17 @@ class DatabaseHelper {
     print('DEBUG: Database creation completed successfully');
   }
 
+  /**
+   * Handles database schema upgrades between versions.
+   * 
+   * This method is called when the database version is increased. It performs
+   * necessary schema migrations and data updates to maintain compatibility
+   * with newer versions of the application.
+   * 
+   * @param db The database instance to upgrade
+   * @param oldVersion The previous database version
+   * @param newVersion The new database version
+   */
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     print('DEBUG: Database upgrade from version $oldVersion to $newVersion');
     if (oldVersion < 2) {
@@ -209,6 +282,15 @@ class DatabaseHelper {
     print('DEBUG: Database upgrade completed');
   }
 
+  /**
+   * Inserts premade study sets into the database.
+   * 
+   * This method populates the database with predefined study sets from the
+   * PremadeStudySetsRepository. It checks for existing sets to avoid duplicates
+   * and inserts both the study set metadata and associated questions.
+   * 
+   * @param db The database instance to insert data into
+   */
   Future<void> _insertPremadeStudySets(Database db) async {
     // Import premade sets from repository
     final premadeSets = PremadeStudySetsRepository.getPremadeSets();
@@ -260,7 +342,18 @@ class DatabaseHelper {
     }
   }
 
-  // User authentication methods
+  /**
+   * Authenticates a user with the provided username and password.
+   * 
+   * This method checks if the provided credentials match a user record
+   * in the database. It performs a simple string comparison for password
+   * verification (in a production environment, this should use proper
+   * password hashing).
+   * 
+   * @param username The username to authenticate
+   * @param password The password to verify
+   * @return A Future that completes with true if authentication succeeds, false otherwise
+   */
   Future<bool> authenticateUser(String username, String password) async {
     print('DEBUG: authenticateUser called for username: $username');
     final db = await database;
@@ -275,6 +368,14 @@ class DatabaseHelper {
     return isAuthenticated;
   }
 
+  /**
+   * Checks if a username already exists in the database.
+   * 
+   * This method is used during user registration to prevent duplicate usernames.
+   * 
+   * @param username The username to check for existence
+   * @return A Future that completes with true if the username exists, false otherwise
+   */
   Future<bool> usernameExists(String username) async {
     print('DEBUG: usernameExists called for username: $username');
     final db = await database;
@@ -289,6 +390,16 @@ class DatabaseHelper {
     return exists;
   }
 
+  /**
+   * Creates a new user account in the database.
+   * 
+   * This method inserts a new user record with the provided credentials.
+   * New users start with 0 points and the default 'space' theme.
+   * 
+   * @param username The username for the new account
+   * @param password The password for the new account
+   * @return A Future that completes with true if user creation succeeds, false otherwise
+   */
   Future<bool> addUser(String username, String password) async {
     print('DEBUG: addUser called for username: $username');
     final db = await database;
@@ -310,7 +421,18 @@ class DatabaseHelper {
     }
   }
 
-  // Study set methods
+  /**
+   * Creates a new study set in the database.
+   * 
+   * This method creates a study set record with the provided metadata.
+   * The study set is marked as user-created (not premade) and associated
+   * with the specified username.
+   * 
+   * @param name The name of the study set
+   * @param description The description of the study set
+   * @param username The username of the creator
+   * @return A Future that completes with the ID of the created study set
+   */
   Future<int> createStudySet(
       String name, String description, String username) async {
     final db = await database;
@@ -323,6 +445,18 @@ class DatabaseHelper {
     });
   }
 
+  /**
+   * Adds a question to an existing study set.
+   * 
+   * This method inserts a new question record associated with the specified
+   * study set. The options are stored as a pipe-separated string for
+   * database storage efficiency.
+   * 
+   * @param studySetId The ID of the study set to add the question to
+   * @param questionText The question text
+   * @param correctAnswer The correct answer for the question
+   * @param options The list of answer options
+   */
   Future<void> addQuestionToStudySet(
     int studySetId,
     String questionText,
@@ -338,6 +472,15 @@ class DatabaseHelper {
     });
   }
 
+  /**
+   * Retrieves all study sets created by a specific user.
+   * 
+   * This method returns study sets that are owned by the specified user,
+   * ordered by creation date (newest first).
+   * 
+   * @param username The username whose study sets to retrieve
+   * @return A Future that completes with a list of study set records
+   */
   Future<List<Map<String, dynamic>>> getUserStudySets(String username) async {
     final db = await database;
     return await db.query(
@@ -348,6 +491,14 @@ class DatabaseHelper {
     );
   }
 
+  /**
+   * Retrieves all questions for a specific study set.
+   * 
+   * This method returns all questions associated with the specified study set ID.
+   * 
+   * @param studySetId The ID of the study set whose questions to retrieve
+   * @return A Future that completes with a list of question records
+   */
   Future<List<Map<String, dynamic>>> getStudySetQuestions(
       int studySetId) async {
     final db = await database;
@@ -358,6 +509,15 @@ class DatabaseHelper {
     );
   }
 
+  /**
+   * Deletes a study set for a specific user.
+   * 
+   * This method removes the association between a user and a study set
+   * from the user_study_sets table.
+   * 
+   * @param username The username who owns the study set
+   * @param setName The name of the study set to delete
+   */
   Future<void> deleteStudySet(String username, String setName) async {
     final db = await database;
     await db.delete(
@@ -367,6 +527,14 @@ class DatabaseHelper {
     );
   }
 
+  /**
+   * Retrieves all premade study sets from the database.
+   * 
+   * This method returns all study sets that are marked as premade (system-created),
+   * ordered alphabetically by name.
+   * 
+   * @return A Future that completes with a list of premade study set records
+   */
   Future<List<Map<String, dynamic>>> getPremadeStudySets() async {
     final db = await database;
     return await db.query(
@@ -377,6 +545,14 @@ class DatabaseHelper {
     );
   }
 
+  /**
+   * Checks if all premade study sets from the repository are loaded in the database.
+   * 
+   * This method compares the study sets available in the PremadeStudySetsRepository
+   * with those stored in the database to ensure all premade sets are properly loaded.
+   * 
+   * @return A Future that completes with true if all sets are loaded, false otherwise
+   */
   Future<bool> areAllPremadeSetsLoaded() async {
     final db = await database;
     final premadeSets = PremadeStudySetsRepository.getPremadeSets();
@@ -401,6 +577,13 @@ class DatabaseHelper {
     return true;
   }
 
+  /**
+   * Refreshes the premade study sets in the database.
+   * 
+   * This method synchronizes the database with the current state of the
+   * PremadeStudySetsRepository. It adds new sets, updates existing ones,
+   * and removes obsolete sets to maintain consistency.
+   */
   Future<void> refreshPremadeSets() async {
     final db = await database;
 
@@ -506,6 +689,15 @@ class DatabaseHelper {
     }
   }
 
+  /**
+   * Associates a study set with a user.
+   * 
+   * This method creates a relationship between a user and a study set,
+   * allowing the user to access the study set for practice.
+   * 
+   * @param username The username to associate with the study set
+   * @param studySetId The ID of the study set to associate
+   */
   Future<void> addStudySetToUser(String username, int studySetId) async {
     final db = await database;
     final userId = await getUserId(username);
@@ -516,7 +708,15 @@ class DatabaseHelper {
     });
   }
 
-  // Helper methods
+  /**
+   * Retrieves the user ID for a given username.
+   * 
+   * This helper method is used to get the internal user ID from the username,
+   * which is needed for foreign key relationships in other tables.
+   * 
+   * @param username The username to look up
+   * @return A Future that completes with the user ID
+   */
   Future<int> getUserId(String username) async {
     final db = await database;
     final result = await db.query(

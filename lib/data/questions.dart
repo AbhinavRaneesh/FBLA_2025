@@ -1,5 +1,36 @@
+/**
+ * Repository containing predefined question sets for the EduQuest application.
+ * 
+ * This file contains a collection of educational questions organized by subject
+ * areas including mathematics, history, science, and computer science. Each
+ * question includes the question text, multiple choice options, and the correct
+ * answer.
+ * 
+ * The questions are designed to be used in various game modes and practice
+ * sessions throughout the application, providing a foundation for educational
+ * content that can be expanded and customized by users.
+ */
 // questions.dart
+
+/**
+ * A repository class that provides access to predefined question sets.
+ * 
+ * This class contains static lists of questions organized by subject area.
+ * Each subject area contains multiple-choice questions with varying difficulty
+ * levels suitable for different educational contexts.
+ */
 class QuestionsRepository {
+  /**
+   * A collection of mathematics questions covering various topics.
+   * 
+   * This list contains fundamental mathematics questions including:
+   * - Basic arithmetic operations (addition, subtraction, multiplication, division)
+   * - Mathematical concepts (pi, square roots, percentages)
+   * - Geometric principles (area, perimeter, angles)
+   * - Number theory (prime numbers, sequences, factorials)
+   * 
+   * Questions range from basic to intermediate difficulty levels.
+   */
   static final List<Question> mathQuestions = [
     Question(
       questionText: 'What is 2 + 2?',
@@ -113,7 +144,17 @@ class QuestionsRepository {
     ),
   ];
 
-
+  /**
+   * A collection of history questions covering significant events and figures.
+   * 
+   * This list contains historical questions including:
+   * - American history (presidents, independence, civil war)
+   * - World history (wars, inventions, discoveries)
+   * - Important historical figures and their contributions
+   * - Key events and their causes
+   * 
+   * Questions focus on major historical milestones and influential people.
+   */
   static final List<Question> historyQuestions = [
     Question(
       questionText: 'Who was the first President of the United States?',
@@ -455,7 +496,22 @@ class QuestionsRepository {
     ),
   ];
 
-  // Method to get questions by subject
+  /**
+   * Retrieves questions for a specific subject area.
+   * 
+   * This method returns a shuffled list of questions for the specified subject.
+   * The questions are copied from the static lists to prevent modification
+   * of the original data, and then shuffled to provide variety in practice sessions.
+   * 
+   * Supported subjects:
+   * - 'Math': Mathematics questions covering arithmetic, geometry, and number theory
+   * - 'History': Historical events, figures, and significant milestones
+   * - 'English': Language arts questions including grammar, vocabulary, and literature
+   * - 'Science': Scientific concepts, chemical symbols, and natural phenomena
+   * 
+   * @param subject The subject area for which to retrieve questions
+   * @return A shuffled list of Question objects for the specified subject
+   */
   static List<Question> getQuestionsForSubject(String subject) {
     List<Question> questions;
     switch (subject) {
@@ -480,11 +536,32 @@ class QuestionsRepository {
   }
 }
 
+/**
+ * A data model representing a single multiple-choice question.
+ * 
+ * This class encapsulates all the information needed for a question in the
+ * EduQuest application, including the question text, answer options, and
+ * the correct answer. It is used throughout the application for various
+ * game modes and practice sessions.
+ * 
+ * The class is immutable to ensure data integrity and prevent accidental
+ * modification of question content during gameplay.
+ */
 class Question {
+  /** The text of the question to be displayed to the user */
   final String questionText;
+  /** The list of multiple-choice options for the question */
   final List<String> options;
+  /** The correct answer that matches one of the options */
   final String correctAnswer;
 
+  /**
+   * Creates a new Question instance.
+   * 
+   * @param questionText The text of the question to be displayed
+   * @param options The list of multiple-choice answer options
+   * @param correctAnswer The correct answer that matches one of the options
+   */
   Question({
     required this.questionText,
     required this.options,

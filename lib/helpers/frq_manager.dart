@@ -20,7 +20,12 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:student_learning_app/ai/models/chat_message_model.dart';
 
-// Manual structure for AP Comp Sci 2024
+/**
+ * Manual structure for AP Computer Science A 2024 Free Response Questions.
+ * 
+ * This list defines the question identifiers for the 2024 AP CS A exam,
+ * including subparts for questions that have multiple components.
+ */
 const List<String> manualQuestions = [
   'Q1a',
   'Q1b',
@@ -31,7 +36,12 @@ const List<String> manualQuestions = [
   'Q4b'
 ];
 
-// Point values for AP CS A 2024 FRQ questions
+/**
+ * Point values for AP Computer Science A 2024 FRQ questions.
+ * 
+ * This map associates each question identifier with its corresponding
+ * point value as defined by the College Board scoring guidelines.
+ */
 const Map<String, int> questionPointValues = {
   'Q1a': 4,
   'Q1b': 5,
@@ -42,10 +52,36 @@ const Map<String, int> questionPointValues = {
   'Q4b': 6,
 };
 
-// SpaceBackground widget for the space theme
+/**
+ * A background widget that creates a space-themed visual environment.
+ * 
+ * This widget displays a gradient background with animated twinkling stars
+ * to create an immersive space atmosphere. It's used in the space theme
+ * of the application.
+ * 
+ * Features:
+ * - Dark gradient background from deep blue to darker blue
+ * - 50 randomly positioned animated stars
+ * - Stars twinkle with random durations
+ * - Responsive to screen dimensions
+ */
 class SpaceBackground extends StatelessWidget {
+  /**
+   * Creates a new SpaceBackground instance.
+   * 
+   * @param key The widget key for this StatelessWidget
+   */
   const SpaceBackground({super.key});
 
+  /**
+   * Builds the space background with animated stars.
+   * 
+   * This method creates a container with a gradient background and overlays
+   * animated star elements positioned randomly across the screen.
+   * 
+   * @param context The build context for this widget
+   * @return A Container widget with gradient background and animated stars
+   */
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -84,11 +120,45 @@ class SpaceBackground extends StatelessWidget {
   }
 }
 
+/**
+ * A widget that manages Free Response Question (FRQ) practice sessions.
+ * 
+ * This widget provides an interface for students to practice AP Computer Science A
+ * Free Response Questions. It integrates with AI-powered feedback systems and
+ * provides a comprehensive practice environment with scoring and analysis.
+ * 
+ * Features:
+ * - PDF viewing of FRQ questions
+ * - AI-powered answer analysis and feedback
+ * - Point-based scoring system
+ * - Progress tracking
+ * - Theme integration
+ * - Export capabilities
+ * 
+ * @param studySet The study set containing FRQ questions and metadata
+ * @param username The current user's username for progress tracking
+ * @param currentTheme The current visual theme of the application
+ * @param frqCount The number of FRQ questions in the practice session
+ */
 class FRQManager extends StatefulWidget {
+  /** The study set containing FRQ questions and metadata */
   final Map<String, dynamic> studySet;
+  /** The current user's username for progress tracking */
   final String username;
+  /** The current visual theme of the application */
   final String currentTheme;
+  /** The number of FRQ questions in the practice session */
   final int frqCount;
+  
+  /**
+   * Creates a new FRQManager instance.
+   * 
+   * @param key The widget key for this StatefulWidget
+   * @param studySet The study set containing FRQ questions and metadata
+   * @param username The current user's username for progress tracking
+   * @param currentTheme The current visual theme of the application
+   * @param frqCount The number of FRQ questions in the practice session
+   */
   const FRQManager(
       {super.key,
       required this.studySet,
@@ -100,9 +170,27 @@ class FRQManager extends StatefulWidget {
   State<FRQManager> createState() => _FRQManagerState();
 }
 
+/**
+ * The state class for the FRQManager widget.
+ * 
+ * This class manages the FRQ practice session state, including answer tracking,
+ * AI response handling, and UI interactions. It coordinates between the PDF
+ * viewer, answer input, and AI feedback systems.
+ */
 class _FRQManagerState extends State<FRQManager> {
+  /** The last response received from the AI analysis system */
   String? lastAIResponse;
 
+  /**
+   * Builds the FRQ practice interface.
+   * 
+   * This method creates a layered interface with a themed background,
+   * transparent app bar, and the main FRQ display screen. It provides
+   * a clean, immersive environment for FRQ practice.
+   * 
+   * @param context The build context for this widget
+   * @return A Stack widget containing the themed background and practice interface
+   */
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -134,22 +222,58 @@ class _FRQManagerState extends State<FRQManager> {
     );
   }
 
+  /** The currently selected FRQ subpart for detailed analysis */
   String? selectedSubpart;
+  /** Map storing user answers for each FRQ question */
   Map<String, String> answers = {};
 
+  /**
+   * Disposes of the FRQManager state.
+   * 
+   * This method is called when the widget is removed from the widget tree.
+   * It performs any necessary cleanup operations.
+   */
   @override
   void dispose() {
     super.dispose();
   }
 
+  /**
+   * Increases the zoom level of the PDF viewer.
+   * 
+   * This method is intended to provide zoom functionality for the PDF viewer,
+   * allowing users to enlarge text for better readability.
+   */
   void _zoomIn() {
     // Implementation of _zoomIn method
   }
 
+  /**
+   * Decreases the zoom level of the PDF viewer.
+   * 
+   * This method is intended to provide zoom functionality for the PDF viewer,
+   * allowing users to reduce text size to see more content at once.
+   */
   void _zoomOut() {
     // Implementation of _zoomOut method
   }
 
+  /**
+   * Parses canonical answers from a text file.
+   * 
+   * This method processes a text file containing official AP CS A FRQ answers
+   * and extracts structured answer data. It handles various formatting patterns
+   * and organizes answers by question identifier.
+   * 
+   * The parsing logic:
+   * - Identifies question patterns (e.g., "Q1a (4 points)", "Q1a:", "Q1a)")
+   * - Extracts answer content following each question identifier
+   * - Handles multi-line answers and formatting
+   * - Provides debug logging for troubleshooting
+   * 
+   * @param txt The raw text content containing the canonical answers
+   * @return A Map associating question identifiers with their corresponding answers
+   */
   Map<String, String> _parseCanonicalAnswers(String txt) {
     final Map<String, String> map = {};
 

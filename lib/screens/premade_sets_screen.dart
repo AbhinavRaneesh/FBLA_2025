@@ -3,10 +3,38 @@ import '../helpers/database_helper.dart';
 import '../data/premade_study_sets.dart';
 import '../main.dart';
 
+/**
+ * A screen that displays and manages premade study sets for users.
+ * 
+ * This screen provides an interface for users to browse, import, and manage
+ * predefined study sets created by the system. It includes functionality for
+ * filtering sets by subject, importing sets to the user's collection, and
+ * removing previously imported sets.
+ * 
+ * Features:
+ * - Browse available premade study sets
+ * - Filter sets by subject area
+ * - Import sets to user's collection
+ * - Remove imported sets
+ * - Refresh study set data
+ * - Pull-to-refresh functionality
+ * 
+ * @param username The current user's username for personalization
+ * @param onSetImported Callback function triggered when a set is imported or removed
+ */
 class PremadeSetsScreen extends StatefulWidget {
+  /** The current user's username for personalization */
   final String username;
+  /** Callback function triggered when a set is imported or removed */
   final VoidCallback onSetImported;
 
+  /**
+   * Creates a new PremadeSetsScreen instance.
+   * 
+   * @param key The widget key for this StatefulWidget
+   * @param username The current user's username for personalization
+   * @param onSetImported Callback function triggered when a set is imported or removed
+   */
   const PremadeSetsScreen({
     super.key,
     required this.username,
@@ -17,19 +45,44 @@ class PremadeSetsScreen extends StatefulWidget {
   _PremadeSetsScreenState createState() => _PremadeSetsScreenState();
 }
 
+/**
+ * The state class for the PremadeSetsScreen widget.
+ * 
+ * This class manages the state of the premade sets screen, including loading
+ * study sets from the database, handling user interactions, and managing
+ * the UI state for filtering and importing sets.
+ */
 class _PremadeSetsScreenState extends State<PremadeSetsScreen> {
+  /** Database helper instance for data operations */
   final DatabaseHelper _dbHelper = DatabaseHelper();
+  /** List of available premade study sets */
   List<Map<String, dynamic>> _premadeSets = [];
+  /** List of study sets imported by the current user */
   List<Map<String, dynamic>> _importedSets = [];
+  /** Flag indicating whether data is currently being loaded */
   bool _isLoading = true;
+  /** Currently selected subject filter */
   String _selectedSubject = 'All';
 
+  /**
+   * Initializes the screen state.
+   * 
+   * This method is called when the widget is first created and loads
+   * the initial study set data from the database.
+   */
   @override
   void initState() {
     super.initState();
     _loadSets();
   }
 
+  /**
+   * Refreshes the study sets data from the database.
+   * 
+   * This method updates the premade sets in the database and reloads
+   * the data for display. It shows success or error messages to the user
+   * based on the operation result.
+   */
   Future<void> _refreshSets() async {
     setState(() {
       _isLoading = true;
@@ -64,6 +117,12 @@ class _PremadeSetsScreenState extends State<PremadeSetsScreen> {
     }
   }
 
+  /**
+   * Loads study sets data from the database.
+   * 
+   * This method fetches both premade study sets and the user's imported
+   * sets from the database and updates the UI state accordingly.
+   */
   Future<void> _loadSets() async {
     setState(() {
       _isLoading = true;
@@ -92,6 +151,15 @@ class _PremadeSetsScreenState extends State<PremadeSetsScreen> {
     }
   }
 
+  /**
+   * Imports a study set to the user's collection.
+   * 
+   * This method adds a study set to the user's imported sets and
+   * notifies the parent widget of the change. It shows success or
+   * error messages to the user based on the operation result.
+   * 
+   * @param studySetId The ID of the study set to import
+   */
   Future<void> _importSet(int studySetId) async {
     try {
       await _dbHelper.importPremadeSet(widget.username, studySetId);
@@ -115,6 +183,15 @@ class _PremadeSetsScreenState extends State<PremadeSetsScreen> {
     }
   }
 
+  /**
+   * Removes a study set from the user's collection.
+   * 
+   * This method removes a study set from the user's imported sets and
+   * updates the UI accordingly. It shows success or error messages to
+   * the user based on the operation result.
+   * 
+   * @param studySetId The ID of the study set to remove
+   */
   Future<void> _removeSet(int studySetId) async {
     try {
       await DatabaseHelper().removeImportedSet(widget.username, studySetId);
@@ -142,10 +219,24 @@ class _PremadeSetsScreenState extends State<PremadeSetsScreen> {
     }
   }
 
+  /**
+   * Checks if a study set is already imported by the user.
+   * 
+   * @param studySetId The ID of the study set to check
+   * @return true if the set is imported, false otherwise
+   */
   bool _isSetImported(int studySetId) {
     return _importedSets.any((set) => set['id'] == studySetId);
   }
 
+  /**
+   * Filters the study sets based on the selected subject.
+   * 
+   * This method returns either all study sets or only those matching
+   * the currently selected subject filter.
+   * 
+   * @return A filtered list of study sets
+   */
   List<Map<String, dynamic>> _getFilteredSets() {
     if (_selectedSubject == 'All') {
       return _premadeSets;
@@ -157,6 +248,16 @@ class _PremadeSetsScreenState extends State<PremadeSetsScreen> {
     }).toList();
   }
 
+  /**
+   * Builds the premade sets screen UI.
+   * 
+   * This method creates a scaffold with an app bar, subject filter dropdown,
+   * and a list of study sets. It includes pull-to-refresh functionality
+   * and handles loading states.
+   * 
+   * @param context The build context for this widget
+   * @return A Scaffold widget containing the premade sets interface
+   */
   @override
   Widget build(BuildContext context) {
     return Scaffold(

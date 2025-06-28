@@ -3,7 +3,47 @@ import 'package:dio/dio.dart';
 import 'package:student_learning_app/ai/models/chat_message_model.dart';
 import 'package:student_learning_app/ai/utils/constants.dart';
 
+/**
+ * A repository class that handles communication with the Google Gemini AI API.
+ * 
+ * This class provides a clean interface for generating AI responses using the
+ * Google Gemini 2.0 Flash model. It handles HTTP requests, response parsing,
+ * and error handling for AI chat functionality.
+ * 
+ * The ChatRepo uses the Dio HTTP client for making API requests and provides
+ * comprehensive logging for debugging and monitoring purposes.
+ * 
+ * Features:
+ * - AI text generation using Google Gemini API
+ * - Comprehensive error handling and logging
+ * - Response validation and parsing
+ * - Support for conversation context
+ */
 class ChatRepo {
+  /**
+   * Generates AI text responses using the Google Gemini API.
+   * 
+   * This method sends a conversation history to the Google Gemini 2.0 Flash
+   * model and returns the generated response. It handles the complete API
+   * communication flow including request formatting, response parsing, and
+   * error handling.
+   * 
+   * The method performs the following steps:
+   * 1. Creates a Dio HTTP client instance
+   * 2. Formats the conversation history for the API
+   * 3. Sends a POST request to the Gemini API
+   * 4. Validates the response status code
+   * 5. Parses the response structure to extract the generated text
+   * 6. Handles various error conditions with detailed logging
+   * 
+   * The API request includes:
+   * - Previous conversation messages for context
+   * - Generation configuration specifying text/plain response format
+   * - API key for authentication
+   * 
+   * @param previousMessage A list of previous chat messages providing context for the AI
+   * @return A Future that completes with the generated AI response text, or empty string on error
+   */
   static Future<String> chatTextGenerationRepo(
       List<ChatMessageModel> previousMessage) async {
     try {
