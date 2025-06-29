@@ -1974,7 +1974,95 @@ class _MainScreenState extends State<MainScreen> {
     }
   }
 
-  void _onTabTapped(int index) {
+  void _onTabTapped(int index) async {
+    // Check if user is trying to navigate away from Learn tab (which contains Quick Play)
+    if (_currentIndex == 0 && index != 0) {
+      // Check if we're on the Quick Play tab (index 2 within the Learn tab)
+      if (_learnTabIndex == 2) {
+        // Show confirmation dialog
+        bool shouldNavigate = await showDialog<bool>(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              backgroundColor: _currentTheme == 'beach'
+                  ? ThemeColors.getCardColor('beach')
+                  : const Color(0xFF2A2D3E),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              title: Row(
+                children: [
+                  Icon(
+                    Icons.warning_amber_rounded,
+                    color: _currentTheme == 'beach'
+                        ? ThemeColors.getAccentColor('beach')
+                        : Colors.orange,
+                    size: 28,
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Discard Changes?',
+                    style: TextStyle(
+                      color: _currentTheme == 'beach'
+                          ? ThemeColors.getTextColor('beach')
+                          : Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              content: Text(
+                'You have unsaved changes in Quick Play. Are you sure you want to navigate away?',
+                style: TextStyle(
+                  color: _currentTheme == 'beach'
+                      ? ThemeColors.getTextColor('beach').withOpacity(0.8)
+                      : Colors.white.withOpacity(0.8),
+                  fontSize: 16,
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: Text(
+                    'Cancel',
+                    style: TextStyle(
+                      color: _currentTheme == 'beach'
+                          ? ThemeColors.getPrimaryColor('beach')
+                          : Colors.blueAccent,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _currentTheme == 'beach'
+                        ? ThemeColors.getAccentColor('beach')
+                        : Colors.orange,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'Discard',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        ) ?? false;
+
+        if (!shouldNavigate) {
+          return; // Don't navigate if user cancels
+        }
+      }
+    }
+
     setState(() {
       _currentIndex = index;
     });
@@ -2218,10 +2306,12 @@ class _LearnTabState extends State<LearnTab>
                         children: [
                           Text(
                             'Welcome, ${widget.username}!',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 28,
                               fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                              color: widget.currentTheme == 'beach'
+                                  ? ThemeColors.getTextColor('beach')
+                                  : Colors.white,
                             ),
                           ),
                           const SizedBox(height: 5),
@@ -2229,7 +2319,9 @@ class _LearnTabState extends State<LearnTab>
                             'Let\'s learn something new today!',
                             style: TextStyle(
                               fontSize: 16,
-                              color: Colors.white.withOpacity(0.8),
+                              color: widget.currentTheme == 'beach'
+                                  ? ThemeColors.getTextColor('beach').withOpacity(0.8)
+                                  : Colors.white.withOpacity(0.8),
                             ),
                           ),
                         ],
@@ -3900,7 +3992,7 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
   bool _isLoading = true;
   bool _hasError = false;
   String _errorMessage = '';
-  String _selectedMode = '';
+  String _selectedMode = 'classic';
   bool _showModeSelection = true;
   bool _showGameModeSelection = false;
   bool _showQuizArea = false;
@@ -9813,3 +9905,5 @@ class PracticeTypeChoiceScreen extends StatelessWidget {
     );
   }
 }
+
+

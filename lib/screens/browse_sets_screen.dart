@@ -820,7 +820,7 @@ class _MCQManagerState extends State<MCQManager> {
       'name': 'AP Computer Science Principles',
       'color': [Color(0xFF43e97b), Color(0xFF38f9d7)],
       'icon': Icons.computer,
-      'description': 'Computational Thinking',
+      'description': 'Computational',
       'questions': [
         {
           'question': 'What is the primary purpose of an algorithm?',
@@ -2176,7 +2176,7 @@ class _MCQManagerState extends State<MCQManager> {
       'name': 'AP Physics C: Mechanics',
       'color': [Color(0xFF43e97b), Color(0xFF38f9d7)],
       'icon': Icons.science,
-      'description': 'Classical Mechanics & Motion',
+      'description': 'Classical Mechanics',
       'questions': [
         {
           'question': 'What is the acceleration due to gravity on Earth?',
@@ -2224,7 +2224,7 @@ class _MCQManagerState extends State<MCQManager> {
       'name': 'AP English Literature',
       'color': [Color(0xFFfa709a), Color(0xFFfee140)],
       'icon': Icons.book,
-      'description': 'Literary Analysis & Composition',
+      'description': 'Literary Analysis',
       'questions': [
         {
           'question': 'What is a metaphor?',
@@ -2347,7 +2347,7 @@ class _MCQManagerState extends State<MCQManager> {
       'name': 'IB Mathematics HL',
       'color': [Color(0xFFffecd2), Color(0xFFfcb69f)],
       'icon': Icons.calculate,
-      'description': 'Higher Level Mathematics',
+      'description': 'Higher Level Math',
       'questions': [
         {
           'question': 'What is the derivative of ln(x)?',
@@ -2614,7 +2614,7 @@ class _MCQManagerState extends State<MCQManager> {
       'name': 'AP Environmental Science',
       'color': [Color(0xFFfa709a), Color(0xFFfee140)],
       'icon': Icons.eco,
-      'description': 'Environmental Systems & Ecology',
+      'description': 'Environmental Systems',
       'questions': [
         {
           'question': 'What is biodiversity?',
@@ -3281,7 +3281,7 @@ class _MCQManagerState extends State<MCQManager> {
               ),
             ),
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 31),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [

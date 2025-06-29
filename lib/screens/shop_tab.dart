@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../helpers/database_helper.dart';
 import '../main.dart'
-    show SpaceBackground, BeachBackground, getBackgroundForTheme;
+    show SpaceBackground, BeachBackground, getBackgroundForTheme, ThemeColors;
 
 class ShopTab extends StatefulWidget {
   final String username;
@@ -71,7 +71,7 @@ class _ShopTabState extends State<ShopTab>
     },
     {
       'name': 'Beach',
-      'price': 100,
+      'price': 0,
       'color': const Color(0xFFFF8A65),
       'description': 'Warm sandy beaches and tropical vibes',
       'icon': Icons.beach_access,
@@ -110,7 +110,7 @@ class _ShopTabState extends State<ShopTab>
     {
       'id': 'skip_question',
       'name': 'Skip Question',
-      'price': 25,
+      'price': 0,
       'description': 'Skip any difficult question without penalty',
       'icon': Icons.skip_next,
       'color': const Color(0xFF4CAF50),
@@ -118,7 +118,7 @@ class _ShopTabState extends State<ShopTab>
     {
       'id': 'fifty_fifty',
       'name': '50/50',
-      'price': 30,
+      'price': 0,
       'description': 'Remove two incorrect answer options',
       'icon': Icons.filter_2,
       'color': const Color(0xFF2196F3),
@@ -126,7 +126,7 @@ class _ShopTabState extends State<ShopTab>
     {
       'id': 'double_points',
       'name': 'Double Points',
-      'price': 50,
+      'price': 0,
       'description': 'Double points for the next correct answer',
       'icon': Icons.star,
       'color': const Color(0xFFFFD700),
@@ -134,10 +134,10 @@ class _ShopTabState extends State<ShopTab>
     {
       'id': 'hint',
       'name': 'Hint',
-      'price': 15,
+      'price': 0,
       'description': 'Get a helpful hint for the current question',
       'icon': Icons.lightbulb,
-      'color': const Color(0xFF9C27B0),
+      'color': const Color(0xFFFF9800),
     },
   ];
 
@@ -162,12 +162,14 @@ class _ShopTabState extends State<ShopTab>
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
+                              Text(
                                 'EduQuest Store',
                                 style: TextStyle(
                                   fontSize: 32,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.white,
+                                  color: widget.currentTheme == 'beach'
+                                      ? Colors.black
+                                      : Colors.white,
                                   letterSpacing: 0.5,
                                 ),
                               ),
@@ -176,7 +178,9 @@ class _ShopTabState extends State<ShopTab>
                                 'Enhance your learning experience',
                                 style: TextStyle(
                                   fontSize: 16,
-                                  color: Colors.white.withOpacity(0.8),
+                                  color: widget.currentTheme == 'beach'
+                                      ? Colors.black
+                                      : Colors.white.withOpacity(0.8),
                                   fontWeight: FontWeight.w400,
                                 ),
                               ),
@@ -251,18 +255,30 @@ class _ShopTabState extends State<ShopTab>
                           ),
                           indicatorSize: TabBarIndicatorSize.tab,
                           dividerColor: Colors.transparent,
-                          tabs: const [
+                          tabs: [
                             Tab(
                               height: 50,
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(Icons.palette, size: 20),
-                                  SizedBox(width: 8),
-                                  Text('Themes',
-                                      style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600)),
+                                  Icon(
+                                    Icons.palette, 
+                                    size: 20,
+                                    color: widget.currentTheme == 'beach'
+                                        ? const Color(0xFF2E2E2E)
+                                        : Colors.white,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Themes',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: widget.currentTheme == 'beach'
+                                          ? const Color(0xFF2E2E2E)
+                                          : Colors.white,
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
@@ -271,12 +287,24 @@ class _ShopTabState extends State<ShopTab>
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(Icons.flash_on, size: 20),
-                                  SizedBox(width: 8),
-                                  Text('Powerups',
-                                      style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600)),
+                                  Icon(
+                                    Icons.flash_on, 
+                                    size: 20,
+                                    color: widget.currentTheme == 'beach'
+                                        ? const Color(0xFF2E2E2E)
+                                        : Colors.white,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Powerups',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: widget.currentTheme == 'beach'
+                                          ? const Color(0xFF2E2E2E)
+                                          : Colors.white,
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
@@ -312,7 +340,7 @@ class _ShopTabState extends State<ShopTab>
           crossAxisCount: 2,
           crossAxisSpacing: 16,
           mainAxisSpacing: 16,
-          childAspectRatio: 0.8,
+          childAspectRatio: 0.7,
         ),
         itemCount: _themes.length,
         itemBuilder: (BuildContext context, int index) {
@@ -568,7 +596,7 @@ class _ShopTabState extends State<ShopTab>
           crossAxisCount: 2,
           crossAxisSpacing: 16,
           mainAxisSpacing: 16,
-          childAspectRatio: 0.8, // Same as themes tab
+          childAspectRatio: 0.7, // Same as themes tab
         ),
         itemCount: _powerups.length,
         itemBuilder: (BuildContext context, int index) {

@@ -54,8 +54,8 @@ class _HomePageState extends State<HomePage> {
   bool showScoreSummary =
       false; // New variable to control score summary visibility
   bool isQuizActive = false; // New variable to track if quiz is active
-  String selectedSubject = "Linguistics";
-  int numberOfQuestions = 5; // New variable for question count
+  String selectedSubject = "";
+  int numberOfQuestions = 1; // New variable for question count
   File? _userProfileImage; // Add profile image state
 
   // Search functionality
@@ -147,7 +147,7 @@ class _HomePageState extends State<HomePage> {
   ];
 
   // Sample questions for each subject
-  final Map<String, List<Map<String, dynamic>>> sampleQuestions = {
+  final Map<String, List<Map<String, dynamic>>> questions = {
     "Chemistry": [
       {
         "question": "What is the chemical symbol for gold?",
@@ -1057,7 +1057,7 @@ class _HomePageState extends State<HomePage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'AI Learning Assistant',
+                              'QuestAI',
                               style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
@@ -1118,7 +1118,7 @@ class _HomePageState extends State<HomePage> {
                               return Container(
                                 height: 54,
                                 width: 54,
-                                child: Lottie.asset('assets/loader.json'),
+                                child: Lottie.asset('assets/animation/loader.json'),
                               );
                             }
                             final message = messages[index];
@@ -1165,7 +1165,7 @@ class _HomePageState extends State<HomePage> {
                                       constraints: BoxConstraints(
                                         maxWidth:
                                             MediaQuery.of(context).size.width *
-                                                0.7,
+                                                0.95,
                                       ),
                                       padding: const EdgeInsets.all(16),
                                       decoration: BoxDecoration(
@@ -1300,7 +1300,7 @@ class _HomePageState extends State<HomePage> {
                               ),
                               const SizedBox(height: 16),
                               const Text(
-                                'AI Assistant Ready!',
+                                'QuestAI Ready!',
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 18,
@@ -1492,7 +1492,7 @@ class _HomePageState extends State<HomePage> {
 
         // Get sample questions for the selected subject
         List<Map<String, dynamic>> subjectSamples =
-            sampleQuestions[selectedSubject] ?? [];
+            questions[selectedSubject] ?? [];
 
         if (subjectSamples.isNotEmpty) {
           // Shuffle the sample questions to randomize them
@@ -1546,7 +1546,7 @@ class _HomePageState extends State<HomePage> {
         // If parsing failed completely, use sample questions
         print('No questions were parsed successfully, using sample questions');
         List<Map<String, dynamic>> subjectSamples =
-            sampleQuestions[selectedSubject] ?? [];
+            questions[selectedSubject] ?? [];
 
         if (subjectSamples.isNotEmpty) {
           // Shuffle and take the requested number
@@ -1903,9 +1903,8 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
             children: [
               // Header with free points button
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const SizedBox(width: 50), // Spacer to center the title
                   const Text(
                     'Choose Your Subject',
                     style: TextStyle(
@@ -1914,34 +1913,6 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
                       color: Colors.white,
                     ),
                     textAlign: TextAlign.center,
-                  ),
-                  // Free Points Button
-                  GestureDetector(
-                    onTap: () => _giveFreePoints(),
-                    child: Container(
-                      width: 50,
-                      height: 50,
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(25),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFFFFD700).withOpacity(0.4),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: const Icon(
-                        Icons.diamond,
-                        color: Colors.white,
-                        size: 24,
-                      ),
-                    ),
                   ),
                 ],
               ),
@@ -2144,12 +2115,8 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
                           ? null
                           : () {
                               setState(() {
-                                if (numberOfQuestions == 5) {
-                                  numberOfQuestions = 3;
-                                } else if (numberOfQuestions > 10) {
-                                  numberOfQuestions -= 5;
-                                } else if (numberOfQuestions == 10) {
-                                  numberOfQuestions = 5;
+                                if (numberOfQuestions > 1) {
+                                  numberOfQuestions -= 1;
                                 }
                               });
                             },
@@ -2183,12 +2150,8 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
                           ? null
                           : () {
                               setState(() {
-                                if (numberOfQuestions == 3) {
-                                  numberOfQuestions = 5;
-                                } else if (numberOfQuestions == 5) {
-                                  numberOfQuestions = 10;
-                                } else if (numberOfQuestions < 200) {
-                                  numberOfQuestions += 5;
+                                if (numberOfQuestions < 200) {
+                                  numberOfQuestions += 1;
                                 }
                               });
                             },
@@ -2278,7 +2241,7 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
                   ],
                 ),
                 child: ElevatedButton(
-                  onPressed: (isWaitingForQuestions || isQuizActive)
+                  onPressed: (isWaitingForQuestions || isQuizActive || selectedSubject.isEmpty)
                       ? null
                       : () {
                           _generateQuestions();
@@ -2317,6 +2280,15 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
                       : isQuizActive
                           ? const Text(
                               'Quiz in Progress',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            )
+                          : selectedSubject.isEmpty
+                          ? const Text(
+                              'Select a Subject',
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -3124,63 +3096,37 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
 
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            const SizedBox(height: 25),
-            // Trophy Icon with Animation
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFFFFD700).withOpacity(0.3),
-                    blurRadius: 30,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
-              ),
-              child: const Icon(
-                Icons.emoji_events,
-                size: 60,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(height: 30),
-
+            const SizedBox(height: 10),
             // Quiz Completed Text
             const Text(
               "Quiz Completed!",
               style: TextStyle(
-                fontSize: 32,
+                fontSize: 28,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
-                letterSpacing: 1.2,
+                letterSpacing: 1.0,
               ),
             ),
-            const SizedBox(height: 40),
+            const SizedBox(height: 32),
 
             // Score Card
             Container(
-              padding: const EdgeInsets.all(30),
+              padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
                   colors: [Color(0xFF667eea), Color(0xFF764ba2)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
                     color: const Color(0xFF667eea).withOpacity(0.3),
-                    blurRadius: 30,
-                    offset: const Offset(0, 15),
+                    blurRadius: 25,
+                    offset: const Offset(0, 12),
                   ),
                 ],
               ),
@@ -3189,64 +3135,85 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
                   const Text(
                     "Your Score",
                     style: TextStyle(
-                      fontSize: 20,
+                      fontSize: 18,
                       color: Colors.white70,
                       fontWeight: FontWeight.w500,
+                      letterSpacing: 0.5,
                     ),
                   ),
-                  const SizedBox(height: 15),
+                  const SizedBox(height: 12),
                   Text(
                     "$correctAnswers / ${scienceQuestions.length}",
                     style: const TextStyle(
-                      fontSize: 48,
+                      fontSize: 42,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
-                      letterSpacing: 2,
+                      letterSpacing: 1.5,
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 16),
                   Container(
                     padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      "Accuracy: ${accuracy.toStringAsFixed(1)}%",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: accuracy > 70
-                            ? const Color(0xFF4CAF50)
-                            : accuracy > 40
-                                ? const Color(0xFFFF9800)
-                                : const Color(0xFFF44336),
+                      color: Colors.white.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(25),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.2),
+                        width: 1,
                       ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          accuracy > 70
+                              ? Icons.trending_up
+                              : accuracy > 40
+                                  ? Icons.trending_flat
+                                  : Icons.trending_down,
+                          color: accuracy > 70
+                              ? const Color(0xFF4CAF50)
+                              : accuracy > 40
+                                  ? const Color(0xFFFF9800)
+                                  : const Color(0xFFF44336),
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          "Accuracy: ${accuracy.toStringAsFixed(1)}%",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white70,
+                            letterSpacing: 0.3,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 40),
+            const SizedBox(height: 20),
 
             // Share Button
             Container(
               width: double.infinity,
-              height: 45,
-              margin: const EdgeInsets.only(bottom: 16),
+              height: 48,
+              margin: const EdgeInsets.only(bottom: 12),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
                   colors: [Color(0xFF4facfe), Color(0xFF00f2fe)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                borderRadius: BorderRadius.circular(22.5),
+                borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
                     color: const Color(0xFF4facfe).withOpacity(0.3),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
+                    blurRadius: 15,
+                    offset: const Offset(0, 8),
                   ),
                 ],
               ),
@@ -3256,20 +3223,21 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
                   backgroundColor: Colors.transparent,
                   shadowColor: Colors.transparent,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(22.5),
+                    borderRadius: BorderRadius.circular(24),
                   ),
                 ),
                 icon: const Icon(
                   Icons.share,
                   color: Colors.white,
-                  size: 18,
+                  size: 20,
                 ),
                 label: const Text(
                   "Share Results",
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
+                    letterSpacing: 0.5,
                   ),
                 ),
               ),
@@ -3280,19 +3248,19 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
               children: [
                 Expanded(
                   child: Container(
-                    height: 45,
+                    height: 48,
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
                         colors: [Color(0xFF4facfe), Color(0xFF00f2fe)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
-                      borderRadius: BorderRadius.circular(22.5),
+                      borderRadius: BorderRadius.circular(24),
                       boxShadow: [
                         BoxShadow(
                           color: const Color(0xFF4facfe).withOpacity(0.3),
-                          blurRadius: 20,
-                          offset: const Offset(0, 10),
+                          blurRadius: 15,
+                          offset: const Offset(0, 8),
                         ),
                       ],
                     ),
@@ -3302,36 +3270,37 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
                         backgroundColor: Colors.transparent,
                         shadowColor: Colors.transparent,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(22.5),
+                          borderRadius: BorderRadius.circular(24),
                         ),
                       ),
                       child: const Text(
                         "Retry Quiz",
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
+                          letterSpacing: 0.5,
                         ),
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Container(
-                    height: 45,
+                    height: 48,
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
                         colors: [Color(0xFF667eea), Color(0xFF764ba2)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
-                      borderRadius: BorderRadius.circular(22.5),
+                      borderRadius: BorderRadius.circular(24),
                       boxShadow: [
                         BoxShadow(
                           color: const Color(0xFF667eea).withOpacity(0.3),
-                          blurRadius: 20,
-                          offset: const Offset(0, 10),
+                          blurRadius: 15,
+                          offset: const Offset(0, 8),
                         ),
                       ],
                     ),
@@ -3341,15 +3310,16 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
                         backgroundColor: Colors.transparent,
                         shadowColor: Colors.transparent,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(22.5),
+                          borderRadius: BorderRadius.circular(24),
                         ),
                       ),
                       child: const Text(
                         "Return Home",
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
+                          letterSpacing: 0.5,
                         ),
                       ),
                     ),
@@ -3705,7 +3675,7 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
                     ),
                   ],
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 10),
 
                 // Hint content
                 Container(
@@ -3772,57 +3742,6 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
       _extraTimeUsed = false;
       _removedOptions = [];
     });
-  }
-
-  void _giveFreePoints() async {
-    try {
-      // Get current points
-      final currentPoints = await _dbHelper.getUserPoints(widget.username);
-      final newPoints = currentPoints + 100;
-
-      // Update points in database
-      await _dbHelper.updateUserPoints(widget.username, newPoints);
-
-      // Call the callback to update the main app's points display
-      if (widget.onPointsUpdated != null) {
-        widget.onPointsUpdated!(newPoints);
-      }
-
-      // Show success message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.diamond, color: Colors.white),
-              const SizedBox(width: 12),
-              const Text('You received 100 free points!'),
-            ],
-          ),
-          backgroundColor: const Color(0xFFFFD700),
-          behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          duration: const Duration(seconds: 3),
-        ),
-      );
-    } catch (e) {
-      // Show error message if something goes wrong
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.error_outline, color: Colors.white),
-              const SizedBox(width: 12),
-              Text('Failed to add points: $e'),
-            ],
-          ),
-          backgroundColor: Colors.red.shade600,
-          behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-      );
-    }
   }
 }
 
