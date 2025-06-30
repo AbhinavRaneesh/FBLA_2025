@@ -2484,7 +2484,7 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
               crossAxisCount: 3,
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
-              childAspectRatio: 0.85,
+              childAspectRatio: 0.80,
             ),
             itemCount: availableSubjects.length,
             itemBuilder: (context, index) {

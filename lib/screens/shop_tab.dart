@@ -188,20 +188,17 @@ class _ShopTabState extends State<ShopTab>
                           ),
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 8),
+                                horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
                               gradient: const LinearGradient(
-                                colors: [Color(0xFFFFD700), Color(0xFFFF8F00)],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
+                                colors: [Colors.amber, Colors.orange],
                               ),
-                              borderRadius: BorderRadius.circular(25),
+                              borderRadius: BorderRadius.circular(16),
                               boxShadow: [
                                 BoxShadow(
-                                  color:
-                                      const Color(0xFFFFD700).withOpacity(0.4),
-                                  blurRadius: 12,
-                                  offset: const Offset(0, 6),
+                                  color: const Color(0xFFFFD700).withOpacity(0.4),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 4),
                                 ),
                               ],
                             ),

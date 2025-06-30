@@ -252,7 +252,7 @@ class _SplashScreenState extends State<SplashScreen>
                     const Text(
                       'Learn. Play. Grow.',
                       style: TextStyle(
-                        fontSize: 18,
+                        fontSize: 16,
                         color: Colors.white70,
                       ),
                     ),
@@ -1153,7 +1153,7 @@ class _SignInPageState extends State<SignInPage>
             content: Row(
               children: [
                 const Icon(Icons.error_outline, color: Colors.white),
-                const SizedBox(width: 8),
+                const SizedBox(width: 6),
                 const Text('Invalid username or password'),
               ],
             ),
@@ -1405,8 +1405,8 @@ class _SignInPageState extends State<SignInPage>
                                         BoxShadow(
                                           color: const Color(0xFF4facfe)
                                               .withOpacity(0.3),
-                                          blurRadius: 10,
-                                          offset: const Offset(0, 5),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 4),
                                         ),
                                       ]
                                     : [],
@@ -1436,7 +1436,7 @@ class _SignInPageState extends State<SignInPage>
                                     : const Text(
                                         'Sign In',
                                         style: TextStyle(
-                                          fontSize: 18,
+                                          fontSize: 16,
                                           fontWeight: FontWeight.bold,
                                           color: Colors.white,
                                         ),
@@ -1612,7 +1612,7 @@ class _SignUpPageState extends State<SignUpPage>
             content: Row(
               children: [
                 const Icon(Icons.check_circle, color: Colors.white),
-                const SizedBox(width: 8),
+                const SizedBox(width: 6),
                 const Text('Account created successfully!'),
               ],
             ),
@@ -1845,8 +1845,8 @@ class _SignUpPageState extends State<SignUpPage>
                                         BoxShadow(
                                           color: const Color(0xFF4facfe)
                                               .withOpacity(0.3),
-                                          blurRadius: 10,
-                                          offset: const Offset(0, 5),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 4),
                                         ),
                                       ]
                                     : [],
@@ -1876,7 +1876,7 @@ class _SignUpPageState extends State<SignUpPage>
                                     : const Text(
                                         'Sign Up',
                                         style: TextStyle(
-                                          fontSize: 18,
+                                          fontSize: 16,
                                           fontWeight: FontWeight.bold,
                                           color: Colors.white,
                                         ),
@@ -1989,7 +1989,7 @@ class _MainScreenState extends State<MainScreen> {
                   ? ThemeColors.getCardColor('beach')
                   : const Color(0xFF2A2D3E),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(16),
               ),
               title: Row(
                 children: [
@@ -2143,14 +2143,14 @@ class _MainScreenState extends State<MainScreen> {
           ),
         ],
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
       floatingActionButton: (_currentIndex == 0 &&
               _learnTabIndex == 0) // Show only on My Sets tab
           ? Padding(
-              padding: const EdgeInsets.only(bottom: 16.0, right: 16.0),
+              padding: const EdgeInsets.only(bottom: 16.0, left: 16.0),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.end,
-                crossAxisAlignment: CrossAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
                     decoration: BoxDecoration(
@@ -2328,17 +2328,17 @@ class _LearnTabState extends State<LearnTab>
                       ),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 8),
+                            horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
                           gradient: const LinearGradient(
                             colors: [Colors.amber, Colors.orange],
                           ),
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.amber.withOpacity(0.3),
-                              blurRadius: 10,
-                              offset: const Offset(0, 5),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
                             ),
                           ],
                         ),
@@ -2346,14 +2346,14 @@ class _LearnTabState extends State<LearnTab>
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             const Icon(Icons.diamond,
-                                color: Colors.white, size: 22),
-                            const SizedBox(width: 8),
+                                color: Colors.white, size: 18),
+                            const SizedBox(width: 6),
                             Text(
                               '${widget.userPoints}',
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
-                                fontSize: 18,
+                                fontSize: 16,
                               ),
                             ),
                           ],
@@ -2485,7 +2485,7 @@ class _LearnTabState extends State<LearnTab>
               shadowColor: Colors.black.withOpacity(0.4),
               clipBehavior: Clip.antiAlias,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(16),
               ),
               child: Container(
                 decoration: BoxDecoration(
@@ -2499,7 +2499,7 @@ class _LearnTabState extends State<LearnTab>
                             const Color(0xFF1D1E33),
                           ],
                         ),
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(16),
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(20),
@@ -2570,7 +2570,7 @@ class _LearnTabState extends State<LearnTab>
                               ),
                               decoration: BoxDecoration(
                                 color: Colors.white.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(20),
+                                borderRadius: BorderRadius.circular(16),
                               ),
                               child: Text(
                                 'Imported',
@@ -2742,7 +2742,7 @@ class _LearnTabState extends State<LearnTab>
                   ),
                   decoration: BoxDecoration(
                     color: Colors.blueAccent.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                   child: Text(
                     'Question ${currentIndex + 1}/$totalQuestions',
@@ -2836,7 +2836,7 @@ class _LearnTabState extends State<LearnTab>
                         title: Text(
                           option,
                           style: TextStyle(
-                            fontSize: 18,
+                            fontSize: 16,
                             color: Colors.white,
                             fontWeight: isSelected
                                 ? FontWeight.bold
@@ -2896,7 +2896,7 @@ class _LearnTabState extends State<LearnTab>
                     child: const Text(
                       'Submit Answer',
                       style: TextStyle(
-                        fontSize: 18,
+                        fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -2924,7 +2924,7 @@ class _LearnTabState extends State<LearnTab>
                           ? 'Next Question'
                           : 'Finish Quiz',
                       style: const TextStyle(
-                        fontSize: 18,
+                        fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -3033,7 +3033,7 @@ class _LearnTabState extends State<LearnTab>
                     "Try Again",
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 18,
+                      fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -3078,7 +3078,7 @@ class _LearnTabState extends State<LearnTab>
                     "New Quiz",
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 18,
+                      fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -3125,7 +3125,7 @@ class _LearnTabState extends State<LearnTab>
                     "Return Home",
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 18,
+                      fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -3357,7 +3357,7 @@ class _ProfileTabState extends State<ProfileTab>
                       width: double.infinity,
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(16),
                         gradient: const LinearGradient(
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
@@ -3409,7 +3409,7 @@ class _ProfileTabState extends State<ProfileTab>
                                     ),
                                     padding: const EdgeInsets.all(8),
                                     child: const Icon(Icons.camera_alt,
-                                        color: Colors.white, size: 22),
+                                        color: Colors.white, size: 18),
                                   ),
                                 ),
                               ),
@@ -3427,23 +3427,23 @@ class _ProfileTabState extends State<ProfileTab>
                           const SizedBox(height: 8),
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 8),
+                                horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
                               color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(20),
+                              borderRadius: BorderRadius.circular(16),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 const Icon(Icons.diamond,
-                                    color: Colors.white, size: 22),
-                                const SizedBox(width: 8),
+                                    color: Colors.white, size: 18),
+                                const SizedBox(width: 6),
                                 Text(
                                   '${widget.userPoints}',
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 18,
+                                    fontSize: 16,
                                   ),
                                 ),
                               ],
@@ -3901,7 +3901,7 @@ class StudySetCreationOptionsScreen extends StatelessWidget {
       child: Card(
         elevation: 8,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(16),
         ),
         clipBehavior: Clip.antiAlias,
         child: Container(
@@ -3935,7 +3935,7 @@ class StudySetCreationOptionsScreen extends StatelessWidget {
                     Text(
                       title,
                       style: const TextStyle(
-                        fontSize: 18,
+                        fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),
@@ -4259,7 +4259,7 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
                   color: const Color(0xFF667eea).withOpacity(0.3),
@@ -4352,7 +4352,7 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
                   color: const Color(0xFF667eea).withOpacity(0.3),
@@ -5009,7 +5009,7 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                               _errorMessage,
                               style: const TextStyle(
                                 color: Colors.white,
-                                fontSize: 18,
+                                fontSize: 16,
                               ),
                               textAlign: TextAlign.center,
                             ),
@@ -5056,7 +5056,7 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                                   'Try Again',
                                   style: TextStyle(
                                     color: Colors.white,
-                                    fontSize: 18,
+                                    fontSize: 16,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -5113,18 +5113,18 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                                     // Points display
                                     Container(
                                       padding: const EdgeInsets.symmetric(
-                                          horizontal: 16, vertical: 8),
+                                          horizontal: 12, vertical: 6),
                                       decoration: BoxDecoration(
                                         gradient: const LinearGradient(
                                           colors: [Colors.amber, Colors.orange],
                                         ),
-                                        borderRadius: BorderRadius.circular(20),
+                                        borderRadius: BorderRadius.circular(16),
                                         boxShadow: [
                                           BoxShadow(
                                             color:
                                                 Colors.amber.withOpacity(0.3),
-                                            blurRadius: 10,
-                                            offset: const Offset(0, 5),
+                                            blurRadius: 8,
+                                            offset: const Offset(0, 4),
                                           ),
                                         ],
                                       ),
@@ -5132,14 +5132,14 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
                                           const Icon(Icons.diamond,
-                                              color: Colors.white, size: 22),
-                                          const SizedBox(width: 8),
+                                              color: Colors.white, size: 18),
+                                          const SizedBox(width: 6),
                                           Text(
                                             '$_currentPoints',
                                             style: const TextStyle(
                                               color: Colors.white,
                                               fontWeight: FontWeight.bold,
-                                              fontSize: 18,
+                                              fontSize: 16,
                                             ),
                                           ),
                                         ],
@@ -5174,7 +5174,7 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                                           gradient: ThemeColors
                                               .getBeachCardGradient(),
                                           borderRadius:
-                                              BorderRadius.circular(20),
+                                              BorderRadius.circular(16),
                                           border: Border.all(
                                             color:
                                                 Colors.black.withOpacity(0.1),
@@ -5187,7 +5187,7 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                                               blurRadius: _showGameModeSelection
                                                   ? 20
                                                   : 10,
-                                              offset: const Offset(0, 5),
+                                              offset: const Offset(0, 4),
                                             ),
                                           ],
                                         )
@@ -5199,7 +5199,7 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                                             ],
                                           ),
                                           borderRadius:
-                                              BorderRadius.circular(20),
+                                              BorderRadius.circular(16),
                                           border: Border.all(
                                             color:
                                                 Colors.white.withOpacity(0.2),
@@ -5212,7 +5212,7 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                                               blurRadius: _showGameModeSelection
                                                   ? 20
                                                   : 10,
-                                              offset: const Offset(0, 5),
+                                              offset: const Offset(0, 4),
                                             ),
                                           ],
                                         ),
@@ -5242,7 +5242,7 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                                                 ? 'Game Modes'
                                                 : 'Selected Game Mode',
                                             style: TextStyle(
-                                              fontSize: 18,
+                                              fontSize: 16,
                                               fontWeight: FontWeight.bold,
                                               color: widget.currentTheme ==
                                                       'beach'
@@ -5294,7 +5294,7 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                                         color: Colors.transparent,
                                         child: InkWell(
                                           borderRadius:
-                                              BorderRadius.circular(20),
+                                              BorderRadius.circular(16),
                                           onTap: () {
                                             setState(() {
                                               _showGameModeSelection =
@@ -5340,7 +5340,7 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                                                           ],
                                                         ),
                                               borderRadius:
-                                                  BorderRadius.circular(20),
+                                                  BorderRadius.circular(16),
                                               border: Border.all(
                                                 color: _selectedMode.isNotEmpty
                                                     ? Colors.white
@@ -5424,7 +5424,7 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                                                             : _getTitleForMode(
                                                                 _selectedMode),
                                                         style: const TextStyle(
-                                                          fontSize: 18,
+                                                          fontSize: 16,
                                                           fontWeight:
                                                               FontWeight.bold,
                                                           color: Colors.white,
@@ -5587,7 +5587,7 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                                           gradient: ThemeColors
                                               .getBeachCardGradient(),
                                           borderRadius:
-                                              BorderRadius.circular(20),
+                                              BorderRadius.circular(16),
                                           border: Border.all(
                                             color:
                                                 Colors.black.withOpacity(0.1),
@@ -5597,7 +5597,7 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                                       : BoxDecoration(
                                           color: Colors.white.withOpacity(0.1),
                                           borderRadius:
-                                              BorderRadius.circular(20),
+                                              BorderRadius.circular(16),
                                           border: Border.all(
                                             color:
                                                 Colors.white.withOpacity(0.2),
@@ -5742,7 +5742,7 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                                       BoxShadow(
                                         color: Colors.black.withOpacity(0.3),
                                         blurRadius: 15,
-                                        offset: const Offset(0, 5),
+                                        offset: const Offset(0, 4),
                                       ),
                                     ],
                                   ),
@@ -5832,7 +5832,7 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                                       const SizedBox(height: 12),
                                       Container(
                                         padding: const EdgeInsets.symmetric(
-                                            horizontal: 16, vertical: 8),
+                                            horizontal: 12, vertical: 6),
                                         decoration: BoxDecoration(
                                           gradient: const LinearGradient(
                                             colors: [
@@ -5841,20 +5841,20 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                                             ],
                                           ),
                                           borderRadius:
-                                              BorderRadius.circular(20),
+                                              BorderRadius.circular(16),
                                         ),
                                         child: Row(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
                                             const Icon(Icons.diamond,
-                                                color: Colors.white, size: 22),
-                                            const SizedBox(width: 8),
+                                                color: Colors.white, size: 18),
+                                            const SizedBox(width: 6),
                                             Text(
                                               '$_currentPoints',
                                               style: const TextStyle(
                                                 color: Colors.white,
                                                 fontWeight: FontWeight.bold,
-                                                fontSize: 18,
+                                                fontSize: 16,
                                               ),
                                             ),
                                           ],
@@ -5918,7 +5918,7 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                                             'Share Results',
                                             style: TextStyle(
                                               color: Colors.white,
-                                              fontSize: 18,
+                                              fontSize: 16,
                                               fontWeight: FontWeight.bold,
                                             ),
                                           ),
@@ -6001,7 +6001,7 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                                             'Try Again',
                                             style: TextStyle(
                                               color: Colors.white,
-                                              fontSize: 18,
+                                              fontSize: 16,
                                               fontWeight: FontWeight.bold,
                                             ),
                                           ),
@@ -6068,7 +6068,7 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                                             'Return Home',
                                             style: TextStyle(
                                               color: Colors.white,
-                                              fontSize: 18,
+                                              fontSize: 16,
                                               fontWeight: FontWeight.bold,
                                             ),
                                           ),
@@ -6174,7 +6174,7 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
             const Color(0xFF1D1E33).withOpacity(0.95),
           ],
         ),
-        borderRadius: BorderRadius.circular(20), // Reduced from 25
+        borderRadius: BorderRadius.circular(16), // Reduced from 25
         border: Border.all(
           color: Colors.white.withOpacity(0.15),
           width: 1.5,
@@ -6486,7 +6486,7 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
               : widget.currentTheme == 'beach'
                   ? null
                   : Colors.white.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(16),
           boxShadow: isSelected
               ? [
                   BoxShadow(
@@ -6834,7 +6834,7 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                               : widget.currentTheme == 'beach'
                                   ? ThemeColors.getTextColor('beach')
                                   : Colors.white,
-                          fontSize: 18, // Reduced from 20
+                          fontSize: 16, // Reduced from 20
                           fontWeight: FontWeight.w600, // Reduced from w700
                           letterSpacing: 0.1, // Reduced from 0.2
                           height:
@@ -6978,7 +6978,7 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
       margin: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: const Color(0xFF1D1E33),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.white.withOpacity(0.1)),
       ),
       child: Column(
@@ -6996,12 +6996,12 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
             child: Row(
               children: [
                 const Icon(Icons.psychology, color: Colors.white, size: 24),
-                const SizedBox(width: 8),
+                const SizedBox(width: 6),
                 const Text(
                   'AI Assistant',
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 18,
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -7066,12 +7066,12 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                                 padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
                                   color: const Color(0xFF667eea),
-                                  borderRadius: BorderRadius.circular(20),
+                                  borderRadius: BorderRadius.circular(16),
                                 ),
                                 child: const Icon(Icons.psychology,
                                     color: Colors.white, size: 16),
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: 6),
                             ],
                             Flexible(
                               child: Container(
@@ -7092,7 +7092,7 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                               ),
                             ),
                             if (isUser) ...[
-                              const SizedBox(width: 8),
+                              const SizedBox(width: 6),
                               CircleAvatar(
                                 radius: 16,
                                 backgroundColor: Colors.transparent,
@@ -7112,7 +7112,7 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                                             end: Alignment.bottomRight,
                                           ),
                                           borderRadius:
-                                              BorderRadius.circular(20),
+                                              BorderRadius.circular(16),
                                           boxShadow: [
                                             BoxShadow(
                                               color: const Color(0xFF4facfe)
@@ -7408,7 +7408,7 @@ class _QuizScreenState extends State<QuizScreen> {
               ),
               decoration: BoxDecoration(
                 color: Colors.blueAccent.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(16),
               ),
               child: Text(
                 'Question ${currentQuestionIndex + 1}/${widget.questionCount}',
@@ -7436,15 +7436,15 @@ class _QuizScreenState extends State<QuizScreen> {
 
         // Score
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
             color: Colors.amber.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(16),
           ),
           child: Text(
             'Score: $score',
             style: const TextStyle(
-              fontSize: 18,
+              fontSize: 16,
               fontWeight: FontWeight.bold,
               color: Colors.amber,
             ),
@@ -7521,7 +7521,7 @@ class _QuizScreenState extends State<QuizScreen> {
                     title: Text(
                       option,
                       style: TextStyle(
-                        fontSize: 18,
+                        fontSize: 16,
                         color: Colors.white,
                         fontWeight:
                             isSelected ? FontWeight.bold : FontWeight.normal,
@@ -7631,7 +7631,7 @@ class _QuizScreenState extends State<QuizScreen> {
                     : accuracy >= 50
                         ? Colors.orange
                         : Colors.red,
-                fontSize: 18,
+                fontSize: 16,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -7675,7 +7675,7 @@ class _QuizScreenState extends State<QuizScreen> {
                   'Share Results',
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 18,
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -7734,7 +7734,7 @@ class _QuizScreenState extends State<QuizScreen> {
                   'Try Again',
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 18,
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -7780,7 +7780,7 @@ class _QuizScreenState extends State<QuizScreen> {
                   'Return Home',
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 18,
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -7816,11 +7816,11 @@ class _QuizScreenState extends State<QuizScreen> {
                           Colors.blueAccent),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 6),
                   Text(
                     '${timeLeft.toStringAsFixed(1)}s',
                     style: const TextStyle(
-                      fontSize: 18,
+                      fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -8365,7 +8365,7 @@ class _QuizletImportScreenState extends State<QuizletImportScreen> {
             Text(
               'Imported ${_questions.length} terms',
               style: const TextStyle(
-                fontSize: 18,
+                fontSize: 16,
                 fontWeight: FontWeight.bold,
                 color: Colors.greenAccent,
               ),
@@ -8432,8 +8432,8 @@ class _QuizletImportScreenState extends State<QuizletImportScreen> {
             ? [
                 BoxShadow(
                   color: colors.first.withOpacity(0.3),
-                  blurRadius: 10,
-                  offset: const Offset(0, 5),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
                 ),
               ]
             : [],
@@ -8845,7 +8845,7 @@ class _SpreadsheetImportScreenState extends State<SpreadsheetImportScreen> {
             Text(
               'Parsed ${_questions.length} questions',
               style: const TextStyle(
-                fontSize: 18,
+                fontSize: 16,
                 fontWeight: FontWeight.bold,
                 color: Colors.greenAccent,
               ),
@@ -8912,8 +8912,8 @@ class _SpreadsheetImportScreenState extends State<SpreadsheetImportScreen> {
             ? [
                 BoxShadow(
                   color: colors.first.withOpacity(0.3),
-                  blurRadius: 10,
-                  offset: const Offset(0, 5),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
                 ),
               ]
             : [],
@@ -9320,8 +9320,8 @@ class _ManualQuestionCreationScreenState
             ? [
                 BoxShadow(
                   color: colors.first.withOpacity(0.3),
-                  blurRadius: 10,
-                  offset: const Offset(0, 5),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
                 ),
               ]
             : [],
@@ -9609,7 +9609,7 @@ class PracticeTypeChoiceScreen extends StatelessWidget {
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withOpacity(0.3),
-                              blurRadius: 10,
+                              blurRadius: 8,
                               offset: const Offset(0, 4),
                             ),
                           ],
@@ -9627,16 +9627,10 @@ class PracticeTypeChoiceScreen extends StatelessWidget {
                           children: [
                             Row(
                               children: [
-                                Icon(
-                                  Icons.school_outlined,
-                                  color: Colors.white,
-                                  size: 20,
-                                ),
-                                const SizedBox(width: 8),
                                 Text(
                                   studySet['name'] ?? 'Practice',
                                   style: const TextStyle(
-                                    fontSize: 24,
+                                    fontSize: 20,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.white,
                                   ),
@@ -9668,7 +9662,7 @@ class PracticeTypeChoiceScreen extends StatelessWidget {
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(16),
                       border: Border.all(
                         color: Colors.white.withOpacity(0.15),
                         width: 1,
@@ -9737,7 +9731,7 @@ class PracticeTypeChoiceScreen extends StatelessWidget {
                           BoxShadow(
                             color: Colors.black.withOpacity(0.3),
                             blurRadius: 15,
-                            offset: const Offset(0, 5),
+                            offset: const Offset(0, 4),
                           ),
                         ],
                         border: Border.all(
@@ -9757,7 +9751,7 @@ class PracticeTypeChoiceScreen extends StatelessWidget {
                                 'Multiple Choice Practice',
                                 style: TextStyle(
                                   color: Colors.white,
-                                  fontSize: 22,
+                                  fontSize: 16,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -9808,7 +9802,7 @@ class PracticeTypeChoiceScreen extends StatelessWidget {
                           BoxShadow(
                             color: Colors.black.withOpacity(0.3),
                             blurRadius: 15,
-                            offset: const Offset(0, 5),
+                            offset: const Offset(0, 4),
                           ),
                         ],
                         border: Border.all(
@@ -9827,7 +9821,7 @@ class PracticeTypeChoiceScreen extends StatelessWidget {
                                 'Free Response Practice',
                                 style: TextStyle(
                                   color: Colors.white,
-                                  fontSize: 22,
+                                  fontSize: 16,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
