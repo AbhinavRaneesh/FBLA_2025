@@ -2019,10 +2019,8 @@ class _FRQTextDisplayScreenState extends State<FRQTextDisplayScreen> {
                 child: Column(
                   children: [
                     // Enhanced question part buttons
-                    Wrap(
-                      spacing: 12,
-                      runSpacing: 12,
-                      alignment: WrapAlignment.center,
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: _getQuestionButtons(),
                     ),
                     const SizedBox(height: 16),

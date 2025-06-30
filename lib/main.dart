@@ -2428,23 +2428,17 @@ class _LearnTabState extends State<LearnTab>
                   : Colors.white.withOpacity(0.5),
             ),
             const SizedBox(height: 20),
-            Text(
-              'No study sets yet',
-              style: TextStyle(
-                fontSize: 20,
-                color: widget.currentTheme == 'beach'
-                    ? ThemeColors.getTextColor('beach').withOpacity(0.7)
-                    : Colors.white.withOpacity(0.7),
-              ),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              'Create your first study set or import a premade one!',
-              style: TextStyle(
-                fontSize: 16,
-                color: widget.currentTheme == 'beach'
-                    ? ThemeColors.getTextColor('beach').withOpacity(0.5)
-                    : Colors.white.withOpacity(0.5),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 40),
+              child: Text(
+                'Create your first study set or import a premade one!',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: widget.currentTheme == 'beach'
+                      ? ThemeColors.getTextColor('beach').withOpacity(0.5)
+                      : Colors.white.withOpacity(0.5),
+                ),
+                textAlign: TextAlign.center,
               ),
             ),
             const SizedBox(height: 20),

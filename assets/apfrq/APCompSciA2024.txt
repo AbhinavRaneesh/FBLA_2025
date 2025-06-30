@@ -1,8 +1,6 @@
 
 -----------------------------------------------------------------------------
-Question 1. This question simulates birds or possibly a bear eating at a bird feeder. The following Feeder class
-contains information about how much food is in the bird feeder and simulates how much food is eaten. You
-will write two methods of the Feeder class.
+Question 1. This question simulates birds or possibly a bear eating at a bird feeder. The following Feeder class contains information about how much food is in the bird feeder and simulates how much food is eaten. You will write two methods of the Feeder class.
 public class Feeder
 {
 /**
