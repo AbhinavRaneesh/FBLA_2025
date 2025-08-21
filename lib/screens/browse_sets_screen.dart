@@ -2173,6 +2173,59 @@ class _MCQManagerState extends State<MCQManager> {
       ],
     },
     {
+      'name': 'SAT',
+      'color': [Color(0xFF667eea), Color(0xFF764ba2)],
+      'icon': Icons.school,
+      'description': 'College Readiness Assessment',
+      'questions': [
+        {
+          'question': 'What is the main purpose of the SAT?',
+          'options': [
+            'To assess college readiness',
+            'To test high school knowledge',
+            'To determine college admission',
+            'All of the above'
+          ],
+          'correct': 3,
+          'explanation':
+              'The SAT serves multiple purposes: assessing college readiness, testing high school knowledge, and helping determine college admission.',
+        },
+        {
+          'question': 'How many sections are there in the SAT?',
+          'options': ['2', '3', '4', '5'],
+          'correct': 1,
+          'explanation':
+              'The SAT has 3 main sections: Reading and Writing, Math, and an optional Essay section.',
+        },
+        {
+          'question': 'What is the total time for the SAT?',
+          'options': ['2 hours', '3 hours', '4 hours', '5 hours'],
+          'correct': 1,
+          'explanation':
+              'The SAT takes approximately 3 hours to complete, not including breaks.',
+        },
+        {
+          'question': 'What is the scoring range for each SAT section?',
+          'options': ['200-800', '100-400', '300-900', '400-1600'],
+          'correct': 0,
+          'explanation':
+              'Each SAT section (Reading and Writing, Math) is scored on a scale of 200-800 points.',
+        },
+        {
+          'question': 'What skills does the SAT Reading section test?',
+          'options': [
+            'Reading comprehension and analysis',
+            'Mathematical reasoning',
+            'Scientific knowledge',
+            'Historical facts'
+          ],
+          'correct': 0,
+          'explanation':
+              'The SAT Reading section tests reading comprehension, analysis, and reasoning skills through various text passages.',
+        },
+      ],
+    },
+    {
       'name': 'AP Physics C: Mechanics',
       'color': [Color(0xFF43e97b), Color(0xFF38f9d7)],
       'icon': Icons.science,
@@ -3336,18 +3389,20 @@ class _MCQManagerState extends State<MCQManager> {
                       color: Colors.white.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Text(
-                      apClass['name'] == 'AP Computer Science A'
-                          ? '20 MCQs + 4 FRQs'
-                          : '20 Questions',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: widget.currentTheme == 'beach'
-                            ? ThemeColors.getTextColor('beach')
-                            : Colors.white,
-                      ),
+                                      child: Text(
+                    apClass['name'] == 'AP Computer Science A'
+                        ? '20 MCQs + 4 FRQs'
+                        : apClass['name'] == 'SAT'
+                        ? 'Choose Subject'
+                        : '20 Questions',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: widget.currentTheme == 'beach'
+                          ? ThemeColors.getTextColor('beach')
+                          : Colors.white,
                     ),
+                  ),
                   ),
                 ],
               ),
@@ -4271,6 +4326,372 @@ class _MCQManagerState extends State<MCQManager> {
     }
   }
 
+  // Show SAT subject choice dialog
+  Future<void> _showSATSubjectChoice() async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF667eea),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.school,
+                  color: Colors.white,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                'Choose SAT Subject',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                ),
+              ),
+            ],
+          ),
+          content: const Text(
+            'Which SAT subject would you like to practice?\n\n'
+            '• Reading & Writing: Tests reading comprehension, analysis, and writing skills\n'
+            '• Math: Tests mathematical reasoning, algebra, geometry, and data analysis',
+            style: TextStyle(fontSize: 16),
+          ),
+          actions: [
+            Row(
+              children: [
+                Expanded(
+                  child: TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      _importSATSubject('SAT Reading & Writing');
+                    },
+                    style: TextButton.styleFrom(
+                      backgroundColor: const Color(0xFF667eea),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text(
+                      'Reading & Writing',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      _importSATSubject('SAT Math');
+                    },
+                    style: TextButton.styleFrom(
+                      backgroundColor: const Color(0xFF764ba2),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text(
+                      'Math',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Import SAT subject
+  Future<void> _importSATSubject(String subjectName) async {
+    try {
+      // Check if the set is already imported
+      final isAlreadyImported = await _isSetAlreadyImported(subjectName);
+      if (isAlreadyImported) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.info_outline, color: Colors.white),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Text('Set "$subjectName" is already imported!'),
+                  ),
+                ],
+              ),
+              backgroundColor: Colors.orange,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              margin: const EdgeInsets.all(16),
+            ),
+          );
+        }
+        return;
+      }
+
+      // Show loading state
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Text('Importing $subjectName...'),
+              ],
+            ),
+            backgroundColor: Colors.blue,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+
+      // Create a custom study set for the SAT subject
+      final studySet = {
+        'name': subjectName,
+        'description': subjectName == 'SAT Reading & Writing' 
+            ? 'SAT Reading & Writing practice questions'
+            : 'SAT Math practice questions',
+        'questions': _getSATQuestions(subjectName),
+        'isCustom': true,
+        'createdAt': DateTime.now().millisecondsSinceEpoch,
+        'color': subjectName == 'SAT Reading & Writing'
+            ? [const Color(0xFF667eea), const Color(0xFF764ba2)]
+            : [const Color(0xFF764ba2), const Color(0xFF667eea)],
+        'icon': subjectName == 'SAT Reading & Writing'
+            ? Icons.menu_book
+            : Icons.calculate,
+      };
+
+      // Save to database using existing methods
+      final studySetId = await _dbHelper.createStudySet(
+        studySet['name'] as String,
+        studySet['description'] as String,
+        widget.username,
+      );
+
+      if (studySetId != null) {
+        // Add questions to the study set
+        final questions = studySet['questions'] as List<Map<String, dynamic>>;
+        for (final question in questions) {
+          await _dbHelper.addQuestionToStudySet(
+            studySetId,
+            question['question'] as String,
+            (question['options'] as List<String>)[question['correct'] as int],
+            question['options'] as List<String>,
+          );
+        }
+
+        // Import the set for the user
+        await _dbHelper.importPremadeSet(widget.username, studySetId);
+
+        // Add to the local apClasses list for immediate display
+        apClasses.add(studySet);
+      }
+
+      // Show success message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.check,
+                    color: Colors.green,
+                    size: 16,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text(
+                        'Successfully Imported!',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      Text(
+                        subjectName,
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 3),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            margin: const EdgeInsets.all(16),
+          ),
+        );
+      }
+
+      // Notify parent to refresh
+      widget.onSetImported?.call();
+    } catch (e) {
+      debugPrint('Error importing SAT subject: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error_outline, color: Colors.white),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Text(
+                      'Failed to import SAT subject. Please try again.'),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            margin: const EdgeInsets.all(16),
+          ),
+        );
+      }
+    }
+  }
+
+  // Get SAT questions based on subject
+  List<Map<String, dynamic>> _getSATQuestions(String subject) {
+    if (subject == 'SAT Reading & Writing') {
+      return [
+        {
+          'question': 'What is the main idea of the following passage?',
+          'options': [
+            'The importance of environmental conservation',
+            'The benefits of renewable energy',
+            'The history of climate change',
+            'The future of technology'
+          ],
+          'correct': 0,
+          'explanation': 'The passage primarily discusses environmental conservation and its significance.',
+        },
+        {
+          'question': 'Which word best completes the sentence?',
+          'options': ['Therefore', 'However', 'Moreover', 'Nevertheless'],
+          'correct': 1,
+          'explanation': '"However" is the best choice as it shows contrast with the previous statement.',
+        },
+        {
+          'question': 'What is the author\'s tone in this passage?',
+          'options': ['Optimistic', 'Pessimistic', 'Neutral', 'Sarcastic'],
+          'correct': 0,
+          'explanation': 'The author uses positive language and hopeful examples, indicating an optimistic tone.',
+        },
+        {
+          'question': 'Which sentence contains a grammatical error?',
+          'options': [
+            'The students are studying for their exams.',
+            'Neither the teacher nor the students was present.',
+            'She has been working here since 2020.',
+            'The book that I bought yesterday is interesting.'
+          ],
+          'correct': 1,
+          'explanation': 'Should be "were present" since "neither...nor" takes a plural verb when the second subject is plural.',
+        },
+        {
+          'question': 'What is the purpose of this paragraph?',
+          'options': [
+            'To inform',
+            'To persuade',
+            'To entertain',
+            'To describe'
+          ],
+          'correct': 0,
+          'explanation': 'The paragraph presents factual information without trying to change the reader\'s opinion.',
+        },
+      ];
+    } else {
+      // SAT Math questions
+      return [
+        {
+          'question': 'If 2x + 3 = 11, what is the value of x?',
+          'options': ['2', '3', '4', '5'],
+          'correct': 2,
+          'explanation': '2x + 3 = 11, subtract 3 from both sides: 2x = 8, divide by 2: x = 4.',
+        },
+        {
+          'question': 'What is the area of a circle with radius 5?',
+          'options': ['25π', '50π', '75π', '100π'],
+          'correct': 0,
+          'explanation': 'Area = πr² = π(5)² = 25π.',
+        },
+        {
+          'question': 'If f(x) = 2x² - 3x + 1, what is f(2)?',
+          'options': ['3', '5', '7', '9'],
+          'correct': 0,
+          'explanation': 'f(2) = 2(2)² - 3(2) + 1 = 2(4) - 6 + 1 = 8 - 6 + 1 = 3.',
+        },
+        {
+          'question': 'What is the slope of the line passing through (2,3) and (4,7)?',
+          'options': ['1', '2', '3', '4'],
+          'correct': 1,
+          'explanation': 'Slope = (y₂-y₁)/(x₂-x₁) = (7-3)/(4-2) = 4/2 = 2.',
+        },
+        {
+          'question': 'What is the probability of rolling a 6 on a fair die?',
+          'options': ['1/6', '1/3', '1/2', '1'],
+          'correct': 0,
+          'explanation': 'On a fair 6-sided die, each number has an equal probability of 1/6.',
+        },
+      ];
+    }
+  }
+
   // Add import functionality for MCQ sets
   Future<void> _importMCQSet(String subjectName) async {
     try {
@@ -4298,6 +4719,12 @@ class _MCQManagerState extends State<MCQManager> {
             ),
           );
         }
+        return;
+      }
+
+      // Special handling for SAT course
+      if (subjectName == 'SAT') {
+        await _showSATSubjectChoice();
         return;
       }
 

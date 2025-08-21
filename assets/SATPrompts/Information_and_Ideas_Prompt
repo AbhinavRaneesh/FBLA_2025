@@ -1,0 +1,90 @@
+Information and Ideas
+Prompt : You are an expert in SAT Reading and Writing Section and you will act as if you are the College Board and generate SAT-like questions for me. The following are a few of the examples for the infomation and ideas questions types; using them as a guide, generate [number of quiestions specified by the user] for Information and Ideas topic.
+Format : Give the answer in the following format [Question (which includes everything like the passage and the qactual question), Answer Choice A, Answer choice B, Answer choice C, Answer Choice D, Letter of the correct asnwer option, explanation]
+Do not inlcude any additiona. text like, "here is the quesitons" sincce that will disrupt the fomratting
+Examples of Information and Ideas question from the College Board
+SAT Information and Ideas Practice Questions with Answers and Explanations
+
+1. The Hubble Space Telescope (HST) is projected to maintain operation until at least 2030, but it has already
+revolutionized high-resolution imaging of solar-system bodies in visible and ultraviolet (UV) light wavelengths,
+notwithstanding that only about 6% of the bodies imaged by the HST are within the solar system. NASA researcher
+Cindy L. Young and colleagues assert that a new space telescope dedicated exclusively to solar-system observations
+would permit an extensive survey of minor solar-system bodies and long-term UV observation to discern how solar-system
+bodies change over time. Young and colleagues’ recommendation therefore implies that the HST ______
+
+A. will likely continue to be used primarily to observe objects outside the solar system.  
+B. will no longer be used to observe solar system objects if the telescope recommended by Young and colleagues is deployed.  
+C. can be modified to observe the features of solar system objects that are of interest to Young and colleagues.  
+D. lacks the sensors to observe the wavelengths of light needed to discern how solar system bodies change over time.  
+
+Correct Answer: A  
+Explanation: The HST is used mainly for observing objects outside the solar system (94% of the time). If a new telescope focuses entirely on the solar system, HST will still mostly be used for outside observations. The passage never suggests it will stop being used for solar system observations or that it needs modification.  
+
+
+2. Neural networks are computer models intended to reflect the organization of human brains and are often
+used in studies of brain function. According to an analysis of 11,000 such networks, Rylan Schaeffer and colleagues advise
+caution when drawing conclusions about brains from observations of neural networks. They found that when attempting to
+mimic grid cells (brain cells used in navigation), while 90% of the networks could accomplish navigation-related tasks,
+only about 10% of those exhibited any behaviors similar to those of grid cells. But even this approximation of grid-cell
+activity has less to do with similarity between the neural networks and biological brains than it does with the rules programmed
+into the networks.
+
+Which finding, if true, would most directly support the claim in the underlined sentence?
+
+A. The rules that allow for networks to exhibit behaviors like those of grid cells have no equivalent in the function of biological brains.  
+B. The networks that do not exhibit behaviors like those of grid cells were nonetheless programmed with rules that had proven useful in earlier neural-network studies.  
+C. Neural networks can often accomplish tasks that biological brains do, but they are typically programmed with rules to model multiple types of brain cells simultaneously.  
+D. Once a neural network is programmed, it is trained on certain tasks to see if it can independently arrive at processes that are similar to those performed by biological brains.  
+
+Correct Answer: A  
+Explanation: This directly supports the idea that any resemblance between neural networks and biological brains comes from artificial rules, not genuine similarity. Other choices mention rules or training but don’t connect them to differences from real brains.  
+
+
+3. Algae living within the tissues of corals play a critical role in keeping corals, and the marine ecosystems they are part of, thriving. 
+Some coral species appear brown in color when healthy due to the algae colonies living in their tissues. In the event of an environmental stressor, 
+the algae can die or be expelled, causing the corals to appear white. To recover the algae, the bleached corals then begin to produce bright colors, 
+which block intense sunlight, encouraging the light-sensitive algae to recolonize the corals.
+
+What does the text most strongly suggest about corals that produce bright colors?
+
+A. These corals have likely been subjected to stressful environmental conditions.  
+B. These corals are likely more vulnerable to exposure from intense sunlight than white corals are.  
+C. These corals have likely recovered from an environmental event without the assistance of algae colonies.  
+D. These corals are more likely to survive without algae colonies than brown corals are.  
+
+Correct Answer: A  
+Explanation: The text says bright colors appear after environmental stress and help corals recover algae. That means bright colors indicate stressful conditions. The other choices misinterpret or add unsupported claims.  
+
+
+4. Biologist Angela Stöger and her team analyzed hundreds of hours of recordings of giraffes in three
+European zoos and found that giraffes make a very low-pitched humming sound. The researchers claim that the giraffes
+use these sounds to communicate when it’s not possible for them to signal one another visually.
+
+Which finding, if true, would most directly support Stöger and her team’s claim?
+
+A. Giraffes have an excellent sense of vision and can see in color.  
+B. The giraffes only produced the humming sounds at night when they couldn’t see one another.  
+C. Wild giraffes have never been recorded making humming sounds.  
+D. Researchers observed other animals in European zoos humming.  
+
+Correct Answer: B  
+Explanation: If giraffes hum specifically when visual communication is impossible (like at night), it supports the claim that humming is a substitute for visual signaling. The other options don’t connect to that claim.  
+
+
+5. Bicycles were first mass-produced in the late nineteenth century throughout Europe and North America,
+allowing individuals remarkable freedom to travel longer distances quickly and comfortably. This freedom,
+coupled with the affordability of the vehicle, made the bicycle immensely popular. Individuals were able to
+live farther from their workplaces, easily visit neighboring towns, and participate in new leisure and sport
+activities. Bicycling quickly became a popular social endeavor, with enthusiasts forming local cycling clubs to
+enjoy these newfound activities with others.  
+
+Which choice best states the main idea of the text?
+
+A. The widespread adoption of the bicycle in the late nineteenth century provided new opportunities for people.  
+B. The affordability of the bicycle in the late nineteenth century made it the preferred way to travel.  
+C. The popularity of the bicycle in the late nineteenth century gave rise to the first cycling clubs.  
+D. The mass production of the bicycle in the late nineteenth century made it safer for people to use.  
+
+Correct Answer: A  
+Explanation: The passage emphasizes that bicycles enabled people to travel farther, live differently, and socialize in new ways—these were new opportunities. Cycling clubs are mentioned but are only one detail, not the main idea.  
+Note : do not incclude any additionaol test ike here is the sat question, or **Qeustion**, all i want it is in the foirmat i have given above in the prompt

@@ -3141,6 +3141,7 @@ class _LearnTabState extends State<LearnTab>
     // Check if this is exactly AP Computer Science A
     String studySetName = studySet['name']?.toString() ?? '';
     bool isAPCompSciA = studySetName == 'AP Computer Science A';
+    bool isSATReadingWriting = studySetName == 'SAT Reading & Writing';
 
     if (isAPCompSciA) {
       // Show practice mode selection for AP Computer Science A
@@ -3157,6 +3158,9 @@ class _LearnTabState extends State<LearnTab>
         // Refresh points when returning from practice
         _loadUserData();
       });
+    } else if (isSATReadingWriting) {
+      // Show topic selection for SAT Reading & Writing
+      _showSATTopicSelection(studySet);
     } else {
       // Go directly to MCQ practice for all other courses
       Navigator.push(
@@ -3173,6 +3177,180 @@ class _LearnTabState extends State<LearnTab>
         _loadUserData();
       });
     }
+  }
+
+  void _showSATTopicSelection(Map<String, dynamic> studySet) {
+    showDialog<void>(
+      context: this.context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF667eea),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.menu_book,
+                  color: Colors.white,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                'Choose SAT Topic',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                ),
+              ),
+            ],
+          ),
+          content: const Text(
+            'Which SAT Reading & Writing topic would you like to practice?\n\n'
+            '• Information and Ideas: Main ideas, supporting details, and text analysis\n'
+            '• Craft and Structure: Author\'s purpose, text structure, and rhetorical devices\n'
+            '• Expression of Ideas: Writing style, word choice, and sentence structure\n'
+            '• Standard English Conventions: Grammar, punctuation, and usage',
+            style: TextStyle(fontSize: 16),
+          ),
+          actions: [
+            Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          _startSATTopicPractice(studySet, 'Information and Ideas');
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF667eea),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text(
+                          'Information and Ideas',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          _startSATTopicPractice(studySet, 'Craft and Structure');
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF764ba2),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text(
+                          'Craft and Structure',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          _startSATTopicPractice(studySet, 'Expression of Ideas');
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF43e97b),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text(
+                          'Expression of Ideas',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          _startSATTopicPractice(studySet, 'Standard English Conventions');
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFfa709a),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text(
+                          'Standard English Conventions',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _startSATTopicPractice(Map<String, dynamic> studySet, String topic) {
+    // Navigate to practice mode screen with topic information
+    Navigator.push(
+      this.context,
+      MaterialPageRoute(
+        builder: (context) => PracticeModeScreen(
+          studySet: studySet,
+          username: widget.username,
+          currentTheme: widget.currentTheme,
+          satTopic: topic, // Pass the topic information
+        ),
+      ),
+    ).then((_) {
+      // Refresh points when returning from practice
+      _loadUserData();
+    });
   }
 
   void _deleteStudySet(int studySetId) {
@@ -3962,12 +4140,14 @@ class PracticeModeScreen extends StatefulWidget {
   final Map<String, dynamic> studySet;
   final String username;
   final String currentTheme;
+  final String? satTopic; // Optional parameter for SAT topics
 
   const PracticeModeScreen({
     super.key,
     required this.studySet,
     required this.username,
     required this.currentTheme,
+    this.satTopic, // Make it optional
   });
 
   @override
@@ -4009,6 +4189,7 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
   bool _doublePointsActive = false;
   bool _extraTimeUsed = false;
   List<String> _removedOptions = [];
+  String informationAndIdeasPrompt = '';
 
   @override
   bool get wantKeepAlive => true;
@@ -4019,12 +4200,85 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
     _loadQuestions();
     _loadUserProfileImage();
     _loadUserData();
+    
+    // Check if this is an SAT topic and open chat for "Information and Ideas"
+    if (widget.satTopic == 'Information and Ideas') {
+      // Load the prompt first, then open chat
+      _loadSATPromptAndOpenChat();
+    } else {
+      // Load prompt for other cases
+      _loadSATPrompt();
+    }
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     _refreshUserProfileImage();
+  }
+
+  Future<void> _loadSATPrompt() async {
+    try {
+      final promptContent = await rootBundle.loadString('assets/SATPrompts/Information_and_Ideas_Prompt');
+      setState(() {
+        informationAndIdeasPrompt = promptContent;
+      });
+    } catch (e) {
+      // If file loading fails, use a fallback prompt
+      setState(() {
+        informationAndIdeasPrompt = 'You are an expert in SAT Reading and Writing Section. Please help me practice Information and Ideas questions for the SAT.';
+      });
+      print('Error loading SAT prompt: $e');
+    }
+  }
+
+  Future<void> _loadSATPromptAndOpenChat() async {
+    try {
+      final promptContent = await rootBundle.loadString('assets/SATPrompts/Information_and_Ideas_Prompt');
+      setState(() {
+        informationAndIdeasPrompt = promptContent;
+      });
+      
+      // Delay to ensure the screen is fully loaded, then open chat
+      Future.delayed(const Duration(milliseconds: 500), () {
+        _openQuestAIChat(informationAndIdeasPrompt);
+      });
+    } catch (e) {
+      // If file loading fails, use a fallback prompt
+      setState(() {
+        informationAndIdeasPrompt = 'You are an expert in SAT Reading and Writing Section. Please help me practice Information and Ideas questions for the SAT.';
+      });
+      print('Error loading SAT prompt: $e');
+      
+      // Still open chat with fallback prompt
+      Future.delayed(const Duration(milliseconds: 500), () {
+        _openQuestAIChat(informationAndIdeasPrompt);
+      });
+    }
+  }
+
+  void _openQuestAIChat(String initialMessage) {
+    // Clear previous chat history
+    _chatBloc.add(ChatClearHistoryEvent());
+    
+    // Show the chat interface
+    setState(() {
+      _showChat = true;
+    });
+    
+    // Send the initial message to the chat
+    _chatBloc.add(ChatGenerationNewTextMessageEvent(inputMessage: initialMessage));
+    
+    // Auto-scroll to bottom after a short delay to ensure the chat interface is rendered
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (_chatScrollController.hasClients) {
+        _chatScrollController.animateTo(
+          _chatScrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
   }
 
   @override
