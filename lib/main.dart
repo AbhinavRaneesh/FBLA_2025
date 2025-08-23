@@ -4177,6 +4177,10 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
   String? _selectedAnswer;
   bool _showAnswer = false;
   File? _userProfileImage;
+  
+  // SAT question parsing variables
+  String? _aiResponse;
+  bool _showParseButton = false;
 
   // Points and powerups
   int _currentPoints = 0;
@@ -4261,13 +4265,37 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
     // Clear previous chat history
     _chatBloc.add(ChatClearHistoryEvent());
     
-    // Show the chat interface
+    // Show the chat interface (no loading state initially)
     setState(() {
       _showChat = true;
+      _isLoading = false;
     });
     
     // Send the initial message to the chat
     _chatBloc.add(ChatGenerationNewTextMessageEvent(inputMessage: initialMessage));
+    
+    // Add listener for chat responses to parse SAT questions
+    _chatBloc.stream.listen((state) {
+      if (state is ChatSuccessState && state.messages.isNotEmpty) {
+        final lastMessage = state.messages.last;
+        if (lastMessage.role == "model") {
+          // Check if this is an SAT Information and Ideas response
+          if (widget.satTopic == 'Information and Ideas') {
+            // Show a button to parse and display questions
+            _showParseQuestionsButton(lastMessage.parts.first.text);
+          }
+        }
+      } else if (state is ChatErrorState) {
+        // Show error message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${state.message}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    });
     
     // Auto-scroll to bottom after a short delay to ensure the chat interface is rendered
     Future.delayed(const Duration(milliseconds: 100), () {
@@ -4279,6 +4307,299 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
         );
       }
     });
+  }
+
+  // Function to show a button to parse questions after AI response
+  void _showParseQuestionsButton(String aiResponse) {
+    setState(() {
+      _aiResponse = aiResponse; // Store the AI response
+      _showParseButton = true; // Show the parse button
+    });
+  }
+
+  // Function to parse SAT questions from AI response
+  void _parseAndDisplaySATQuestions(String aiResponse) {
+    try {
+      print('=== START OF AI RESPONSE ===');
+      print(aiResponse);
+      print('=== END OF AI RESPONSE ===');
+      print('Response length: ${aiResponse.length}');
+      print('Contains %: ${aiResponse.contains('%')}');
+      print('Contains [: ${aiResponse.contains('[')}');
+      print('Contains ]: ${aiResponse.contains(']')}');
+      
+      List<Map<String, dynamic>> parsedQuestions = [];
+      
+            // First, try to find questions by looking for the pattern [Answer choices...]
+      RegExp questionPattern = RegExp(r'\[([^\]]+)\]');
+      Iterable<RegExpMatch> matches = questionPattern.allMatches(aiResponse);
+      
+      for (RegExpMatch match in matches) {
+        String bracketContent = match.group(1) ?? '';
+        print('Found bracket content: $bracketContent');
+        
+        // Check if this looks like answer choices with % separators
+        if (bracketContent.contains('%')) {
+          // Find the question text that comes before the brackets
+          String questionText = _findQuestionTextBeforeBrackets(aiResponse, match.start);
+          if (questionText.isNotEmpty) {
+            // Combine question text with bracket content
+            String fullQuestion = '[$questionText%$bracketContent]';
+            print('Combined question: $fullQuestion');
+            
+            Map<String, dynamic>? question = _parseSATQuestionFormat(fullQuestion);
+            if (question != null) {
+              parsedQuestions.add(question);
+              print('Successfully parsed SAT question: ${question['question_text']}');
+            }
+          }
+        }
+      }
+      
+      // If no questions found with regex, try line-by-line parsing
+      if (parsedQuestions.isEmpty) {
+        print('No questions found with regex, trying line-by-line parsing');
+        List<String> lines = aiResponse.split('\n');
+        
+        for (String line in lines) {
+          String trimmedLine = line.trim();
+          if (trimmedLine.startsWith('[') && trimmedLine.endsWith(']')) {
+            Map<String, dynamic>? question = _parseSATQuestionFormat(trimmedLine);
+            if (question != null) {
+              parsedQuestions.add(question);
+              print('Successfully parsed SAT question: ${question['question_text']}');
+            }
+          }
+        }
+      }
+      
+      // If still no questions found, try to find any text with % separators
+      if (parsedQuestions.isEmpty) {
+        print('Still no questions found, trying to find any text with % separators');
+        List<String> lines = aiResponse.split('\n');
+        
+        for (String line in lines) {
+          String trimmedLine = line.trim();
+          // Look for any line that contains % separators and has enough parts
+          if (trimmedLine.contains('%')) {
+            List<String> parts = trimmedLine.split('%');
+            if (parts.length >= 7) {
+              // Try to parse it as a question
+              Map<String, dynamic>? question = _parseSATQuestionFormat('[$trimmedLine]');
+              if (question != null) {
+                parsedQuestions.add(question);
+                print('Successfully parsed SAT question from line with % separators: ${question['question_text']}');
+              }
+            }
+          }
+        }
+      }
+      
+      if (parsedQuestions.isNotEmpty) {
+        setState(() {
+          _questions = parsedQuestions;
+          _showQuizArea = true;
+          _showChat = false; // Hide chat and show quiz
+          _currentQuestionIndex = 0;
+          _selectedAnswer = null;
+          _showAnswer = false;
+          _isLoading = false; // Stop loading indicator
+          _showParseButton = false; // Hide parse button
+          _aiResponse = null; // Clear AI response
+        });
+        
+        print('Successfully loaded ${parsedQuestions.length} SAT questions');
+        
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Successfully loaded ${parsedQuestions.length} SAT questions!'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      } else {
+        print('No SAT questions found in AI response');
+        setState(() {
+          _isLoading = false;
+          _showParseButton = false; // Hide parse button
+        });
+        
+        // Show error message
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No questions found in AI response. Please try again.'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      print('Error parsing SAT questions: $e');
+      setState(() {
+        _isLoading = false;
+        _showParseButton = false; // Hide parse button
+      });
+      
+      // Show error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error parsing questions: $e'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+
+  // Function to find question text that comes before brackets
+  String _findQuestionTextBeforeBrackets(String aiResponse, int bracketStart) {
+    try {
+      // Look for text before the brackets that could be a question
+      // Start from the beginning and go up to the bracket
+      String textBeforeBrackets = aiResponse.substring(0, bracketStart).trim();
+      
+      // Split by lines and find the last non-empty line that looks like a question
+      List<String> lines = textBeforeBrackets.split('\n');
+      String questionText = '';
+      
+      for (int i = lines.length - 1; i >= 0; i--) {
+        String line = lines[i].trim();
+        if (line.isNotEmpty) {
+          // Check if this line looks like a question (ends with common question words)
+          if (line.endsWith('to') || 
+              line.endsWith('?') || 
+              line.endsWith('is') ||
+              line.endsWith('are') ||
+              line.endsWith('does') ||
+              line.endsWith('do') ||
+              line.endsWith('would') ||
+              line.endsWith('could') ||
+              line.endsWith('should')) {
+            questionText = line;
+            break;
+          }
+        }
+      }
+      
+      print('Found question text: "$questionText"');
+      return questionText;
+    } catch (e) {
+      print('Error finding question text: $e');
+      return '';
+    }
+  }
+
+  // Function to parse SAT question format: [Question% Answer choice A% Answer choice B% Answer Choice C% Answer choice D% Correct answer choice letter%Explanation]
+  Map<String, dynamic>? _parseSATQuestionFormat(String line) {
+    try {
+      print('Attempting to parse line: $line');
+      
+      // Remove [ and ] brackets
+      if (!line.startsWith('[') || !line.endsWith(']')) {
+        print('Line does not start with [ or end with ]');
+        return null;
+      }
+      
+      String content = line.substring(1, line.length - 1);
+      print('Content after removing brackets: $content');
+      
+      // Split by % symbol
+      List<String> parts = content.split('%');
+      print('Split into ${parts.length} parts: $parts');
+      
+      if (parts.length >= 7) {
+        // Extract the full question text (which contains both paragraph and question)
+        String fullQuestionText = parts[0].trim();
+        
+        // Try to separate paragraph from the actual question
+        String paragraph = '';
+        String questionOnly = '';
+        
+        // Look for patterns that indicate where the paragraph ends and question begins
+        List<String> sentences = fullQuestionText.split('. ');
+        
+        // Find the last sentence that looks like a question (contains question words)
+        for (int i = sentences.length - 1; i >= 0; i--) {
+          String sentence = sentences[i].trim();
+          if (sentence.contains('The author') || 
+              sentence.contains('Which') || 
+              sentence.contains('What') || 
+              sentence.contains('How') ||
+              sentence.contains('purpose is to') ||
+              sentence.contains('most directly') ||
+              sentence.contains('best states') ||
+              sentence.contains('suggests about')) {
+            // This looks like the question part
+            questionOnly = sentences.sublist(i).join('. ').trim();
+            if (i > 0) {
+              paragraph = sentences.sublist(0, i).join('. ').trim() + '.';
+            }
+            break;
+          }
+        }
+        
+        // If we couldn't separate them, use the full text as question
+        if (questionOnly.isEmpty) {
+          questionOnly = fullQuestionText;
+        }
+        
+        // Get the answer choices
+        String optionA = parts[1].trim();
+        String optionB = parts[2].trim();
+        String optionC = parts[3].trim();
+        String optionD = parts[4].trim();
+        String correctLetter = parts[5].trim().toUpperCase();
+        
+        print('Parsed paragraph: $paragraph');
+        print('Parsed question: $questionOnly');
+        print('Parsed options: A=$optionA, B=$optionB, C=$optionC, D=$optionD');
+        print('Correct letter: $correctLetter');
+        
+        // Map the correct letter to the actual answer text
+        String correctAnswer;
+        switch (correctLetter) {
+          case 'A':
+            correctAnswer = optionA;
+            break;
+          case 'B':
+            correctAnswer = optionB;
+            break;
+          case 'C':
+            correctAnswer = optionC;
+            break;
+          case 'D':
+            correctAnswer = optionD;
+            break;
+          default:
+            correctAnswer = optionA; // Default to A if letter is not recognized
+            print('Unknown correct letter: $correctLetter, defaulting to A');
+        }
+        
+        String explanation = parts.length > 6 ? parts[6].trim() : '';
+        if (parts.length > 7) {
+          // If there are more parts, combine them as explanation
+          explanation = parts.sublist(6).join('%').trim();
+        }
+        
+        print('Final explanation: $explanation');
+        
+        return {
+          'question_text': questionOnly,
+          'paragraph': paragraph,
+          'options': '$optionA|$optionB|$optionC|$optionD',
+          'correct_answer': correctAnswer,
+          'correct_letter': correctLetter,
+          'explanation': explanation,
+        };
+      } else {
+        print('Expected 7 parts but got ${parts.length}. Parts: $parts');
+        return null;
+      }
+    } catch (e) {
+      print('Error parsing SAT question format: $e');
+      return null;
+    }
   }
 
   @override
@@ -6984,20 +7305,48 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                     width: 1.5,
                   ),
                 ),
-                child: Center(
-                  child: Text(
-                    _questions[_currentQuestionIndex]['question_text'],
-                    style: TextStyle(
-                      color: widget.currentTheme == 'beach'
-                          ? ThemeColors.getTextColor('beach')
-                          : Colors.white,
-                      fontSize: 24, // Reduced from 26
-                      fontWeight: FontWeight.bold,
-                      height: 1.4, // Reduced from 1.5
-                      letterSpacing: 0.2, // Reduced from 0.3
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Display paragraph if it exists (for SAT questions)
+                    if (_questions[_currentQuestionIndex]['paragraph'] != null && 
+                        _questions[_currentQuestionIndex]['paragraph'].toString().isNotEmpty) ...[ 
+                      Text(
+                        _questions[_currentQuestionIndex]['paragraph'],
+                        style: TextStyle(
+                          color: widget.currentTheme == 'beach'
+                              ? ThemeColors.getTextColor('beach')
+                              : Colors.white70,
+                          fontSize: 20,
+                          fontWeight: FontWeight.normal,
+                          height: 1.5,
+                          letterSpacing: 0.1,
+                        ),
+                        textAlign: TextAlign.justify,
+                      ),
+                      const SizedBox(height: 16),
+                      // Divider between paragraph and question
+                      Container(
+                        height: 1,
+                        color: Colors.white.withOpacity(0.2),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                    // Display the actual question
+                    Text(
+                      _questions[_currentQuestionIndex]['question_text'],
+                      style: TextStyle(
+                        color: widget.currentTheme == 'beach'
+                            ? ThemeColors.getTextColor('beach')
+                            : Colors.white,
+                        fontSize: 24, // Reduced from 26
+                        fontWeight: FontWeight.bold,
+                        height: 1.4, // Reduced from 1.5
+                        letterSpacing: 0.2, // Reduced from 0.3
+                      ),
+                      textAlign: TextAlign.left,
                     ),
-                    textAlign: TextAlign.center,
-                  ),
+                  ],
                 ),
               ),
             );
@@ -7097,6 +7446,62 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
             ),
           );
         }).toList(),
+        // Show explanation for SAT questions when answer is revealed
+        if (_showAnswer && widget.satTopic == 'Information and Ideas' && 
+            _questions[_currentQuestionIndex]['explanation'] != null) ...[
+          const SizedBox(height: 16),
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 24),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  const Color(0xFF667eea).withOpacity(0.1),
+                  const Color(0xFF764ba2).withOpacity(0.1),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: const Color(0xFF667eea).withOpacity(0.3),
+                width: 1,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      Icons.lightbulb_outline,
+                      color: const Color(0xFF667eea),
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Explanation',
+                      style: TextStyle(
+                        color: const Color(0xFF667eea),
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  _questions[_currentQuestionIndex]['explanation'],
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.9),
+                    fontSize: 14,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
         if (_showAnswer) ...[
           const SizedBox(height: 24), // Reduced from 32
           Padding(
@@ -7422,6 +7827,54 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
               },
             ),
           ),
+          // Parse questions button for SAT Information and Ideas
+          if (_showParseButton && widget.satTopic == 'Information and Ideas') ...[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF43e97b), Color(0xFF38f9d7)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF43e97b).withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    if (_aiResponse != null) {
+                      _parseAndDisplaySATQuestions(_aiResponse!);
+                    }
+                  },
+                  icon: const Icon(Icons.quiz, color: Colors.white, size: 20),
+                  label: const Text(
+                    'Parse & Start Quiz',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
           // Chat input
           Container(
             padding: const EdgeInsets.all(16),
