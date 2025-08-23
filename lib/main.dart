@@ -4330,7 +4330,7 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
       
       List<Map<String, dynamic>> parsedQuestions = [];
       
-            // First, try to find questions by looking for the pattern [Answer choices...]
+      // Split the AI response into sections by looking for bracketed content
       RegExp questionPattern = RegExp(r'\[([^\]]+)\]');
       Iterable<RegExpMatch> matches = questionPattern.allMatches(aiResponse);
       
@@ -4338,20 +4338,116 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
         String bracketContent = match.group(1) ?? '';
         print('Found bracket content: $bracketContent');
         
-        // Check if this looks like answer choices with % separators
-        if (bracketContent.contains('%')) {
-          // Find the question text that comes before the brackets
-          String questionText = _findQuestionTextBeforeBrackets(aiResponse, match.start);
-          if (questionText.isNotEmpty) {
-            // Combine question text with bracket content
-            String fullQuestion = '[$questionText%$bracketContent]';
-            print('Combined question: $fullQuestion');
-            
-            Map<String, dynamic>? question = _parseSATQuestionFormat(fullQuestion);
-            if (question != null) {
-              parsedQuestions.add(question);
-              print('Successfully parsed SAT question: ${question['question_text']}');
+        // Split the bracket content by % to see how many parts we have
+        List<String> bracketParts = bracketContent.split('%');
+        print('Bracket parts: $bracketParts (${bracketParts.length} parts)');
+        
+        // We expect the format: [question%choiceA%choiceB%choiceC%choiceD%correct_letter%explanation]
+        // So we need to find the question text that comes BEFORE the brackets
+        if (bracketParts.length >= 6) {
+          // Find the text before these brackets
+          String textBeforeBrackets = aiResponse.substring(0, match.start).trim();
+          print('Text before brackets: "$textBeforeBrackets"');
+          
+          // Look for the last question in the text before brackets
+          String questionText = '';
+          String passage = '';
+          
+          // Split by lines and find the question
+          List<String> lines = textBeforeBrackets.split('\n');
+          for (int i = lines.length - 1; i >= 0; i--) {
+            String line = lines[i].trim();
+            if (line.isNotEmpty) {
+              // Check if this line looks like a question
+              if (line.contains('Which') || 
+                  line.contains('What') || 
+                  line.contains('How') ||
+                  line.contains('The author') ||
+                  line.contains('purpose is to') ||
+                  line.contains('most directly') ||
+                  line.contains('best states') ||
+                  line.contains('suggests about') ||
+                  line.endsWith('?')) {
+                questionText = line;
+                // Everything before this line is the passage
+                if (i > 0) {
+                  passage = lines.sublist(0, i).join('\n').trim();
+                }
+                break;
+              }
             }
+          }
+          
+          // If we couldn't find a question, use the last non-empty line
+          if (questionText.isEmpty) {
+            for (int i = lines.length - 1; i >= 0; i--) {
+              if (lines[i].trim().isNotEmpty) {
+                questionText = lines[i].trim();
+                if (i > 0) {
+                  passage = lines.sublist(0, i).join('\n').trim();
+                }
+                break;
+              }
+            }
+          }
+          
+          print('Extracted question: "$questionText"');
+          print('Extracted passage: "$passage"');
+          
+          // Now parse the bracket content - expecting 6 parts
+          if (bracketParts.length >= 6) {
+            String passageAndQuestion = bracketParts[0].trim();
+            String optionA = bracketParts[1].trim();
+            String optionB = bracketParts[2].trim();
+            String optionC = bracketParts[3].trim();
+            String optionD = bracketParts[4].trim();
+            String correctLetter = bracketParts[5].trim().toUpperCase();
+            String explanation = bracketParts.length > 6 ? bracketParts.sublist(6).join('%').trim() : '';
+            
+            // Print all 6 parts to debug console
+            print('=== PARSED 6 PARTS ===');
+            print('1. Passage + Question: "$passageAndQuestion"');
+            print('2. Choice A: "$optionA"');
+            print('3. Choice B: "$optionB"');
+            print('4. Choice C: "$optionC"');
+            print('5. Choice D: "$optionD"');
+            print('6. Answer Letter: "$correctLetter"');
+            print('7. Explanation: "$explanation"');
+            print('=== END PARSED PARTS ===');
+            
+            // Map the correct letter to the actual answer text
+            String correctAnswer;
+            switch (correctLetter) {
+              case 'A':
+                correctAnswer = optionA;
+                break;
+              case 'B':
+                correctAnswer = optionB;
+                break;
+              case 'C':
+                correctAnswer = optionC;
+                break;
+              case 'D':
+                correctAnswer = optionD;
+                break;
+              default:
+                correctAnswer = optionA;
+                print('Unknown correct letter: $correctLetter, defaulting to A');
+            }
+            
+            // Create the question object
+            Map<String, dynamic> questionObj = {
+              'question_text': optionA, // The actual question is now Choice A
+              'passage': passageAndQuestion, // The first part contains passage + question
+              'options': '$optionA|$optionB|$optionC|$optionD',
+              'correct_answer': correctAnswer,
+              'correct_letter': correctLetter,
+              'explanation': explanation,
+            };
+            
+            parsedQuestions.add(questionObj);
+            print('Successfully parsed SAT question: ${questionObj['question_text']}');
+            print('With passage: ${questionObj['passage']}');
           }
         }
       }
@@ -4364,10 +4460,62 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
         for (String line in lines) {
           String trimmedLine = line.trim();
           if (trimmedLine.startsWith('[') && trimmedLine.endsWith(']')) {
-            Map<String, dynamic>? question = _parseSATQuestionFormat(trimmedLine);
-            if (question != null) {
-              parsedQuestions.add(question);
-              print('Successfully parsed SAT question: ${question['question_text']}');
+            // Parse the line directly
+            String content = trimmedLine.substring(1, trimmedLine.length - 1);
+            List<String> parts = content.split('%');
+            
+            if (parts.length >= 6) {
+              String passageAndQuestion = parts[0].trim();
+              String optionA = parts[1].trim();
+              String optionB = parts[2].trim();
+              String optionC = parts[3].trim();
+              String optionD = parts[4].trim();
+              String correctLetter = parts[5].trim().toUpperCase();
+              String explanation = parts.length > 6 ? parts.sublist(6).join('%').trim() : '';
+              
+              // Print all 6 parts to debug console
+              print('=== FALLBACK PARSED 6 PARTS ===');
+              print('1. Passage + Question: "$passageAndQuestion"');
+              print('2. Choice A: "$optionA"');
+              print('3. Choice B: "$optionB"');
+              print('4. Choice C: "$optionC"');
+              print('5. Choice D: "$optionD"');
+              print('6. Answer Letter: "$correctLetter"');
+              print('7. Explanation: "$explanation"');
+              print('=== END FALLBACK PARSED PARTS ===');
+              
+              // Map the correct letter to the actual answer text
+              String correctAnswer;
+              switch (correctLetter) {
+                case 'A':
+                  correctAnswer = optionA;
+                  break;
+                case 'B':
+                  correctAnswer = optionB;
+                  break;
+                case 'C':
+                  correctAnswer = optionC;
+                  break;
+                case 'D':
+                  correctAnswer = optionD;
+                  break;
+                default:
+                  correctAnswer = optionA;
+                  print('Unknown correct letter: $correctLetter, defaulting to A');
+              }
+              
+              // Create the question object
+              Map<String, dynamic> questionObj = {
+                'question_text': optionA, // The actual question is now Choice A
+                'passage': passageAndQuestion, // The first part contains passage + question
+                'options': '$optionA|$optionB|$optionC|$optionD',
+                'correct_answer': correctAnswer,
+                'correct_letter': correctLetter,
+                'explanation': explanation,
+              };
+              
+              parsedQuestions.add(questionObj);
+              print('Successfully parsed SAT question from bracketed line: ${questionObj['question_text']}');
             }
           }
         }
@@ -4383,13 +4531,58 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
           // Look for any line that contains % separators and has enough parts
           if (trimmedLine.contains('%')) {
             List<String> parts = trimmedLine.split('%');
-            if (parts.length >= 7) {
-              // Try to parse it as a question
-              Map<String, dynamic>? question = _parseSATQuestionFormat('[$trimmedLine]');
-              if (question != null) {
-                parsedQuestions.add(question);
-                print('Successfully parsed SAT question from line with % separators: ${question['question_text']}');
+            if (parts.length >= 6) {
+              String passageAndQuestion = parts[0].trim();
+              String optionA = parts[1].trim();
+              String optionB = parts[2].trim();
+              String optionC = parts[3].trim();
+              String optionD = parts[4].trim();
+              String correctLetter = parts[5].trim().toUpperCase();
+              String explanation = parts.length > 6 ? parts.sublist(6).join('%').trim() : '';
+              
+              // Print all 6 parts to debug console
+              print('=== FINAL FALLBACK PARSED 6 PARTS ===');
+              print('1. Passage + Question: "$passageAndQuestion"');
+              print('2. Choice A: "$optionA"');
+              print('3. Choice B: "$optionB"');
+              print('4. Choice C: "$optionC"');
+              print('5. Choice D: "$optionD"');
+              print('6. Answer Letter: "$correctLetter"');
+              print('7. Explanation: "$explanation"');
+              print('=== END FINAL FALLBACK PARSED PARTS ===');
+              
+              // Map the correct letter to the actual answer text
+              String correctAnswer;
+              switch (correctLetter) {
+                case 'A':
+                  correctAnswer = optionA;
+                  break;
+                case 'B':
+                  correctAnswer = optionB;
+                  break;
+                case 'C':
+                  correctAnswer = optionC;
+                  break;
+                case 'D':
+                  correctAnswer = optionD;
+                  break;
+                default:
+                  correctAnswer = optionA;
+                  print('Unknown correct letter: $correctLetter, defaulting to A');
               }
+              
+              // Create the question object
+              Map<String, dynamic> questionObj = {
+                'question_text': optionA, // The actual question is now Choice A
+                'passage': passageAndQuestion, // The first part contains passage + question
+                'options': '$optionA|$optionB|$optionC|$optionD',
+                'correct_answer': correctAnswer,
+                'correct_letter': correctLetter,
+                'explanation': explanation,
+              };
+              
+              parsedQuestions.add(questionObj);
+              print('Successfully parsed SAT question from line with % separators: ${questionObj['question_text']}');
             }
           }
         }
@@ -4452,155 +4645,9 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
     }
   }
 
-  // Function to find question text that comes before brackets
-  String _findQuestionTextBeforeBrackets(String aiResponse, int bracketStart) {
-    try {
-      // Look for text before the brackets that could be a question
-      // Start from the beginning and go up to the bracket
-      String textBeforeBrackets = aiResponse.substring(0, bracketStart).trim();
-      
-      // Split by lines and find the last non-empty line that looks like a question
-      List<String> lines = textBeforeBrackets.split('\n');
-      String questionText = '';
-      
-      for (int i = lines.length - 1; i >= 0; i--) {
-        String line = lines[i].trim();
-        if (line.isNotEmpty) {
-          // Check if this line looks like a question (ends with common question words)
-          if (line.endsWith('to') || 
-              line.endsWith('?') || 
-              line.endsWith('is') ||
-              line.endsWith('are') ||
-              line.endsWith('does') ||
-              line.endsWith('do') ||
-              line.endsWith('would') ||
-              line.endsWith('could') ||
-              line.endsWith('should')) {
-            questionText = line;
-            break;
-          }
-        }
-      }
-      
-      print('Found question text: "$questionText"');
-      return questionText;
-    } catch (e) {
-      print('Error finding question text: $e');
-      return '';
-    }
-  }
 
-  // Function to parse SAT question format: [Question% Answer choice A% Answer choice B% Answer Choice C% Answer choice D% Correct answer choice letter%Explanation]
-  Map<String, dynamic>? _parseSATQuestionFormat(String line) {
-    try {
-      print('Attempting to parse line: $line');
-      
-      // Remove [ and ] brackets
-      if (!line.startsWith('[') || !line.endsWith(']')) {
-        print('Line does not start with [ or end with ]');
-        return null;
-      }
-      
-      String content = line.substring(1, line.length - 1);
-      print('Content after removing brackets: $content');
-      
-      // Split by % symbol
-      List<String> parts = content.split('%');
-      print('Split into ${parts.length} parts: $parts');
-      
-      if (parts.length >= 7) {
-        // Extract the full question text (which contains both paragraph and question)
-        String fullQuestionText = parts[0].trim();
-        
-        // Try to separate paragraph from the actual question
-        String paragraph = '';
-        String questionOnly = '';
-        
-        // Look for patterns that indicate where the paragraph ends and question begins
-        List<String> sentences = fullQuestionText.split('. ');
-        
-        // Find the last sentence that looks like a question (contains question words)
-        for (int i = sentences.length - 1; i >= 0; i--) {
-          String sentence = sentences[i].trim();
-          if (sentence.contains('The author') || 
-              sentence.contains('Which') || 
-              sentence.contains('What') || 
-              sentence.contains('How') ||
-              sentence.contains('purpose is to') ||
-              sentence.contains('most directly') ||
-              sentence.contains('best states') ||
-              sentence.contains('suggests about')) {
-            // This looks like the question part
-            questionOnly = sentences.sublist(i).join('. ').trim();
-            if (i > 0) {
-              paragraph = sentences.sublist(0, i).join('. ').trim() + '.';
-            }
-            break;
-          }
-        }
-        
-        // If we couldn't separate them, use the full text as question
-        if (questionOnly.isEmpty) {
-          questionOnly = fullQuestionText;
-        }
-        
-        // Get the answer choices
-        String optionA = parts[1].trim();
-        String optionB = parts[2].trim();
-        String optionC = parts[3].trim();
-        String optionD = parts[4].trim();
-        String correctLetter = parts[5].trim().toUpperCase();
-        
-        print('Parsed paragraph: $paragraph');
-        print('Parsed question: $questionOnly');
-        print('Parsed options: A=$optionA, B=$optionB, C=$optionC, D=$optionD');
-        print('Correct letter: $correctLetter');
-        
-        // Map the correct letter to the actual answer text
-        String correctAnswer;
-        switch (correctLetter) {
-          case 'A':
-            correctAnswer = optionA;
-            break;
-          case 'B':
-            correctAnswer = optionB;
-            break;
-          case 'C':
-            correctAnswer = optionC;
-            break;
-          case 'D':
-            correctAnswer = optionD;
-            break;
-          default:
-            correctAnswer = optionA; // Default to A if letter is not recognized
-            print('Unknown correct letter: $correctLetter, defaulting to A');
-        }
-        
-        String explanation = parts.length > 6 ? parts[6].trim() : '';
-        if (parts.length > 7) {
-          // If there are more parts, combine them as explanation
-          explanation = parts.sublist(6).join('%').trim();
-        }
-        
-        print('Final explanation: $explanation');
-        
-        return {
-          'question_text': questionOnly,
-          'paragraph': paragraph,
-          'options': '$optionA|$optionB|$optionC|$optionD',
-          'correct_answer': correctAnswer,
-          'correct_letter': correctLetter,
-          'explanation': explanation,
-        };
-      } else {
-        print('Expected 7 parts but got ${parts.length}. Parts: $parts');
-        return null;
-      }
-    } catch (e) {
-      print('Error parsing SAT question format: $e');
-      return null;
-    }
-  }
+
+
 
   @override
   void dispose() {
@@ -7308,16 +7355,16 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Display paragraph if it exists (for SAT questions)
-                    if (_questions[_currentQuestionIndex]['paragraph'] != null && 
-                        _questions[_currentQuestionIndex]['paragraph'].toString().isNotEmpty) ...[ 
+                    // Display passage if it exists (for SAT questions)
+                    if (_questions[_currentQuestionIndex]['passage'] != null && 
+                        _questions[_currentQuestionIndex]['passage'].toString().isNotEmpty) ...[ 
                       Text(
-                        _questions[_currentQuestionIndex]['paragraph'],
+                        _questions[_currentQuestionIndex]['passage'],
                         style: TextStyle(
                           color: widget.currentTheme == 'beach'
                               ? ThemeColors.getTextColor('beach')
                               : Colors.white70,
-                          fontSize: 20,
+                          fontSize: 16,
                           fontWeight: FontWeight.normal,
                           height: 1.5,
                           letterSpacing: 0.1,
@@ -7325,7 +7372,7 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
                         textAlign: TextAlign.justify,
                       ),
                       const SizedBox(height: 16),
-                      // Divider between paragraph and question
+                      // Divider between passage and question
                       Container(
                         height: 1,
                         color: Colors.white.withOpacity(0.2),
