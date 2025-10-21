@@ -781,11 +781,52 @@ class BeachBackground extends StatelessWidget {
   }
 }
 
+// Generic image background widget used by image-based themes
+class _ImageBackground extends StatelessWidget {
+  final String assetPath;
+  const _ImageBackground(this.assetPath);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      height: double.infinity,
+      decoration: BoxDecoration(
+        image: DecorationImage(
+          image: AssetImage(assetPath),
+          fit: BoxFit.cover,
+        ),
+      ),
+      child: Container(
+        // Soft overlay to improve text contrast on bright images
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Colors.black.withOpacity(0.05),
+              Colors.black.withOpacity(0.15),
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 // Theme helper function
 Widget getBackgroundForTheme(String theme) {
   switch (theme) {
     case 'beach':
       return const BeachBackground();
+    case 'forest':
+      return const _ImageBackground('assets/images/forest.png');
+    case 'arctic':
+      return const _ImageBackground('assets/images/arctic.png');
+    case 'crystal':
+      return const _ImageBackground('assets/images/glass.png');
+    case 'volcano':
+      return const _ImageBackground('assets/images/volcano.png');
     case 'space':
     default:
       return const SpaceBackground();
@@ -800,12 +841,12 @@ class ThemeColors {
         return const Color(0xFF4DD0E1); // Turquoise from ocean
       case 'forest':
         return const Color(0xFF2E7D32);
-      case 'sunset':
-        return const Color(0xFFFF6D00);
-      case 'purple':
-        return const Color(0xFF6A1B9A);
-      case 'dark':
-        return const Color(0xFF121212);
+      case 'volcano':
+        return const Color(0xFFD32F2F); // Lava red
+      case 'arctic':
+        return const Color(0xFF81D4FA); // Icy blue
+      case 'crystal':
+        return const Color(0xFF80DEEA); // Glassy teal
       case 'space':
       default:
         return const Color(0xFF0A0E21);
@@ -818,12 +859,12 @@ class ThemeColors {
         return const Color(0xFFF5E6D3); // Sandy beige
       case 'forest':
         return const Color(0xFF4CAF50);
-      case 'sunset':
-        return const Color(0xFFFFC107);
-      case 'purple':
-        return const Color(0xFF9C27B0);
-      case 'dark':
-        return const Color(0xFF424242);
+      case 'volcano':
+        return const Color(0xFFFF7043); // Lava orange
+      case 'arctic':
+        return const Color(0xFFB3E5FC); // Pale ice
+      case 'crystal':
+        return const Color(0xFFE0F7FA); // Light aqua
       case 'space':
       default:
         return const Color(0xFF1D1E33);
@@ -834,8 +875,14 @@ class ThemeColors {
     switch (theme) {
       case 'beach':
         return const Color(0xFF2E2E2E); // Dark gray for readability
-      case 'dark':
-        return Colors.white;
+      case 'arctic':
+        return const Color(0xFF2E2E2E); // Arctic is bright, use dark text
+      case 'crystal':
+        return const Color(0xFF2E2E2E); // Crystal/glass is bright
+      case 'forest':
+        return Colors.white; // Forest image is darker
+      case 'volcano':
+        return Colors.white; // Volcano image tends darker
       case 'space':
       default:
         return Colors.white;
@@ -848,12 +895,12 @@ class ThemeColors {
         return const Color(0xFF26C6DA); // Bright turquoise
       case 'forest':
         return const Color(0xFF66BB6A);
-      case 'sunset':
-        return const Color(0xFFFF9800);
-      case 'purple':
-        return const Color(0xFFBA68C8);
-      case 'dark':
-        return const Color(0xFF757575);
+      case 'volcano':
+        return const Color(0xFFFF5722);
+      case 'arctic':
+        return const Color(0xFF4FC3F7);
+      case 'crystal':
+        return const Color(0xFF4DD0E1);
       case 'space':
       default:
         return Colors.blueAccent;
@@ -866,6 +913,14 @@ class ThemeColors {
       case 'beach':
         return const Color(0xFFF5F5DC)
             .withOpacity(0.9); // Beige/cream card background
+      case 'arctic':
+        return const Color(0xFFFFFFFF).withOpacity(0.85);
+      case 'crystal':
+        return const Color(0xFFE0F7FA).withOpacity(0.85);
+      case 'forest':
+        return Colors.white.withOpacity(0.08);
+      case 'volcano':
+        return Colors.white.withOpacity(0.08);
       case 'space':
       default:
         return Colors.white.withOpacity(0.1); // Dark cards for space
@@ -888,6 +943,14 @@ class ThemeColors {
     switch (theme) {
       case 'beach':
         return const Color(0xFFFF8A65); // Coral from tropical flowers
+      case 'volcano':
+        return const Color(0xFFFF7043);
+      case 'arctic':
+        return const Color(0xFF81D4FA);
+      case 'crystal':
+        return const Color(0xFF80DEEA);
+      case 'forest':
+        return const Color(0xFF66BB6A);
       case 'space':
       default:
         return Colors.blueAccent;

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../helpers/database_helper.dart';
 import '../main.dart'
-    show SpaceBackground, BeachBackground, getBackgroundForTheme, ThemeColors;
+  show SpaceBackground, BeachBackground, getBackgroundForTheme, ThemeColors;
 
 class ShopTab extends StatefulWidget {
   final String username;
@@ -84,25 +84,25 @@ class _ShopTabState extends State<ShopTab>
       'icon': Icons.forest,
     },
     {
-      'name': 'Sunset',
+      'name': 'Volcano',
       'price': 150,
-      'color': const Color(0xFFFF6D00),
-      'description': 'Warm sunset colors and glow',
-      'icon': Icons.wb_sunny,
+      'color': const Color(0xFFD32F2F),
+      'description': 'Molten lava energy and heat',
+      'icon': Icons.local_fire_department,
     },
     {
-      'name': 'Purple',
-      'price': 100,
-      'color': const Color(0xFF6A1B9A),
-      'description': 'Royal purple elegance',
-      'icon': Icons.color_lens,
+      'name': 'Arctic',
+      'price': 150,
+      'color': const Color(0xFF81D4FA),
+      'description': 'Cool icy blues and clarity',
+      'icon': Icons.ac_unit,
     },
     {
-      'name': 'Dark',
+      'name': 'Crystal',
       'price': 200,
-      'color': const Color(0xFF121212),
-      'description': 'Pure dark mode experience',
-      'icon': Icons.dark_mode,
+      'color': const Color(0xFF80DEEA),
+      'description': 'Prismatic glass vibes',
+      'icon': Icons.blur_on,
     },
   ];
 
@@ -167,9 +167,8 @@ class _ShopTabState extends State<ShopTab>
                                 style: TextStyle(
                                   fontSize: 32,
                                   fontWeight: FontWeight.bold,
-                                  color: widget.currentTheme == 'beach'
-                                      ? Colors.black
-                                      : Colors.white,
+                                  color: ThemeColors.getTextColor(
+                                      widget.currentTheme),
                                   letterSpacing: 0.5,
                                 ),
                               ),
@@ -178,9 +177,9 @@ class _ShopTabState extends State<ShopTab>
                                 'Enhance your learning experience',
                                 style: TextStyle(
                                   fontSize: 16,
-                                  color: widget.currentTheme == 'beach'
-                                      ? Colors.black
-                                      : Colors.white.withOpacity(0.8),
+                                  color: ThemeColors
+                                      .getTextColor(widget.currentTheme)
+                                      .withOpacity(0.8),
                                   fontWeight: FontWeight.w400,
                                 ),
                               ),
@@ -235,8 +234,11 @@ class _ShopTabState extends State<ShopTab>
                         ),
                         child: TabBar(
                           controller: _tabController,
-                          labelColor: Colors.white,
-                          unselectedLabelColor: Colors.white60,
+                          labelColor:
+                              ThemeColors.getTextColor(widget.currentTheme),
+                          unselectedLabelColor: ThemeColors
+                              .getTextColor(widget.currentTheme)
+                              .withOpacity(0.6),
                           indicator: BoxDecoration(
                             gradient: const LinearGradient(
                               colors: [Color(0xFF667eea), Color(0xFF764ba2)],
@@ -259,11 +261,10 @@ class _ShopTabState extends State<ShopTab>
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Icon(
-                                    Icons.palette, 
+                                    Icons.palette,
                                     size: 20,
-                                    color: widget.currentTheme == 'beach'
-                                        ? const Color(0xFF2E2E2E)
-                                        : Colors.white,
+                                    color: ThemeColors.getTextColor(
+                                        widget.currentTheme),
                                   ),
                                   const SizedBox(width: 8),
                                   Text(
@@ -271,9 +272,8 @@ class _ShopTabState extends State<ShopTab>
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w600,
-                                      color: widget.currentTheme == 'beach'
-                                          ? const Color(0xFF2E2E2E)
-                                          : Colors.white,
+                                      color: ThemeColors.getTextColor(
+                                          widget.currentTheme),
                                     ),
                                   ),
                                 ],
@@ -285,11 +285,10 @@ class _ShopTabState extends State<ShopTab>
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Icon(
-                                    Icons.flash_on, 
+                                    Icons.flash_on,
                                     size: 20,
-                                    color: widget.currentTheme == 'beach'
-                                        ? const Color(0xFF2E2E2E)
-                                        : Colors.white,
+                                    color: ThemeColors.getTextColor(
+                                        widget.currentTheme),
                                   ),
                                   const SizedBox(width: 8),
                                   Text(
@@ -297,9 +296,8 @@ class _ShopTabState extends State<ShopTab>
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w600,
-                                      color: widget.currentTheme == 'beach'
-                                          ? const Color(0xFF2E2E2E)
-                                          : Colors.white,
+                                      color: ThemeColors.getTextColor(
+                                          widget.currentTheme),
                                     ),
                                   ),
                                 ],
