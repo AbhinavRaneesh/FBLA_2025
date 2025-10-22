@@ -30,6 +30,9 @@ import 'helpers/frq_manager.dart';
 import 'screens/study_set_edit_screen.dart';
 import 'screens/modes/lightning_mode_screen.dart';
 import 'screens/modes/puzzle_quest_screen.dart';
+import 'screens/modes/survival_mode_screen.dart';
+import 'screens/modes/memory_master_mode_screen.dart';
+import 'screens/modes/treasure_hunt_mode_screen.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:lottie/lottie.dart';
 import 'package:student_learning_app/screens/shop_tab.dart';
@@ -835,6 +838,26 @@ Widget getBackgroundForTheme(String theme) {
 
 // Theme colors helper
 class ThemeColors {
+  static SystemUiOverlayStyle getOverlayStyle(String theme) {
+    // For bright backgrounds, use dark icons; for dark/image backgrounds, use light icons
+    switch (theme) {
+      case 'beach':
+      case 'arctic':
+      case 'crystal':
+        return SystemUiOverlayStyle.dark.copyWith(
+          statusBarColor: Colors.transparent,
+          systemNavigationBarColor: Colors.transparent,
+        );
+      case 'forest':
+      case 'volcano':
+      case 'space':
+      default:
+        return SystemUiOverlayStyle.light.copyWith(
+          statusBarColor: Colors.transparent,
+          systemNavigationBarColor: Colors.transparent,
+        );
+    }
+  }
   static Color getPrimaryColor(String theme) {
     switch (theme) {
       case 'beach':
@@ -898,7 +921,7 @@ class ThemeColors {
       case 'volcano':
         return const Color(0xFFFF5722);
       case 'arctic':
-        return const Color(0xFF4FC3F7);
+        return const Color(0xFF1F2937); // Dark slate for better contrast per request
       case 'crystal':
         return const Color(0xFF4DD0E1);
       case 'space':
@@ -1097,6 +1120,7 @@ class _SignInPageState extends State<SignInPage>
   late Animation<Offset> _slideAnimation;
   bool _isLoading = false;
   String _currentTheme = 'space';
+  bool _developerMode = false;
 
   @override
   void initState() {
@@ -1144,6 +1168,7 @@ class _SignInPageState extends State<SignInPage>
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _currentTheme = prefs.getString('current_theme') ?? 'space';
+      _developerMode = prefs.getBool('developer_mode') ?? false;
     });
   }
 
@@ -1292,6 +1317,140 @@ class _SignInPageState extends State<SignInPage>
         });
       }
     }
+  }
+
+  Future<void> _showDeveloperPassDialog() async {
+    final TextEditingController devPasswordController = TextEditingController();
+    
+    await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF1D1E33),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Row(
+            children: [
+              Icon(Icons.developer_mode, color: Colors.amber),
+              const SizedBox(width: 8),
+              const Text(
+                'Developer Pass',
+                style: TextStyle(color: Colors.white),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Enter password to access the EduQuest demo account.',
+                style: TextStyle(color: Colors.white70, fontSize: 14),
+              ),
+              const SizedBox(height: 20),
+              TextField(
+                controller: devPasswordController,
+                obscureText: true,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  labelText: 'Password',
+                  labelStyle: const TextStyle(color: Colors.white70),
+                  prefixIcon: const Icon(Icons.lock, color: Colors.amber),
+                  filled: true,
+                  fillColor: Colors.white.withOpacity(0.1),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: Colors.white.withOpacity(0.2),
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                      color: Colors.amber,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text(
+                'Cancel',
+                style: TextStyle(color: Colors.white70),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (devPasswordController.text == 'eduquest') {
+                  // Ensure demo account exists, then log into it
+                  try {
+                    final exists = await _dbHelper.usernameExists('EduQuest');
+                    if (!exists) {
+                      await _dbHelper.addUser('EduQuest', 'eduquest');
+                      // Optionally give starter points to demo account
+                      await _dbHelper.updateUserPoints('EduQuest', 999999);
+                    }
+                    if (!mounted) return;
+                    Navigator.of(context).pop();
+                    // Navigate straight to MainScreen as demo
+                    Navigator.pushReplacement(
+                      this.context,
+                      MaterialPageRoute(
+                        builder: (_) => MainScreen(username: 'EduQuest'),
+                      ),
+                    );
+                  } catch (e) {
+                    if (!mounted) return;
+                    Navigator.of(context).pop();
+                    ScaffoldMessenger.of(this.context).showSnackBar(
+                      SnackBar(
+                        content: Row(
+                          children: [
+                            const Icon(Icons.error_outline, color: Colors.white),
+                            const SizedBox(width: 12),
+                            Text('Demo login failed: $e'),
+                          ],
+                        ),
+                        backgroundColor: Colors.red,
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  }
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Row(
+                        children: [
+                          const Icon(Icons.error_outline, color: Colors.white),
+                          const SizedBox(width: 12),
+                          const Text('Incorrect password'),
+                        ],
+                      ),
+                      backgroundColor: Colors.red,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.amber,
+                foregroundColor: Colors.black,
+              ),
+              child: const Text('Enter'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -1552,6 +1711,34 @@ class _SignInPageState extends State<SignInPage>
                                       ),
                                     ),
                                   ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+
+                            // Developer Pass button
+                            OutlinedButton.icon(
+                              onPressed: _showDeveloperPassDialog,
+                              icon: Icon(
+                                Icons.developer_mode,
+                                color: _developerMode ? Colors.green : Colors.amber,
+                                size: 20,
+                              ),
+                              label: Text(
+                                _developerMode ? 'Developer Mode Active' : 'Developer Pass',
+                                style: TextStyle(
+                                  color: _developerMode ? Colors.green : Colors.amber,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              style: OutlinedButton.styleFrom(
+                                side: BorderSide(
+                                  color: _developerMode ? Colors.green : Colors.amber,
+                                  width: 1.5,
+                                ),
+                                minimumSize: const Size(double.infinity, 44),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
                               ),
                             ),
@@ -2001,6 +2188,7 @@ class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
   String _currentTheme = 'space';
   int _userPoints = 0;
+  bool _developerMode = false;
   final DatabaseHelper _dbHelper = DatabaseHelper();
   List<Map<String, dynamic>> _studySets = [];
   List<Map<String, dynamic>> _premadeStudySets = [];
@@ -2020,6 +2208,7 @@ class _MainScreenState extends State<MainScreen> {
     setState(() {
       _userPoints = points;
       _currentTheme = theme ?? 'space';
+      _developerMode = widget.username == 'EduQuest';
     });
   }
 
@@ -2150,6 +2339,7 @@ class _MainScreenState extends State<MainScreen> {
         username: widget.username,
         userPoints: _userPoints,
         currentTheme: _currentTheme,
+        developerMode: _developerMode,
         onPointsUpdated: _updatePoints,
         onTabChanged: (index) {
           // Add this callback
@@ -2162,6 +2352,7 @@ class _MainScreenState extends State<MainScreen> {
         username: widget.username,
         userPoints: _userPoints,
         currentTheme: _currentTheme,
+        developerMode: _developerMode,
         onPointsUpdated: _updatePoints,
         onThemeChanged: _updateTheme,
       ),
@@ -2278,6 +2469,7 @@ class LearnTab extends StatefulWidget {
   final String username;
   final int userPoints;
   final String currentTheme;
+  final bool developerMode;
   final Function(int) onPointsUpdated;
   final Function(int) onTabChanged; // Add this callback
 
@@ -2286,6 +2478,7 @@ class LearnTab extends StatefulWidget {
     required this.username,
     required this.userPoints,
     required this.currentTheme,
+    required this.developerMode,
     required this.onPointsUpdated,
     required this.onTabChanged, // Add this parameter
   });
@@ -2301,6 +2494,8 @@ class _LearnTabState extends State<LearnTab>
   List<Map<String, dynamic>> _premadeStudySets = [];
   bool _isLoading = true;
   late TabController _tabController;
+  final TextEditingController _importedSearchController = TextEditingController();
+  String _importedSearchQuery = '';
 
   @override
   bool get wantKeepAlive => true;
@@ -2316,10 +2511,16 @@ class _LearnTabState extends State<LearnTab>
         widget.onTabChanged(_tabController.index);
       }
     });
+    _importedSearchController.addListener(() {
+      setState(() {
+        _importedSearchQuery = _importedSearchController.text.trim();
+      });
+    });
   }
 
   @override
   void dispose() {
+    _importedSearchController.dispose();
     _tabController.dispose();
     super.dispose();
   }
@@ -2351,7 +2552,9 @@ class _LearnTabState extends State<LearnTab>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return Scaffold(
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: ThemeColors.getOverlayStyle(widget.currentTheme),
+      child: Scaffold(
       body: Stack(
         children: [
           getBackgroundForTheme(widget.currentTheme),
@@ -2372,9 +2575,7 @@ class _LearnTabState extends State<LearnTab>
                             style: TextStyle(
                               fontSize: 28,
                               fontWeight: FontWeight.bold,
-                              color: widget.currentTheme == 'beach'
-                                  ? ThemeColors.getTextColor('beach')
-                                  : Colors.white,
+                              color: ThemeColors.getTextColor(widget.currentTheme),
                             ),
                           ),
                           const SizedBox(height: 5),
@@ -2382,9 +2583,7 @@ class _LearnTabState extends State<LearnTab>
                             'Let\'s learn something new today!',
                             style: TextStyle(
                               fontSize: 16,
-                              color: widget.currentTheme == 'beach'
-                                  ? ThemeColors.getTextColor('beach').withOpacity(0.8)
-                                  : Colors.white.withOpacity(0.8),
+                              color: ThemeColors.getTextColor(widget.currentTheme).withOpacity(0.8),
                             ),
                           ),
                         ],
@@ -2412,7 +2611,7 @@ class _LearnTabState extends State<LearnTab>
                                 color: Colors.white, size: 18),
                             const SizedBox(width: 6),
                             Text(
-                              '${widget.userPoints}',
+                              widget.developerMode ? '∞' : '${widget.userPoints}',
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
@@ -2435,20 +2634,16 @@ class _LearnTabState extends State<LearnTab>
                           children: [
                             Container(
                               margin: EdgeInsets.only(top: 0),
-                              child: TabBar(
-                                controller: _tabController,
-                                labelColor: widget.currentTheme == 'beach'
-                                    ? ThemeColors.getTextColor('beach')
-                                    : Colors.white,
-                                unselectedLabelColor:
-                                    widget.currentTheme == 'beach'
-                                        ? ThemeColors.getTextColor('beach')
-                                            .withOpacity(0.7)
-                                        : Colors.white70,
-                                indicatorColor: widget.currentTheme == 'beach'
-                                    ? ThemeColors.getPrimaryColor('beach')
-                                    : Colors.blueAccent,
-                                tabs: const [
+                child: TabBar(
+                controller: _tabController,
+                labelColor: ThemeColors
+                  .getTextColor(widget.currentTheme),
+                unselectedLabelColor: ThemeColors
+                  .getTextColor(widget.currentTheme)
+                  .withOpacity(0.7),
+                indicatorColor:
+                  ThemeColors.getPrimaryColor(widget.currentTheme),
+                tabs: const [
                                   Tab(text: 'My Sets'),
                                   Tab(text: 'Browse'),
                                   Tab(text: 'Quick Play'),
@@ -2473,12 +2668,22 @@ class _LearnTabState extends State<LearnTab>
           ),
         ],
       ),
+      ),
     );
   }
 
   Widget _buildMyStudySets() {
     final allSets = [..._studySets, ..._premadeStudySets];
-    if (allSets.isEmpty) {
+    // When searching, only filter imported sets (premade) by query
+    final bool searching = _importedSearchQuery.isNotEmpty;
+    final List<Map<String, dynamic>> visibleSets = searching
+        ? _premadeStudySets
+            .where((s) => (s['name']?.toString().toLowerCase() ?? '')
+                .contains(_importedSearchQuery.toLowerCase()))
+            .toList()
+        : allSets;
+
+    if (visibleSets.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -2494,7 +2699,9 @@ class _LearnTabState extends State<LearnTab>
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 40),
               child: Text(
-                'Create your first study set or import a premade one!',
+                searching
+                    ? 'No imported sets match your search.'
+                    : 'Create your first study set or import a premade one!',
                 style: TextStyle(
                   fontSize: 16,
                   color: widget.currentTheme == 'beach'
@@ -2525,206 +2732,275 @@ class _LearnTabState extends State<LearnTab>
       );
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: allSets.length,
-      itemBuilder: (BuildContext context, int index) {
-        final studySet = allSets[index];
-        final isImported =
-            _premadeStudySets.any((s) => s['id'] == studySet['id']);
-        return FutureBuilder<int>(
-          future: _dbHelper.getStudySetQuestionCount(studySet['id']),
-          builder: (context, snapshot) {
-            final questionCount = snapshot.data ?? 0;
-            return Card(
-              margin: const EdgeInsets.only(bottom: 20),
-              elevation: 10,
-              shadowColor: Colors.black.withOpacity(0.4),
-              clipBehavior: Clip.antiAlias,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+          child: TextField(
+            controller: _importedSearchController,
+            style: TextStyle(
+              color: widget.currentTheme == 'beach'
+                  ? ThemeColors.getTextColor('beach')
+                  : Colors.white,
+            ),
+            decoration: InputDecoration(
+              hintText: 'Search imported sets...',
+              hintStyle: TextStyle(
+                color: widget.currentTheme == 'beach'
+                    ? ThemeColors.getTextColor('beach').withOpacity(0.6)
+                    : Colors.white70,
               ),
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: widget.currentTheme == 'beach'
-                      ? ThemeColors.getBeachCardGradient()
-                      : LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            const Color(0xFF2A2D3E).withOpacity(0.9),
-                            const Color(0xFF1D1E33),
-                          ],
-                        ),
-                  borderRadius: BorderRadius.circular(16),
+              prefixIcon: Icon(Icons.search,
+                  color: widget.currentTheme == 'beach'
+                      ? ThemeColors.getTextColor('beach').withOpacity(0.8)
+                      : Colors.white70),
+              filled: true,
+              fillColor: widget.currentTheme == 'beach'
+                  ? Colors.white.withOpacity(0.9)
+                  : Colors.white.withOpacity(0.08),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: Colors.white.withOpacity(0.2),
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.blueAccent.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: Icon(
-                              _getSubjectIcon(studySet['name']),
-                              color: Colors.blueAccent,
-                              size: 32,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: Colors.white.withOpacity(0.2),
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: widget.currentTheme == 'beach'
+                      ? ThemeColors.getButtonColor('beach')
+                      : Colors.blueAccent,
+                  width: 1.5,
+                ),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Expanded(
+          child: ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: visibleSets.length,
+            itemBuilder: (BuildContext context, int index) {
+              final studySet = visibleSets[index];
+              final isImported =
+                  _premadeStudySets.any((s) => s['id'] == studySet['id']);
+              return FutureBuilder<int>(
+                future: _dbHelper.getStudySetQuestionCount(studySet['id']),
+                builder: (context, snapshot) {
+                  final questionCount = snapshot.data ?? 0;
+                  return Card(
+                    margin: const EdgeInsets.only(bottom: 20),
+                    elevation: 10,
+                    shadowColor: Colors.black.withOpacity(0.4),
+                    clipBehavior: Clip.antiAlias,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: widget.currentTheme == 'beach'
+                            ? ThemeColors.getBeachCardGradient()
+                            : LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  const Color(0xFF2A2D3E).withOpacity(0.9),
+                                  const Color(0xFF1D1E33),
+                                ],
+                              ),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  studySet['name'],
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                    color: widget.currentTheme == 'beach'
-                                        ? ThemeColors.getTextColor('beach')
-                                        : Colors.white,
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color:
+                                        Colors.blueAccent.withOpacity(0.2),
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: Icon(
+                                    _getSubjectIcon(studySet['name']),
+                                    color: Colors.blueAccent,
+                                    size: 32,
                                   ),
                                 ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  studySet['description'] ?? '',
-                                  style: TextStyle(
-                                    color: widget.currentTheme == 'beach'
-                                        ? ThemeColors.getTextColor('beach')
-                                            .withOpacity(0.7)
-                                        : Colors.white.withOpacity(0.7),
-                                    fontSize: 14,
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        studySet['name'],
+                                        style: TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                          color: widget.currentTheme == 'beach'
+                                              ? ThemeColors.getTextColor(
+                                                  'beach')
+                                              : Colors.white,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        studySet['description'] ?? '',
+                                        style: TextStyle(
+                                          color: widget.currentTheme == 'beach'
+                                              ? ThemeColors.getTextColor(
+                                                      'beach')
+                                                  .withOpacity(0.7)
+                                              : Colors.white
+                                                  .withOpacity(0.7),
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        '$questionCount question${questionCount == 1 ? '' : 's'}',
+                                        style: TextStyle(
+                                          color: widget.currentTheme == 'beach'
+                                              ? ThemeColors.getTextColor(
+                                                      'beach')
+                                                  .withOpacity(0.8)
+                                              : Colors.white
+                                                  .withOpacity(0.8),
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  '$questionCount question${questionCount == 1 ? '' : 's'}',
-                                  style: TextStyle(
-                                    color: widget.currentTheme == 'beach'
-                                        ? ThemeColors.getTextColor('beach')
-                                            .withOpacity(0.8)
-                                        : Colors.white.withOpacity(0.8),
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
+                                if (isImported)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 6,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    child: Text(
+                                      'Imported',
+                                      style: TextStyle(
+                                        color: widget.currentTheme == 'beach'
+                                            ? ThemeColors.getTextColor('beach')
+                                                .withOpacity(0.7)
+                                            : Colors.white70,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              'Created: ${_formatDate(studySet['created_at'])}',
+                              style: TextStyle(
+                                color: widget.currentTheme == 'beach'
+                                    ? ThemeColors.getTextColor('beach')
+                                        .withOpacity(0.5)
+                                    : Colors.white.withOpacity(0.5),
+                                fontSize: 12,
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                ElevatedButton.icon(
+                                  onPressed: () =>
+                                      _deleteStudySet(studySet['id']),
+                                  icon: const Icon(Icons.delete, size: 18),
+                                  label: const Text('Delete'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor:
+                                        Colors.redAccent.withOpacity(0.8),
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 20,
+                                      vertical: 10,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                // Show edit button only for manually created sets (not imported ones)
+                                if (!isImported) ...[
+                                  ElevatedButton.icon(
+                                    onPressed: () => _editStudySet(studySet),
+                                    icon: const Icon(Icons.edit, size: 18),
+                                    label: const Text('Edit'),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor:
+                                          Colors.orange.withOpacity(0.8),
+                                      foregroundColor: Colors.white,
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 20,
+                                        vertical: 10,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                ],
+                                ElevatedButton.icon(
+                                  onPressed: () => _startPractice(studySet),
+                                  icon:
+                                      const Icon(Icons.play_arrow, size: 18),
+                                  label: const Text('Practice'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor:
+                                        widget.currentTheme == 'beach'
+                                            ? ThemeColors
+                                                    .getTropicalGreen('beach')
+                                                .withOpacity(0.8)
+                                            : Colors.green.withOpacity(0.8),
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 20,
+                                      vertical: 10,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
                                   ),
                                 ),
                               ],
                             ),
-                          ),
-                          if (isImported)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: Text(
-                                'Imported',
-                                style: TextStyle(
-                                  color: widget.currentTheme == 'beach'
-                                      ? ThemeColors.getTextColor('beach')
-                                          .withOpacity(0.7)
-                                      : Colors.white70,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Created: ${_formatDate(studySet['created_at'])}',
-                        style: TextStyle(
-                          color: widget.currentTheme == 'beach'
-                              ? ThemeColors.getTextColor('beach')
-                                  .withOpacity(0.5)
-                              : Colors.white.withOpacity(0.5),
-                          fontSize: 12,
+                          ],
                         ),
                       ),
-                      const SizedBox(height: 20),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          ElevatedButton.icon(
-                            onPressed: () => _deleteStudySet(studySet['id']),
-                            icon: const Icon(Icons.delete, size: 18),
-                            label: const Text('Delete'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor:
-                                  Colors.redAccent.withOpacity(0.8),
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                                vertical: 10,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          // Show edit button only for manually created sets (not imported ones)
-                          if (!isImported) ...[
-                            ElevatedButton.icon(
-                              onPressed: () => _editStudySet(studySet),
-                              icon: const Icon(Icons.edit, size: 18),
-                              label: const Text('Edit'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.orange.withOpacity(0.8),
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 20,
-                                  vertical: 10,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                          ],
-                          ElevatedButton.icon(
-                            onPressed: () => _startPractice(studySet),
-                            icon: const Icon(Icons.play_arrow, size: 18),
-                            label: const Text('Practice'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: widget.currentTheme == 'beach'
-                                  ? ThemeColors.getTropicalGreen('beach')
-                                      .withOpacity(0.8)
-                                  : Colors.green.withOpacity(0.8),
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                                vertical: 10,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
-        );
-      },
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 
@@ -5316,18 +5592,19 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
       'Test your memory! Questions and answers will be shown briefly, then you must match them correctly.',
       Icons.psychology,
       () {
-        setState(() {
-          _showModeSelection = false;
-          _showQuizArea = true;
-          _showScoreSummary = false;
-          _currentQuestionIndex = 0;
-          _correctAnswers = 0;
-          _skipUsed = false;
-          _fiftyFiftyUsed = false;
-          _doublePointsActive = false;
-          _extraTimeUsed = false;
-          _removedOptions = [];
-        });
+        final dynamic sid = widget.studySet['id'];
+        final int studySetId = sid is int ? sid : int.tryParse(sid?.toString() ?? '') ?? 0;
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => MemoryMasterModeScreen(
+              username: widget.username,
+              currentTheme: widget.currentTheme,
+              studySetId: studySetId,
+              questionCount: _questionCount,
+            ),
+          ),
+        );
       },
     );
   }
@@ -5339,18 +5616,19 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
       'You have 3 lives! Each wrong answer costs a life. How long can you survive?',
       Icons.favorite,
       () {
-        setState(() {
-          _showModeSelection = false;
-          _showQuizArea = true;
-          _showScoreSummary = false;
-          _currentQuestionIndex = 0;
-          _correctAnswers = 0;
-          _skipUsed = false;
-          _fiftyFiftyUsed = false;
-          _doublePointsActive = false;
-          _extraTimeUsed = false;
-          _removedOptions = [];
-        });
+        final dynamic sid = widget.studySet['id'];
+        final int studySetId = sid is int ? sid : int.tryParse(sid?.toString() ?? '') ?? 0;
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => SurvivalModeScreen(
+              username: widget.username,
+              currentTheme: widget.currentTheme,
+              studySetId: studySetId,
+              questionCount: _questionCount,
+            ),
+          ),
+        );
       },
     );
   }
@@ -5362,18 +5640,19 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
       'Find hidden treasures by answering questions correctly! Collect gems and unlock special rewards.',
       Icons.diamond,
       () {
-        setState(() {
-          _showModeSelection = false;
-          _showQuizArea = true;
-          _showScoreSummary = false;
-          _currentQuestionIndex = 0;
-          _correctAnswers = 0;
-          _skipUsed = false;
-          _fiftyFiftyUsed = false;
-          _doublePointsActive = false;
-          _extraTimeUsed = false;
-          _removedOptions = [];
-        });
+        final dynamic sid = widget.studySet['id'];
+        final int studySetId = sid is int ? sid : int.tryParse(sid?.toString() ?? '') ?? 0;
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => TreasureHuntModeScreen(
+              username: widget.username,
+              currentTheme: widget.currentTheme,
+              studySetId: studySetId,
+              questionCount: _questionCount,
+            ),
+          ),
+        );
       },
     );
   }
@@ -5661,6 +5940,7 @@ class _PracticeModeScreenState extends State<PracticeModeScreen>
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Scaffold(
       body: Stack(
         children: [

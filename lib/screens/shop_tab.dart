@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import '../helpers/database_helper.dart';
 import '../main.dart'
-  show SpaceBackground, BeachBackground, getBackgroundForTheme, ThemeColors;
+  show getBackgroundForTheme, ThemeColors;
 
 class ShopTab extends StatefulWidget {
   final String username;
   final int userPoints;
   final String currentTheme;
+  final bool developerMode;
   final Function(int) onPointsUpdated;
   final Function(String) onThemeChanged;
 
@@ -15,6 +16,7 @@ class ShopTab extends StatefulWidget {
     required this.username,
     required this.userPoints,
     required this.currentTheme,
+    required this.developerMode,
     required this.onPointsUpdated,
     required this.onThemeChanged,
   });
@@ -110,7 +112,7 @@ class _ShopTabState extends State<ShopTab>
     {
       'id': 'skip_question',
       'name': 'Skip Question',
-      'price': 0,
+      'price': 20,
       'description': 'Skip any difficult question without penalty',
       'icon': Icons.skip_next,
       'color': const Color(0xFF4CAF50),
@@ -118,7 +120,7 @@ class _ShopTabState extends State<ShopTab>
     {
       'id': 'fifty_fifty',
       'name': '50/50',
-      'price': 0,
+      'price': 10,
       'description': 'Remove two incorrect answer options',
       'icon': Icons.filter_2,
       'color': const Color(0xFF2196F3),
@@ -126,7 +128,7 @@ class _ShopTabState extends State<ShopTab>
     {
       'id': 'double_points',
       'name': 'Double Points',
-      'price': 0,
+      'price': 50,
       'description': 'Double points for the next correct answer',
       'icon': Icons.star,
       'color': const Color(0xFFFFD700),
@@ -134,7 +136,7 @@ class _ShopTabState extends State<ShopTab>
     {
       'id': 'hint',
       'name': 'Hint',
-      'price': 0,
+      'price': 15,
       'description': 'Get a helpful hint for the current question',
       'icon': Icons.lightbulb,
       'color': const Color(0xFFFF9800),
@@ -208,7 +210,7 @@ class _ShopTabState extends State<ShopTab>
                                     color: Colors.white, size: 18),
                                 const SizedBox(width: 6),
                                 Text(
-                                  '${widget.userPoints}',
+                                  widget.developerMode ? '∞' : '${widget.userPoints}',
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontWeight: FontWeight.bold,
@@ -340,7 +342,8 @@ class _ShopTabState extends State<ShopTab>
         itemCount: _themes.length,
         itemBuilder: (BuildContext context, int index) {
           final theme = _themes[index];
-          final canAfford = widget.userPoints >= (theme['price'] as int);
+      final canAfford = widget.developerMode ||
+        widget.userPoints >= (theme['price'] as int);
           final isEquipped = widget.currentTheme == theme['name'].toLowerCase();
           final isOwned = _ownedThemes.contains(theme['name'].toLowerCase());
 
@@ -597,7 +600,8 @@ class _ShopTabState extends State<ShopTab>
         itemBuilder: (BuildContext context, int index) {
           final powerup = _powerups[index];
           final userCount = _userPowerups[powerup['id']] ?? 0;
-          final canAfford = widget.userPoints >= (powerup['price'] as int);
+      final canAfford = widget.developerMode ||
+        widget.userPoints >= (powerup['price'] as int);
 
           return Container(
             decoration: BoxDecoration(
@@ -640,7 +644,7 @@ class _ShopTabState extends State<ShopTab>
                 child: Stack(
                   children: [
                     Padding(
-                      padding: const EdgeInsets.all(10),
+                      padding: const EdgeInsets.fromLTRB(10, 10, 10, 13),
                       child: Column(
                         children: [
                           // Fixed top section - optimized for space
@@ -726,43 +730,80 @@ class _ShopTabState extends State<ShopTab>
                                 SizedBox(
                                   width: double.infinity,
                                   height: 32,
-                                  child: ElevatedButton(
-                                    onPressed: canAfford
-                                        ? () => _purchasePowerup(powerup)
-                                        : null,
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: canAfford
-                                          ? powerup['color'].withOpacity(0.15)
-                                          : Colors.grey.shade600
-                                              .withOpacity(0.8),
-                                      foregroundColor: Colors.white,
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 4),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(6),
-                                      ),
-                                      elevation: 0,
+                                  child: DecoratedBox(
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(10),
+                                      gradient: canAfford
+                                          ? LinearGradient(
+                                              colors: [
+                                                powerup['color']
+                                                    .withOpacity(0.9),
+                                                powerup['color']
+                                                    .withOpacity(0.7),
+                                              ],
+                                            )
+                                          : LinearGradient(
+                                              colors: [
+                                                Colors.grey.shade700,
+                                                Colors.grey.shade600,
+                                              ],
+                                            ),
+                                      boxShadow: canAfford
+                                          ? [
+                                              BoxShadow(
+                                                color: powerup['color']
+                                                    .withOpacity(0.6),
+                                                blurRadius: 12,
+                                                spreadRadius: 1,
+                                                offset: const Offset(0, 4),
+                                              ),
+                                            ]
+                                          : [],
                                     ),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        const Icon(
-                                          Icons.diamond,
-                                          size: 12,
-                                          color: Colors.white,
+                                    child: ElevatedButton(
+                                      onPressed: canAfford
+                                          ? () => _purchasePowerup(powerup)
+                                          : null,
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.transparent,
+                                        shadowColor: Colors.transparent,
+                                        foregroundColor: Colors.white,
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 8),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(10),
                                         ),
-                                        const SizedBox(width: 3),
-                                        Text(
-                                          '${powerup['price']}',
-                                          style: const TextStyle(
+                                        elevation: 0,
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          const Icon(
+                                            Icons.diamond,
+                                            size: 14,
                                             color: Colors.white,
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.bold,
-                                            letterSpacing: 0.5,
                                           ),
-                                        ),
-                                      ],
+                                          const SizedBox(width: 6),
+                                          Text(
+                                            '${powerup['price']}',
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                              letterSpacing: 0.6,
+                                            ),
+                                          ),
+                                          if (canAfford) ...[
+                                            const SizedBox(width: 8),
+                                            const Icon(
+                                              Icons.flash_on,
+                                              size: 14,
+                                              color: Colors.white,
+                                            ),
+                                          ]
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -783,7 +824,7 @@ class _ShopTabState extends State<ShopTab>
   }
 
   Future<void> _purchaseTheme(Map<String, dynamic> theme) async {
-    if (widget.userPoints < (theme['price'] as int)) {
+    if (!widget.developerMode && widget.userPoints < (theme['price'] as int)) {
       ScaffoldMessenger.of(this.context).showSnackBar(
         SnackBar(
           content: Row(
@@ -803,12 +844,12 @@ class _ShopTabState extends State<ShopTab>
     }
 
     try {
-      await _dbHelper.purchaseTheme(
-          widget.username, theme['name'].toLowerCase());
-      final newPoints = widget.userPoints - (theme['price'] as int);
-      await _dbHelper.updateUserPoints(widget.username, newPoints);
-
-      widget.onPointsUpdated(newPoints);
+      await _dbHelper.purchaseTheme(widget.username, theme['name'].toLowerCase());
+      if (!widget.developerMode) {
+        final newPoints = widget.userPoints - (theme['price'] as int);
+        await _dbHelper.updateUserPoints(widget.username, newPoints);
+        widget.onPointsUpdated(newPoints);
+      }
       widget.onThemeChanged(theme['name'].toLowerCase());
       await _loadOwnedThemes(); // Refresh owned themes
 
@@ -851,101 +892,29 @@ class _ShopTabState extends State<ShopTab>
     try {
       await _dbHelper.updateCurrentTheme(widget.username, themeName);
       widget.onThemeChanged(themeName);
-
-      ScaffoldMessenger.of(this.context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.check_circle, color: Colors.white),
-              const SizedBox(width: 12),
-              Text('Theme changed to ${themeName.toUpperCase()}!'),
-            ],
-          ),
-          backgroundColor: Colors.green.shade600,
-          behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-      );
     } catch (e) {
-      ScaffoldMessenger.of(this.context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.error_outline, color: Colors.white),
-              const SizedBox(width: 12),
-              Text('Failed to change theme: $e'),
-            ],
-          ),
-          backgroundColor: Colors.red.shade600,
-          behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-      );
+      // Suppress SnackBar per requirement
     }
   }
 
   Future<void> _purchasePowerup(Map<String, dynamic> powerup) async {
-    if (widget.userPoints < (powerup['price'] as int)) {
-      ScaffoldMessenger.of(this.context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.error_outline, color: Colors.white),
-              const SizedBox(width: 12),
-              const Text('Insufficient points to purchase this powerup!'),
-            ],
-          ),
-          backgroundColor: Colors.red.shade600,
-          behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-      );
+    if (!widget.developerMode && widget.userPoints < (powerup['price'] as int)) {
+      // Suppress SnackBar per requirement
       return;
     }
 
     try {
       await _dbHelper.purchasePowerup(widget.username, powerup['id']);
-      final newPoints = widget.userPoints - (powerup['price'] as int);
-      await _dbHelper.updateUserPoints(widget.username, newPoints);
-
-      widget.onPointsUpdated(newPoints);
+      if (!widget.developerMode) {
+        final newPoints = widget.userPoints - (powerup['price'] as int);
+        await _dbHelper.updateUserPoints(widget.username, newPoints);
+        widget.onPointsUpdated(newPoints);
+      }
       await _loadUserPowerups(); // Refresh powerup counts
 
-      ScaffoldMessenger.of(this.context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.check_circle, color: Colors.white),
-              const SizedBox(width: 12),
-              Text('Successfully purchased ${powerup['name']}!'),
-            ],
-          ),
-          backgroundColor: Colors.green.shade600,
-          behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          duration: const Duration(seconds: 2),
-        ),
-      );
+      // Suppress SnackBar per requirement
     } catch (e) {
-      ScaffoldMessenger.of(this.context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.error_outline, color: Colors.white),
-              const SizedBox(width: 12),
-              Text('Failed to purchase powerup: $e'),
-            ],
-          ),
-          backgroundColor: Colors.red.shade600,
-          behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-      );
+      // Suppress SnackBar per requirement
     }
   }
 }
