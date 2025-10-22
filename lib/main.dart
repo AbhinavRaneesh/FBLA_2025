@@ -899,16 +899,61 @@ class ThemeColors {
       case 'beach':
         return const Color(0xFF2E2E2E); // Dark gray for readability
       case 'arctic':
-        return const Color(0xFF2E2E2E); // Arctic is bright, use dark text
+        return Colors.white; // Arctic: use white text per request
       case 'crystal':
-        return const Color(0xFF2E2E2E); // Crystal/glass is bright
+        return Colors.white; // Crystal: use white text per request
       case 'forest':
-        return Colors.white; // Forest image is darker
+        return const Color(0xFF1F2937); // Dark slate for better contrast on forest
       case 'volcano':
         return Colors.white; // Volcano image tends darker
       case 'space':
       default:
         return Colors.white;
+    }
+  }
+
+  // Translucent backdrop behind TabBar for better readability across themes
+  static Color getTabBackdropColor(String theme) {
+    switch (theme) {
+      case 'beach':
+      case 'arctic':
+      case 'crystal':
+        return Colors.black.withOpacity(0.20);
+      case 'forest':
+      case 'volcano':
+      case 'space':
+      default:
+        return Colors.white.withOpacity(0.20);
+    }
+  }
+
+  // Pill color for the selected tab indicator
+  static Color getTabPillColor(String theme) {
+    switch (theme) {
+      case 'beach':
+      case 'arctic':
+      case 'crystal':
+        return Colors.black.withOpacity(0.30);
+      case 'forest':
+      case 'volcano':
+      case 'space':
+      default:
+        return Colors.white.withOpacity(0.30);
+    }
+  }
+
+  // Selected label color for maximum contrast on the pill
+  static Color getTabSelectedLabelColor(String theme) {
+    switch (theme) {
+      case 'beach':
+      case 'arctic':
+      case 'crystal':
+        return Colors.white;
+      case 'forest':
+      case 'volcano':
+      case 'space':
+      default:
+        return getTextColor(theme);
     }
   }
 
@@ -2633,17 +2678,35 @@ class _LearnTabState extends State<LearnTab>
                       : Column(
                           children: [
                             Container(
-                              margin: EdgeInsets.only(top: 0),
-                child: TabBar(
-                controller: _tabController,
-                labelColor: ThemeColors
-                  .getTextColor(widget.currentTheme),
-                unselectedLabelColor: ThemeColors
-                  .getTextColor(widget.currentTheme)
-                  .withOpacity(0.7),
-                indicatorColor:
-                  ThemeColors.getPrimaryColor(widget.currentTheme),
-                tabs: const [
+                              margin: const EdgeInsets.only(top: 0),
+                              decoration: BoxDecoration(
+                                color: ThemeColors.getTabBackdropColor(widget.currentTheme),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+                              child: TabBar(
+                                controller: _tabController,
+                                labelColor: ThemeColors.getTabSelectedLabelColor(widget.currentTheme),
+                                labelStyle: TextStyle(
+                                  fontWeight: widget.currentTheme == 'forest'
+                                      ? FontWeight.bold
+                                      : FontWeight.w600,
+                                ),
+                                unselectedLabelColor: ThemeColors
+                                    .getTextColor(widget.currentTheme)
+                                    .withOpacity(0.7),
+                                unselectedLabelStyle: TextStyle(
+                                  fontWeight: widget.currentTheme == 'forest'
+                                      ? FontWeight.bold
+                                      : FontWeight.w500,
+                                ),
+                                indicator: BoxDecoration(
+                                  color: ThemeColors.getTabPillColor(widget.currentTheme),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                indicatorSize: TabBarIndicatorSize.tab,
+                                indicatorPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                tabs: const [
                                   Tab(text: 'My Sets'),
                                   Tab(text: 'Browse'),
                                   Tab(text: 'Quick Play'),

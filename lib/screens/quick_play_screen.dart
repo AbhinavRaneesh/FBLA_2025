@@ -2812,7 +2812,7 @@ Generate exactly $numberOfQuestions questions for $selectedSubject:
               Text(
                 currentQuestion["question"]!,
                 style: TextStyle(
-                  fontSize: 24,
+                  fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: widget.currentTheme == 'beach'
                       ? ThemeColors.getTextColor('beach')
