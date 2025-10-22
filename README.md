@@ -59,3 +59,4 @@ EduQuest uses SQLite as the database for storing user progress, game data, and o
 
 For any queries or support, please contact:
 **Email:** [abhinav.raneesh@gmail.com](mailto:abhinav.raneesh@gmail.com)
+**Email:** [kushalnarkhede09@gmail.com](mailto:kushalnarkhede09@gmail.com)
