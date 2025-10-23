@@ -48,6 +48,7 @@ flutter:
     - assets/animation/Animation - 1750352180300.json
     - assets/apfrq/
     - assets/SATPrompts/
+    - assets/prompts/
     - assets/images/planet.png
     - assets/images/astronaut.png
     - assets/images/google_icon.png

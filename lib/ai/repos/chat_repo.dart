@@ -49,6 +49,14 @@ class ChatRepo {
     try {
       Dio dio = Dio();
 
+      // Debug logging to track what's being sent
+      print('Sending ${previousMessage.length} messages to AI');
+      for (int i = 0; i < previousMessage.length; i++) {
+        final msg = previousMessage[i];
+        final text = msg.parts.isNotEmpty ? msg.parts.first.text : '';
+        print('Message $i [${msg.role}]: ${text.length} chars - "${text.substring(0, text.length > 50 ? 50 : text.length)}..."');
+      }
+
       final response = await dio.post(
           "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}",
           data: {
