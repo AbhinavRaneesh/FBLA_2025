@@ -2,6 +2,8 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' as path;
 import 'package:flutter/foundation.dart';
 import '../data/premade_study_sets.dart';
+import '../utils/config.dart';
+import 'remote_api_client.dart';
 
 /**
  * A singleton database helper class for managing the EduQuest application's SQLite database.
@@ -44,6 +46,9 @@ class DatabaseHelper {
    * Private constructor for singleton pattern implementation.
    */
   DatabaseHelper._internal();
+
+  // Remote API client for Mongo-backed operations
+  final RemoteApiClient _remote = RemoteApiClient();
 
   /**
    * Gets the database instance, initializing it if necessary.
@@ -356,6 +361,18 @@ class DatabaseHelper {
    */
   Future<bool> authenticateUser(String username, String password) async {
     print('DEBUG: authenticateUser called for username: $username');
+    if (AppConfig.useRemoteDb) {
+      try {
+        final ok = await _remote.login(username, password);
+        print('DEBUG: Remote login result: $ok for $username');
+        if (ok) return true;
+        // If remote login fails, fall back to local SQLite
+        print('DEBUG: Remote login failed, trying local SQLite fallback');
+      } catch (e) {
+        print('DEBUG: Remote login error: $e, falling back to local SQLite');
+      }
+    }
+    // Local SQLite authentication
     final db = await database;
     final result = await db.query(
       'users',
@@ -365,6 +382,16 @@ class DatabaseHelper {
     final isAuthenticated = result.isNotEmpty;
     print(
         'DEBUG: User authentication result: $isAuthenticated for username: $username');
+    // Best-effort remote provisioning so this user can log in from other devices next time
+    if (isAuthenticated && AppConfig.useRemoteDb) {
+      try {
+        await _remote.register(username, password);
+        print('DEBUG: Provisioned remote account for $username');
+      } catch (e) {
+        // Ignore errors like 409 conflict if already exists
+        print('DEBUG: Remote provisioning skipped/failed for $username: $e');
+      }
+    }
     return isAuthenticated;
   }
 
@@ -402,6 +429,21 @@ class DatabaseHelper {
    */
   Future<bool> addUser(String username, String password) async {
     print('DEBUG: addUser called for username: $username');
+    // Create the account in the remote API first when enabled
+    if (AppConfig.useRemoteDb) {
+      try {
+        final ok = await _remote.register(username, password);
+        print('DEBUG: Remote register result for $username: $ok');
+        if (!ok) {
+          print('DEBUG: Remote register returned false for $username');
+          return false; // require cloud registration for cross-device access
+        }
+      } catch (e) {
+        // Fail sign-up if cloud registration fails (e.g., 409 user exists or network error)
+        print('DEBUG: Remote register error for $username: $e');
+        return false;
+      }
+    }
     final db = await database;
     try {
       final userId = await db.insert('users', {
@@ -731,6 +773,16 @@ class DatabaseHelper {
   // Points and theme methods
   Future<int> getUserPoints(String username) async {
     print('DEBUG: getUserPoints called for username: $username');
+    if (AppConfig.useRemoteDb) {
+      try {
+        final points = await _remote.getUserPoints(username);
+        print('DEBUG: Remote points returned: $points');
+        return points;
+      } catch (e) {
+        print('DEBUG: Remote getUserPoints error: $e');
+        return 0;
+      }
+    }
     try {
       final db = await database;
       final result = await db.query(
@@ -753,33 +805,21 @@ class DatabaseHelper {
       print('DEBUG: getUserPoints stack trace: ${StackTrace.current}');
       return 0;
     }
-
-    // Emergency database reset method
-    Future<void> resetDatabase() async {
-      print('DEBUG: Resetting database...');
-      try {
-        String pathStr = path.join(await getDatabasesPath(), 'eduquest.db');
-        if (await databaseExists(pathStr)) {
-          await deleteDatabase(pathStr);
-          print('DEBUG: Database deleted successfully');
-        }
-
-        // Clear the cached database instance
-        _database = null;
-
-        // Reinitialize the database
-        await database;
-        print('DEBUG: Database reset and reinitialized successfully');
-      } catch (e) {
-        print('DEBUG: Error during database reset: $e');
-        rethrow;
-      }
-    }
+    
   }
 
   Future<void> updateUserPoints(String username, int points) async {
-    print(
-        'DEBUG: updateUserPoints called for username: $username with points: $points');
+    print('DEBUG: updateUserPoints called for username: $username with points: $points');
+    if (AppConfig.useRemoteDb) {
+      try {
+        await _remote.setUserPoints(username, points);
+        print('DEBUG: Remote updateUserPoints ok');
+        return;
+      } catch (e) {
+        print('DEBUG: Remote updateUserPoints error: $e');
+        rethrow;
+      }
+    }
     try {
       final db = await database;
       final result = await db.update(
@@ -788,12 +828,10 @@ class DatabaseHelper {
         where: 'username = ?',
         whereArgs: [username],
       );
-      print(
-          'DEBUG: updateUserPoints completed. Rows affected: $result for username: $username');
+      print('DEBUG: updateUserPoints completed. Rows affected: $result for username: $username');
 
       if (result == 0) {
-        print(
-            'DEBUG: updateUserPoints - No rows were updated for username: $username');
+        print('DEBUG: updateUserPoints - No rows were updated for username: $username');
       }
     } catch (e) {
       print('DEBUG: updateUserPoints error: $e');
@@ -803,6 +841,14 @@ class DatabaseHelper {
   }
 
   Future<String?> getCurrentTheme(String username) async {
+    if (AppConfig.useRemoteDb) {
+      try {
+        return await _remote.getCurrentTheme(username);
+      } catch (e) {
+        print('DEBUG: Remote getCurrentTheme error: $e');
+        return 'space';
+      }
+    }
     final db = await database;
     final result = await db.query(
       'users',
@@ -814,6 +860,14 @@ class DatabaseHelper {
   }
 
   Future<void> updateCurrentTheme(String username, String theme) async {
+    if (AppConfig.useRemoteDb) {
+      try {
+        await _remote.setCurrentTheme(username, theme);
+        return;
+      } catch (e) {
+        print('DEBUG: Remote updateCurrentTheme error: $e');
+      }
+    }
     final db = await database;
     await db.update(
       'users',
@@ -824,22 +878,26 @@ class DatabaseHelper {
   }
 
   Future<bool> userOwnsTheme(String username, String theme) async {
-    final db = await database;
-
     // Space theme is free for everyone
     if (theme == 'space') {
       return true;
     }
-
+    if (AppConfig.useRemoteDb) {
+      try {
+        final owned = await getUserOwnedThemes(username);
+        return owned.contains(theme);
+      } catch (e) {
+        return false;
+      }
+    }
+    final db = await database;
     try {
       await _ensureThemeTableExists(db);
-
       final result = await db.query(
         'user_purchased_themes',
         where: 'username = ? AND theme_name = ?',
         whereArgs: [username, theme],
       );
-
       return result.isNotEmpty;
     } catch (e) {
       print('DEBUG: Error in userOwnsTheme: $e');
@@ -848,68 +906,70 @@ class DatabaseHelper {
   }
 
   Future<List<String>> getUserOwnedThemes(String username) async {
+    if (AppConfig.useRemoteDb) {
+      try {
+        final themes = await _remote.getUserOwnedThemes(username);
+        return {'space', ...themes}.toList();
+      } catch (e) {
+        print('DEBUG: Remote getUserOwnedThemes: $e');
+        return ['space'];
+      }
+    }
     final db = await database;
-
     try {
       await _ensureThemeTableExists(db);
-
       final result = await db.query(
         'user_purchased_themes',
         where: 'username = ?',
         whereArgs: [username],
       );
-
-      List<String> ownedThemes = ['space']; // Space is always owned
-
+      List<String> ownedThemes = ['space'];
       for (var row in result) {
         ownedThemes.add(row['theme_name'] as String);
       }
-
       return ownedThemes;
     } catch (e) {
       print('DEBUG: Error in getUserOwnedThemes: $e');
-      return [
-        'space'
-      ]; // Return just the default space theme if there's an error
+      return ['space'];
     }
   }
 
   Future<void> purchaseTheme(String username, String theme) async {
     print('DEBUG: purchaseTheme called for user: $username, theme: $theme');
+    if (AppConfig.useRemoteDb) {
+      try {
+        await _remote.purchaseTheme(username, theme);
+        await _remote.setCurrentTheme(username, theme);
+        return;
+      } catch (e) {
+        print('DEBUG: Remote purchaseTheme error: $e');
+        rethrow;
+      }
+    }
     final db = await database;
-
     try {
-      // Ensure the table exists first
       await _ensureThemeTableExists(db);
-
-      // Check if user already owns this theme
       final existingPurchase = await db.query(
         'user_purchased_themes',
         where: 'username = ? AND theme_name = ?',
         whereArgs: [username, theme],
       );
-
       if (existingPurchase.isNotEmpty) {
         print('DEBUG: User $username already owns theme $theme');
         throw Exception('You already own this theme');
       }
-
-      // Record the theme purchase
       await db.insert('user_purchased_themes', {
         'username': username,
         'theme_name': theme,
         'purchased_at': DateTime.now().toIso8601String(),
       });
-      print('DEBUG: Theme purchase recorded for user $username, theme $theme');
-
-      // Set as current theme
       await db.update(
         'users',
         {'current_theme': theme},
         where: 'username = ?',
         whereArgs: [username],
       );
-      print('DEBUG: Current theme updated for user $username to $theme');
+      print('DEBUG: Theme purchase recorded and current theme set');
     } catch (e) {
       print('DEBUG: Error in purchaseTheme: $e');
       print('DEBUG: Stack trace: ${StackTrace.current}');
@@ -941,19 +1001,34 @@ class DatabaseHelper {
   }
 
   Future<void> importPremadeSet(String username, int studySetId) async {
+    if (AppConfig.useRemoteDb) {
+      try {
+        String? setName;
+        try {
+          final db = await database;
+          final res = await db.query('study_sets', where: 'id = ?', whereArgs: [studySetId]);
+          if (res.isNotEmpty) setName = res.first['name'] as String?;
+        } catch (_) {}
+        if (setName == null) {
+          debugPrint('Could not resolve study set name for ID $studySetId');
+          return;
+        }
+  await _remote.addImportedSet(username, setName, studySetId: studySetId);
+        debugPrint('Remote: Imported set "$setName" for $username');
+        return;
+      } catch (e) {
+        debugPrint('Remote importPremadeSet error: $e');
+        return;
+      }
+    }
     final db = await database;
     final userId = await getUserId(username);
-
-    debugPrint(
-        'Attempting to import set ID $studySetId for user $username (ID: $userId)');
-
-    // Check if user already has this set
+    debugPrint('Attempting to import set ID $studySetId for user $username (ID: $userId)');
     final existingSet = await db.query(
       'user_study_sets',
       where: 'user_id = ? AND study_set_id = ?',
       whereArgs: [userId, studySetId],
     );
-
     if (existingSet.isEmpty) {
       debugPrint('User does not have set ID $studySetId, adding it...');
       await db.insert('user_study_sets', {
@@ -965,13 +1040,11 @@ class DatabaseHelper {
       debugPrint('User already has set ID $studySetId, skipping import');
     }
 
-    // Debug: Show all sets for this user after import
     final allUserSets = await db.rawQuery('''
       SELECT s.* FROM study_sets s
       INNER JOIN user_study_sets us ON s.id = us.study_set_id
       WHERE us.user_id = ?
     ''', [userId]);
-
     debugPrint('User $username now has ${allUserSets.length} imported sets:');
     for (var set in allUserSets) {
       debugPrint('- ${set['name']} (ID: ${set['id']})');
@@ -980,25 +1053,47 @@ class DatabaseHelper {
 
   Future<List<Map<String, dynamic>>> getUserImportedSets(
       String username) async {
+    if (AppConfig.useRemoteDb) {
+      try {
+        final sets = await _remote.getUserImportedSets(username);
+        return sets;
+      } catch (e) {
+        debugPrint('Remote getUserImportedSets error: $e');
+        return [];
+      }
+    }
     final db = await database;
     final userId = await getUserId(username);
-
     final result = await db.rawQuery('''
       SELECT s.* FROM study_sets s
       INNER JOIN user_study_sets us ON s.id = us.study_set_id
       WHERE us.user_id = ?
     ''', [userId]);
-
-    debugPrint(
-        'User $username (ID: $userId) has ${result.length} imported sets:');
+    debugPrint('User $username (ID: $userId) has ${result.length} imported sets:');
     for (var set in result) {
       debugPrint('- ${set['name']} (ID: ${set['id']})');
     }
-
     return result;
   }
 
   Future<void> removeImportedSet(String username, int setId) async {
+    if (AppConfig.useRemoteDb) {
+      try {
+        String? setName;
+        try {
+          final db = await database;
+          final res = await db.query('study_sets', where: 'id = ?', whereArgs: [setId]);
+          if (res.isNotEmpty) setName = res.first['name'] as String?;
+        } catch (_) {}
+        if (setName != null) {
+          await _remote.removeImportedSet(username, setName);
+        }
+        return;
+      } catch (e) {
+        debugPrint('Remote removeImportedSet error: $e');
+        return;
+      }
+    }
     final db = await database;
     final userId = await getUserId(username);
     await db.delete(
@@ -1064,35 +1159,46 @@ class DatabaseHelper {
 
   // Powerup methods
   Future<Map<String, int>> getUserPowerups(String username) async {
+    if (AppConfig.useRemoteDb) {
+      try {
+        return await _remote.getUserPowerups(username);
+      } catch (e) {
+        debugPrint('Remote getUserPowerups error: $e');
+        return {};
+      }
+    }
     final db = await database;
     final result = await db.query(
       'user_powerups',
       where: 'username = ?',
       whereArgs: [username],
     );
-
     Map<String, int> powerups = {};
     for (var row in result) {
       final powerupId = row['powerup_id'] as String;
       final count = row['count'] as int;
       powerups[powerupId] = (powerups[powerupId] ?? 0) + count;
     }
-
     return powerups;
   }
 
   Future<void> purchasePowerup(String username, String powerupId) async {
+    if (AppConfig.useRemoteDb) {
+      try {
+        await _remote.purchasePowerup(username, powerupId);
+        return;
+      } catch (e) {
+        debugPrint('Remote purchasePowerup error: $e');
+        return;
+      }
+    }
     final db = await database;
-
-    // Check if user already has this powerup
     final existingPowerup = await db.query(
       'user_powerups',
       where: 'username = ? AND powerup_id = ?',
       whereArgs: [username, powerupId],
     );
-
     if (existingPowerup.isNotEmpty) {
-      // Increment count
       final currentCount = existingPowerup.first['count'] as int;
       await db.update(
         'user_powerups',
@@ -1101,7 +1207,6 @@ class DatabaseHelper {
         whereArgs: [username, powerupId],
       );
     } else {
-      // Insert new powerup
       await db.insert('user_powerups', {
         'username': username,
         'powerup_id': powerupId,
@@ -1112,18 +1217,24 @@ class DatabaseHelper {
   }
 
   Future<void> usePowerup(String username, String powerupId) async {
+    if (AppConfig.useRemoteDb) {
+      try {
+        await _remote.usePowerup(username, powerupId);
+        return;
+      } catch (e) {
+        debugPrint('Remote usePowerup error: $e');
+        return;
+      }
+    }
     final db = await database;
-
     final existingPowerup = await db.query(
       'user_powerups',
       where: 'username = ? AND powerup_id = ?',
       whereArgs: [username, powerupId],
     );
-
     if (existingPowerup.isNotEmpty) {
       final currentCount = existingPowerup.first['count'] as int;
       if (currentCount > 1) {
-        // Decrement count
         await db.update(
           'user_powerups',
           {'count': currentCount - 1},
@@ -1131,7 +1242,6 @@ class DatabaseHelper {
           whereArgs: [username, powerupId],
         );
       } else {
-        // Remove powerup if count becomes 0
         await db.delete(
           'user_powerups',
           where: 'username = ? AND powerup_id = ?',

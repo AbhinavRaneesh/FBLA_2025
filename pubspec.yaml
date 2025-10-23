@@ -59,11 +59,8 @@ flutter:
     - assets/apcs_2024_frq_answers.txt
     - assets/apfrq/APCompSciA2024.txt
 
-# Windows platform configuration
-platforms:
-  windows:
-    pluginClass: FilePickerPlugin
-    dartPluginClass: FilePickerPlugin
+## Note: The `platforms` section with pluginClass/dartPluginClass is for plugin packages, not apps.
+## It has been removed to satisfy pubspec schema and avoid build errors.
 
 #  fonts:
 #    - family: YourCustomFont # Optional: Add custom fonts if needed

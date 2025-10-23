@@ -1,8 +1,12 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">Add commentMore actions
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Required for network requests to backend API -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    
     <application
         android:label="EduQuest"
         android:name="${applicationName}"
-        android:icon="@mipmap/launcher_icon">
+        android:icon="@mipmap/launcher_icon"
+        android:usesCleartextTraffic="true">
         <activity
             android:name=".MainActivity"
             android:exported="true"

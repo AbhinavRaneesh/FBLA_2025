@@ -4837,24 +4837,22 @@ class _MCQManagerState extends State<MCQManager> {
         widget.username,
       );
 
-      if (studySetId != null) {
-        // Add questions to the study set
-        final questions = studySet['questions'] as List<Map<String, dynamic>>;
-        for (final question in questions) {
-          await _dbHelper.addQuestionToStudySet(
-            studySetId,
-            question['question'] as String,
-            (question['options'] as List<String>)[question['correct'] as int],
-            question['options'] as List<String>,
-          );
-        }
-
-        // Import the set for the user
-        await _dbHelper.importPremadeSet(widget.username, studySetId);
-
-        // Add to the local apClasses list for immediate display
-        apClasses.add(studySet);
+      // Add questions to the study set
+      final questions = studySet['questions'] as List<Map<String, dynamic>>;
+      for (final question in questions) {
+        await _dbHelper.addQuestionToStudySet(
+          studySetId,
+          question['question'] as String,
+          (question['options'] as List<String>)[question['correct'] as int],
+          question['options'] as List<String>,
+        );
       }
+
+      // Import the set for the user
+      await _dbHelper.importPremadeSet(widget.username, studySetId);
+
+      // Add to the local apClasses list for immediate display
+      apClasses.add(studySet);
 
       // Show success message
       if (mounted) {
