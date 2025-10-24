@@ -31,7 +31,7 @@ EduQuest uses SQLite as the database for storing user progress, game data, and o
 
 1. Clone the repository from GitHub:
    ```bash
-   git clone <repository_url>
+   git clone https://github.com/AbhinavRaneesh/FBLA_2025.git
    ```
 2. Navigate to the project directory:
    ```bash
