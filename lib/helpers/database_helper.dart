@@ -1,6 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' as path;
 import 'package:flutter/foundation.dart';
+import 'dart:async';
 import '../data/premade_study_sets.dart';
 import '../utils/config.dart';
 import 'remote_api_client.dart';
@@ -775,12 +776,18 @@ class DatabaseHelper {
     print('DEBUG: getUserPoints called for username: $username');
     if (AppConfig.useRemoteDb) {
       try {
-        final points = await _remote.getUserPoints(username);
+        final points = await _remote.getUserPoints(username).timeout(
+          Duration(seconds: 8),
+          onTimeout: () {
+            print('DEBUG: Remote getUserPoints timed out, falling back to local');
+            throw TimeoutException('getUserPoints timeout');
+          },
+        );
         print('DEBUG: Remote points returned: $points');
         return points;
       } catch (e) {
-        print('DEBUG: Remote getUserPoints error: $e');
-        return 0;
+        print('DEBUG: Remote getUserPoints error: $e, falling back to local');
+        // Fall back to local on timeout or error
       }
     }
     try {
@@ -812,12 +819,18 @@ class DatabaseHelper {
     print('DEBUG: updateUserPoints called for username: $username with points: $points');
     if (AppConfig.useRemoteDb) {
       try {
-        await _remote.setUserPoints(username, points);
+        await _remote.setUserPoints(username, points).timeout(
+          Duration(seconds: 8),
+          onTimeout: () {
+            print('DEBUG: Remote updateUserPoints timed out, falling back to local');
+            throw TimeoutException('updateUserPoints timeout');
+          },
+        );
         print('DEBUG: Remote updateUserPoints ok');
         return;
       } catch (e) {
-        print('DEBUG: Remote updateUserPoints error: $e');
-        rethrow;
+        print('DEBUG: Remote updateUserPoints error: $e, falling back to local');
+        // Fall back to local on timeout or error
       }
     }
     try {
@@ -843,10 +856,16 @@ class DatabaseHelper {
   Future<String?> getCurrentTheme(String username) async {
     if (AppConfig.useRemoteDb) {
       try {
-        return await _remote.getCurrentTheme(username);
+        return await _remote.getCurrentTheme(username).timeout(
+          Duration(seconds: 8),
+          onTimeout: () {
+            print('DEBUG: Remote getCurrentTheme timed out, falling back to local');
+            throw TimeoutException('getCurrentTheme timeout');
+          },
+        );
       } catch (e) {
-        print('DEBUG: Remote getCurrentTheme error: $e');
-        return 'space';
+        print('DEBUG: Remote getCurrentTheme error: $e, falling back to local');
+        // Fall back to local
       }
     }
     final db = await database;
@@ -862,10 +881,17 @@ class DatabaseHelper {
   Future<void> updateCurrentTheme(String username, String theme) async {
     if (AppConfig.useRemoteDb) {
       try {
-        await _remote.setCurrentTheme(username, theme);
+        await _remote.setCurrentTheme(username, theme).timeout(
+          Duration(seconds: 8),
+          onTimeout: () {
+            print('DEBUG: Remote updateCurrentTheme timed out, falling back to local');
+            throw TimeoutException('updateCurrentTheme timeout');
+          },
+        );
         return;
       } catch (e) {
-        print('DEBUG: Remote updateCurrentTheme error: $e');
+        print('DEBUG: Remote updateCurrentTheme error: $e, falling back to local');
+        // Fall back to local
       }
     }
     final db = await database;
@@ -908,11 +934,17 @@ class DatabaseHelper {
   Future<List<String>> getUserOwnedThemes(String username) async {
     if (AppConfig.useRemoteDb) {
       try {
-        final themes = await _remote.getUserOwnedThemes(username);
+        final themes = await _remote.getUserOwnedThemes(username).timeout(
+          Duration(seconds: 8),
+          onTimeout: () {
+            print('DEBUG: Remote getUserOwnedThemes timed out, falling back to local');
+            throw TimeoutException('getUserOwnedThemes timeout');
+          },
+        );
         return {'space', ...themes}.toList();
       } catch (e) {
-        print('DEBUG: Remote getUserOwnedThemes: $e');
-        return ['space'];
+        print('DEBUG: Remote getUserOwnedThemes: $e, falling back to local');
+        // Fall back to local
       }
     }
     final db = await database;
@@ -938,12 +970,24 @@ class DatabaseHelper {
     print('DEBUG: purchaseTheme called for user: $username, theme: $theme');
     if (AppConfig.useRemoteDb) {
       try {
-        await _remote.purchaseTheme(username, theme);
-        await _remote.setCurrentTheme(username, theme);
+        await _remote.purchaseTheme(username, theme).timeout(
+          Duration(seconds: 8),
+          onTimeout: () {
+            print('DEBUG: Remote purchaseTheme timed out, falling back to local');
+            throw TimeoutException('purchaseTheme timeout');
+          },
+        );
+        await _remote.setCurrentTheme(username, theme).timeout(
+          Duration(seconds: 8),
+          onTimeout: () {
+            print('DEBUG: Remote setCurrentTheme timed out after purchase');
+            throw TimeoutException('setCurrentTheme timeout');
+          },
+        );
         return;
       } catch (e) {
-        print('DEBUG: Remote purchaseTheme error: $e');
-        rethrow;
+        print('DEBUG: Remote purchaseTheme error: $e, falling back to local');
+        // Fall back to local on timeout or error
       }
     }
     final db = await database;
@@ -1013,12 +1057,18 @@ class DatabaseHelper {
           debugPrint('Could not resolve study set name for ID $studySetId');
           return;
         }
-  await _remote.addImportedSet(username, setName, studySetId: studySetId);
+  await _remote.addImportedSet(username, setName, studySetId: studySetId).timeout(
+          Duration(seconds: 8),
+          onTimeout: () {
+            debugPrint('Remote addImportedSet timed out, falling back to local');
+            throw TimeoutException('addImportedSet timeout');
+          },
+        );
         debugPrint('Remote: Imported set "$setName" for $username');
         return;
       } catch (e) {
-        debugPrint('Remote importPremadeSet error: $e');
-        return;
+        debugPrint('Remote importPremadeSet error: $e, falling back to local');
+        // Fall back to local
       }
     }
     final db = await database;
@@ -1055,11 +1105,32 @@ class DatabaseHelper {
       String username) async {
     if (AppConfig.useRemoteDb) {
       try {
-        final sets = await _remote.getUserImportedSets(username);
-        return sets;
+        final sets = await _remote.getUserImportedSets(username).timeout(
+          Duration(seconds: 8),
+          onTimeout: () {
+            debugPrint('Remote getUserImportedSets timed out, falling back to local');
+            throw TimeoutException('getUserImportedSets timeout');
+          },
+        );
+        // Enrich remote data with local IDs by matching set names
+        final db = await database;
+        final enrichedSets = <Map<String, dynamic>>[];
+        for (var remoteSet in sets) {
+          final setName = remoteSet['name'] as String?;
+          if (setName != null) {
+            final localMatch = await db.query('study_sets', where: 'name = ?', whereArgs: [setName]);
+            if (localMatch.isNotEmpty) {
+              enrichedSets.add(localMatch.first);
+            } else {
+              // Fallback: use name-only with placeholder id
+              enrichedSets.add({'id': 0, 'name': setName});
+            }
+          }
+        }
+        return enrichedSets;
       } catch (e) {
-        debugPrint('Remote getUserImportedSets error: $e');
-        return [];
+        debugPrint('Remote getUserImportedSets error: $e, falling back to local');
+        // Fall back to local
       }
     }
     final db = await database;
@@ -1086,12 +1157,18 @@ class DatabaseHelper {
           if (res.isNotEmpty) setName = res.first['name'] as String?;
         } catch (_) {}
         if (setName != null) {
-          await _remote.removeImportedSet(username, setName);
+          await _remote.removeImportedSet(username, setName).timeout(
+            Duration(seconds: 8),
+            onTimeout: () {
+              debugPrint('Remote removeImportedSet timed out, falling back to local');
+              throw TimeoutException('removeImportedSet timeout');
+            },
+          );
         }
         return;
       } catch (e) {
-        debugPrint('Remote removeImportedSet error: $e');
-        return;
+        debugPrint('Remote removeImportedSet error: $e, falling back to local');
+        // Fall back to local
       }
     }
     final db = await database;
@@ -1161,10 +1238,16 @@ class DatabaseHelper {
   Future<Map<String, int>> getUserPowerups(String username) async {
     if (AppConfig.useRemoteDb) {
       try {
-        return await _remote.getUserPowerups(username);
+        return await _remote.getUserPowerups(username).timeout(
+          Duration(seconds: 8),
+          onTimeout: () {
+            debugPrint('Remote getUserPowerups timed out, falling back to local');
+            throw TimeoutException('getUserPowerups timeout');
+          },
+        );
       } catch (e) {
-        debugPrint('Remote getUserPowerups error: $e');
-        return {};
+        debugPrint('Remote getUserPowerups error: $e, falling back to local');
+        // Fall back to local
       }
     }
     final db = await database;
@@ -1185,11 +1268,17 @@ class DatabaseHelper {
   Future<void> purchasePowerup(String username, String powerupId) async {
     if (AppConfig.useRemoteDb) {
       try {
-        await _remote.purchasePowerup(username, powerupId);
+        await _remote.purchasePowerup(username, powerupId).timeout(
+          Duration(seconds: 8),
+          onTimeout: () {
+            debugPrint('Remote purchasePowerup timed out, falling back to local');
+            throw TimeoutException('purchasePowerup timeout');
+          },
+        );
         return;
       } catch (e) {
-        debugPrint('Remote purchasePowerup error: $e');
-        return;
+        debugPrint('Remote purchasePowerup error: $e, falling back to local');
+        // Fall back to local
       }
     }
     final db = await database;
@@ -1219,11 +1308,17 @@ class DatabaseHelper {
   Future<void> usePowerup(String username, String powerupId) async {
     if (AppConfig.useRemoteDb) {
       try {
-        await _remote.usePowerup(username, powerupId);
+        await _remote.usePowerup(username, powerupId).timeout(
+          Duration(seconds: 8),
+          onTimeout: () {
+            debugPrint('Remote usePowerup timed out, falling back to local');
+            throw TimeoutException('usePowerup timeout');
+          },
+        );
         return;
       } catch (e) {
-        debugPrint('Remote usePowerup error: $e');
-        return;
+        debugPrint('Remote usePowerup error: $e, falling back to local');
+        // Fall back to local
       }
     }
     final db = await database;

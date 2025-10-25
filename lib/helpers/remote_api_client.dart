@@ -8,10 +8,10 @@ class RemoteApiClient {
   RemoteApiClient()
       : _dio = Dio(
           BaseOptions(
-            // Prevent infinite spinner on unreachable servers
-            connectTimeout: const Duration(seconds: 5),
-            receiveTimeout: const Duration(seconds: 10),
-            sendTimeout: const Duration(seconds: 10),
+            // Longer timeouts to handle Render cold starts (free tier sleeps after inactivity)
+            connectTimeout: const Duration(seconds: 15),
+            receiveTimeout: const Duration(seconds: 45),
+            sendTimeout: const Duration(seconds: 30),
             // Don't throw on non-2xx; let us handle status codes
             validateStatus: (_) => true,
           ),
@@ -20,19 +20,38 @@ class RemoteApiClient {
 
   // AUTH
   Future<bool> login(String username, String password) async {
-    final res = await _dio.post('$_base/auth/login', data: {
-      'username': username,
-      'password': password,
-    });
-    return res.statusCode == 200 && (res.data['ok'] == true);
+    try {
+      final res = await _dio.post('$_base/auth/login', data: {
+        'username': username,
+        'password': password,
+      });
+      return res.statusCode == 200 && 
+             res.data is Map && 
+             res.data['ok'] == true;
+    } catch (e) {
+      print('Remote login exception: $e');
+      return false;
+    }
   }
 
   Future<bool> register(String username, String password) async {
-    final res = await _dio.post('$_base/auth/register', data: {
-      'username': username,
-      'password': password,
-    });
-    return res.statusCode == 200 && (res.data['ok'] == true);
+    try {
+      final res = await _dio.post('$_base/auth/register', data: {
+        'username': username,
+        'password': password,
+      });
+      // 200 = success, 409 = user exists (fail gracefully)
+      if (res.statusCode == 200 && res.data is Map && res.data['ok'] == true) {
+        return true;
+      }
+      if (res.statusCode == 409) {
+        print('Remote register: user already exists');
+      }
+      return false;
+    } catch (e) {
+      print('Remote register exception: $e');
+      return false;
+    }
   }
 
   // POINTS

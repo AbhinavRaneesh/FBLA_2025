@@ -65,6 +65,11 @@ const ensureUser = async (username) => {
   return user;
 };
 
+// Root endpoint to confirm backend is alive
+app.get('/', (req, res) => {
+  res.send('FBLA 2025 API is running!');
+});
+
 // Health
 app.get('/health', (req, res) => {
   res.json({ ok: true, uptime: process.uptime() });

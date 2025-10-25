@@ -13,8 +13,7 @@ class AppConfig {
     if (envUrl.isNotEmpty) return envUrl;
 
     // Production: use your deployed backend URL
-    // TODO: Replace with your actual Render/Railway/Fly URL after deployment
-    const productionUrl = 'https://your-backend.onrender.com';
+    const productionUrl = 'https://fbla-2025-5mb7.onrender.com';
     if (productionUrl != 'https://your-backend.onrender.com') {
       return productionUrl; // Use production URL if configured
     }
