@@ -1122,8 +1122,13 @@ class DatabaseHelper {
             if (localMatch.isNotEmpty) {
               enrichedSets.add(localMatch.first);
             } else {
-              // Fallback: use name-only with placeholder id
-              enrichedSets.add({'id': 0, 'name': setName});
+              // Fallback: construct minimal entry with safe defaults to avoid null crashes in UI
+              enrichedSets.add({
+                'id': -1,
+                'name': setName,
+                'description': '',
+                'created_at': DateTime.now().toIso8601String(),
+              });
             }
           }
         }

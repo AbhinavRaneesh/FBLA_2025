@@ -3534,9 +3534,16 @@ class _LearnTabState extends State<LearnTab>
     );
   }
 
-  String _formatDate(String dateString) {
-    final date = DateTime.parse(dateString);
-    return '${date.day}/${date.month}/${date.year}';
+  String _formatDate(dynamic dateValue) {
+    if (dateValue == null) return '';
+    try {
+      final String s = dateValue is String ? dateValue : dateValue.toString();
+      if (s.isEmpty) return '';
+      final date = DateTime.parse(s);
+      return '${date.day}/${date.month}/${date.year}';
+    } catch (_) {
+      return '';
+    }
   }
 
   void _startPractice(Map<String, dynamic> studySet) {

@@ -1687,63 +1687,77 @@ class _FRQTextDisplayScreenState extends State<FRQTextDisplayScreen> {
           final lastMessage = state.messages.last;
           if (lastMessage.role == "model") {
             lastAIResponse = lastMessage.parts.first.text;
-            // Parse the AI response and create results
+            // Parse the AI response and create results (robust parser)
             List<FrqGradingResult> results = [];
-            List<String> lines = lastAIResponse!.split('\n');
-            RegExp questionStart = RegExp(r'^\[Q\d+[a-zA-Z]?\s*\|\|\|');
-            for (int i = 0; i < lines.length; i++) {
-              String line = lines[i].trim();
-              if (questionStart.hasMatch(line)) {
-                try {
-                  // Remove leading '[' and trailing ']' if present
-                  String entry = line;
-                  if (entry.startsWith('[')) entry = entry.substring(1);
-                  if (entry.endsWith(']'))
-                    entry = entry.substring(0, entry.length - 1);
-                  // If the canonical answer is multi-line, keep reading until we hit a line ending with ']'
-                  while (!line.endsWith(']') && i + 1 < lines.length) {
-                    i++;
-                    entry += '\n' + lines[i].trim();
-                    line = lines[i].trim();
-                  }
-                  // Now split by '|||'
-                  List<String> parts = entry.split('|||');
-                  if (parts.length >= 4) {
-                    String questionNumber = parts[0].trim();
-                    String pointsStr = parts[1].trim();
-                    String feedback = parts[2].trim();
-                    String canonicalAnswer =
-                        parts.sublist(3).join('|||').trim();
-                    // Remove trailing ']' if present
-                    if (canonicalAnswer.endsWith(']')) {
-                      canonicalAnswer = canonicalAnswer
-                          .substring(0, canonicalAnswer.length - 1)
-                          .trim();
-                    }
-                    // Parse points (e.g., '0 points' -> 0)
-                    int pointsAwarded = 0;
-                    RegExp pointsReg = RegExp(r'(\d+)');
-                    var match = pointsReg.firstMatch(pointsStr);
-                    if (match != null) {
-                      pointsAwarded = int.parse(match.group(1)!);
-                    }
-                    // Get max points based on question - Updated to match AP CS A 2024 FRQ
-                    int maxPoints = questionPointValues[questionNumber] ??
-                        3; // Default to 3 if not found
-                    results.add(FrqGradingResult(
-                      subpart: questionNumber,
-                      userAnswer: answers[questionNumber] ?? '',
-                      canonicalAnswer: canonicalAnswer,
-                      pointsAwarded: pointsAwarded,
-                      maxPoints: maxPoints,
-                      feedback: feedback,
-                    ));
-                  }
-                } catch (e) {
-                  print('Error parsing line: $line');
-                  print('Error: $e');
+
+            try {
+              final text = lastAIResponse!;
+
+              // 1) Try to extract bracketed entries anywhere in the text, across lines
+              final entryRegex = RegExp(
+                  r"\[(Q\d+[a-zA-Z]?)\s*\|\|\|\s*([^|\]]+)\|\|\|\s*([\s\S]*?)\|\|\|\s*([\s\S]*?)\]",
+                  multiLine: true);
+              final matches = entryRegex.allMatches(text).toList();
+
+              void addResult(String questionNumber, String pointsStr,
+                  String feedback, String canonicalAnswer) {
+                // Normalize values
+                final q = questionNumber.trim();
+                final f = feedback.trim();
+                final ca = canonicalAnswer.trim();
+                final ps = pointsStr.trim();
+
+                int pointsAwarded = 0;
+                final m = RegExp(r"(\d+)").firstMatch(ps);
+                if (m != null) {
+                  pointsAwarded = int.tryParse(m.group(1)!) ?? 0;
+                }
+
+                final maxPoints = questionPointValues[q] ?? 3;
+                results.add(FrqGradingResult(
+                  subpart: q,
+                  userAnswer: answers[q] ?? '',
+                  canonicalAnswer: ca,
+                  pointsAwarded: pointsAwarded,
+                  maxPoints: maxPoints,
+                  feedback: f,
+                ));
+              }
+
+              if (matches.isNotEmpty) {
+                for (final m in matches) {
+                  addResult(m.group(1)!, m.group(2)!, m.group(3)!, m.group(4)!);
+                }
+              } else {
+                // 2) Fallback: look for lines (or paragraphs) that contain Q.. and '|||' without brackets
+                final altRegex = RegExp(
+                    r"(Q\d+[a-zA-Z]?)\s*\|\|\|\s*([^|\n]+)\|\|\|\s*([\s\S]*?)\|\|\|\s*([\s\S]*?)(?:\n\n|\r\n\r\n|\$|\Z)",
+                    multiLine: true);
+                final altMatches = altRegex.allMatches(text).toList();
+                for (final m in altMatches) {
+                  addResult(m.group(1)!, m.group(2)!, m.group(3)!, m.group(4)!);
                 }
               }
+            } catch (e, st) {
+              print('FRQ grading response parse error: $e');
+              print(st);
+            }
+
+            // If still empty, show a friendly message and do not navigate to an empty screen
+            if (results.isEmpty) {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                        'Could not parse grading results. Please try again.'),
+                    duration: Duration(seconds: 3),
+                  ),
+                );
+              }
+              setState(() {
+                isSubmitting = false;
+              });
+              return;
             }
 
             // Navigate to the FrqSummaryScreen with the results
@@ -1757,6 +1771,9 @@ class _FRQTextDisplayScreenState extends State<FRQTextDisplayScreen> {
                 ),
               ),
             );
+            setState(() {
+              isSubmitting = false;
+            });
           }
         }
       });

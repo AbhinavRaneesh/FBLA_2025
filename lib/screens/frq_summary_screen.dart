@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../helpers/frq_manager.dart';
+// import '../helpers/frq_manager.dart';
 import '../main.dart' show getBackgroundForTheme;
 import '../helpers/database_helper.dart';
 
@@ -90,26 +90,7 @@ class _FrqSummaryScreenState extends State<FrqSummaryScreen> {
           _pointsAwarded = true;
         });
 
-        // Show success message
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  const Icon(Icons.diamond, color: Colors.white),
-                  const SizedBox(width: 12),
-                  Text(
-                      'Earned $shopPointsToAward shop points for your FRQ performance!'),
-                ],
-              ),
-              backgroundColor: const Color(0xFFFFD700),
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-              duration: const Duration(seconds: 4),
-            ),
-          );
-        }
+        // Success: silently award points without showing a notification
       } catch (e) {
         print('DEBUG: Error awarding shop points: $e');
       }
@@ -334,7 +315,6 @@ class _FrqSummaryScreenState extends State<FrqSummaryScreen> {
                     )
                   else
                     ...widget.results.asMap().entries.map((entry) {
-                      final index = entry.key;
                       final result = entry.value;
                       final maxPoints = questionPointValues[result.subpart] ??
                           result.maxPoints;
