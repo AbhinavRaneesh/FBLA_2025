@@ -903,7 +903,8 @@ class ThemeColors {
       case 'crystal':
         return Colors.white; // Crystal: use white text per request
       case 'forest':
-        return const Color(0xFF1F2937); // Dark slate for better contrast on forest
+        // Use a warm off-white for forest so text pops over green image
+        return const Color(0xFFF1F8EE);
       case 'volcano':
         return Colors.white; // Volcano image tends darker
       case 'space':
@@ -920,6 +921,8 @@ class ThemeColors {
       case 'crystal':
         return Colors.black.withOpacity(0.20);
       case 'forest':
+        // Slightly darker translucent backdrop for forest to improve readability
+        return Colors.black.withOpacity(0.35);
       case 'volcano':
       case 'space':
       default:
@@ -935,6 +938,8 @@ class ThemeColors {
       case 'crystal':
         return Colors.black.withOpacity(0.30);
       case 'forest':
+        // Greenish pill for forest
+        return const Color(0xFF2E7D32).withOpacity(0.45);
       case 'volcano':
       case 'space':
       default:
@@ -950,6 +955,7 @@ class ThemeColors {
       case 'crystal':
         return Colors.white;
       case 'forest':
+        return Colors.white;
       case 'volcano':
       case 'space':
       default:
@@ -986,7 +992,8 @@ class ThemeColors {
       case 'crystal':
         return const Color(0xFFE0F7FA).withOpacity(0.85);
       case 'forest':
-        return Colors.white.withOpacity(0.08);
+        // Use a subtle dark-green translucent card to contrast the forest image
+        return const Color(0xFF04260F).withOpacity(0.55);
       case 'volcano':
         return Colors.white.withOpacity(0.08);
       case 'space':
@@ -1018,7 +1025,8 @@ class ThemeColors {
       case 'crystal':
         return const Color(0xFF80DEEA);
       case 'forest':
-        return const Color(0xFF66BB6A);
+        // Brighter lime for accents on forest
+        return const Color(0xFF8BC34A);
       case 'space':
       default:
         return Colors.blueAccent;
@@ -1654,81 +1662,81 @@ class _SignInPageState extends State<SignInPage>
                             ),
                             const SizedBox(height: 32),
 
-                            // Sign In button
-                            Container(
-                              height: 50,
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: _isFormValid
-                                      ? [
-                                          const Color(0xFF4facfe),
-                                          const Color(0xFF00f2fe)
-                                        ]
-                                      : [Colors.grey, Colors.grey.shade700],
+                            // Sign In button or standalone loading animation
+                            if (_isLoading)
+                              Center(
+                                child: SizedBox(
+                                  height: 220,
+                                  width: 220,
+                                  child: Lottie.asset(
+                                    'assets/animation/loadingplane.json',
+                                    fit: BoxFit.contain,
+                                  ),
                                 ),
-                                borderRadius: BorderRadius.circular(12),
-                                boxShadow: _isFormValid
-                                    ? [
-                                        BoxShadow(
-                                          color: const Color(0xFF4facfe)
-                                              .withOpacity(0.3),
-                                          blurRadius: 8,
-                                          offset: const Offset(0, 4),
-                                        ),
-                                      ]
-                                    : [],
+                              )
+                            else
+                              Container(
+                                height: 50,
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: _isFormValid
+                                        ? [
+                                            const Color(0xFF4facfe),
+                                            const Color(0xFF00f2fe)
+                                          ]
+                                        : [Colors.grey, Colors.grey.shade700],
+                                  ),
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: _isFormValid
+                                      ? [
+                                          BoxShadow(
+                                            color: const Color(0xFF4facfe)
+                                                .withOpacity(0.3),
+                                            blurRadius: 8,
+                                            offset: const Offset(0, 4),
+                                          ),
+                                        ]
+                                      : [],
+                                ),
+                                child: ElevatedButton(
+                                  onPressed: _isFormValid ? _signIn : null,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.transparent,
+                                    shadowColor: Colors.transparent,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  child: const Text(
+                                    'Sign In',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
                               ),
-                              child: ElevatedButton(
-                                onPressed: _isLoading
-                                    ? null
-                                    : (_isFormValid ? _signIn : null),
+                            const SizedBox(height: 24),
+
+                            // Google Sign In button (hidden while loading)
+                            if (!_isLoading)
+                              ElevatedButton.icon(
+                                onPressed: _signInWithGoogle,
+                                icon: Image.asset(
+                                  'assets/images/google_icon.png',
+                                  height: 24,
+                                ),
+                                label: const Text('Sign in with Google'),
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.transparent,
-                                  shadowColor: Colors.transparent,
+                                  backgroundColor: Colors.white,
+                                  foregroundColor: Colors.black,
+                                  minimumSize: const Size(double.infinity, 50),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                 ),
-                                child: _isLoading
-                                    ? const SizedBox(
-                                        height: 20,
-                                        width: 20,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          valueColor:
-                                              AlwaysStoppedAnimation<Color>(
-                                                  Colors.white),
-                                        ),
-                                      )
-                                    : const Text(
-                                        'Sign In',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white,
-                                        ),
-                                      ),
                               ),
-                            ),
-                            const SizedBox(height: 24),
-
-                            // Google Sign In button
-                            ElevatedButton.icon(
-                              onPressed: _isLoading ? null : _signInWithGoogle,
-                              icon: Image.asset(
-                                'assets/images/google_icon.png',
-                                height: 24,
-                              ),
-                              label: const Text('Sign in with Google'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.white,
-                                foregroundColor: Colors.black,
-                                minimumSize: const Size(double.infinity, 50),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                            ),
                             const SizedBox(height: 24),
 
                             // Sign up text
